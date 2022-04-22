@@ -1,0 +1,41 @@
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+
+exports_files(["ts_project.bzl"])
+
+bzl_library(
+    name = "ts_project",
+    srcs = ["ts_project.bzl"],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":ts_validate_options",
+        "@aspect_bazel_lib//lib:copy_to_bin",
+        "@aspect_bazel_lib//lib:utils",
+        "@bazel_skylib//lib:dicts",
+        "@rules_nodejs//nodejs/private/providers:bzl",  # keep
+    ],
+)
+
+bzl_library(
+    name = "ts_config",
+    srcs = ["ts_config.bzl"],
+    visibility = ["//ts:__subpackages__"],
+    deps = [":ts_lib"],
+)
+
+bzl_library(
+    name = "ts_lib",
+    srcs = ["ts_lib.bzl"],
+    visibility = ["//ts:__subpackages__"],
+    deps = ["@rules_nodejs//nodejs:bzl"],  # keep
+)
+
+bzl_library(
+    name = "ts_validate_options",
+    srcs = ["ts_validate_options.bzl"],
+    visibility = ["//ts:__subpackages__"],
+    deps = [
+        ":ts_config",
+        ":ts_lib",
+        "@aspect_bazel_lib//lib:copy_to_bin",
+    ],
+)

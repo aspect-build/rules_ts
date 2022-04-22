@@ -7,7 +7,7 @@ statement from these, that's a bug in our distribution.
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 
-def rules_mylang_internal_deps():
+def rules_ts_internal_deps():
     "Fetch deps needed for local development"
     maybe(
         http_archive,
@@ -61,11 +61,4 @@ def rules_mylang_internal_deps():
             "https://mirror.bazel.build/github.com/bazelbuild/stardoc/releases/download/0.5.0/stardoc-0.5.0.tar.gz",
             "https://github.com/bazelbuild/stardoc/releases/download/0.5.0/stardoc-0.5.0.tar.gz",
         ],
-    )
-
-    maybe(
-        http_archive,
-        name = "aspect_bazel_lib",
-        sha256 = "8c8cf0554376746e2451de85c4a7670cc8d7400c1f091574c1c1ed2a65021a4c",
-        url = "https://github.com/aspect-build/bazel-lib/releases/download/v0.2.6/bazel_lib-0.2.6.tar.gz",
     )
