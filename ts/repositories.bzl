@@ -46,9 +46,9 @@ def rules_ts_dependencies():
     maybe(
         http_archive,
         name = "aspect_rules_js",
-        sha256 = "30f9678a5886c4f4bdd621e1c241e889828c82b22e23a442c7cfb8ee6bb7e719",
-        strip_prefix = "rules_js-63cc1a1eef2e67203aac9f35ffee6dbdfd5e2745",
-        url = "https://github.com/aspect-build/rules_js/archive/63cc1a1eef2e67203aac9f35ffee6dbdfd5e2745.tar.gz",
+        sha256 = "e5de2d6aa3c6987875085c381847a216b1053b095ec51c11e97b781309406ad4",
+        strip_prefix = "rules_js-0.5.0",
+        url = "https://github.com/aspect-build/rules_js/archive/refs/tags/v0.5.0.tar.gz",
     )
 
     maybe(
