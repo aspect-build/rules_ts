@@ -1,6 +1,9 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
-exports_files(["ts_project.bzl"])
+exports_files([
+    "ts_project.bzl",
+    "ts_project_options_validator.js",
+])
 
 bzl_library(
     name = "ts_project",
