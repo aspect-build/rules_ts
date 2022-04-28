@@ -1,6 +1,6 @@
 module aspect.build/rules_ts
 
-go 1.17
+go 1.18
 
 require (
 	github.com/bazelbuild/bazel-gazelle v0.25.0
