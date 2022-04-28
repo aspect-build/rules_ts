@@ -1,0 +1,38 @@
+# This is a nested workspace so that we don't force all users of rules_ts
+# to depend on rules_go.
+# See https://github.com/bazelbuild/bazel-skylib/issues/250
+workspace(name = "aspect_rules_ts_gazelle")
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+    name = "io_bazel_rules_go",
+    sha256 = "2b1641428dff9018f9e85c0384f03ec6c10660d935b750e3fa1492a281a53b0f",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/rules_go/releases/download/v0.29.0/rules_go-v0.29.0.zip",
+        "https://github.com/bazelbuild/rules_go/releases/download/v0.29.0/rules_go-v0.29.0.zip",
+    ],
+)
+
+http_archive(
+    name = "bazel_gazelle",
+    sha256 = "31453a0f1200bc2cd6ecba2314e1942bac7f7da99729eb4f1dcdbd9791e3f989",
+    strip_prefix = "bazel-gazelle-b458bec82e613d1bac59afbb5b8b3d5846771b01",
+    urls = [
+        "https://github.com/bazelbuild/bazel-gazelle/archive/b458bec82e613d1bac59afbb5b8b3d5846771b01.tar.gz",
+    ],
+)
+
+load("//:deps.bzl", "gazelle_deps")
+
+gazelle_deps()
+
+load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_dependencies")
+load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies")
+
+go_rules_dependencies()
+
+go_register_toolchains(version = "1.17.2")
+
+# gazelle:repository_macro deps.bzl%gazelle_deps
+gazelle_dependencies()
