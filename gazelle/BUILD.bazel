@@ -1,0 +1,22 @@
+load("@bazel_gazelle//:def.bzl", "DEFAULT_LANGUAGES", "gazelle", "gazelle_binary")
+
+gazelle_binary(
+    name = "gazelle_go_binary",
+    languages = DEFAULT_LANGUAGES,
+)
+
+# gazelle:prefix aspect.build/rules_ts
+gazelle(
+    name = "gazelle",
+    gazelle = "gazelle_go_binary",
+)
+
+gazelle(
+    name = "update_go_deps",
+    args = [
+        "-from_file=go.mod",
+        "-to_macro=deps.bzl%gazelle_deps",
+        "-prune",
+    ],
+    command = "update-repos",
+)
