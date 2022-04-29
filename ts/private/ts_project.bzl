@@ -50,11 +50,14 @@ def _ts_project_impl(ctx, run_action = None, ExternalNpmPackageInfo = None):
     # Add user specified arguments *before* rule supplied arguments
     arguments.add_all(ctx.attr.args)
 
+    outdir = _lib.join(ctx.label.package, ctx.attr.out_dir) if ctx.attr.out_dir else ctx.label.package
+    if outdir == "":
+        outdir = "."
     arguments.add_all([
         "--project",
         ctx.file.tsconfig.path,
         "--outDir",
-        _lib.join(ctx.label.package, ctx.attr.out_dir) if ctx.attr.out_dir else ctx.label.package,
+        outdir,
         "--rootDir",
         _lib.calculate_root_dir(ctx),
     ])
