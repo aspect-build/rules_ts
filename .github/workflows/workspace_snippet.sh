@@ -5,6 +5,7 @@ set -o errexit -o nounset -o pipefail
 # Set by GH actions, see
 # https://docs.github.com/en/actions/learn-github-actions/environment-variables#default-environment-variables
 TAG=${GITHUB_REF_NAME}
+# Strip leading 'v'
 PREFIX="rules_ts-${TAG:1}"
 SHA=$(git archive --format=tar --prefix=${PREFIX}/ ${TAG} | gzip | shasum -a 256 | awk '{print $1}')
 
@@ -18,14 +19,7 @@ http_archive(
     strip_prefix = "${PREFIX}",
     url = "https://github.com/aspect-build/rules_ts/archive/refs/tags/${TAG}.tar.gz",
 )
-
-# Fetches the rules_ts dependencies.
-# If you want to have a different version of some dependency,
-# you should fetch it *before* calling this.
-# Alternatively, you can skip calling this function, so long as you've
-# already fetched all the dependencies.
-load("@aspect_rules_ts//ts:repositories.bzl", "rules_ts_dependencies")
-rules_ts_dependencies()
-
-\`\`\`
 EOF
+
+awk 'f;/--SNIP--/{f=1}' e2e/workspace/WORKSPACE
+echo "\`\`\`" 
