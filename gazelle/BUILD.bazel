@@ -1,4 +1,5 @@
-load("@bazel_gazelle//:def.bzl", "DEFAULT_LANGUAGES", "gazelle", "gazelle_binary")
+load("@bazel_gazelle//:def.bzl", "DEFAULT_LANGUAGES", "gazelle", "gazelle_binary", "gazelle_generation_test")
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 gazelle_binary(
     name = "gazelle_go_binary",
@@ -19,4 +20,70 @@ gazelle(
         "-prune",
     ],
     command = "update-repos",
+)
+
+go_library(
+    name = "gazelle_library",
+    srcs = glob(
+        ["*.go"],
+        exclude = ["*_test.go"],
+    ),
+    importpath = "aspect.build/rules_ts/gazelle",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@bazel_gazelle//config:go_default_library",
+        "@bazel_gazelle//label:go_default_library",
+        "@bazel_gazelle//language:go_default_library",
+        "@bazel_gazelle//repo:go_default_library",
+        "@bazel_gazelle//resolve:go_default_library",
+        "@bazel_gazelle//rule:go_default_library",
+        "@com_github_bazelbuild_buildtools//build:go_default_library",
+        "@com_github_bmatcuk_doublestar//:doublestar",
+        "@com_github_emirpasic_gods//lists/singlylinkedlist",
+        "@com_github_emirpasic_gods//sets/treeset",
+        "@com_github_emirpasic_gods//utils",
+        "@com_github_evanw_esbuild//pkg/api:go_default_library",
+        "@io_bazel_rules_go//go/tools/bazel:go_default_library",
+    ],
+)
+
+gazelle_binary(
+    name = "gazelle_js_binary",
+    languages = [":gazelle_library"],
+    visibility = ["//visibility:public"],
+)
+
+# A separate generation test for each tests/* test case
+[
+    gazelle_generation_test(
+        name = "%s_test" % test_workspace.replace("/WORKSPACE", "").replace("tests/", ""),
+        gazelle_binary = "gazelle_js_binary",
+        test_data = [
+            ":_%s-data" % test_workspace.replace("/WORKSPACE", "").replace("tests/", ""),
+        ],
+    )
+    for test_workspace in glob(["tests/**/WORKSPACE"])
+]
+
+# Data for each generation test
+[
+    filegroup(
+        name = "_%s-data" % test_workspace.replace("/WORKSPACE", "").replace("tests/", ""),
+        srcs = glob(["%s/**" % test_workspace.replace("/WORKSPACE", "")]),
+        visibility = ["//visibility:private"],
+    )
+    for test_workspace in glob(["tests/**/WORKSPACE"])
+]
+
+# Standalone tests
+go_test(
+    name = "parser_test",
+    srcs = ["parser_test.go"],
+    embed = [":gazelle_library"],
+)
+
+go_test(
+    name = "generate_test",
+    srcs = ["generate_test.go"],
+    embed = [":gazelle_library"],
 )
