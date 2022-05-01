@@ -1,4 +1,4 @@
-load("@bazel_gazelle//:def.bzl", "DEFAULT_LANGUAGES", "gazelle", "gazelle_binary", "gazelle_generation_test")
+load("@bazel_gazelle//:def.bzl", "DEFAULT_LANGUAGES", "gazelle", "gazelle_binary")
 load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 gazelle_binary(
@@ -52,28 +52,6 @@ gazelle_binary(
     languages = [":gazelle_library"],
     visibility = ["//visibility:public"],
 )
-
-# A separate generation test for each tests/* test case
-[
-    gazelle_generation_test(
-        name = "%s_test" % test_workspace.replace("/WORKSPACE", "").replace("tests/", ""),
-        gazelle_binary = "gazelle_js_binary",
-        test_data = [
-            ":_%s-data" % test_workspace.replace("/WORKSPACE", "").replace("tests/", ""),
-        ],
-    )
-    for test_workspace in glob(["tests/**/WORKSPACE"])
-]
-
-# Data for each generation test
-[
-    filegroup(
-        name = "_%s-data" % test_workspace.replace("/WORKSPACE", "").replace("tests/", ""),
-        srcs = glob(["%s/**" % test_workspace.replace("/WORKSPACE", "")]),
-        visibility = ["//visibility:private"],
-    )
-    for test_workspace in glob(["tests/**/WORKSPACE"])
-]
 
 # Standalone tests
 go_test(

@@ -1,0 +1,25 @@
+load("@bazel_gazelle//:def.bzl", "gazelle_generation_test")
+
+
+# A separate generation test for each tests/* test case
+[
+    gazelle_generation_test(
+        name = "%s_test" % test_workspace,
+        gazelle_binary = "//:gazelle_js_binary",
+        test_data = [
+            ":_%s-data" % test_workspace,
+        ],
+    )
+    for test_workspace in [t.replace("/WORKSPACE", "") for t in glob(["*/WORKSPACE"])]
+]
+
+# Data for each generation test
+[
+    filegroup(
+        name = "_%s-data" % test_workspace,
+        srcs = glob(["%s/**" % test_workspace]),
+        testonly = True,
+        visibility = ["//visibility:private"],
+    )
+    for test_workspace in [t.replace("/WORKSPACE", "") for t in glob(["*/WORKSPACE"])]
+]
