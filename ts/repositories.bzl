@@ -21,14 +21,15 @@ def _http_archive_version_impl(rctx):
     if rctx.attr.version:
         version = rctx.attr.version
     else:
-        p = json.decode(rctx.read(rctx.path(rctx.attr.package_json)))
+        json_path = rctx.path(rctx.attr.version_from)
+        p = json.decode(rctx.read(json_path))
         if "devDependencies" in p.keys() and "typescript" in p["devDependencies"]:
             ts = p["devDependencies"]["typescript"]
         elif "dependencies" in p.keys() and "typescript" in p["dependencies"]:
             ts = p["dependencies"]["typescript"]
         else:
-            fail("key `typescript` not found in either dependencies or devDependencies of %s" % rctx.path(rctx.attr.package_json))
-        if any([not seg.isalnum() for seg in ts.split(".")]):
+            fail("key `typescript` not found in either dependencies or devDependencies of %s" % json_path)
+        if any([not seg.isdigit() for seg in ts.split(".")]):
             fail("""typescript version in package.json must be exactly specified, not a semver range: %s.
             You can supply an exact `ts_version` attribute to `rules_ts_dependencies` to bypass this check.""" % ts)
         version = ts
@@ -55,7 +56,7 @@ http_archive_version = repository_rule(
         "version": attr.string(doc = "Explicit version for urls placeholder. If provided, the package.json is not read"),
         "urls": attr.string_list(doc = "URLs to fetch from, each should have a {}-style placeholder"),
         "build_file": attr.label(doc = "the BUILD file to symlink into the created repository"),
-        "package_json": attr.label(doc = "a path on disk to package.json which may have a version for the package"),
+        "version_from": attr.label(doc = "a path on disk to package.json which may have a version for the package"),
     },
 )
 
@@ -65,25 +66,25 @@ http_archive_version = repository_rule(
 # ours took precedence. Such breakages are challenging for users, so any
 # changes in this function should be marked as BREAKING in the commit message
 # and released only in semver majors.
-def rules_ts_dependencies(ts_version_from_package_json = None, ts_version = None, ts_integrity = None):
+def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrity = None):
     """Dependencies needed by users of rules_ts.
 
     To skip fetching the typescript package, define repository called 'npm_typescript' before calling this.
 
     Args:
-        ts_version_from_package_json: path to a package.json file which declares an exact typescript version.
-            The version to fetch is read from the dependencies or devDependencies property.
-            Exactly one of `ts_version` or `ts_version_from_package_json` must be set.
+        ts_version_from: label of a json file (typically `package.json`) which declares an exact typescript version
+            in a dependencies or devDependencies property.
+            Exactly one of `ts_version` or `ts_version_from` must be set.
         ts_version: version of the TypeScript compiler.
-            Exactly one of `ts_version` or `ts_version_from_package_json` must be set.
+            Exactly one of `ts_version` or `ts_version_from` must be set.
         ts_integrity: integrity hash for the npm package.
             By default, uses values mirrored into rules_ts.
             For example, to get the integrity of version 4.6.3 you could run
             `curl --silent https://registry.npmjs.org/typescript/4.6.3 | jq -r '.dist.integrity'`
     """
 
-    if (ts_version and ts_version_from_package_json) or (not ts_version_from_package_json and not ts_version):
-        fail("""Exactly one of `ts_version` or `ts_version_from_package_json` must be set.""")
+    if (ts_version and ts_version_from) or (not ts_version_from and not ts_version):
+        fail("""Exactly one of `ts_version` or `ts_version_from` must be set.""")
 
     # The minimal version of bazel_skylib we require
     maybe(
@@ -123,7 +124,7 @@ def rules_ts_dependencies(ts_version_from_package_json = None, ts_version = None
         http_archive_version,
         name = "npm_typescript",
         version = ts_version,
-        package_json = ts_version_from_package_json,
+        version_from = ts_version_from,
         integrity = ts_integrity,
         build_file = "@aspect_rules_ts//ts:BUILD.typescript",
         urls = ["https://registry.npmjs.org/typescript/-/typescript-{}.tgz"],

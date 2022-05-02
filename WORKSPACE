@@ -23,7 +23,7 @@ load("//ts:repositories.bzl", "rules_ts_dependencies")
 # Fetch dependencies which users need as well
 # You can verify the typescript version used by Bazel:
 # bazel run @npm_typescript//:tsc -- --version
-rules_ts_dependencies(ts_version_from_package_json = "//:package.json")
+rules_ts_dependencies(ts_version_from = "//:package.json")
 
 load("@rules_nodejs//nodejs:repositories.bzl", "nodejs_register_toolchains")
 
