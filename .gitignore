@@ -1,2 +1,3 @@
 bazel-*
 .bazelrc.user
+node_modules/
