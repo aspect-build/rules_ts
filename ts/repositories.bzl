@@ -72,19 +72,18 @@ def rules_ts_dependencies(ts_version_from_package_json = None, ts_version = None
 
     Args:
         ts_version_from_package_json: path to a package.json file which declares an exact typescript version.
-            The version to fetch is read from the file.
+            The version to fetch is read from the dependencies or devDependencies property.
+            Exactly one of `ts_version` or `ts_version_from_package_json` must be set.
         ts_version: version of the TypeScript compiler.
-            Overrides ts_version_from_package_json.
-            Only needed if ts_version_from_package_json is not set,
-            or the version of typescript in package.json is a semver range.
+            Exactly one of `ts_version` or `ts_version_from_package_json` must be set.
         ts_integrity: integrity hash for the npm package.
             By default, uses values mirrored into rules_ts.
-            You can simply fetch this from the registry:
+            For example, to get the integrity of version 4.6.3 you could run
             `curl --silent https://registry.npmjs.org/typescript/4.6.3 | jq -r '.dist.integrity'`
     """
 
-    if not ts_version_from_package_json and not ts_version:
-        fail("""One of `ts_version` or `ts_version_from_package_json` must be set.""")
+    if (ts_version and ts_version_from_package_json) or (not ts_version_from_package_json and not ts_version):
+        fail("""Exactly one of `ts_version` or `ts_version_from_package_json` must be set.""")
 
     # The minimal version of bazel_skylib we require
     maybe(
