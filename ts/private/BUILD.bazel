@@ -42,3 +42,9 @@ bzl_library(
         "@aspect_bazel_lib//lib:copy_to_bin",
     ],
 )
+
+bzl_library(
+    name = "versions",
+    srcs = ["versions.bzl"],
+    visibility = ["//ts:__subpackages__"],
+)

@@ -16,7 +16,6 @@ versions = struct(
 
 LATEST_TS_VERSION = TS_VERSIONS.keys()[-1]
 
-# Re-implementation of http_archive that can read the version from package.json
 def _http_archive_version_impl(rctx):
     if rctx.attr.version:
         version = rctx.attr.version
@@ -50,13 +49,14 @@ def _http_archive_version_impl(rctx):
     rctx.symlink(rctx.path(rctx.attr.build_file), "BUILD.bazel")
 
 http_archive_version = repository_rule(
+    doc = "Re-implementation of http_archive that can read the version from package.json",
     implementation = _http_archive_version_impl,
     attrs = {
-        "integrity": attr.string(doc = "Needed only if the ts version isn't mirrored"),
-        "version": attr.string(doc = "Explicit version for urls placeholder. If provided, the package.json is not read"),
-        "urls": attr.string_list(doc = "URLs to fetch from, each should have a {}-style placeholder"),
-        "build_file": attr.label(doc = "the BUILD file to symlink into the created repository"),
-        "version_from": attr.label(doc = "a path on disk to package.json which may have a version for the package"),
+        "integrity": attr.string(doc = "Needed only if the ts version isn't mirrored in `versions.bzl`."),
+        "version": attr.string(doc = "Explicit version for `urls` placeholder. If provided, the package.json is not read."),
+        "urls": attr.string_list(doc = "URLs to fetch from. Each must have one `{}`-style placeholder."),
+        "build_file": attr.label(doc = "The BUILD file to symlink into the created repository."),
+        "version_from": attr.label(doc = "Location of package.json which may have a version for the package."),
     },
 )
 
