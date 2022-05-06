@@ -35,6 +35,7 @@ def _ts_project_impl(ctx):
 
     arguments = ctx.actions.args()
     execution_requirements = {}
+    executable = ctx.executable.tsc
     progress_prefix = "Compiling TypeScript project"
 
     if ctx.attr.supports_workers:
@@ -44,6 +45,7 @@ def _ts_project_impl(ctx):
         execution_requirements["supports-workers"] = "1"
         execution_requirements["worker-key-mnemonic"] = "TsProject"
         progress_prefix = "Compiling TypeScript project (worker mode)"
+        executable = ctx.executable.tsc_worker
 
     # Add user specified arguments *before* rule supplied arguments
     arguments.add_all(ctx.attr.args)
@@ -152,7 +154,7 @@ This is an error because Bazel does not run actions unless their outputs are nee
 
     if len(outputs) > 0:
         ctx.actions.run(
-            executable = ctx.executable.tsc,
+            executable = executable,
             inputs = copy_files_to_bin_actions(ctx, inputs),
             arguments = [arguments],
             outputs = outputs,

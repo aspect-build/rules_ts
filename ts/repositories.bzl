@@ -14,6 +14,13 @@ versions = struct(
     rules_js = "61b1867c79e6ee46a0a926fd9b6894e95457c01b",
 )
 
+worker_versions = struct(
+    bazel_worker_version = "5.4.2",
+    bazel_worker_integrity = "sha512-wQZ1ybgiCPkuITaiPfh91zB/lBYqBglf1XYh9hJZCQnWZ+oz9krCnZcywI/i1U9/E9p3A+4Y1ni5akAwTMmfUA==",
+    google_protobuf_version = "3.20.1",
+    google_protobuf_integrity = "sha512-XMf1+O32FjYIV3CYu6Tuh5PNbfNEU5Xu22X+Xkdb/DUexFlCzhvv7d5Iirm4AOwn8lv4al1YvIhzGrg2j9Zfzw=="
+)
+
 LATEST_VERSION = TS_VERSIONS.keys()[-1]
 
 def _http_archive_version_impl(rctx):
@@ -46,7 +53,14 @@ def _http_archive_version_impl(rctx):
         url = [u.format(version) for u in rctx.attr.urls],
         integrity = integrity,
     )
-    rctx.symlink(rctx.path(rctx.attr.build_file), "BUILD.bazel")
+    build_file_substitutions = {"ts_version": version}
+    build_file_substitutions.update(**rctx.attr.build_file_substitutions)
+    rctx.template(
+        "BUILD.bazel",
+        rctx.path(rctx.attr.build_file), 
+        substitutions = build_file_substitutions,
+        executable = False,
+    )
 
 http_archive_version = repository_rule(
     doc = "Re-implementation of http_archive that can read the version from package.json",
@@ -55,7 +69,8 @@ http_archive_version = repository_rule(
         "integrity": attr.string(doc = "Needed only if the ts version isn't mirrored in `versions.bzl`."),
         "version": attr.string(doc = "Explicit version for `urls` placeholder. If provided, the package.json is not read."),
         "urls": attr.string_list(doc = "URLs to fetch from. Each must have one `{}`-style placeholder."),
-        "build_file": attr.label(doc = "The BUILD file to symlink into the created repository."),
+        "build_file": attr.label(doc = "The BUILD file to write into the created repository."),
+        "build_file_substitutions": attr.string_dict(doc = "Substitutions to make when expanding the BUILD file."),
         "version_from": attr.label(doc = "Location of package.json which may have a version for the package."),
     },
 )
@@ -112,6 +127,7 @@ def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrit
         url = "https://github.com/aspect-build/rules_js/archive/{}.tar.gz".format(versions.rules_js),
     )
 
+
     maybe(
         http_archive,
         name = "aspect_bazel_lib",
@@ -121,11 +137,32 @@ def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrit
     )
 
     maybe(
+        http_archive,
+        name = "npm_google_protobuf",
+        build_file = "@aspect_rules_ts//ts:BUILD.package",
+        integrity = worker_versions.google_protobuf_integrity,
+        urls = ["https://registry.npmjs.org/google-protobuf/-/google-protobuf-{}.tgz".format(worker_versions.google_protobuf_version)],
+    )
+
+    maybe(
+        http_archive,
+        name = "npm_at_bazel_worker",
+        integrity = worker_versions.bazel_worker_integrity,
+        build_file = "@aspect_rules_ts//ts:BUILD.package",
+        urls = ["https://registry.npmjs.org/@bazel/worker/-/worker-{}.tgz".format(worker_versions.bazel_worker_version)],
+    )
+
+    maybe(
         http_archive_version,
         name = "npm_typescript",
         version = ts_version,
         version_from = ts_version_from,
         integrity = ts_integrity,
         build_file = "@aspect_rules_ts//ts:BUILD.typescript",
+        build_file_substitutions = {
+            "bazel_worker_version": worker_versions.bazel_worker_version,
+            "google_protobuf_version": worker_versions.google_protobuf_version
+        },
         urls = ["https://registry.npmjs.org/typescript/-/typescript-{}.tgz"],
     )
+
