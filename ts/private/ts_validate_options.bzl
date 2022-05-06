@@ -45,6 +45,7 @@ def _validate_options_impl(ctx, run_action = None):
         "inputs": copy_files_to_bin_actions(ctx, inputs),
         "outputs": [marker],
         "arguments": [arguments],
+        "mnemonic": "TsValidateOptions",
         "env": {
             "BAZEL_BINDIR": ctx.bin_dir.path,
         },
