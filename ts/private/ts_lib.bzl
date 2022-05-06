@@ -64,6 +64,12 @@ STD_ATTRS = {
         executable = True,
         cfg = "exec",
     ),
+    "tsc_worker": attr.label(
+        doc = "TypeScript compiler worker binary",
+        mandatory = True,
+        executable = True,
+        cfg = "exec",
+    ),
     "tsconfig": attr.label(
         doc = "tsconfig.json file, see https://www.typescriptlang.org/tsconfig",
         mandatory = True,
