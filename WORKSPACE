@@ -7,12 +7,6 @@ workspace(
     name = "aspect_rules_ts",
 )
 
-# Don't recurse into the nested workspace
-local_repository(
-    name = "aspect_rules_ts_gazelle",
-    path = "./gazelle",
-)
-
 load(":internal_deps.bzl", "rules_ts_internal_deps")
 
 # Fetch deps needed only locally for development
