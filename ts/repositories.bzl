@@ -14,7 +14,7 @@ versions = struct(
     rules_js = "1e97acf805b11d7b8716a5c2f4d4466f57d3fb3d",
 )
 
-LATEST_TS_VERSION = TS_VERSIONS.keys()[-1]
+LATEST_VERSION = TS_VERSIONS.keys()[-1]
 
 def _http_archive_version_impl(rctx):
     if rctx.attr.version:
