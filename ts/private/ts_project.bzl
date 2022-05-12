@@ -7,7 +7,7 @@ load(":ts_lib.bzl", "COMPILER_OPTION_ATTRS", "OUTPUT_ATTRS", "STD_ATTRS", "Valid
 load(":ts_config.bzl", "TsConfigInfo")
 load(":ts_validate_options.bzl", _validate_lib = "lib")
 
-def _ts_project_impl(ctx, run_action = None, ExternalNpmPackageInfo = None):
+def _ts_project_impl(ctx):
     """Creates the action which spawns `tsc`.
 
     This function has two extra arguments that are particular to how it's called
@@ -16,8 +16,6 @@ def _ts_project_impl(ctx, run_action = None, ExternalNpmPackageInfo = None):
 
     Args:
         ctx: starlark rule execution context
-        run_action: used with the build_bazel_rules_nodejs linker, by default we use ctx.actions.run
-        ExternalNpmPackageInfo: a provider symbol specific to the build_bazel_rules_nodejs linker
 
     Returns:
         list of providers
@@ -89,10 +87,6 @@ def _ts_project_impl(ctx, run_action = None, ExternalNpmPackageInfo = None):
     for dep in ctx.attr.deps:
         if TsConfigInfo in dep:
             deps_depsets.append(dep[TsConfigInfo].deps)
-        if ExternalNpmPackageInfo != None and ExternalNpmPackageInfo in dep:
-            # TODO: we could maybe filter these to be tsconfig.json or *.d.ts only
-            # we don't expect tsc wants to read any other files from npm packages.
-            deps_depsets.append(dep[ExternalNpmPackageInfo].sources)
         if DeclarationInfo in dep:
             deps_depsets.append(dep[DeclarationInfo].transitive_declarations)
         if ValidOptionsInfo in dep:
@@ -157,33 +151,22 @@ This is an error because Bazel does not run actions unless their outputs are nee
         default_outputs_depset = depset([])
 
     if len(outputs) > 0:
-        run_action_kwargs = {
-            "inputs": copy_files_to_bin_actions(ctx, inputs),
-            "arguments": [arguments],
-            "outputs": outputs,
-            "mnemonic": "TsProject",
-            "execution_requirements": execution_requirements,
-            "progress_message": "%s %s [tsc -p %s]" % (
+        ctx.actions.run(
+            executable = ctx.executable.tsc,
+            inputs = copy_files_to_bin_actions(ctx, inputs),
+            arguments = [arguments],
+            outputs = outputs,
+            mnemonic = "TsProject",
+            execution_requirements = execution_requirements,
+            progress_message = "%s %s [tsc -p %s]" % (
                 progress_prefix,
                 ctx.label,
                 ctx.file.tsconfig.short_path,
             ),
-            "env": {
+            env = {
                 "BAZEL_BINDIR": ctx.bin_dir.path,
             },
-        }
-        if run_action != None:
-            run_action(
-                ctx,
-                link_workspace_root = ctx.attr.link_workspace_root,
-                executable = "tsc",
-                **run_action_kwargs
-            )
-        else:
-            ctx.actions.run(
-                executable = ctx.executable.tsc,
-                **run_action_kwargs
-            )
+        )
 
     providers = [
         # DefaultInfo is what you see on the command-line for a built library,
