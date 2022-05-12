@@ -18,7 +18,7 @@ def _tsconfig_inputs(ctx):
             inputs.extend(ctx.attr.extends.files.to_list())
     return inputs
 
-def _validate_options_impl(ctx, run_action = None):
+def _validate_options_impl(ctx):
     # Bazel won't run our action unless its output is needed, so make a marker file
     # We make it a .d.ts file so we can plumb it to the deps of the ts_project compile.
     marker = ctx.actions.declare_file("%s.optionsvalid.d.ts" % ctx.label.name)
@@ -41,26 +41,16 @@ def _validate_options_impl(ctx, run_action = None):
 
     inputs = _tsconfig_inputs(ctx)
 
-    run_action_kwargs = {
-        "inputs": copy_files_to_bin_actions(ctx, inputs),
-        "outputs": [marker],
-        "arguments": [arguments],
-        "mnemonic": "TsValidateOptions",
-        "env": {
+    ctx.actions.run(
+        executable = ctx.executable.validator,
+        inputs = copy_files_to_bin_actions(ctx, inputs),
+        outputs = [marker],
+        arguments = [arguments],
+        mnemonic = "TsValidateOptions",
+        env = {
             "BAZEL_BINDIR": ctx.bin_dir.path,
         },
-    }
-    if run_action != None:
-        run_action(
-            ctx,
-            executable = "validator",
-            **run_action_kwargs
-        )
-    else:
-        ctx.actions.run(
-            executable = ctx.executable.validator,
-            **run_action_kwargs
-        )
+    )
 
     return [
         ValidOptionsInfo(marker = marker),
