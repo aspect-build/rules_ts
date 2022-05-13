@@ -1,41 +1,31 @@
 "BUILD file inserted into @npm_typescript repository"
-load("@aspect_bazel_lib//lib:copy_directory.bzl", "copy_directory")
-load("@aspect_rules_js//js:node_package.bzl", "node_package")
-load("@aspect_rules_js//js:defs.bzl", "js_binary")
+load("@aspect_rules_js//js:defs.bzl", "link_js_package", "js_package", "js_binary")
+load("@aspect_bazel_lib//lib:directory_path.bzl", directory_path = "directory_path")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 
-# For RBE compatibility, the package must be a TreeArtifact in bazel-out
-copy_directory(
+js_package(
     name = "_npm_typescript",
     src = "package",
-    out = "typescript",
+    package = "typescript",
 )
 
-node_package(
+link_js_package(
     name = "npm_typescript",
     src = "_npm_typescript",
-    package = "typescript",
     visibility = ["//visibility:public"],
 )
 
-# Needed to address the entry_point within the typescript package
-# since the js_binary implementation in rules_js doesn't support
-# $(rootpath) expansions yet.
-write_file(
-    name = "write_tsc",
-    out = "tsc.js",
-    content = [
-        "const {dirname} = require('path')",
-        "const tsPath = dirname(require.resolve('typescript'))",
-        "require(tsPath + '/tsc.js')",
-    ],
+directory_path(
+    name = "tsc_entrypoint",
+    directory = ":npm_typescript__dir",
+    path = "bin/tsc",
 )
 
 js_binary(
     name = "tsc",
-    data = ["npm_typescript"],
-    entry_point = "tsc.js",
+    data = [":npm_typescript"],
+    entry_point = ":tsc_entrypoint",
     visibility = ["//visibility:public"],
 )
 
