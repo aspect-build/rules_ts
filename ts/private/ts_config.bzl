@@ -61,20 +61,20 @@ extended configuration file as well, to pass them both to the TypeScript compile
 def _join(*elements):
     return "/".join([f for f in elements if f])
 
-def _relative_path(tsconfig, dest):
+def _relative_path(bindir, tsconfig, dest):
     relative_to = tsconfig.dirname
+    destpath = dest.path
     if dest.is_source:
-        # Calculate a relative path from the directory where we're writing the tsconfig
-        # back to the sources root
-        workspace_root = "/".join([".."] * len(relative_to.split("/")))
-        return _join(workspace_root, dest.path)
+        # We assume that sources will be copied to the output folder by the time
+        # typescript tries to load them.
+        destpath = _join(bindir.path, destpath)
 
     # Bazel guarantees that srcs are beneath the package directory, and we disallow
     # tsconfig.json being generated with a "/" in the name.
     # So we can calculate a relative path from e.g.
     # bazel-out/darwin-fastbuild/bin/packages/typescript/test/ts_project/generated_tsconfig/gen_src
     # to <generated file packages/typescript/test/ts_project/generated_tsconfig/gen_src/subdir/a.ts>
-    result = dest.path[len(relative_to) + 1:]
+    result = destpath[len(relative_to) + 1:]
     if not result.startswith("."):
         result = "./" + result
     return result
@@ -92,14 +92,14 @@ def _write_tsconfig_rule(ctx):
     if ctx.attr.extends:
         content = content.replace(
             "__extends__",
-            _relative_path(ctx.outputs.out, ctx.file.extends),
+            _relative_path(ctx.bin_dir, ctx.outputs.out, ctx.file.extends),
         )
 
     filtered_files = _filter_input_files(ctx.files.files, ctx.attr.allow_js, ctx.attr.resolve_json_module)
     if filtered_files:
         content = content.replace(
             "\"__files__\"",
-            str([_relative_path(ctx.outputs.out, f) for f in filtered_files]),
+            str([_relative_path(ctx.bin_dir, ctx.outputs.out, f) for f in filtered_files]),
         )
     ctx.actions.write(
         output = ctx.outputs.out,

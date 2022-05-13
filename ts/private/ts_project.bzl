@@ -53,7 +53,7 @@ def _ts_project_impl(ctx):
         outdir = "."
     arguments.add_all([
         "--project",
-        ctx.file.tsconfig.path,
+        ctx.file.tsconfig.short_path,
         "--outDir",
         outdir,
         "--rootDir",
@@ -118,7 +118,7 @@ def _ts_project_impl(ctx):
     if ctx.outputs.buildinfo_out:
         arguments.add_all([
             "--tsBuildInfoFile",
-            ctx.outputs.buildinfo_out.path,
+            ctx.outputs.buildinfo_out.short_path,
         ])
         outputs.append(ctx.outputs.buildinfo_out)
     runtime_outputs = json_outs + js_outs + map_outs

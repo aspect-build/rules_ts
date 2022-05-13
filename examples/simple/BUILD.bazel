@@ -1,7 +1,21 @@
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 
+# Type-checks, and emits output to
+# bazel-bin/examples/simple/foo.js
+# bazel-bin/examples/simple/foo.d.ts
 ts_project(
     name = "ts",
     srcs = ["foo.ts"],
     declaration = True,
+)
+
+# Writes output to bazel-bin/examples/simple/build/foo.js
+ts_project(
+    name = "outdir",
+    srcs = ["foo.ts"],
+    tsconfig = {
+        "compilerOptions": {
+            "outDir": "build",
+        },
+    },
 )
