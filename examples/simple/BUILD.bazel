@@ -1,4 +1,5 @@
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
 
 # Type-checks, and emits output to
 # bazel-bin/examples/simple/foo.js
@@ -9,10 +10,24 @@ ts_project(
     declaration = True,
 )
 
+# Code generation tools can produce .ts outputs.
+# This example just writes one directly to bazel-bin.
+write_file(
+    name = "code_generation",
+    out = "generated.ts",
+    content = [
+        "export const data: string[] = []",
+    ],
+)
+
 # Writes output to bazel-bin/examples/simple/build/foo.js
 ts_project(
     name = "outdir",
-    srcs = ["foo.ts"],
+    srcs = [
+        "foo.ts",
+        "generated.ts",
+    ],
+    # A tsconfig.json file will be generated with this content
     tsconfig = {
         "compilerOptions": {
             "outDir": "build",

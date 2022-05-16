@@ -211,8 +211,6 @@ def _calculate_typing_maps_outs(srcs, typings_out_dir, root_dir, declaration_map
     return _out_paths(srcs, typings_out_dir, root_dir, allow_js, exts)
 
 def _calculate_root_dir(ctx):
-    some_generated_path = None
-    some_source_path = None
     root_path = None
 
     # Note we don't have access to the ts_project macro allow_js param here.
@@ -223,18 +221,8 @@ def _calculate_root_dir(ctx):
     # a breaking change to restrict it further.
     allow_js = True
     for src in ctx.files.srcs:
-        if _is_ts_src(src.path, allow_js):
-            if src.is_source:
-                some_source_path = src.path
-            else:
-                some_generated_path = src.path
-                root_path = ctx.bin_dir.path
-
-    if some_source_path and some_generated_path:
-        fail("ERROR: %s srcs cannot be a mix of generated files and source files " % ctx.label +
-             "since this would prevent giving a single rootDir to the TypeScript compiler\n" +
-             "    found generated file %s and source file %s" %
-             (some_generated_path, some_source_path))
+        if not _is_ts_src(src.path, allow_js):
+            root_path = ctx.bin_dir.path
 
     return _join(
         root_path,
