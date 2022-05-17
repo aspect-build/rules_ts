@@ -150,48 +150,6 @@ function main(_a) {
         )
         return 1
     }
-    // When there are dependencies on other ts_project targets, the tsconfig must be configured
-    // to help TypeScript resolve them.
-    if (attrs.has_local_deps) {
-        var rootDirsValid = true
-        if (!options.rootDirs) {
-            console.error(
-                'ERROR: ts_project rule ' +
-                    target +
-                    ' is configured without rootDirs.'
-            )
-            rootDirsValid = false
-        } else if (
-            !options.rootDirs.some(function (d) {
-                return d.startsWith(process.env['BAZEL_BINDIR'])
-            })
-        ) {
-            console.error(
-                'ERROR: ts_project rule ' +
-                    target +
-                    ' is missing a needed rootDir under ' +
-                    process.env['BAZEL_BINDIR'] +
-                    '.'
-            )
-            console.error('Found only: ', options.rootDirs)
-            rootDirsValid = false
-        }
-        if (!rootDirsValid) {
-            console.error(
-                'This makes it likely that TypeScript will be unable to resolve dependencies using relative import paths'
-            )
-            console.error(
-                "For example, if you 'import {} from ./foo', this expects to resolve foo.d.ts from Bazel's output tree"
-            )
-            console.error(
-                'and TypeScript only knows how to locate this when the rootDirs attribute includes that path.'
-            )
-            console.error(
-                'See the ts_project documentation: https://bazelbuild.github.io/rules_nodejs/TypeScript.html#ts_project'
-            )
-            return 1
-        }
-    }
     check('allowJs', 'allow_js')
     check('declarationMap', 'declaration_map')
     check('emitDeclarationOnly', 'emit_declaration_only')
