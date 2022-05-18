@@ -1,0 +1,8 @@
+load("@aspect_rules_js//js:defs.bzl", "js_package")
+
+js_package(
+    name = "js_lib",
+    srcs = ["index.js"],
+    package = "@myorg/js_lib",
+    visibility = ["//examples:__subpackages__"],
+)
