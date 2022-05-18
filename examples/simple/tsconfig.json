@@ -1,5 +1,10 @@
 {
     "compilerOptions": {
-        "declaration": true
+        "declaration": true,
+        "baseUrl": ".",
+        "paths": {
+            "@myorg/*": ["../*"]
+        },
+        "types": ["node"]
     }
 }

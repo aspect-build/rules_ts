@@ -6,9 +6,9 @@ local_repository(
 
 #---SNIP--- Below here is re-used in the workspace snippet published on releases
 
-######################
-# rules_terser setup #
-######################
+##################
+# rules_ts setup #
+##################
 # Fetches the rules_ts dependencies.
 # If you want to have a different version of some dependency,
 # you should fetch it *before* calling this.

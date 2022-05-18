@@ -1,6 +1,12 @@
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 
+# Dependencies for all targets in this package
+_DEPS = [
+    "//examples:link_js_lib",
+    "@npm//@types/node",
+]
+
 # Type-checks, and emits output to
 # bazel-bin/examples/simple/foo.js
 # bazel-bin/examples/simple/foo.d.ts
@@ -8,6 +14,9 @@ ts_project(
     name = "ts",
     srcs = ["foo.ts"],
     declaration = True,
+    # Note, the tsconfig attribute defaults to the tsconfig.json file in this directory.
+    # tsconfig = "<default>",
+    deps = _DEPS,
 )
 
 # Code generation tools can produce .ts outputs.
@@ -23,6 +32,7 @@ write_file(
 # Writes output to bazel-bin/examples/simple/build/foo.js
 ts_project(
     name = "outdir",
+    # Demonstrates that you can mix sources with generated files
     srcs = [
         "foo.ts",
         "generated.ts",
@@ -33,4 +43,5 @@ ts_project(
             "outDir": "build",
         },
     },
+    deps = _DEPS,
 )
