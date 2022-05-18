@@ -1,0 +1,12 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+# Demonstrates the --resolveJsonModule feature of TypeScript
+ts_project(
+    name = "ts",
+    srcs = [
+        "data.json",
+        "index.ts",
+    ],
+    out_dir = "build",
+    resolve_json_module = True,
+)
