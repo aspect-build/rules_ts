@@ -211,21 +211,7 @@ def _calculate_typing_maps_outs(srcs, typings_out_dir, root_dir, declaration_map
     return _out_paths(srcs, typings_out_dir, root_dir, allow_js, exts)
 
 def _calculate_root_dir(ctx):
-    root_path = None
-
-    # Note we don't have access to the ts_project macro allow_js param here.
-    # For error-handling purposes, we can assume that any .js/.jsx
-    # input is meant to be in the rootDir alongside .ts/.tsx sources,
-    # whether the user meant for them to be sources or not.
-    # It's a non-breaking change to relax this constraint later, but would be
-    # a breaking change to restrict it further.
-    allow_js = True
-    for src in ctx.files.srcs:
-        if not _is_ts_src(src.path, allow_js):
-            root_path = ctx.bin_dir.path
-
     return _join(
-        root_path,
         ctx.label.workspace_root,
         ctx.label.package,
         ctx.attr.root_dir,
