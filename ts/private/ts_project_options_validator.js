@@ -228,9 +228,7 @@ function main(_a) {
     // Make the output change whenever the attributes changed.
     require('fs').writeFileSync(
         output,
-        '\n// ' +
-            process.argv[1] +
-            ' checked attributes for ' +
+        '\n// checked attributes for ' +
             target +
             '\n// allow_js:              ' +
             attrs.allow_js +
