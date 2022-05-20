@@ -95,7 +95,7 @@ def _ts_project_impl(ctx):
     inputs.extend(depset(transitive = deps_depsets).to_list())
 
     # Gather TsConfig info from both the direct (tsconfig) and indirect (extends) attribute
-    tsconfig_inputs = _validate_lib.tsconfig_inputs(ctx)
+    tsconfig_inputs = copy_files_to_bin_actions(ctx, _validate_lib.tsconfig_inputs(ctx))
     inputs.extend(tsconfig_inputs)
 
     # We do not try to predeclare json_outs, because their output locations generally conflict with their path in the source tree.
