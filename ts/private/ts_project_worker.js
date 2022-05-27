@@ -4,17 +4,37 @@ const path = require('path')
 const worker = require('@bazel/worker')
 const MNEMONIC = 'TsProject'
 
-// TODO: drop this together with console.time calls
 const console = new globalThis.console.Console(process.stderr, process.stderr)
 
-function noop() {}
+function noop() { }
 
-function parseArgsFile() {
-    let argsFilePath = process.argv.pop()
-    if (argsFilePath.startsWith('@')) {
-        argsFilePath = argsFilePath.slice(1)
+function getArgsFromParamFile() {
+    let paramFilePath = process.argv.pop()
+    if (paramFilePath.startsWith('@')) {
+        paramFilePath = paramFilePath.slice(1)
     }
-    return fs.readFileSync(argsFilePath).toString().split('\n')
+    return fs.readFileSync(paramFilePath).toString().split('\n')
+}
+
+
+// TODO: support overloading with https://github.com/microsoft/TypeScript/blob/ab2523bbe0352d4486f67b73473d2143ad64d03d/src/compiler/builder.ts#L1008
+function createEmitCacheAndDiagnosticsProgram(rootNames, options, host, oldProgram, configFileParsingDiagnostics, projectReferences) {
+    const builder = ts.createEmitAndSemanticDiagnosticsBuilderProgram(rootNames, options, host, oldProgram, configFileParsingDiagnostics, projectReferences);
+    const emittedFiles = host.emittedFiles = host.emittedFiles || new Map();
+    const emit = builder.emit;
+    builder.emit = (targetSourceFile, writeFile, cancellationToken, emitOnlyDtsFiles, customTransformers) => {
+        writeFile = writeFile || host.writeFile
+        for (const [path, content] of emittedFiles) {
+            writeFile(path, content)
+        }
+        const writeF = (fileName, data, writeByteOrderMark, onError, sourceFiles) => {
+            writeFile(fileName, data, writeByteOrderMark, onError, sourceFiles);
+            emittedFiles.set(fileName, data)
+        }
+        return emit(targetSourceFile, writeF, cancellationToken, emitOnlyDtsFiles, customTransformers)
+    }
+
+    return builder;
 }
 
 /** @type {ts.FormatDiagnosticsHost} */
@@ -29,91 +49,164 @@ function printDiagnostics(diagnostics) {
     worker.log(ts.formatDiagnostics(diagnostics, formatDiagnosticHost))
 }
 
+function isAncestorDirectory(ancestor, child) {
+    const ancestorChunks = ancestor.split(path.sep).filter(i => !!i);
+    const childChunks = child.split(path.sep).filter(i => !!i);
+    return ancestorChunks.every((chunk, i) => childChunks[i] === chunk)
+}
+
 /** @type {Date} */
 let lastRequestTimestamp
 /** @type {string} */
 let lastRequestArgHash
 /** @type {ts.WatchOfConfigFile<ts.EmitAndSemanticDiagnosticsBuilderProgram>} */
 let program
+
+let host
+
 /** @type {import("@bazel/worker").Inputs} */
 let previousInputs
 
-/** @type {Map<string, ts.FileWatcherCallback>} */
-let invalidate = new Map()
 
-
-function getProgram(args) {
+function getProgram(args, initialInputs) {
     if (lastRequestArgHash !== args.join(' ')) {
-        program = lastRequestArgHash = undefined
+        program = lastRequestArgHash = host = undefined
     }
-    if (!program) {
-        const parsedArgs = ts.parseCommandLine(args)
-        const tsconfigPath = args[args.indexOf('--project') + 1]
 
-        const execRoot = path.resolve(process.cwd(), '..', '..', '..')
+    if (!program) {
+        lastRequestArgHash = args.join(' ')
+
+        const startingDir = process.cwd();
+        const execRoot = path.resolve(startingDir, '..', '..', '..')
+
+        const tsconfigPath = args[args.indexOf('--project') + 1]
+        worker.log(tsconfigPath)
+        const parsedArgs = ts.parseCommandLine(args)
+
+        const directoryWatchers = new Map();
+        const fileWatchers = new Map();
+
+        const knownInputs = new Set(initialInputs);
 
         /** @type {ts.System} */
         const sys = {
             ...ts.sys,
             write: worker.log,
             writeOutputIsTTY: false,
-            setTimeout: (callback) => {
-               return setImmediate(callback)
-            },
+            setTimeout: setImmediate,
+            readDirectory: readDirectory,
             clearTimeout: clearImmediate,
-            watchFile: (filePath, callback) => {
-                const relativeFilePath = path.relative(execRoot, filePath)
-                invalidate.set(relativeFilePath, (kind) => callback(filePath, kind))
-                return {close: () => invalidate.delete(relativeFilePath)}
-            },
-            watchDirectory: (path, callback, recursive, options) => {
-                // TODO: Figure out what to do with directory watchers
-                // tsc seem to be using them for watching the typeroots, node_modules tree, current dir
-            }
+            watchFile: watchFile,
+            watchDirectory: watchDirectory
         }
-  
-        const host = ts.createWatchCompilerHost(
+
+        host = ts.createWatchCompilerHost(
             tsconfigPath,
             parsedArgs.options,
             sys,
-            ts.createSemanticDiagnosticsBuilderProgram,
+            createEmitCacheAndDiagnosticsProgram,
             noop,
             noop
         )
+        host.invalidate = invalidate;
 
-        lastRequestArgHash = args.join(' ')
         program = ts.createWatchProgram(host)
+
+        function readDirectory(directory, extensions, exclude, include, depth) {
+            const files = ts.sys.readDirectory(directory, extensions, exclude, include, depth);
+            const strictView = [];
+  
+            const relativeDirectory = path.relative(execRoot, directory);
+
+
+            // TODO: 
+            // - find out why tsc does not pick up upstream declaration changes
+            // - only run strictView logic for current directory. tsc should be free to read upstream directories. (limit these to deps attribute.)
+            if (relativeDirectory != "bazel-out/darwin_arm64-fastbuild/bin/feature") {
+                return files
+            }
+
+            for (const file of files) {
+                const relativePath = path.relative(execRoot, file);
+                if (knownInputs.has(relativePath)) {
+                    strictView.push(file);
+                    worker.debug(`${relativePath} is not filtered as it is known input.`);
+                } else {
+                    worker.debug(`Skipping ${relativePath} as it is not input to current compilation.`)
+                }
+            }
+            worker.log(relativeDirectory, files, strictView, knownInputs);
+
+            return strictView;
+        }
+
+        function invalidate(filePath, kind) {
+            worker.log(`Invalidate:: ${filePath} :: ${ts.FileWatcherEventKind[kind]}`)
+            if (kind == ts.FileWatcherEventKind.Created) {
+                // we need to report the new file through an ancestor directory watcher
+                for (const [directory, callback] of directoryWatchers.entries()) {
+                    if (isAncestorDirectory(directory, filePath)) {
+                        callback(filePath);
+                        break;
+                    }
+                }
+                knownInputs.add(filePath);
+            } else {
+                fileWatchers.get(filePath)?.(kind)
+                if (kind == ts.FileWatcherEventKind.Deleted) {
+                    knownInputs.delete(filePath);
+                }
+            }
+        }
+
+        function watchDirectory(directoryPath, callback, recursive, options) {
+            worker.log(`watchDirectory ${directoryPath}`)
+            const relativeFilePath = path.relative(execRoot, directoryPath)
+            // since rules_js runs everything under bazel-out we shouldn't care about anything outside of it.
+            if (relativeFilePath.startsWith("bazel-out")) {
+                directoryWatchers.set(relativeFilePath, (input) => callback(path.join(execRoot, input)))
+            }
+            return { close: () => directoryWatchers.delete(relativeFilePath) }
+        }
+
+        function watchFile(filePath, callback) {
+            worker.log(`watchFile ${filePath}`)
+            const relativeFilePath = path.relative(execRoot, filePath)
+            fileWatchers.set(relativeFilePath, (kind) => callback(filePath, kind))
+            return { close: () => fileWatchers.delete(relativeFilePath) }
+        }
     }
 
     return program
 }
 
-async function emit(args, inputs, once = false) {
-    lastRequestTimestamp = Date.now()
 
+async function emit(args, inputs) {
+    lastRequestTimestamp = Date.now()
 
     if (previousInputs) {
         console.time(`invalidate`);
         for (const input of Object.keys(previousInputs)) {
             if (!inputs[input]) {
-                invalidate.get(input)?.(ts.FileWatcherEventKind.Deleted)
+                host.invalidate(input, ts.FileWatcherEventKind.Deleted);
             }
         }
         for (const [input, digest] of Object.entries(inputs)) {
             if (!(input in previousInputs)) {
-                invalidate.get(input)?.(ts.FileWatcherEventKind.Created)
+                host.invalidate(input, ts.FileWatcherEventKind.Created);
             } else if (previousInputs[input] != digest) {
-                invalidate.get(input)?.(ts.FileWatcherEventKind.Changed)
+                host.invalidate(input, ts.FileWatcherEventKind.Changed);
             }
         }
         console.timeEnd("invalidate")
     }
- 
+
+    const builder = getProgram(args, Object.keys(inputs))
 
     console.time("getProgram")
     // NOTE: Always get the program after the invalidation logic above as watcher program could
     // swap the program with new one based on the changes
-    const program = getProgram(args).getProgram()
+    const program = builder.getProgram()
     console.timeEnd("getProgram")
 
     const cancellationToken = {
@@ -151,6 +244,28 @@ async function emit(args, inputs, once = false) {
     return succeded
 }
 
+function emitOnce(args) {
+    const cmdline = ts.parseCommandLine(args)
+    const program = ts.createProgram({
+        options: cmdline.options,
+        rootNames: cmdline.fileNames,
+        projectReferences: cmdline.projectReferences,
+        configFileParsingDiagnostics: cmdline.errors
+    });
+    const result = program.emit();
+    const diagnostics = ts.getPreEmitDiagnostics(program)
+    const succeded =
+        !result.emitSkipped &&
+        result?.diagnostics.length === 0 &&
+        diagnostics.length == 0
+
+    if (!succeded) {
+        printDiagnostics(diagnostics)
+    }
+
+    return succeded
+}
+
 function main() {
     if (worker.runAsWorker(process.argv)) {
         worker.log(`Running ${MNEMONIC} as a Bazel worker`)
@@ -158,8 +273,10 @@ function main() {
     } else {
         worker.log(`Running ${MNEMONIC} as a standalone process`)
         worker.log(`Started a new process to perform this action. Your build might be misconfigured, try \n build --strategy=${MNEMONIC}=worker`)
-        const args = parseArgsFile()
-        emit(args, {}, true)
+        const args = getArgsFromParamFile()
+        if (!emitOnce(args)) {
+            process.exit(1)
+        }
     }
 }
 

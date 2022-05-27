@@ -62,10 +62,12 @@ def _ts_project_impl(ctx):
         _lib.calculate_root_dir(ctx),
     ])
     if len(typings_outs) > 0:
-        declaration_dir = ctx.attr.declaration_dir if ctx.attr.declaration_dir else ctx.attr.out_dir
+        declaration_dir = _lib.join(ctx.label.package, ctx.attr.declaration_dir) if ctx.attr.declaration_dir else ctx.label.package
+        if declaration_dir == "":
+            declaration_dir = "."
         arguments.add_all([
             "--declarationDir",
-            _lib.join(ctx.label.package, ctx.attr.declaration_dir) if ctx.attr.declaration_dir else ctx.label.package,
+           declaration_dir,
         ])
 
     # When users report problems, we can ask them to re-build with

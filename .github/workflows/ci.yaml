@@ -21,6 +21,7 @@ jobs:
                 folder:
                     - '.'
                     - 'e2e/workspace'
+                    - 'e2e/worker'
 
         # Steps represent a sequence of tasks that will be executed as part of the job
         steps:
@@ -51,3 +52,7 @@ jobs:
                   XDG_CACHE_HOME: ~/.cache/bazel-repo
               working-directory: ${{ matrix.folder }}
               run: bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc --bazelrc=.bazelrc test //...
+            - name: test worker mode
+              working-directory: ${{ matrix.folder }}
+              if: ${{ matrix.folder == "e2e/worker" }}
+              run: test.sh
