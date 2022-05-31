@@ -1,6 +1,6 @@
 "BUILD file inserted into @npm_typescript repository"
-load("@aspect_rules_js//js:defs.bzl", "link_js_package", "js_package", "js_binary")
-load("@aspect_bazel_lib//lib:directory_path.bzl", directory_path = "directory_path")
+load("@aspect_rules_js//js:defs.bzl", "constants", "link_js_package", "js_package", "js_binary")
+load("@aspect_bazel_lib//lib:directory_path.bzl", "directory_path")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 
@@ -18,7 +18,7 @@ link_js_package(
 
 directory_path(
     name = "tsc_entrypoint",
-    directory = ":npm_typescript__dir",
+    directory = ":npm_typescript{}".format(constants.dir_suffix),
     path = "bin/tsc",
 )
 
