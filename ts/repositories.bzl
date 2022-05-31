@@ -11,7 +11,7 @@ load("//ts/private:versions.bzl", TS_VERSIONS = "VERSIONS")
 versions = struct(
     bazel_lib = "0.11.1",
     rules_nodejs = "5.4.0",
-    rules_js = "0.8.0",
+    rules_js = "0.9.1",
 )
 
 LATEST_VERSION = TS_VERSIONS.keys()[-1]
@@ -107,7 +107,7 @@ def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrit
     maybe(
         http_archive,
         name = "aspect_rules_js",
-        sha256 = "06dd11130f05df3e8b9aa8cc1b93577e88f540cd4ece8f00035109cc17dcf5ff",
+        sha256 = "f01010e1f6bd49a8da6f7350c60992b7eb2eb62058cfe7aa6abd9e416bc2158b",
         strip_prefix = "rules_js-" + versions.rules_js,
         url = "https://github.com/aspect-build/rules_js/archive/refs/tags/v{}.tar.gz".format(versions.rules_js),
     )
