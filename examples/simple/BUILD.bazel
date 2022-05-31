@@ -1,14 +1,12 @@
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("@npm//:defs.bzl", "package")
 
 # Dependencies for all targets in this package
 _DEPS = [
-    # For packages within the workspace, we use the package() helper to get a label
-    # for the location where it's linked in the node_modules tree:
-    package("@myorg/js_lib"),
+    # For packages within the workspace, we use the link target in the node_modules tree:
+    "//examples:link_js_lib",
     # Third-party packages from npm can be referenced directly:
-    "@npm//@types/node",
+    "@npm//examples/@types/node",
 ]
 
 # Type-checks, and emits output to

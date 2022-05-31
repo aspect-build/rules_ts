@@ -1,11 +1,12 @@
-load("@npm//:defs.bzl", "link_js_packages", "package")
+load("@npm//:defs.bzl", "link_js_packages")
 load("@aspect_rules_js//js:defs.bzl", "link_js_package")
 
 # Building this target results in bazel-bin/examples/node_modules/@myorg/js_lib, so that
 # TypeScript and other node programs beneath bazel-bin/examples are able to resolve its location.
 link_js_package(
-    name = package("@myorg/js_lib").name,
+    name = "link_js_lib",
     src = "//examples/js_lib",
+    root_package = "examples",
     visibility = ["//examples:__subpackages__"],
 )
 
