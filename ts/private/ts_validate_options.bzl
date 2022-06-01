@@ -37,7 +37,7 @@ def _validate_options_impl(ctx):
         incremental = ctx.attr.incremental,
         ts_build_info_file = ctx.attr.ts_build_info_file,
     )
-    arguments.add_all([ctx.file.tsconfig.path, marker.short_path, ctx.attr.target, json.encode(config)])
+    arguments.add_all([ctx.file.tsconfig.short_path, marker.short_path, ctx.attr.target, json.encode(config)])
 
     inputs = _tsconfig_inputs(ctx)
 

@@ -92,7 +92,7 @@ For the list of args, see the ts_project rule.
 | Name  | Description | Default Value |
 | :------------- | :------------- | :------------- |
 | <a id="ts_project-name"></a>name |  <p align="center"> - </p>   |  none |
-| <a id="ts_project-tsconfig"></a>tsconfig |  <p align="center"> - </p>   |  <code>"tsconfig.json"</code> |
+| <a id="ts_project-tsconfig"></a>tsconfig |  <p align="center"> - </p>   |  <code>None</code> |
 | <a id="ts_project-srcs"></a>srcs |  <p align="center"> - </p>   |  <code>None</code> |
 | <a id="ts_project-args"></a>args |  <p align="center"> - </p>   |  <code>[]</code> |
 | <a id="ts_project-data"></a>data |  <p align="center"> - </p>   |  <code>[]</code> |
