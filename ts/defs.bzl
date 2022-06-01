@@ -8,7 +8,7 @@ Differences:
 - didn't copy the whole doc string
 """
 
-load("@aspect_bazel_lib//lib:utils.bzl", "is_external_label")
+load("@aspect_bazel_lib//lib:utils.bzl", "is_external_label", "to_label")
 load("//ts/private:ts_config.bzl", "write_tsconfig", _ts_config = "ts_config")
 load("//ts/private:ts_project.bzl", _ts_project_lib = "ts_project")
 load("//ts/private:ts_validate_options.bzl", validate_lib = "lib")
@@ -26,10 +26,21 @@ _ts_project = rule(
     attrs = dict(_ts_project_lib.attrs),
 )
 
+def _is_file_missing(label):
+    """Check if a file is missing by passing its relative path through a glob().
+
+    Args
+        label: the file's label
+    """
+    file_abs = "%s/%s" % (label.package, label.name)
+    file_rel = file_abs[len(native.package_name()) + 1:]
+    file_glob = native.glob([file_rel])
+    return len(file_glob) == 0
+
 # buildifier: disable=function-docstring-args
 def ts_project(
         name,
-        tsconfig = "tsconfig.json",
+        tsconfig = None,
         srcs = None,
         args = [],
         data = [],
@@ -73,6 +84,15 @@ def ts_project(
         "visibility": kwargs.get("visibility", None),
         "testonly": kwargs.get("testonly", None),
     }
+
+    if tsconfig == None:
+        if _is_file_missing(to_label(":tsconfig.json")):
+            fail("No tsconfig.json file found in {}/. You must set the tsconfig attribute on {}.".format(
+                native.package_name(),
+                to_label(name),
+            ))
+        else:
+            tsconfig = "tsconfig.json"
 
     if type(tsconfig) == type(dict()):
         # Copy attributes <-> tsconfig properties
