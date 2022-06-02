@@ -60,32 +60,3 @@ ts_project(
     out_dir = "build-babel",
     transpiler = babel,
 )
-
-# A file that can be transpiled, but fails to typecheck
-write_file(
-    name = "gen_typeerror",
-    out = "typeerror.ts",
-    content = ["const a: string = 1"],
-)
-
-# This target proves that transpilation doesn't require typechecking:
-#
-# $ bazel build examples/swc:transpile_with_typeerror
-# INFO: Analyzed target //examples/swc:transpile_with_typeerror (1 packages loaded, 8 targets configured).
-# Target //examples/swc:transpile_with_typeerror up-to-date:
-#   bazel-bin/examples/swc/typeerror.js
-#
-# But the _typecheck target fails to build:
-#
-# $ bazel build examples/swc:transpile_with_typeerror_typecheck
-# INFO: Analyzed target //examples/swc:transpile_with_typeerror_typecheck (0 packages loaded, 1 target configured).
-# ERROR: /home/alexeagle/Projects/rules_ts/examples/swc/BUILD.bazel:30:11: Compiling TypeScript project //examples/swc:transpile_with_typeerror_typings
-# examples/swc/typeerror.ts(1,14): error TS2322: Type 'number' is not assignable to type 'string'
-ts_project(
-    name = "transpile_with_typeerror",
-    srcs = ["typeerror.ts"],
-    # The transpile_with_typeerror.check target will have a build failure
-    # But the default transpile_with_typeerror target should still produce JS outs
-    tags = ["manual"],
-    transpiler = swc_transpiler,
-)
