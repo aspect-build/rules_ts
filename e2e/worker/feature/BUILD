@@ -3,18 +3,20 @@ load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 ts_project(
     name = "feature",
     srcs = ["index.ts"],
-    deps = [
-        ":sub"
-    ],
-    supports_workers = True,
     declaration = True,
-    visibility = ["//visibility:public"]
+    supports_workers = True,
+    visibility = ["//visibility:public"],   
+    deps = [
+        ":sub",
+    ],
 )
-
 
 ts_project(
     name = "sub",
-    srcs = ["sub/index.ts"],
-    supports_workers = False,
-    declaration = True
+    srcs = glob(["sub/*.ts"]),
+    tsconfig = {},
+    declaration = True,
+    resolve_json_module = True,
+    supports_workers = True,
+    validate = False,
 )

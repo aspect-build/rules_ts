@@ -1,1 +1,1 @@
-export const feature_name = "completely_different_feature"
+export const name = "feature/sub";

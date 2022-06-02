@@ -1,4 +1,3 @@
-import {feature_name as sub_feature_name} from "./sub";
+export const name = `fancy_feature`
 
-export const test: string = sub_feature_name
-export const feature_name = `fancy_feature + ${test}`
+export const sub = import("./sub").then(s => s.name);

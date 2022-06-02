@@ -52,7 +52,8 @@ bazel build :ts
 echo '{"compilerOptions": {"noImplicitAny": true}}' > tsconfig.json
 
 message="foo.ts(3,19): error TS7006: Parameter 'should_i' implicitly has an 'any' type."
-bazel build :ts 2>&1 | grep "$message" || exit_with_message "Case 3: expected worker to report \"$message\" but it didn't" 
-
+bazel build :ts 2>&1 | grep "$message" || exit_with_message "Case 3: expected worker to report \"$message\" but it didn't"
+cleanup
+bazel build :ts
 
 message "All tests have passed"

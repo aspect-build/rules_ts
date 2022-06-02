@@ -4,9 +4,21 @@ const path = require('path')
 const worker = require('@bazel/worker')
 const MNEMONIC = 'TsProject'
 
-const console = new globalThis.console.Console(process.stderr, process.stderr)
-
 function noop() { }
+
+function debuglog(...args) {
+    false && worker.log(...args)
+}
+
+/** Timing */
+const timing = {}
+function timingStart(label) {
+    timing[label] = performance.now();
+}
+function timingEnd(label) {
+    debuglog(`${label} ${performance.now() - timing[label]}ms`)
+}
+
 
 function getArgsFromParamFile() {
     let paramFilePath = process.argv.pop()
@@ -17,18 +29,34 @@ function getArgsFromParamFile() {
 }
 
 
+
 // TODO: support overloading with https://github.com/microsoft/TypeScript/blob/ab2523bbe0352d4486f67b73473d2143ad64d03d/src/compiler/builder.ts#L1008
 function createEmitCacheAndDiagnosticsProgram(rootNames, options, host, oldProgram, configFileParsingDiagnostics, projectReferences) {
     const builder = ts.createEmitAndSemanticDiagnosticsBuilderProgram(rootNames, options, host, oldProgram, configFileParsingDiagnostics, projectReferences);
+    /** @type {Map} */
     const emittedFiles = host.emittedFiles = host.emittedFiles || new Map();
+    /** @type {Map} */
+    const emittingMap = host.emittedFilesWeak = host.emittedFilesWeak || new Map();
+
     const emit = builder.emit;
     builder.emit = (targetSourceFile, writeFile, cancellationToken, emitOnlyDtsFiles, customTransformers) => {
         writeFile = writeFile || host.writeFile
-        for (const [path, content] of emittedFiles) {
-            writeFile(path, content)
+        if (!targetSourceFile) {
+            for (const [path, content] of emittedFiles.entries()) {
+                const sourcePath = emittingMap.get(path);
+                if(!builder.getSourceFile(sourcePath)) {
+                    debuglog(`removing ${path} from emit cache`);
+                    emittedFiles.delete(path);
+                    emittingMap.delete(path);
+                } else {
+                    writeFile(path, content);
+                }
+            }
         }
+
         const writeF = (fileName, data, writeByteOrderMark, onError, sourceFiles) => {
             writeFile(fileName, data, writeByteOrderMark, onError, sourceFiles);
+            emittingMap.set(fileName, sourceFiles[0].fileName)
             emittedFiles.set(fileName, data)
         }
         return emit(targetSourceFile, writeF, cancellationToken, emitOnlyDtsFiles, customTransformers)
@@ -49,143 +77,233 @@ function printDiagnostics(diagnostics) {
     worker.log(ts.formatDiagnostics(diagnostics, formatDiagnosticHost))
 }
 
+
+
 function isAncestorDirectory(ancestor, child) {
     const ancestorChunks = ancestor.split(path.sep).filter(i => !!i);
     const childChunks = child.split(path.sep).filter(i => !!i);
     return ancestorChunks.every((chunk, i) => childChunks[i] === chunk)
 }
 
-/** @type {Date} */
-let lastRequestTimestamp
-/** @type {string} */
-let lastRequestArgHash
-/** @type {ts.WatchOfConfigFile<ts.EmitAndSemanticDiagnosticsBuilderProgram>} */
-let program
+/** @type {Map<string, {program: ts.EmitAndSemanticDiagnosticsBuilderProgram, host: ts.WatchCompilerHost, previousInputs?: import("@bazel/worker").Inputs}>} */
+const workers = new Map(); 
 
-let host
+function getTsConfigPath(args) {
+    return args[args.indexOf('--project') + 1]
+}
 
-/** @type {import("@bazel/worker").Inputs} */
-let previousInputs
+function createProgram(args, initialInputs) {
+    const tsconfig = getTsConfigPath(args);
+    const startingDir = path.dirname(tsconfig)
+    const absStartingDir = path.join(process.cwd(), startingDir);
+    const execRoot = path.resolve(process.cwd(), '..', '..', '..')
 
+    debuglog(`tsconfig: ${tsconfig}`);
+    debuglog(`starting_dir: ${startingDir}`);
+    debuglog(`execroot ${execRoot}`);
 
-function getProgram(args, initialInputs) {
-    if (lastRequestArgHash !== args.join(' ')) {
-        program = lastRequestArgHash = host = undefined
+    const parsedArgs = ts.parseCommandLine(args)
+
+    const directoryWatchers = new Map();
+    const fileWatchers = new Map();
+
+    const knownInputs = new Set(initialInputs);
+
+    /** @type {ts.System} */
+    const sys = {
+        ...ts.sys,
+        write: worker.log,
+        writeOutputIsTTY: false,
+        setTimeout: setImmediate,
+        clearTimeout: clearImmediate,
+        fileExists: fileExists,
+        readFile: readFile,
+        writeFile: writeFile,
+        readDirectory: readDirectory,
+        directoryExists: directoryExists,
+        getDirectories: getDirectories,
+        watchFile: watchFile,
+        watchDirectory: watchDirectory
     }
 
-    if (!program) {
-        lastRequestArgHash = args.join(' ')
+    const host = ts.createWatchCompilerHost(
+        tsconfig,
+        parsedArgs.options,
+        sys,
+        createEmitCacheAndDiagnosticsProgram,
+        noop,
+        noop
+    )
 
-        const startingDir = process.cwd();
-        const execRoot = path.resolve(startingDir, '..', '..', '..')
+    host.invalidate = invalidate;
 
-        const tsconfigPath = args[args.indexOf('--project') + 1]
-        worker.log(tsconfigPath)
-        const parsedArgs = ts.parseCommandLine(args)
+    program = ts.createWatchProgram(host)
+    
 
-        const directoryWatchers = new Map();
-        const fileWatchers = new Map();
-
-        const knownInputs = new Set(initialInputs);
-
-        /** @type {ts.System} */
-        const sys = {
-            ...ts.sys,
-            write: worker.log,
-            writeOutputIsTTY: false,
-            setTimeout: setImmediate,
-            readDirectory: readDirectory,
-            clearTimeout: clearImmediate,
-            watchFile: watchFile,
-            watchDirectory: watchDirectory
-        }
-
-        host = ts.createWatchCompilerHost(
-            tsconfigPath,
-            parsedArgs.options,
-            sys,
-            createEmitCacheAndDiagnosticsProgram,
-            noop,
-            noop
-        )
-        host.invalidate = invalidate;
-
-        program = ts.createWatchProgram(host)
-
-        function readDirectory(directory, extensions, exclude, include, depth) {
-            const files = ts.sys.readDirectory(directory, extensions, exclude, include, depth);
-            const strictView = [];
-  
-            const relativeDirectory = path.relative(execRoot, directory);
-
-
-            // TODO: 
-            // - find out why tsc does not pick up upstream declaration changes
-            // - only run strictView logic for current directory. tsc should be free to read upstream directories. (limit these to deps attribute.)
-            if (relativeDirectory != "bazel-out/darwin_arm64-fastbuild/bin/feature") {
-                return files
+    function getDirectoryWatcherForPath(path) {
+        for (const [directory, cb] of directoryWatchers.entries()) {
+            if (isAncestorDirectory(directory, path)) {
+                debuglog(`found a directory watcher for ${path} ${directory}`)
+                return cb;
             }
+        }
+    }
 
+    function writeFile(path, data, writeByteOrderMark) {
+        debuglog(`writeFile ${path}`);
+        ts.sys.writeFile(path, data, writeByteOrderMark);
+    }
+
+    function readFile(filePath, encoding) {
+        debuglog(`readFile ${filePath}`);
+        const relative = path.relative(execRoot, filePath)
+        /** if it is under node_modules just allow file reads as we don't have a list of deps */
+        if (filePath.indexOf("node_modules") == -1 && !knownInputs.has(relative)) {
+            return undefined
+        }
+        return ts.sys.readFile(filePath, encoding);
+    }
+
+    function directoryExists(directory) {
+        if (!directory.startsWith(execRoot)) {
+            return false;
+        }
+        const exists = ts.sys.directoryExists(directory)
+        debuglog(`directoryExists ${directory} ${exists}`);
+        return exists
+    }
+
+    function getDirectories(directory) {
+        const dirs = ts.sys.getDirectories(directory);
+        debuglog(`getDirectories ${directory}`, dirs)
+        return dirs;
+    }
+
+    function fileExists(filePath) {
+        const relative = path.relative(execRoot, filePath)
+        debuglog(`fileExists ${filePath} ${knownInputs.has(relative)}`)
+        if (!knownInputs.has(relative)) {
+            return false;
+        }
+        return true;
+    }
+
+    function readDirectory(directory, extensions, exclude, include, depth) {
+        const files = ts.sys.readDirectory(directory, extensions, exclude, include, depth);
+        // TODO: walk up the directory to find a tsconfig.json to determine whether we are trying to read a directory
+        // that belongs to a upstream target.
+        const strictView = [];
+        if (directory != absStartingDir) {
+            for (const file of files) {
+                // tsc should never read source files of upstream targets.
+                if (file.endsWith(".d.ts") || file.endsWith(".js")) {
+                    const relative = path.relative(execRoot, file)
+                    if (knownInputs.has(relative)) {
+                        strictView.push(file);
+                    }
+                } else if (file.endsWith(".ts")) {
+                    
+                } else {
+                    strictView.push(file);
+                }
+            }
+        } else {
             for (const file of files) {
                 const relativePath = path.relative(execRoot, file);
                 if (knownInputs.has(relativePath)) {
                     strictView.push(file);
-                    worker.debug(`${relativePath} is not filtered as it is known input.`);
                 } else {
-                    worker.debug(`Skipping ${relativePath} as it is not input to current compilation.`)
-                }
-            }
-            worker.log(relativeDirectory, files, strictView, knownInputs);
-
-            return strictView;
-        }
-
-        function invalidate(filePath, kind) {
-            worker.log(`Invalidate:: ${filePath} :: ${ts.FileWatcherEventKind[kind]}`)
-            if (kind == ts.FileWatcherEventKind.Created) {
-                // we need to report the new file through an ancestor directory watcher
-                for (const [directory, callback] of directoryWatchers.entries()) {
-                    if (isAncestorDirectory(directory, filePath)) {
-                        callback(filePath);
-                        break;
-                    }
-                }
-                knownInputs.add(filePath);
-            } else {
-                fileWatchers.get(filePath)?.(kind)
-                if (kind == ts.FileWatcherEventKind.Deleted) {
-                    knownInputs.delete(filePath);
+                    debuglog(`Skipping ${relativePath} as it is not input to current compilation.`)
                 }
             }
         }
 
-        function watchDirectory(directoryPath, callback, recursive, options) {
-            worker.log(`watchDirectory ${directoryPath}`)
-            const relativeFilePath = path.relative(execRoot, directoryPath)
-            // since rules_js runs everything under bazel-out we shouldn't care about anything outside of it.
-            if (relativeFilePath.startsWith("bazel-out")) {
-                directoryWatchers.set(relativeFilePath, (input) => callback(path.join(execRoot, input)))
-            }
-            return { close: () => directoryWatchers.delete(relativeFilePath) }
+        debuglog(`readDirectory ${directory} ${strictView}`)
+
+        return strictView;
+    }
+
+    function invalidate(filePath, kind) {
+        if (filePath.endsWith(".params")) return;
+        debuglog(`invalidate ${filePath} : ${ts.FileWatcherEventKind[kind]}`)
+        if (kind == ts.FileWatcherEventKind.Created) { 
+            knownInputs.add(filePath);
+            // signal that the directory has been created.
+            const dirname = path.dirname(filePath);
+            getDirectoryWatcherForPath(filePath)?.(dirname);
+        } else if (kind == ts.FileWatcherEventKind.Deleted) {
+            knownInputs.delete(filePath);
         }
 
-        function watchFile(filePath, callback) {
-            worker.log(`watchFile ${filePath}`)
-            const relativeFilePath = path.relative(execRoot, filePath)
-            fileWatchers.set(relativeFilePath, (kind) => callback(filePath, kind))
-            return { close: () => fileWatchers.delete(relativeFilePath) }
+        let callback = fileWatchers.get(filePath)
+
+        callback?.(kind)
+
+        if (!callback) {
+            debuglog(`no callback for ${filePath}`);
+        }
+
+        // in case this file was never seen before then we have to report it through
+        // ancestor file watcher. Usually happens when a new file is introduced
+        if (!callback) {
+            debuglog(`looking for callback ${filePath}`)
+            getDirectoryWatcherForPath(filePath)?.(filePath);
         }
     }
 
-    return program
+    function watchDirectory(directoryPath, callback, recursive, options) {
+        directoryPath = path.relative(execRoot, directoryPath)
+        // since rules_js runs everything under bazel-out we shouldn't care about anything outside of it.
+        if (!directoryPath.startsWith("bazel-out")) {
+            return;
+        }
+        debuglog(`watchDirectory ${directoryPath}`)
+        directoryWatchers.set(directoryPath, (input) => callback(path.join(execRoot, input)))
+        return {
+            close: () => {
+                directoryWatchers.delete(directoryPath)
+                debuglog(`watchDirectory@close ${directoryPath}`)
+            } 
+        }
+    }
+
+    function watchFile(filePath, callback, interval) {
+        debuglog(`watchFile ${filePath} ${interval}`)
+        const relativeFilePath = path.relative(execRoot, filePath)
+        fileWatchers.set(relativeFilePath, (kind) => callback(filePath, kind))
+        return { 
+            close: () => {
+                fileWatchers.delete(relativeFilePath);
+                debuglog(`watchFile@close ${filePath}`)
+            } 
+        }
+    }
+    return {host, program}
 }
 
+function getOrCreateWorker(key, args, inputs) {
+    if (!workers.has(key)) {
+        debuglog(`Creating a worker for ${key}`);
+        const {program, host} = createProgram(args, inputs)
+        workers.set(key, {
+            program,
+            host
+        })
+    }
+    return workers.get(key);
+}
 
 async function emit(args, inputs) {
-    lastRequestTimestamp = Date.now()
+    const key = getTsConfigPath(args);
+    const workir = getOrCreateWorker(key, args, Object.keys(inputs));
+    const host = workir.host;
+    const lastRequestTimestamp = Date.now();
+    const previousInputs = workir.previousInputs;
 
+    debuglog(`Performing work for ${key}`);
+    
     if (previousInputs) {
-        console.time(`invalidate`);
+        timingStart(`invalidate`);
         for (const input of Object.keys(previousInputs)) {
             if (!inputs[input]) {
                 host.invalidate(input, ts.FileWatcherEventKind.Deleted);
@@ -198,16 +316,15 @@ async function emit(args, inputs) {
                 host.invalidate(input, ts.FileWatcherEventKind.Changed);
             }
         }
-        console.timeEnd("invalidate")
+        timingEnd("invalidate")
     }
 
-    const builder = getProgram(args, Object.keys(inputs))
-
-    console.time("getProgram")
+    timingStart("getProgram")
     // NOTE: Always get the program after the invalidation logic above as watcher program could
     // swap the program with new one based on the changes
-    const program = builder.getProgram()
-    console.timeEnd("getProgram")
+    const program = workir.program.getProgram()
+    timingEnd("getProgram")
+
 
     const cancellationToken = {
         isCancellationRequested: function (timestamp) {
@@ -220,26 +337,29 @@ async function emit(args, inputs) {
         }.bind(null, lastRequestTimestamp),
     }
 
-    console.time("emit")
+    timingStart("emit")
     const result = program.emit(undefined, undefined, cancellationToken)
-    console.timeEnd("emit")
-    console.time("diagnostics")
+    timingEnd("emit")
+
+    timingStart("diagnostics")
     const diagnostics = ts.getPreEmitDiagnostics(
         program,
         undefined,
         cancellationToken
-    )
-    console.timeEnd("diagnostics")
+    ).concat(result?.diagnostics)
+    timingEnd("diagnostics")
+
     const succeded =
         !result.emitSkipped &&
         result?.diagnostics.length === 0 &&
         diagnostics.length == 0
 
-    if (!succeded) {
-        printDiagnostics(diagnostics)
-    }
 
-    previousInputs = inputs
+    if (!succeded) {
+        printDiagnostics(diagnostics)    
+    }
+    
+    workir.previousInputs = inputs;
 
     return succeded
 }
