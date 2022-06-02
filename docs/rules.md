@@ -4,7 +4,6 @@ Public API for TypeScript rules
 
 Nearly identical to the ts_project wrapper macro in npm @bazel/typescript.
 Differences:
-- this doesn't have the transpiler attribute yet
 - doesn't have worker support
 - uses the executables from @npm_typescript rather than what a user npm_install'ed
 - didn't copy the whole doc string
