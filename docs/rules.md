@@ -4,7 +4,6 @@ Public API for TypeScript rules
 
 Nearly identical to the ts_project wrapper macro in npm @bazel/typescript.
 Differences:
-- this doesn't have the transpiler attribute yet
 - doesn't have worker support
 - uses the executables from @npm_typescript rather than what a user npm_install'ed
 - didn't copy the whole doc string
@@ -78,8 +77,8 @@ validate_options(<a href="#validate_options-name">name</a>, <a href="#validate_o
 <pre>
 ts_project(<a href="#ts_project-name">name</a>, <a href="#ts_project-tsconfig">tsconfig</a>, <a href="#ts_project-srcs">srcs</a>, <a href="#ts_project-args">args</a>, <a href="#ts_project-data">data</a>, <a href="#ts_project-deps">deps</a>, <a href="#ts_project-extends">extends</a>, <a href="#ts_project-allow_js">allow_js</a>, <a href="#ts_project-declaration">declaration</a>, <a href="#ts_project-source_map">source_map</a>,
            <a href="#ts_project-declaration_map">declaration_map</a>, <a href="#ts_project-resolve_json_module">resolve_json_module</a>, <a href="#ts_project-preserve_jsx">preserve_jsx</a>, <a href="#ts_project-composite">composite</a>, <a href="#ts_project-incremental">incremental</a>,
-           <a href="#ts_project-emit_declaration_only">emit_declaration_only</a>, <a href="#ts_project-ts_build_info_file">ts_build_info_file</a>, <a href="#ts_project-tsc">tsc</a>, <a href="#ts_project-validate">validate</a>, <a href="#ts_project-validator">validator</a>, <a href="#ts_project-declaration_dir">declaration_dir</a>,
-           <a href="#ts_project-out_dir">out_dir</a>, <a href="#ts_project-root_dir">root_dir</a>, <a href="#ts_project-kwargs">kwargs</a>)
+           <a href="#ts_project-emit_declaration_only">emit_declaration_only</a>, <a href="#ts_project-transpiler">transpiler</a>, <a href="#ts_project-ts_build_info_file">ts_build_info_file</a>, <a href="#ts_project-tsc">tsc</a>, <a href="#ts_project-validate">validate</a>, <a href="#ts_project-validator">validator</a>,
+           <a href="#ts_project-declaration_dir">declaration_dir</a>, <a href="#ts_project-out_dir">out_dir</a>, <a href="#ts_project-root_dir">root_dir</a>, <a href="#ts_project-kwargs">kwargs</a>)
 </pre>
 
 Compiles one TypeScript project using `tsc --project`.
@@ -107,6 +106,7 @@ For the list of args, see the ts_project rule.
 | <a id="ts_project-composite"></a>composite |  <p align="center"> - </p>   |  <code>False</code> |
 | <a id="ts_project-incremental"></a>incremental |  <p align="center"> - </p>   |  <code>False</code> |
 | <a id="ts_project-emit_declaration_only"></a>emit_declaration_only |  <p align="center"> - </p>   |  <code>False</code> |
+| <a id="ts_project-transpiler"></a>transpiler |  <p align="center"> - </p>   |  <code>None</code> |
 | <a id="ts_project-ts_build_info_file"></a>ts_build_info_file |  <p align="center"> - </p>   |  <code>None</code> |
 | <a id="ts_project-tsc"></a>tsc |  <p align="center"> - </p>   |  <code>"@npm_typescript//:tsc"</code> |
 | <a id="ts_project-validate"></a>validate |  <p align="center"> - </p>   |  <code>True</code> |

@@ -2,14 +2,16 @@
 
 Nearly identical to the ts_project wrapper macro in npm @bazel/typescript.
 Differences:
-- this doesn't have the transpiler attribute yet
 - doesn't have worker support
 - uses the executables from @npm_typescript rather than what a user npm_install'ed
 - didn't copy the whole doc string
 """
 
 load("@aspect_bazel_lib//lib:utils.bzl", "is_external_label", "to_label")
+load("@bazel_skylib//lib:partial.bzl", "partial")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("//ts/private:ts_config.bzl", "write_tsconfig", _ts_config = "ts_config")
+load("//ts/private:ts_declaration.bzl", "ts_declaration")
 load("//ts/private:ts_project.bzl", _ts_project_lib = "ts_project")
 load("//ts/private:ts_validate_options.bzl", validate_lib = "lib")
 load("//ts/private:ts_lib.bzl", _lib = "lib")
@@ -55,6 +57,7 @@ def ts_project(
         composite = False,
         incremental = False,
         emit_declaration_only = False,
+        transpiler = None,
         ts_build_info_file = None,
         tsc = "@npm_typescript//:tsc",
         validate = True,
@@ -160,8 +163,75 @@ def ts_project(
     typings_outs = _lib.calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, composite, allow_js)
     typing_maps_outs = _lib.calculate_typing_maps_outs(srcs, typings_out_dir, root_dir, declaration_map, allow_js)
 
+    tsc_js_outs = []
+    tsc_map_outs = []
+    if not transpiler:
+        tsc_js_outs = js_outs
+        tsc_map_outs = map_outs
+        tsc_target_name = name
+    else:
+        # To stitch together a tree of ts_project where transpiler is a separate rule,
+        # we have to produce a few targets
+        tsc_target_name = "%s_typings" % name
+        transpile_target_name = "%s_transpile" % name
+        typecheck_target_name = "%s_typecheck" % name
+        test_target_name = "%s_typecheck_test" % name
+
+        transpile_srcs = [s for s in srcs if _lib.is_ts_src(s, allow_js)]
+        if (len(transpile_srcs) != len(js_outs)):
+            fail("ERROR: illegal state: transpile_srcs has length {} but js_outs has length {}".format(
+                len(transpile_srcs),
+                len(js_outs),
+            ))
+
+        if type(transpiler) == "function" or type(transpiler) == "rule":
+            transpiler(
+                name = transpile_target_name,
+                srcs = transpile_srcs,
+                js_outs = js_outs,
+                map_outs = map_outs,
+                **common_kwargs
+            )
+        elif partial.is_instance(transpiler):
+            partial.call(
+                transpiler,
+                name = transpile_target_name,
+                srcs = transpile_srcs,
+                js_outs = js_outs,
+                map_outs = map_outs,
+                **common_kwargs
+            )
+        else:
+            fail("transpiler attribute should be a rule/macro or a skylib partial. Got " + type(transpiler))
+
+        # Users should build this target to get a failed build when typechecking fails
+        native.filegroup(
+            name = typecheck_target_name,
+            srcs = [tsc_target_name],
+            # This causes the DeclarationInfo to be produced, which in turn triggers the tsc action to typecheck
+            output_group = "types",
+            **common_kwargs
+        )
+
+        # Ensures the typecheck target gets built under `bazel test --build_tests_only`
+        build_test(
+            name = test_target_name,
+            targets = [typecheck_target_name],
+            **common_kwargs
+        )
+
+        # Default target produced by the macro gives the js and map outs, with the transitive dependencies.
+        ts_declaration(
+            name = name,
+            srcs = js_outs + map_outs,
+            # Include the tsc target so that this js_library can be a valid dep for downstream ts_project
+            # or other DeclarationInfo-aware rules.
+            deps = deps + [tsc_target_name],
+            **common_kwargs
+        )
+
     _ts_project(
-        name = name,
+        name = tsc_target_name,
         srcs = srcs,
         args = args,
         data = data,
@@ -178,17 +248,14 @@ def ts_project(
         declaration_map = declaration_map,
         out_dir = out_dir,
         root_dir = root_dir,
-        js_outs = js_outs,
-        map_outs = map_outs,
+        js_outs = tsc_js_outs,
+        map_outs = tsc_map_outs,
         typings_outs = typings_outs,
         typing_maps_outs = typing_maps_outs,
         buildinfo_out = tsbuildinfo_path if composite or incremental else None,
         emit_declaration_only = emit_declaration_only,
         tsc = tsc,
-        # TODO: support transpiler attribute when we have a js_library equivalent
-        # and can copy over the logic from rules_nodejs to set tsc_js_outs, ts_map_outs
-        # and create all the targets for transpilation
-        transpile = True,
+        transpile = not transpiler,
         # We don't support this feature at all from rules_nodejs yet
         supports_workers = False,
         **kwargs
