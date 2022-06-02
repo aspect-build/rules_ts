@@ -8,6 +8,7 @@ Differences:
 """
 
 load("@aspect_bazel_lib//lib:utils.bzl", "is_external_label", "to_label")
+load("@bazel_skylib//lib:partial.bzl", "partial")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("//ts/private:ts_config.bzl", "write_tsconfig", _ts_config = "ts_config")
 load("//ts/private:ts_declaration.bzl", "ts_declaration")
@@ -191,8 +192,17 @@ def ts_project(
                 map_outs = map_outs,
                 **common_kwargs
             )
+        elif partial.is_instance(transpiler):
+            partial.call(
+                transpiler,
+                name = transpile_target_name,
+                srcs = transpile_srcs,
+                js_outs = js_outs,
+                map_outs = map_outs,
+                **common_kwargs
+            )
         else:
-            fail("transpiler attribute should be a rule/macro. Got " + type(transpiler))
+            fail("transpiler attribute should be a rule/macro or a skylib partial. Got " + type(transpiler))
 
         # Users should build this target to get a failed build when typechecking fails
         native.filegroup(

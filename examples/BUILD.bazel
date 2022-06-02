@@ -1,4 +1,3 @@
-load("@npm//:defs.bzl", "link_js_packages")
 load("@aspect_rules_js//js:defs.bzl", "link_js_package")
 
 # Building this target results in bazel-bin/examples/node_modules/@myorg/js_lib, so that
@@ -9,6 +8,3 @@ link_js_package(
     root_package = "examples",
     visibility = ["//examples:__subpackages__"],
 )
-
-# This macro expands to a link_js_package for each third-party package in package.json
-link_js_packages()

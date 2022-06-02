@@ -1,6 +1,9 @@
 {
     "private": true,
     "dependencies": {
+        "@babel/cli": "^7.16.7",
+        "@babel/core": "^7.16.7",
+        "@babel/preset-typescript": "^7.16.7",
         "@types/node": "latest",
         "typescript": "4.6.3"
     }

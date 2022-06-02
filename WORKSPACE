@@ -17,7 +17,7 @@ load("//ts:repositories.bzl", "rules_ts_dependencies")
 # Fetch dependencies which users need as well
 # You can verify the typescript version used by Bazel:
 # bazel run -- @npm_typescript//:tsc --version
-rules_ts_dependencies(ts_version_from = "//examples:package.json")
+rules_ts_dependencies(ts_version_from = "//:package.json")
 
 load("@rules_nodejs//nodejs:repositories.bzl", "nodejs_register_toolchains")
 
@@ -48,9 +48,16 @@ load("@aspect_rules_js//js:npm_import.bzl", "translate_pnpm_lock")
 
 translate_pnpm_lock(
     name = "npm",
-    pnpm_lock = "//examples:pnpm-lock.yaml",
+    pnpm_lock = "//:pnpm-lock.yaml",
 )
 
 load("@npm//:repositories.bzl", "npm_repositories")
 
 npm_repositories()
+
+load("@aspect_rules_swc//swc:repositories.bzl", "LATEST_VERSION", "swc_register_toolchains")
+
+swc_register_toolchains(
+    name = "swc",
+    swc_version = LATEST_VERSION,
+)

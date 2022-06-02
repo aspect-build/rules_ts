@@ -1,5 +1,6 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("@bazel_gazelle//:def.bzl", "gazelle", "gazelle_binary")
+load("@npm//:defs.bzl", "link_js_packages")
 
 gazelle_binary(
     name = "gazelle_bin",
@@ -20,3 +21,6 @@ bzl_library(
         "@bazel_tools//tools/build_defs/repo:utils.bzl",
     ],
 )
+
+# This macro expands to a link_js_package for each third-party package in package.json
+link_js_packages()
