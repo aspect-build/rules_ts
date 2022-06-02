@@ -6,7 +6,7 @@ _DEPS = [
     # For packages within the workspace, we use the link target in the node_modules tree:
     "//examples:link_js_lib",
     # Third-party packages from npm can be referenced directly:
-    "@npm//@types/node",
+    "@npm//examples/@types/node",
 ]
 
 # Type-checks, and emits output to

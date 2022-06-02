@@ -1,6 +1,6 @@
 "Adapter from the Babel CLI to the ts_project#transpiler interface"
 
-load("@npm//@babel/cli:package_json.bzl", "bin")
+load("@npm//examples/@babel/cli:package_json.bzl", "bin")
 
 # buildifier: disable=function-docstring
 def babel(name, srcs, js_outs, map_outs, **kwargs):
@@ -13,10 +13,10 @@ def babel(name, srcs, js_outs, map_outs, **kwargs):
     for idx, src in enumerate(srcs):
         # see https://babeljs.io/docs/en/babel-cli
         args = [
-            "../../../$(location %s)" % src,
+            "../../../../$(location %s)" % src,
             "--presets=@babel/preset-typescript",
             "--out-file",
-            "../../../$(location %s)" % js_outs[idx],
+            "../../../../$(location %s)" % js_outs[idx],
         ]
         outs = [js_outs[idx]]
 
@@ -28,8 +28,9 @@ def babel(name, srcs, js_outs, map_outs, **kwargs):
             name = "{}_{}".format(name, idx),
             srcs = [
                 src,
-                "@npm//@babel/preset-typescript",
+                "@npm//examples/@babel/preset-typescript",
             ],
+            chdir = "examples",
             outs = outs,
             args = args,
             **kwargs

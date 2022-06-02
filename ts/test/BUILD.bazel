@@ -1,4 +1,5 @@
 load("@bazel_skylib//lib:partial.bzl", "partial")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@aspect_rules_swc//swc:defs.bzl", "swc_transpiler")
 load(":transpiler_tests.bzl", "transpiler_test_suite")
@@ -58,6 +59,12 @@ ts_project(
     tags = ["manual"],
     transpiler = _transpiler,
     tsconfig = _TSCONFIG,
+)
+
+# Assert that the JS can be produced despite that type error
+build_test(
+    name = "smoke_test",
+    targets = ["typeerror.js"],
 )
 
 ts_project(
