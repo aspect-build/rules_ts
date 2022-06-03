@@ -1,1 +1,1 @@
-#build --define=VERBOSE_LOGS=1
+build:verbose --define=VERBOSE_LOGS=1

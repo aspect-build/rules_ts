@@ -7,7 +7,7 @@ const MNEMONIC = 'TsProject'
 function noop() { }
 
 function debuglog(...args) {
-    false && worker.log(...args)
+    worker.debug(...args)
 }
 
 /** Timing */
@@ -94,12 +94,9 @@ function getTsConfigPath(args) {
 
 function createProgram(args, initialInputs) {
     const tsconfig = getTsConfigPath(args);
-    const startingDir = path.dirname(tsconfig)
-    const absStartingDir = path.join(process.cwd(), startingDir);
     const execRoot = path.resolve(process.cwd(), '..', '..', '..')
 
     debuglog(`tsconfig: ${tsconfig}`);
-    debuglog(`starting_dir: ${startingDir}`);
     debuglog(`execroot ${execRoot}`);
 
     const parsedArgs = ts.parseCommandLine(args)
@@ -169,7 +166,7 @@ function createProgram(args, initialInputs) {
             return false;
         }
         const exists = ts.sys.directoryExists(directory)
-        debuglog(`directoryExists ${directory} ${exists}`);
+        directory.indexOf("node_modules") == -1 && debuglog(`directoryExists ${directory} ${exists}`);
         return exists
     }
 
@@ -190,33 +187,17 @@ function createProgram(args, initialInputs) {
 
     function readDirectory(directory, extensions, exclude, include, depth) {
         const files = ts.sys.readDirectory(directory, extensions, exclude, include, depth);
-        // TODO: walk up the directory to find a tsconfig.json to determine whether we are trying to read a directory
-        // that belongs to a upstream target.
         const strictView = [];
-        if (directory != absStartingDir) {
-            for (const file of files) {
-                // tsc should never read source files of upstream targets.
-                if (file.endsWith(".d.ts") || file.endsWith(".js")) {
-                    const relative = path.relative(execRoot, file)
-                    if (knownInputs.has(relative)) {
-                        strictView.push(file);
-                    }
-                } else if (file.endsWith(".ts")) {
-                    
-                } else {
-                    strictView.push(file);
-                }
-            }
-        } else {
-            for (const file of files) {
-                const relativePath = path.relative(execRoot, file);
-                if (knownInputs.has(relativePath)) {
-                    strictView.push(file);
-                } else {
-                    debuglog(`Skipping ${relativePath} as it is not input to current compilation.`)
-                }
+
+        for (const file of files) {
+            const relativePath = path.relative(execRoot, file);
+            if (knownInputs.has(relativePath)) {
+                strictView.push(file);
+            } else {
+                debuglog(`Skipping ${relativePath} as it is not input to current compilation.`)
             }
         }
+    
 
         debuglog(`readDirectory ${directory} ${strictView}`)
 
@@ -226,11 +207,14 @@ function createProgram(args, initialInputs) {
     function invalidate(filePath, kind) {
         if (filePath.endsWith(".params")) return;
         debuglog(`invalidate ${filePath} : ${ts.FileWatcherEventKind[kind]}`)
+
         if (kind == ts.FileWatcherEventKind.Created) { 
             knownInputs.add(filePath);
-            // signal that the directory has been created.
+
             const dirname = path.dirname(filePath);
             getDirectoryWatcherForPath(filePath)?.(dirname);
+
+            // signal that the directory has been created.
         } else if (kind == ts.FileWatcherEventKind.Deleted) {
             knownInputs.delete(filePath);
         }
@@ -238,24 +222,13 @@ function createProgram(args, initialInputs) {
         let callback = fileWatchers.get(filePath)
 
         callback?.(kind)
-
-        if (!callback) {
-            debuglog(`no callback for ${filePath}`);
-        }
-
-        // in case this file was never seen before then we have to report it through
-        // ancestor file watcher. Usually happens when a new file is introduced
-        if (!callback) {
-            debuglog(`looking for callback ${filePath}`)
-            getDirectoryWatcherForPath(filePath)?.(filePath);
-        }
     }
 
     function watchDirectory(directoryPath, callback, recursive, options) {
         directoryPath = path.relative(execRoot, directoryPath)
         // since rules_js runs everything under bazel-out we shouldn't care about anything outside of it.
         if (!directoryPath.startsWith("bazel-out")) {
-            return;
+            return {close: () => {}}
         }
         debuglog(`watchDirectory ${directoryPath}`)
         directoryWatchers.set(directoryPath, (input) => callback(path.join(execRoot, input)))
