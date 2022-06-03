@@ -3,7 +3,10 @@ load("@bazel_skylib//rules:build_test.bzl", "build_test")
 
 ts_project(
     name = "ts",
-    srcs = glob(["*.ts"], exclude = ["lib.ts", "fail.ts"]),
+    srcs = glob(
+        ["*.ts"], 
+        exclude = ["lib.ts", "fail.ts"]
+    ),
     deps = [
         "//feature",
         "//feature1",
@@ -28,7 +31,8 @@ ts_project(
     srcs = ["fail.ts"],
     supports_workers = True,
     declaration = True,
-    tsconfig = {}
+    tsconfig = {},
+    tags = ["manual"]
 )
 
 build_test(

@@ -27,7 +27,7 @@ STD_ATTRS = {
         allow_files = True,
     ),
     "declaration_dir": attr.string(
-        doc = "Always controlled by Bazel. https://www.typescriptlang.org/tsconfig#declarationDir",
+        doc = "https://www.typescriptlang.org/tsconfig#declarationDir",
     ),
     # Note, this is overridden by the @bazel/typescript implementation in build_bazel_rules_nodejs
     # to add an aspect on the deps attribute.
@@ -36,10 +36,10 @@ STD_ATTRS = {
         providers = DEPS_PROVIDERS,
     ),
     "out_dir": attr.string(
-        doc = "Always controlled by Bazel. https://www.typescriptlang.org/tsconfig#outDir",
+        doc = "https://www.typescriptlang.org/tsconfig#outDir",
     ),
     "root_dir": attr.string(
-        doc = "Always controlled by Bazel. https://www.typescriptlang.org/tsconfig#rootDir",
+        doc = "https://www.typescriptlang.org/tsconfig#rootDir",
     ),
     # NB: no restriction on extensions here, because tsc sometimes adds type-check support
     # for more file kinds (like require('some.json')) and also

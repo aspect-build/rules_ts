@@ -9,9 +9,9 @@ load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 load("//ts/private:versions.bzl", TS_VERSIONS = "VERSIONS")
 
 versions = struct(
-    bazel_lib = "0.11.1",
+    bazel_lib = "0.12.1",
     rules_nodejs = "5.4.0",
-    rules_js = "61b1867c79e6ee46a0a926fd9b6894e95457c01b",
+    rules_js = "0.9.1",
 )
 
 worker_versions = struct(
@@ -122,16 +122,16 @@ def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrit
     maybe(
         http_archive,
         name = "aspect_rules_js",
-        sha256 = "9d733a3b38e20a09f803affc5ec052bafee35792f3cd52d53f219be24727349c",
-        strip_prefix = "rules_js-" + versions.rules_js,
-        url = "https://github.com/aspect-build/rules_js/archive/{}.tar.gz".format(versions.rules_js),
+        sha256 = "2db66bedabc30f2dfa87bd4845e42b0dbc80fa9344d2dfbaa2685cdced2f1e03",
+        strip_prefix = "rules_js-0.10.0",
+        url = "https://github.com/aspect-build/rules_js/archive/refs/tags/v0.10.0.tar.gz",
     )
 
 
     maybe(
         http_archive,
         name = "aspect_bazel_lib",
-        sha256 = "a8b47eeaf3c1bd41c4f4b633ef4c959daf83fdee343379495098b50571d4b3b8",
+        sha256 = "91aa7356b22ecdb87dcf5f1cc8a6a147e23a1ef425221bab75e5f857cd6b2716",
         strip_prefix = "bazel-lib-" + versions.bazel_lib,
         url = "https://github.com/aspect-build/bazel-lib/archive/refs/tags/v{}.tar.gz".format(versions.bazel_lib),
     )

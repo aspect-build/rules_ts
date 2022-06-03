@@ -1,47 +1,48 @@
 "BUILD file inserted into @npm_typescript repository"
-load("@aspect_rules_js//js:defs.bzl", "link_js_package", "js_package", "js_binary")
-load("@aspect_bazel_lib//lib:directory_path.bzl", directory_path = "directory_path")
+load("@aspect_rules_js//js:defs.bzl", "js_binary")
+load("@aspect_rules_js//npm:defs.bzl", "link_npm_package", "npm_package")
+load("@aspect_bazel_lib//lib:directory_path.bzl", "directory_path")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 
-js_package(
-    name = "_npm_typescript",
+npm_package(
+    name = "npm_typescript",
     src = "package",
     package = "typescript",
     version = "ts_version",
 )
 
-link_js_package(
-    name = "npm_typescript",
-    src = "_npm_typescript",
+link_npm_package(
+    name = "node_modules/typescript",
+    src = "npm_typescript",
     visibility = ["//visibility:public"],
 )
 
-js_package(
-    name = "_npm_google_protobuf",
+npm_package(
+    name = "npm_google_protobuf",
     src = "@npm_google_protobuf//:package",
     package = "google-protobuf",
     version = "bazel_worker_version",
 )
 
-link_js_package(
-    name = "npm_google_protobuf",
-    src = "_npm_google_protobuf",
+link_npm_package(
+    name = "node_modules/google-protobuf",
+    src = "npm_google_protobuf",
     visibility = ["//visibility:public"],
 )
 
-js_package(
-    name = "_npm_at_bazel_worker",
+npm_package(
+    name = "npm_at_bazel_worker",
     src = "@npm_at_bazel_worker//:package",
     package = "@bazel/worker",
     version = "bazel_worker_version",
 )
 
-link_js_package(
-    name = "npm_at_bazel_worker",
-    src = "_npm_at_bazel_worker",
+link_npm_package(
+    name = "node_modules/@bazel/worker",
+    src = "npm_at_bazel_worker",
     deps = [
-        ":npm_google_protobuf"
+        ":node_modules/google-protobuf"
     ],
     visibility = ["//visibility:public"],
 )
@@ -51,12 +52,12 @@ link_js_package(
 # tsc
 directory_path(
     name = "tsc_entrypoint",
-    directory = ":npm_typescript__dir",
+    directory = ":node_modules/typescript/dir",
     path = "bin/tsc",
 )
 js_binary(
     name = "tsc",
-    data = [":npm_typescript"],
+    data = [":node_modules/typescript"],
     entry_point = ":tsc_entrypoint",
     visibility = ["//visibility:public"],
 )
@@ -70,7 +71,7 @@ copy_file(
 
 js_binary(
     name = "tsc_worker",
-    data = ["npm_typescript", "npm_at_bazel_worker"],
+    data = [":node_modules/typescript", ":node_modules/@bazel/worker"],
     entry_point = "copy_ts_project_worker",
     visibility = ["//visibility:public"],
 )
@@ -84,7 +85,7 @@ copy_file(
 
 js_binary(
     name = "validator",
-    data = ["npm_typescript"],
+    data = [":node_modules/typescript"],
     entry_point = "copy_validator",
     visibility = ["//visibility:public"],
 )

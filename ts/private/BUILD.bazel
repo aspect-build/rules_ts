@@ -27,6 +27,12 @@ bzl_library(
 )
 
 bzl_library(
+    name = "ts_declaration",
+    srcs = ["ts_declaration.bzl"],
+    visibility = ["//ts:__subpackages__"],
+)
+
+bzl_library(
     name = "ts_lib",
     srcs = ["ts_lib.bzl"],
     visibility = ["//ts:__subpackages__"],

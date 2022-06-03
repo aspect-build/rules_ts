@@ -1,0 +1,94 @@
+load("@bazel_skylib//lib:partial.bzl", "partial")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@aspect_rules_swc//swc:defs.bzl", "swc_transpiler")
+load(":transpiler_tests.bzl", "transpiler_test_suite")
+load("//ts:defs.bzl", "ts_project")
+
+_TSCONFIG = {
+    "compilerOptions": {
+        "declaration": True,
+        "sourceMap": True,
+    },
+}
+
+_transpiler = partial.make(
+    swc_transpiler,
+    source_maps = "true",
+)
+
+write_file(
+    name = "gen_ts",
+    out = "big.ts",
+    content = [
+        "export const a{0}: number = {0}".format(x)
+        for x in range(1000)
+    ],
+)
+
+write_file(
+    name = "gen_typeerror",
+    out = "typeerror.ts",
+    content = ["export const a: string = 1"],
+)
+
+write_file(
+    name = "gen_lib_dts",
+    out = "lib.d.ts",
+    content = ["export const a: string;"],
+)
+
+write_file(
+    name = "gen_index_ts",
+    out = "index.ts",
+    content = ["export const a: string = \"1\";"],
+)
+
+ts_project(
+    name = "transpile_with_swc",
+    srcs = ["big.ts"],
+    transpiler = _transpiler,
+    tsconfig = _TSCONFIG,
+)
+
+# This target proves that transpilation doesn't require typechecking:
+#
+# $ bazel build examples/swc:transpile_with_typeerror
+# INFO: Analyzed target //examples/swc:transpile_with_typeerror (1 packages loaded, 8 targets configured).
+# Target //examples/swc:transpile_with_typeerror up-to-date:
+#   bazel-bin/examples/swc/typeerror.js
+#
+# But the _typecheck target fails to build:
+#
+# $ bazel build examples/swc:transpile_with_typeerror_typecheck
+# INFO: Analyzed target //examples/swc:transpile_with_typeerror_typecheck (0 packages loaded, 1 target configured).
+# ERROR: /home/alexeagle/Projects/rules_ts/examples/swc/BUILD.bazel:30:11: Compiling TypeScript project //examples/swc:transpile_with_typeerror_typings
+# examples/swc/typeerror.ts(1,14): error TS2322: Type 'number' is not assignable to type 'string'
+ts_project(
+    name = "transpile_with_typeerror",
+    srcs = ["typeerror.ts"],
+    # The transpile_with_typeerror.check target will have a build failure
+    # But the default transpile_with_typeerror target should still produce JS outs
+    tags = ["manual"],
+    transpiler = _transpiler,
+    tsconfig = _TSCONFIG,
+)
+
+# Assert that the JS can be produced despite that type error
+build_test(
+    name = "smoke_test",
+    targets = ["typeerror.js"],
+)
+
+ts_project(
+    name = "transpile_with_dts",
+    srcs = [
+        "index.ts",
+        "lib.d.ts",
+    ],
+    tags = ["manual"],
+    transpiler = _transpiler,
+    tsconfig = _TSCONFIG,
+)
+
+transpiler_test_suite()
