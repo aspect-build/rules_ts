@@ -1,6 +1,6 @@
 "BUILD file inserted into @npm_typescript repository"
 load("@aspect_rules_js//js:defs.bzl", "js_binary")
-load("@aspect_rules_js//npm:defs.bzl", "link_npm_package", "npm_package")
+load("@aspect_rules_js//npm:defs.bzl", "npm_link_package", "npm_package")
 load("@aspect_bazel_lib//lib:directory_path.bzl", "directory_path")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
@@ -11,7 +11,7 @@ npm_package(
     package = "typescript",
 )
 
-link_npm_package(
+npm_link_package(
     name = "node_modules/typescript",
     src = "npm_typescript",
     visibility = ["//visibility:public"],
