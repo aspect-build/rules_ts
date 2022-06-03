@@ -60,4 +60,9 @@ bazel build :ts 2>&1 | grep "$message" || exit_with_message "Case 3: expected wo
 cleanup
 bazel build :ts
 
+
+message "# Case 4: Builds with local strategy"
+bazel clean
+bazel build :lib --strategy=TsProject=local
+
 message "All tests have passed"

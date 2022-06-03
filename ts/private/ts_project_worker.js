@@ -23,9 +23,9 @@ function timingEnd(label) {
 function getArgsFromParamFile() {
     let paramFilePath = process.argv.pop()
     if (paramFilePath.startsWith('@')) {
-        paramFilePath = paramFilePath.slice(1)
+        paramFilePath = path.resolve("..", "..", "..", paramFilePath.slice(1))
     }
-    return fs.readFileSync(paramFilePath).toString().split('\n')
+    return fs.readFileSync(paramFilePath).toString().trim().split('\n')
 }
 
 
@@ -136,7 +136,6 @@ function createProgram(args, initialInputs) {
 
     program = ts.createWatchProgram(host)
     
-
     function getDirectoryWatcherForPath(path) {
         for (const [directory, cb] of directoryWatchers.entries()) {
             if (isAncestorDirectory(directory, path)) {
@@ -337,16 +336,22 @@ async function emit(args, inputs) {
     return succeded
 }
 
+// Based on https://github.com/microsoft/TypeScript/blob/3fd8a6e44341f14681aa9d303dc380020ccb2147/src/executeCommandLine/executeCommandLine.ts#L465
 function emitOnce(args) {
-    const cmdline = ts.parseCommandLine(args)
+    const currentDirectory = ts.sys.getCurrentDirectory();
+    const reportDiagnostic = ts.createDiagnosticReporter({...ts.sys, write: worker.log});
+    const commandLine = ts.parseCommandLine(args)
+    const extendedConfigCache = new ts.Map();
+    const commandLineOptions = ts.convertToOptionsWithAbsolutePaths(commandLine.options, (fileName) => ts.getNormalizedAbsolutePath(fileName, currentDirectory));
+    const configParseResult = ts.parseConfigFileWithSystem(commandLine.options.project, commandLineOptions, extendedConfigCache, commandLine.watchOptions, ts.sys, reportDiagnostic);
     const program = ts.createProgram({
-        options: cmdline.options,
-        rootNames: cmdline.fileNames,
-        projectReferences: cmdline.projectReferences,
-        configFileParsingDiagnostics: cmdline.errors
+        options: configParseResult.options,
+        rootNames: configParseResult.fileNames,
+        projectReferences: configParseResult.projectReferences,
+        configFileParsingDiagnostics: configParseResult.errors
     });
     const result = program.emit();
-    const diagnostics = ts.getPreEmitDiagnostics(program)
+    const diagnostics = ts.getPreEmitDiagnostics(program).concat(result?.diagnostics)
     const succeded =
         !result.emitSkipped &&
         result?.diagnostics.length === 0 &&
@@ -364,8 +369,9 @@ function main() {
         worker.log(`Running ${MNEMONIC} as a Bazel worker`)
         worker.runWorkerLoop(emit)
     } else {
-        worker.log(`Running ${MNEMONIC} as a standalone process`)
-        worker.log(`Started a new process to perform this action. Your build might be misconfigured, try \n build --strategy=${MNEMONIC}=worker`)
+        worker.log(`WARNING: Running ${MNEMONIC} as a standalone process`)
+        worker.log(`Your build might be misconfigured, try putting "build --strategy=${MNEMONIC}=worker" into your .bazelrc or add "supports_workers = False" attribute into this ts_project target.`)
+        worker.log(`Started a standalone process to perform this action but this might lead to some unexpected behavior with tsc due to being run non-sandboxed.`)
         const args = getArgsFromParamFile()
         if (!emitOnce(args)) {
             process.exit(1)
