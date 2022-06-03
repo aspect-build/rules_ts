@@ -32,7 +32,7 @@ def babel(name, srcs, js_outs, map_outs, **kwargs):
             name = "{}_{}".format(name, idx),
             srcs = [
                 src,
-                "@npm//examples/@babel/preset-typescript",
+                "//examples:node_modules/@babel/preset-typescript",
             ],
             chdir = "examples",
             outs = outs,
