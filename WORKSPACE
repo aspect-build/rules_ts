@@ -44,7 +44,7 @@ gazelle_dependencies()
 
 ###########################################
 # A pnpm workspace so we can test 3p deps
-load("@aspect_rules_js//js:npm_import.bzl", "translate_pnpm_lock")
+load("@aspect_rules_js//npm:npm_import.bzl", "translate_pnpm_lock")
 
 translate_pnpm_lock(
     name = "npm",
