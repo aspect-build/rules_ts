@@ -62,11 +62,3 @@ def rules_ts_internal_deps():
             "https://github.com/bazelbuild/stardoc/releases/download/0.5.0/stardoc-0.5.0.tar.gz",
         ],
     )
-
-    maybe(
-        http_archive,
-        name = "aspect_rules_swc",
-        sha256 = "24df246060f39294e3a4f8b9759d3e9cc382d01ddf8926beb5221992af194bc0",
-        strip_prefix = "rules_swc-0.9.0",
-        url = "https://github.com/aspect-build/rules_swc/archive/refs/tags/v0.9.0.tar.gz",
-    )

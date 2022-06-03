@@ -14,7 +14,7 @@ def _impl0(ctx):
     return unittest.end(env)
 
 transitive_declarations_test = unittest.make(_impl0, attrs = {
-    "lib": attr.label(default = "transpile_with_swc"),
+    "lib": attr.label(default = "transpile"),
     "expected_declarations": attr.string_list(default = ["big.d.ts"]),
 })
 

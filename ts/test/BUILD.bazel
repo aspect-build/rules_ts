@@ -1,7 +1,6 @@
-load("@bazel_skylib//lib:partial.bzl", "partial")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("@aspect_rules_swc//swc:defs.bzl", "swc_transpiler")
+load(":mock_transpiler.bzl", "mock")
 load(":transpiler_tests.bzl", "transpiler_test_suite")
 load("//ts:defs.bzl", "ts_project")
 
@@ -11,11 +10,6 @@ _TSCONFIG = {
         "sourceMap": True,
     },
 }
-
-_transpiler = partial.make(
-    swc_transpiler,
-    source_maps = "true",
-)
 
 write_file(
     name = "gen_ts",
@@ -45,9 +39,9 @@ write_file(
 )
 
 ts_project(
-    name = "transpile_with_swc",
+    name = "transpile",
     srcs = ["big.ts"],
-    transpiler = _transpiler,
+    transpiler = mock,
     tsconfig = _TSCONFIG,
 )
 
@@ -70,7 +64,7 @@ ts_project(
     # The transpile_with_typeerror.check target will have a build failure
     # But the default transpile_with_typeerror target should still produce JS outs
     tags = ["manual"],
-    transpiler = _transpiler,
+    transpiler = mock,
     tsconfig = _TSCONFIG,
 )
 
@@ -87,7 +81,7 @@ ts_project(
         "lib.d.ts",
     ],
     tags = ["manual"],
-    transpiler = _transpiler,
+    transpiler = mock,
     tsconfig = _TSCONFIG,
 )
 
