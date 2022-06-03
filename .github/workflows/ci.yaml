@@ -54,5 +54,5 @@ jobs:
               run: bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc --bazelrc=.bazelrc test //...
             - name: ./test.sh (e2e/worker)
               working-directory: ${{ matrix.folder }}
-              if: ${{ matrix.folder == "e2e/worker" }}
+              if: ${{ matrix.folder == 'e2e/worker' }}
               run: ./test.sh
