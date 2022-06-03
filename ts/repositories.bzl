@@ -6,58 +6,18 @@ See https://docs.bazel.build/versions/main/skylark/deploying.html#dependencies
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
-load("//ts/private:versions.bzl", TS_VERSIONS = "VERSIONS")
+load("//ts/private:npm_typescript_repository.bzl", "npm_typescript_repository", _http_archive_version = "http_archive_version")
+load("//ts/private:versions.bzl", _LATEST_VERSION = "LATEST_VERSION", _TS_VERSIONS = "VERSIONS")
+
+TS_VERSIONS = _TS_VERSIONS
+LATEST_VERSION = _LATEST_VERSION
+
+http_archive_version = _http_archive_version
 
 versions = struct(
     bazel_lib = "0.12.1",
     rules_nodejs = "5.4.0",
     rules_js = "0.9.1",
-)
-
-LATEST_VERSION = TS_VERSIONS.keys()[-1]
-
-def _http_archive_version_impl(rctx):
-    if rctx.attr.version:
-        version = rctx.attr.version
-    else:
-        json_path = rctx.path(rctx.attr.version_from)
-        p = json.decode(rctx.read(json_path))
-        if "devDependencies" in p.keys() and "typescript" in p["devDependencies"]:
-            ts = p["devDependencies"]["typescript"]
-        elif "dependencies" in p.keys() and "typescript" in p["dependencies"]:
-            ts = p["dependencies"]["typescript"]
-        else:
-            fail("key `typescript` not found in either dependencies or devDependencies of %s" % json_path)
-        if any([not seg.isdigit() for seg in ts.split(".")]):
-            fail("""typescript version in package.json must be exactly specified, not a semver range: %s.
-            You can supply an exact `ts_version` attribute to `rules_ts_dependencies` to bypass this check.""" % ts)
-        version = ts
-
-    if rctx.attr.integrity:
-        integrity = rctx.attr.integrity
-    elif version in TS_VERSIONS.keys():
-        integrity = TS_VERSIONS[version]
-    else:
-        fail("""typescript version {} is not mirrored in rules_ts, is this a real version?
-            If so, you must manually set `ts_integrity`.
-            See documentation on rules_ts_dependencies.""".format(version))
-
-    rctx.download_and_extract(
-        url = [u.format(version) for u in rctx.attr.urls],
-        integrity = integrity,
-    )
-    rctx.symlink(rctx.path(rctx.attr.build_file), "BUILD.bazel")
-
-http_archive_version = repository_rule(
-    doc = "Re-implementation of http_archive that can read the version from package.json",
-    implementation = _http_archive_version_impl,
-    attrs = {
-        "integrity": attr.string(doc = "Needed only if the ts version isn't mirrored in `versions.bzl`."),
-        "version": attr.string(doc = "Explicit version for `urls` placeholder. If provided, the package.json is not read."),
-        "urls": attr.string_list(doc = "URLs to fetch from. Each must have one `{}`-style placeholder."),
-        "build_file": attr.label(doc = "The BUILD file to symlink into the created repository."),
-        "version_from": attr.label(doc = "Location of package.json which may have a version for the package."),
-    },
 )
 
 # WARNING: any additions to this function may be BREAKING CHANGES for users
@@ -120,12 +80,4 @@ def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrit
         url = "https://github.com/aspect-build/bazel-lib/archive/refs/tags/v{}.tar.gz".format(versions.bazel_lib),
     )
 
-    maybe(
-        http_archive_version,
-        name = "npm_typescript",
-        version = ts_version,
-        version_from = ts_version_from,
-        integrity = ts_integrity,
-        build_file = "@aspect_rules_ts//ts:BUILD.typescript",
-        urls = ["https://registry.npmjs.org/typescript/-/typescript-{}.tgz"],
-    )
+    npm_typescript_repository(ts_version_from = ts_version_from, ts_version = ts_version, ts_integrity = ts_integrity)

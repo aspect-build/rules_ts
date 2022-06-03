@@ -20,6 +20,7 @@ jobs:
             matrix:
                 folder:
                     - '.'
+                    - 'e2e/bzlmod'
                     - 'e2e/workspace'
 
         # Steps represent a sequence of tasks that will be executed as part of the job

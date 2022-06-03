@@ -19,6 +19,16 @@ bzl_library(
 )
 
 bzl_library(
+    name = "npm_typescript_repository",
+    srcs = ["npm_typescript_repository.bzl"],
+    visibility = ["//ts:__subpackages__"],
+    deps = [
+        "//ts/private:versions",
+        "@bazel_tools//tools/build_defs/repo:utils.bzl",
+    ],
+)
+
+bzl_library(
     name = "ts_config",
     srcs = ["ts_config.bzl"],
     visibility = ["//ts:__subpackages__"],
