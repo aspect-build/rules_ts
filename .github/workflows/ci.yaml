@@ -55,5 +55,5 @@ jobs:
             - name: run ./test.sh
               working-directory: ${{ matrix.folder }}
               # hashFiles returns an empty string if test.sh is absent
-              if: ${{ hashFiles('test.sh') != '' }}
+              if: ${{ hashFiles(format('{0}/test.sh', matrix.folder)) != '' }}
               run: ./test.sh

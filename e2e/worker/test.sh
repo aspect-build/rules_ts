@@ -36,7 +36,7 @@ echo "evilcode = 1" > evil.ts
 bazel build :ts && exit_with_message "Case 1: expected ts worker to report errors for evil.ts"
 
 message="evil.ts(1,1): error TS2304: Cannot find name 'evilcode'."
-bazel build :ts 2>&1 | grep "$message" || exit_with_message "Case 1: expected worker to report \"$message\" 
+bazel build :ts 2>&1 | grep "$message" || exit_with_message "Case 1: expected worker to report \"$message\""
 cleanup
 
 
