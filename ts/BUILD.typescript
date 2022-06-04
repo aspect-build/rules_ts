@@ -54,7 +54,7 @@ npm_package(
     version = "bazel_worker_version",
 )
 
-link_npm_package(
+npm_link_package(
     name = "node_modules/google-protobuf",
     src = "npm_google_protobuf",
     visibility = ["//visibility:public"],
@@ -67,7 +67,7 @@ npm_package(
     version = "bazel_worker_version",
 )
 
-link_npm_package(
+npm_link_package(
     name = "node_modules/@bazel/worker",
     src = "npm_at_bazel_worker",
     deps = [
