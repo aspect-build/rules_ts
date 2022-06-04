@@ -44,9 +44,9 @@ gazelle_dependencies()
 
 ###########################################
 # A pnpm workspace so we can test 3p deps
-load("@aspect_rules_js//npm:npm_import.bzl", "translate_pnpm_lock")
+load("@aspect_rules_js//npm:npm_import.bzl", "npm_translate_lock")
 
-translate_pnpm_lock(
+npm_translate_lock(
     name = "npm",
     pnpm_lock = "//examples:pnpm-lock.yaml",
 )
@@ -54,10 +54,3 @@ translate_pnpm_lock(
 load("@npm//:repositories.bzl", "npm_repositories")
 
 npm_repositories()
-
-load("@aspect_rules_swc//swc:repositories.bzl", "LATEST_VERSION", "swc_register_toolchains")
-
-swc_register_toolchains(
-    name = "swc",
-    swc_version = LATEST_VERSION,
-)
