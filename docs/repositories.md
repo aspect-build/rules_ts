@@ -11,7 +11,8 @@ See https://docs.bazel.build/versions/main/skylark/deploying.html#dependencies
 ## http_archive_version
 
 <pre>
-http_archive_version(<a href="#http_archive_version-name">name</a>, <a href="#http_archive_version-build_file">build_file</a>, <a href="#http_archive_version-integrity">integrity</a>, <a href="#http_archive_version-repo_mapping">repo_mapping</a>, <a href="#http_archive_version-urls">urls</a>, <a href="#http_archive_version-version">version</a>, <a href="#http_archive_version-version_from">version_from</a>)
+http_archive_version(<a href="#http_archive_version-name">name</a>, <a href="#http_archive_version-build_file">build_file</a>, <a href="#http_archive_version-build_file_substitutions">build_file_substitutions</a>, <a href="#http_archive_version-integrity">integrity</a>, <a href="#http_archive_version-repo_mapping">repo_mapping</a>, <a href="#http_archive_version-urls">urls</a>,
+                     <a href="#http_archive_version-version">version</a>, <a href="#http_archive_version-version_from">version_from</a>)
 </pre>
 
 Re-implementation of http_archive that can read the version from package.json
@@ -22,7 +23,8 @@ Re-implementation of http_archive that can read the version from package.json
 | Name  | Description | Type | Mandatory | Default |
 | :------------- | :------------- | :------------- | :------------- | :------------- |
 | <a id="http_archive_version-name"></a>name |  A unique name for this repository.   | <a href="https://bazel.build/docs/build-ref.html#name">Name</a> | required |  |
-| <a id="http_archive_version-build_file"></a>build_file |  The BUILD file to symlink into the created repository.   | <a href="https://bazel.build/docs/build-ref.html#labels">Label</a> | optional | None |
+| <a id="http_archive_version-build_file"></a>build_file |  The BUILD file to write into the created repository.   | <a href="https://bazel.build/docs/build-ref.html#labels">Label</a> | optional | None |
+| <a id="http_archive_version-build_file_substitutions"></a>build_file_substitutions |  Substitutions to make when expanding the BUILD file.   | <a href="https://bazel.build/docs/skylark/lib/dict.html">Dictionary: String -> String</a> | optional | {} |
 | <a id="http_archive_version-integrity"></a>integrity |  Needed only if the ts version isn't mirrored in <code>versions.bzl</code>.   | String | optional | "" |
 | <a id="http_archive_version-repo_mapping"></a>repo_mapping |  A dictionary from local repository name to global repository name. This allows controls over workspace dependency resolution for dependencies of this repository.&lt;p&gt;For example, an entry <code>"@foo": "@bar"</code> declares that, for any time this repository depends on <code>@foo</code> (such as a dependency on <code>@foo//some:target</code>, it should actually resolve that dependency within globally-declared <code>@bar</code> (<code>@bar//some:target</code>).   | <a href="https://bazel.build/docs/skylark/lib/dict.html">Dictionary: String -> String</a> | required |  |
 | <a id="http_archive_version-urls"></a>urls |  URLs to fetch from. Each must have one <code>{}</code>-style placeholder.   | List of strings | optional | [] |

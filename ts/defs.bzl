@@ -2,7 +2,6 @@
 
 Nearly identical to the ts_project wrapper macro in npm @bazel/typescript.
 Differences:
-- doesn't have worker support
 - uses the executables from @npm_typescript rather than what a user npm_install'ed
 - didn't copy the whole doc string
 """
@@ -64,6 +63,7 @@ def ts_project(
         transpiler = None,
         ts_build_info_file = None,
         tsc = "@npm_typescript//:tsc",
+        tsc_worker = "@npm_typescript//:tsc_worker",
         validate = True,
         validator = "@npm_typescript//:validator",
         declaration_dir = None,
@@ -425,8 +425,7 @@ def ts_project(
         buildinfo_out = tsbuildinfo_path if composite or incremental else None,
         emit_declaration_only = emit_declaration_only,
         tsc = tsc,
+        tsc_worker = tsc_worker,
         transpile = not transpiler,
-        # We don't support this feature at all from rules_nodejs yet
-        supports_workers = False,
         **kwargs
     )

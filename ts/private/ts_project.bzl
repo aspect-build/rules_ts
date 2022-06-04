@@ -35,7 +35,7 @@ def _ts_project_impl(ctx):
 
     arguments = ctx.actions.args()
     execution_requirements = {}
-    progress_prefix = "Compiling TypeScript project"
+    executable = ctx.executable.tsc
 
     if ctx.attr.supports_workers:
         # Set to use a multiline param-file for worker mode
@@ -43,7 +43,7 @@ def _ts_project_impl(ctx):
         arguments.set_param_file_format("multiline")
         execution_requirements["supports-workers"] = "1"
         execution_requirements["worker-key-mnemonic"] = "TsProject"
-        progress_prefix = "Compiling TypeScript project (worker mode)"
+        executable = ctx.executable.tsc_worker
 
     # Add user specified arguments *before* rule supplied arguments
     arguments.add_all(ctx.attr.args)
@@ -154,14 +154,13 @@ This is an error because Bazel does not run actions unless their outputs are nee
 
     if len(outputs) > 0:
         ctx.actions.run(
-            executable = ctx.executable.tsc,
+            executable = executable,
             inputs = copy_files_to_bin_actions(ctx, inputs),
             arguments = [arguments],
             outputs = outputs,
             mnemonic = "TsProject",
             execution_requirements = execution_requirements,
-            progress_message = "%s %s [tsc -p %s]" % (
-                progress_prefix,
+            progress_message = "Compiling TypeScript project %s [tsc -p %s]" % (
                 ctx.label,
                 ctx.file.tsconfig.short_path,
             ),
