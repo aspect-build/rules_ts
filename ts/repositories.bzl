@@ -127,7 +127,6 @@ def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrit
         url = "https://github.com/aspect-build/rules_js/archive/refs/tags/v0.10.0.tar.gz",
     )
 
-
     maybe(
         http_archive,
         name = "aspect_bazel_lib",

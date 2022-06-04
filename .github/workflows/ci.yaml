@@ -52,7 +52,8 @@ jobs:
                   XDG_CACHE_HOME: ~/.cache/bazel-repo
               working-directory: ${{ matrix.folder }}
               run: bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc --bazelrc=.bazelrc test //...
-            - name: ./test.sh (e2e/worker)
+            - name: run ./test.sh
               working-directory: ${{ matrix.folder }}
-              if: ${{ matrix.folder == 'e2e/worker' }}
+              # hashFiles returns an empty string if test.sh is absent
+              if: ${{ hashFiles('test.sh') != '' }}
               run: ./test.sh

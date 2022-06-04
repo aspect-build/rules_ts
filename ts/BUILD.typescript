@@ -18,6 +18,35 @@ link_npm_package(
     visibility = ["//visibility:public"],
 )
 
+# tsc
+directory_path(
+    name = "tsc_entrypoint",
+    directory = ":node_modules/typescript/dir",
+    path = "bin/tsc",
+)
+
+js_binary(
+    name = "tsc",
+    data = [":node_modules/typescript"],
+    entry_point = ":tsc_entrypoint",
+    visibility = ["//visibility:public"],
+)
+
+# validator
+copy_file(
+    name = "copy_validator",
+    src = "@aspect_rules_ts//ts/private:ts_project_options_validator.js",
+    out = "ts_project_options_validator.js",
+)
+
+js_binary(
+    name = "validator",
+    data = [":node_modules/typescript"],
+    entry_point = "copy_validator",
+    visibility = ["//visibility:public"],
+)
+
+# tsc worker
 npm_package(
     name = "npm_google_protobuf",
     src = "@npm_google_protobuf//:package",
@@ -47,22 +76,6 @@ link_npm_package(
     visibility = ["//visibility:public"],
 )
 
-
-
-# tsc
-directory_path(
-    name = "tsc_entrypoint",
-    directory = ":node_modules/typescript/dir",
-    path = "bin/tsc",
-)
-js_binary(
-    name = "tsc",
-    data = [":node_modules/typescript"],
-    entry_point = ":tsc_entrypoint",
-    visibility = ["//visibility:public"],
-)
-
-# tsc worker
 copy_file(
     name = "copy_ts_project_worker",
     src = "@aspect_rules_ts//ts/private:ts_project_worker.js",
@@ -73,19 +86,5 @@ js_binary(
     name = "tsc_worker",
     data = [":node_modules/typescript", ":node_modules/@bazel/worker"],
     entry_point = "copy_ts_project_worker",
-    visibility = ["//visibility:public"],
-)
-
-# validator
-copy_file(
-    name = "copy_validator",
-    src = "@aspect_rules_ts//ts/private:ts_project_options_validator.js",
-    out = "ts_project_options_validator.js",
-)
-
-js_binary(
-    name = "validator",
-    data = [":node_modules/typescript"],
-    entry_point = "copy_validator",
     visibility = ["//visibility:public"],
 )
