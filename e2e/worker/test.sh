@@ -14,7 +14,8 @@ exit_with_message() {
 }
 
 cleanup() {
-    rm -f evil.ts included.ts
+    rm -f evil.ts
+    find . -type f -name '_addendum_*.ts' -exec rm {} \;
     git checkout HEAD -- tsconfig.json
 }
 
@@ -46,22 +47,38 @@ echo "evilcode = 1" > evil.ts
 bazel build :ts && exit_with_message "Case 2: expected ts worker to report errors for evil.ts" 
 rm evil.ts
 bazel build :ts || exit_with_message "Case 2: expected ts worker to not report any errors for evil.ts" 
-echo "evilcode = 1" > evil.ts
-bazel build :ts && exit_with_message "Case 2: expected ts worker to report errors for evil.ts" 
 cleanup
 
 
 message "# Case 3; worker reports errors when the tsconfig changes"
 bazel build :ts
-echo '{"compilerOptions": {"noImplicitAny": true}}' > tsconfig.json
+echo '{"compilerOptions": {"noImplicitAny": true, "module": "ES2020", "moduleResolution": "node"}}' > tsconfig.json
 
 message="error TS7006: Parameter 'should_i' implicitly has an 'any' type."
 bazel build :ts 2>&1 | grep "$message" || exit_with_message "Case 3: expected worker to report \"$message\""
 cleanup
+
+
+message "# Case 4; assert that tsc does not read a file that's been removed from srcs"
+for i in $(seq 0 9)
+do
+    echo "const a = $i" > "_addendum_$i.ts"
+    bazel build :ts
+    rm "_addendum_$i.ts"
+    bazel build :ts
+done
+
+
+message "# Case 5; tsc can handle tsconfig change, file addendum and removal in one batch"
+echo "const a = $i" > "_addendum_$i.ts"
+bazel build :ts
+echo '{"compilerOptions": {"module": "ES2015", "moduleResolution": "node"}}' > tsconfig.json  
+rm "_addendum_$i.ts"
+echo "const a = $i" > "_addendum_${i}_$i.ts"
 bazel build :ts
 
 
-message "# Case 4: Builds with local strategy"
+message "# Case 6: Builds with local strategy"
 bazel clean
 bazel build :lib --strategy=TsProject=local
 
