@@ -235,12 +235,13 @@ function createProgram(args, initialInputs) {
 
         if (kind === ts.FileWatcherEventKind.Created) {
             knownInputs.add(filePath);
-            const directoryWatcher = getDirectoryWatcherForPath(filePath)
-            directoryWatcher?.(path.dirname(filePath));
-            directoryWatcher?.(filePath);
         } else if (kind === ts.FileWatcherEventKind.Deleted) {
             knownInputs.delete(filePath);
         }
+
+        const directoryWatcher = getDirectoryWatcherForPath(filePath)
+        directoryWatcher?.(path.dirname(filePath));
+        directoryWatcher?.(filePath);
 
         let callback = fileWatchers.get(filePath);
 
@@ -287,7 +288,13 @@ function createProgram(args, initialInputs) {
     return { host, program };
 }
 
-function getOrCreateWorker(key, args, inputs) {
+
+function getOrCreateWorker(args, inputs) {
+    const tsconfig = getTsConfigPath(args);
+    const outDir = args[args.lastIndexOf("--outDir") + 1]
+    const declarationDir = args[args.lastIndexOf("--declarationDir") + 1]
+    const rootDir = args[args.lastIndexOf("--rootDir") + 1]
+    const key = `${tsconfig} @ ${outDir} @ ${declarationDir} @ ${rootDir}`
     if (!workers.has(key)) {
         debuglog(`Creating a worker for ${key}`);
         const { program, host } = createProgram(args, inputs);
@@ -300,13 +307,10 @@ function getOrCreateWorker(key, args, inputs) {
 }
 
 async function emit(args, inputs) {
-    const key = getTsConfigPath(args);
-    const workir = getOrCreateWorker(key, args, Object.keys(inputs));
+    const workir = getOrCreateWorker(args, Object.keys(inputs));
     const host = workir.host;
     const lastRequestTimestamp = Date.now();
     const previousInputs = workir.previousInputs;
-
-    debuglog(`Performing work for ${key}`);
 
     if (previousInputs) {
         timingStart(`invalidate`);
