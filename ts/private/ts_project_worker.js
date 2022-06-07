@@ -255,10 +255,8 @@ function createProgram(args, initialInputs) {
             close: () => {
                 const callbacks = directoryWatchers.get(directoryPath);
                 callbacks.delete(cb);
-                if (callbacks.size == 0) {
+                if (callbacks.size === 0) {
                     directoryWatchers.delete(directoryPath)
-                } else {
-                    directoryWatchers.set(directoryPath, callbacks)
                 }
                 debuglog(`watchDirectory@close ${directoryPath}`);
             },
