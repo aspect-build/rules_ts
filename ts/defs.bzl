@@ -69,6 +69,7 @@ def ts_project(
         declaration_dir = None,
         out_dir = None,
         root_dir = None,
+        supports_workers = True,
         **kwargs):
     """Compiles one TypeScript project using `tsc --project`.
 
@@ -77,6 +78,9 @@ def ts_project(
     Unlike bare `tsc`, this rule understands the Bazel interop mechanism (Providers)
     so that this rule works with others that produce or consume TypeScript typings (`.d.ts` files).
 
+    One of the benefits of using ts_project is that it understands Bazel Worker Protocol which makes
+    JIT overhead one time cost. Worker mode is on by default to speed up build and typechecking process.
+    
     Some TypeScript options affect which files are emitted, and Bazel needs to predict these ahead-of-time.
     As a result, several options from the tsconfig file must be mirrored as attributes to ts_project.
     A validator action is run to help ensure that these are correctly mirrored.
@@ -237,7 +241,17 @@ def ts_project(
             Instructs Bazel *not* to expect `.js` or `.js.map` outputs for `.ts` sources.
         ts_build_info_file: The user-specified value of `tsBuildInfoFile` from the tsconfig.
             Helps Bazel to predict the path where the .tsbuildinfo output is written.
+        supports_workers: Whether the worker protocol is enabled. 
+            To disable worker mode for a particular target set `supports_workers` to `False`.
+            Worker mode can be controlled as well via `--spawn_strategy` and `mnemonic` and  using .bazelrc.
+            
+            Putting this to your .bazelrc will disable it globally.
 
+            ```
+            build --spawn_strategy=TsProject=sandboxed
+            ```
+            
+            Checkout https://docs.bazel.build/versions/main/user-manual.html#flag--spawn_strategy for more
         **kwargs: passed through to underlying [`ts_project_rule`](#ts_project_rule), eg. `visibility`, `tags`
     """
 
@@ -427,5 +441,6 @@ def ts_project(
         tsc = tsc,
         tsc_worker = tsc_worker,
         transpile = not transpiler,
+        supports_workers = supports_workers,
         **kwargs
     )

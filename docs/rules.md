@@ -129,7 +129,7 @@ Validates that some tsconfig.json properties match attributes on ts_project.
 ts_project(<a href="#ts_project-name">name</a>, <a href="#ts_project-tsconfig">tsconfig</a>, <a href="#ts_project-srcs">srcs</a>, <a href="#ts_project-args">args</a>, <a href="#ts_project-data">data</a>, <a href="#ts_project-deps">deps</a>, <a href="#ts_project-extends">extends</a>, <a href="#ts_project-allow_js">allow_js</a>, <a href="#ts_project-declaration">declaration</a>, <a href="#ts_project-source_map">source_map</a>,
            <a href="#ts_project-declaration_map">declaration_map</a>, <a href="#ts_project-resolve_json_module">resolve_json_module</a>, <a href="#ts_project-preserve_jsx">preserve_jsx</a>, <a href="#ts_project-composite">composite</a>, <a href="#ts_project-incremental">incremental</a>,
            <a href="#ts_project-emit_declaration_only">emit_declaration_only</a>, <a href="#ts_project-transpiler">transpiler</a>, <a href="#ts_project-ts_build_info_file">ts_build_info_file</a>, <a href="#ts_project-tsc">tsc</a>, <a href="#ts_project-tsc_worker">tsc_worker</a>, <a href="#ts_project-validate">validate</a>,
-           <a href="#ts_project-validator">validator</a>, <a href="#ts_project-declaration_dir">declaration_dir</a>, <a href="#ts_project-out_dir">out_dir</a>, <a href="#ts_project-root_dir">root_dir</a>, <a href="#ts_project-kwargs">kwargs</a>)
+           <a href="#ts_project-validator">validator</a>, <a href="#ts_project-declaration_dir">declaration_dir</a>, <a href="#ts_project-out_dir">out_dir</a>, <a href="#ts_project-root_dir">root_dir</a>, <a href="#ts_project-supports_workers">supports_workers</a>, <a href="#ts_project-kwargs">kwargs</a>)
 </pre>
 
 Compiles one TypeScript project using `tsc --project`.
@@ -138,6 +138,9 @@ This is a drop-in replacement for the `tsc` rule automatically generated for the
 package, typically loaded from `@npm//typescript:package_json.bzl`.
 Unlike bare `tsc`, this rule understands the Bazel interop mechanism (Providers)
 so that this rule works with others that produce or consume TypeScript typings (`.d.ts` files).
+
+One of the benefits of using ts_project is that it understands Bazel Worker Protocol which makes
+JIT overhead one time cost. Worker mode is on by default to speed up build and typechecking process.
 
 Some TypeScript options affect which files are emitted, and Bazel needs to predict these ahead-of-time.
 As a result, several options from the tsconfig file must be mirrored as attributes to ts_project.
@@ -194,6 +197,7 @@ Any code that works with `tsc` should work with `ts_project` with a few caveats:
 | <a id="ts_project-declaration_dir"></a>declaration_dir |  String specifying a subdirectory under the bazel-out folder where generated declaration outputs are written. Equivalent to the TypeScript --declarationDir option. By default declarations are written to the out_dir.   |  <code>None</code> |
 | <a id="ts_project-out_dir"></a>out_dir |  String specifying a subdirectory under the bazel-out folder where outputs are written. Equivalent to the TypeScript --outDir option. Note that Bazel always requires outputs be written under a subdirectory matching the input package, so if your rule appears in path/to/my/package/BUILD.bazel and out_dir = "foo" then the .js files will appear in bazel-out/[arch]/bin/path/to/my/package/foo/*.js. By default the out_dir is '.', meaning the packages folder in bazel-out.   |  <code>None</code> |
 | <a id="ts_project-root_dir"></a>root_dir |  String specifying a subdirectory under the input package which should be consider the root directory of all the input files. Equivalent to the TypeScript --rootDir option. By default it is '.', meaning the source directory where the BUILD file lives.   |  <code>None</code> |
+| <a id="ts_project-supports_workers"></a>supports_workers |  Whether the worker protocol is enabled.  To disable worker mode for a particular target set <code>supports_workers</code> to <code>False</code>. Worker mode can be controlled as well via <code>--spawn_strategy</code> and <code>mnemonic</code> and  using .bazelrc.<br><br>Putting this to your .bazelrc will disable it globally.<br><br><pre><code> build --spawn_strategy=TsProject=sandboxed </code></pre><br><br>Checkout https://docs.bazel.build/versions/main/user-manual.html#flag--spawn_strategy for more   |  <code>True</code> |
 | <a id="ts_project-kwargs"></a>kwargs |  passed through to underlying [<code>ts_project_rule</code>](#ts_project_rule), eg. <code>visibility</code>, <code>tags</code>   |  none |
 
 

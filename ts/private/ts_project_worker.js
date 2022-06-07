@@ -107,6 +107,7 @@ function getTsConfigPath(args) {
 function createProgram(args, initialInputs) {
     const tsconfig = getTsConfigPath(args);
     const execRoot = path.resolve(process.cwd(), '..', '..', '..');
+    const bin = process.cwd();
 
     debuglog(`tsconfig: ${tsconfig}`);
     debuglog(`execroot ${execRoot}`);
@@ -181,7 +182,7 @@ function createProgram(args, initialInputs) {
     }
 
     function directoryExists(directory) {
-        if (!directory.startsWith(execRoot)) {
+        if (!directory.startsWith(bin)) {
             return false;
         }
         const exists = ts.sys.directoryExists(directory);
@@ -196,6 +197,10 @@ function createProgram(args, initialInputs) {
     }
 
     function fileExists(filePath) {
+        // TreeArtifact inputs are absent from input list so we have no way of knowing node_modules inputs.
+        if (filePath.includes('node_modules')) {
+            return ts.sys.fileExists(filePath)
+        }
         const relative = path.relative(execRoot, filePath);
         debuglog(`fileExists ${filePath} ${knownInputs.has(relative)}`);
         return knownInputs.has(relative);
@@ -203,6 +208,11 @@ function createProgram(args, initialInputs) {
 
     function readDirectory(directory, extensions, exclude, include, depth) {
         const files = ts.sys.readDirectory(directory, extensions, exclude, include, depth);
+
+        if (directory.includes('node_modules')) {
+            return files;
+        }
+
         const strictView = [];
 
         for (const file of files) {
