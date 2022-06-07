@@ -119,7 +119,6 @@ function createProgram(args, initialInputs) {
     const knownInputs = new Set(initialInputs);
 
     /** @type {ts.System} */
-
     const strictSys = {
         write: worker.log,
         writeOutputIsTTY: false,
@@ -154,10 +153,14 @@ function createProgram(args, initialInputs) {
     const program = ts.createWatchProgram(host);
 
     function getDirectoryWatcherForPath(path) {
-        for (const [directory, cb] of directoryWatchers.entries()) {
+        for (const [directory, callbacks] of directoryWatchers.entries()) {
             if (isAncestorDirectory(directory, path)) {
                 debuglog(`found a directory watcher for ${path} ${directory}`);
-                return cb;
+                return (filePath) => {
+                    for (const callback of callbacks) {
+                        callback(filePath)
+                    }
+                };
             }
         }
     }
@@ -172,7 +175,7 @@ function createProgram(args, initialInputs) {
         const relative = path.relative(execRoot, filePath);
         /** if it is under node_modules just allow file reads as we don't have a list of deps */
         if (!filePath.includes('node_modules') && !knownInputs.has(relative)) {
-            return undefined;
+            throw new Error(`tsc tried to read file (${filePath}) that wasn't an input to it.`);
         }
         return ts.sys.readFile(filePath, encoding);
     }
@@ -222,11 +225,9 @@ function createProgram(args, initialInputs) {
 
         if (kind === ts.FileWatcherEventKind.Created) {
             knownInputs.add(filePath);
-
-            const dirname = path.dirname(filePath);
-            getDirectoryWatcherForPath(filePath)?.(dirname);
-
-            // signal that the directory has been created.
+            const directoryWatcher = getDirectoryWatcherForPath(filePath)
+            directoryWatcher?.(path.dirname(filePath));
+            directoryWatcher?.(filePath);
         } else if (kind === ts.FileWatcherEventKind.Deleted) {
             knownInputs.delete(filePath);
         }
@@ -243,10 +244,20 @@ function createProgram(args, initialInputs) {
             return { close: () => {} };
         }
         debuglog(`watchDirectory ${directoryPath}`);
-        directoryWatchers.set(directoryPath, (input) => callback(path.join(execRoot, input)));
+
+        const cb = (input) => callback(path.join(execRoot, input))
+
+        const callbacks = directoryWatchers.get(directoryPath) || new Set();
+        callbacks.add(cb)
+        directoryWatchers.set(directoryPath, callbacks);
+
         return {
             close: () => {
-                directoryWatchers.delete(directoryPath);
+                const callbacks = directoryWatchers.get(directoryPath);
+                callbacks.delete(cb);
+                if (callbacks.size === 0) {
+                    directoryWatchers.delete(directoryPath)
+                }
                 debuglog(`watchDirectory@close ${directoryPath}`);
             },
         };
