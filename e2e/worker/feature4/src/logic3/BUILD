@@ -7,7 +7,6 @@ ts_project(
         "//feature4/helper"
     ],
     declaration = True,
-    supports_workers = True,
     visibility = ["//visibility:public"],   
     tsconfig = {},
 )

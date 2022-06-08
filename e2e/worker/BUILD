@@ -13,15 +13,13 @@ ts_project(
         "//feature2",
         "//feature3",
         "//feature4"
-    ],
-    supports_workers = True,
+    ]
 )
 
 
 ts_project(
     name = "lib",
     srcs = ["lib.ts"],
-    supports_workers = True,
     declaration = True,
     tsconfig = {}
 )
@@ -29,7 +27,6 @@ ts_project(
 ts_project(
     name = "should_fail",
     srcs = ["fail.ts"],
-    supports_workers = True,
     declaration = True,
     tsconfig = {},
     tags = ["manual"]

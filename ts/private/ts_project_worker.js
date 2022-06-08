@@ -6,17 +6,13 @@ const MNEMONIC = 'TsProject';
 
 function noop() {}
 
-function debuglog(...args) {
-    worker.debug(...args);
-}
-
 /** Timing */
-const timing = {};
 function timingStart(label) {
-    timing[label] = performance.now();
+    ts.performance.mark(`before${label}`);
 }
 function timingEnd(label) {
-    debuglog(`${label} ${performance.now() - timing[label]}ms`);
+    ts.performance.mark(`after${label}`);
+    ts.performance.measure(`TsProject ${label}`, `before${label}`, `after${label}`);
 }
 
 function getArgsFromParamFile() {
@@ -59,7 +55,6 @@ function createEmitCacheAndDiagnosticsProgram(
             for (const [path, content] of emittedFiles.entries()) {
                 const sourcePath = emittingMap.get(path);
                 if (!builder.getSourceFile(sourcePath)) {
-                    debuglog(`removing ${path} from emit cache`);
                     emittedFiles.delete(path);
                     emittingMap.delete(path);
                 } else {
@@ -70,6 +65,7 @@ function createEmitCacheAndDiagnosticsProgram(
 
         const writeF = (fileName, data, writeByteOrderMark, onError, sourceFiles) => {
             writeFile(fileName, data, writeByteOrderMark, onError, sourceFiles);
+            host.debuglog?.(`putting ${fileName} into emit cache`);
             emittingMap.set(fileName, sourceFiles[0].fileName);
             emittedFiles.set(fileName, data);
         };
@@ -97,7 +93,7 @@ function isAncestorDirectory(ancestor, child) {
     return ancestorChunks.every((chunk, i) => childChunks[i] === chunk);
 }
 
-/** @type {Map<string, {program: ts.EmitAndSemanticDiagnosticsBuilderProgram, host: ts.WatchCompilerHost, previousInputs?: import("@bazel/worker").Inputs}>} */
+/** @type {Map<string, ReturnType<createProgram> & {previousInputs?: import("@bazel/worker").Inputs}>} */
 const workers = new Map();
 
 function getTsConfigPath(args) {
@@ -105,26 +101,28 @@ function getTsConfigPath(args) {
 }
 
 function createProgram(args, initialInputs) {
+    const parsedArgs = ts.parseCommandLine(args);
+    const extendedDiagnostics = parsedArgs.options.extendedDiagnostics;
+
     const tsconfig = getTsConfigPath(args);
     const execRoot = path.resolve(process.cwd(), '..', '..', '..');
     const bin = process.cwd();
-
+    
     debuglog(`tsconfig: ${tsconfig}`);
     debuglog(`execroot ${execRoot}`);
 
-    const parsedArgs = ts.parseCommandLine(args);
 
     const directoryWatchers = new Map();
     const fileWatchers = new Map();
-
     const knownInputs = new Set(initialInputs);
 
+    let applyChanges = () => {}
     /** @type {ts.System} */
     const strictSys = {
         write: worker.log,
-        writeOutputIsTTY: false,
-        setTimeout: setImmediate,
-        clearTimeout: clearImmediate,
+        writeOutputIsTTY: () => false,
+        setTimeout: (cb) => applyChanges = () => cb(),
+        clearTimeout: () => applyChanges = () => {},
         fileExists: fileExists,
         readFile: readFile,
         writeFile: writeFile,
@@ -134,7 +132,6 @@ function createProgram(args, initialInputs) {
         watchFile: watchFile,
         watchDirectory: watchDirectory,
     };
-
     const sys = {
         ...ts.sys,
         ...strictSys,
@@ -150,8 +147,16 @@ function createProgram(args, initialInputs) {
     );
 
     host.invalidate = invalidate;
+    host.applyChanges = () => applyChanges();
+    host.debuglog = debuglog;
 
     const program = ts.createWatchProgram(host);
+
+    return { host, program };
+
+    function debuglog(message) {
+        extendedDiagnostics && host.trace?.(message)
+    }
 
     function getDirectoryWatcherForPath(path) {
         for (const [directory, callbacks] of directoryWatchers.entries()) {
@@ -285,7 +290,6 @@ function createProgram(args, initialInputs) {
             },
         };
     }
-    return { host, program };
 }
 
 
@@ -296,8 +300,8 @@ function getOrCreateWorker(args, inputs) {
     const rootDir = args[args.lastIndexOf("--rootDir") + 1]
     const key = `${tsconfig} @ ${outDir} @ ${declarationDir} @ ${rootDir}`
     if (!workers.has(key)) {
-        debuglog(`Creating a worker for ${key}`);
         const { program, host } = createProgram(args, inputs);
+        host.debuglog(`Created a new worker for ${key}`);
         workers.set(key, {
             program,
             host,
@@ -307,10 +311,16 @@ function getOrCreateWorker(args, inputs) {
 }
 
 async function emit(args, inputs) {
+    ts.performance.enable();
+    timingStart('compile');
+
+    timingStart('createWorker');
     const workir = getOrCreateWorker(args, Object.keys(inputs));
+    timingEnd('createWorker');
     const host = workir.host;
     const lastRequestTimestamp = Date.now();
     const previousInputs = workir.previousInputs;
+    const extendedDiagnostics = workir.program.getCurrentProgram().getCompilerOptions().extendedDiagnostics;
 
     if (previousInputs) {
         timingStart(`invalidate`);
@@ -329,10 +339,12 @@ async function emit(args, inputs) {
         timingEnd('invalidate');
     }
 
+    timingStart('applyChanges')
+    host.applyChanges();
+    timingEnd('applyChanges')
+
     timingStart('getProgram');
-    // NOTE: Always get the program after the invalidation logic above as watcher program could
-    // swap the program with new one based on the changes
-    const program = workir.program.getProgram();
+    const program = workir.program.getCurrentProgram()
     timingEnd('getProgram');
 
     const cancellationToken = {
@@ -361,6 +373,14 @@ async function emit(args, inputs) {
     }
 
     workir.previousInputs = inputs;
+
+    timingEnd('compile');
+
+    if (extendedDiagnostics && ts.performance.isEnabled()) {
+        ts.performance.forEachMeasure((name, duration) => host.debuglog(`${name} time: ${duration}`));
+        // Disabling performance will reset counters for the next compilation
+        ts.performance.disable()
+    }
 
     return succeded;
 }

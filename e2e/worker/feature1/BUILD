@@ -6,7 +6,7 @@ write_file(
     out = "big.ts",
     content = [
         "export const a{0}: number = {0}".format(x)
-        for x in range(100000)
+        for x in range(10000)
     ],
 )
 
@@ -14,7 +14,6 @@ ts_project(
     name = "feature1",
     srcs = ["index.ts", "big.ts"],
     declaration = True,
-    supports_workers = True,
     visibility = ["//visibility:public"],   
     tsconfig = {},
 )
