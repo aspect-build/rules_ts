@@ -7,10 +7,10 @@ Differences:
 """
 
 load("@aspect_bazel_lib//lib:utils.bzl", "is_external_label", "to_label")
+load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@bazel_skylib//lib:partial.bzl", "partial")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("//ts/private:ts_config.bzl", "write_tsconfig", _ts_config = "ts_config")
-load("//ts/private:ts_declaration.bzl", "ts_declaration")
 load("//ts/private:ts_project.bzl", _ts_project_lib = "ts_project")
 load("//ts/private:ts_validate_options.bzl", validate_lib = "lib")
 load("//ts/private:ts_lib.bzl", _lib = "lib")
@@ -80,7 +80,7 @@ def ts_project(
 
     One of the benefits of using ts_project is that it understands Bazel Worker Protocol which makes
     JIT overhead one time cost. Worker mode is on by default to speed up build and typechecking process.
-    
+
     Some TypeScript options affect which files are emitted, and Bazel needs to predict these ahead-of-time.
     As a result, several options from the tsconfig file must be mirrored as attributes to ts_project.
     A validator action is run to help ensure that these are correctly mirrored.
@@ -215,6 +215,7 @@ def ts_project(
 
         tsc: Label of the TypeScript compiler binary to run.
             This allows you to use a custom compiler.
+        tsc_worker: Label of a custom TypeScript compiler binary which understands Bazel's persistent worker protocol.
         validator: Label of the tsconfig validator to run when `validate = True`.
         allow_js: Whether TypeScript will read .js and .jsx files.
             When used with `declaration`, TypeScript will generate `.d.ts` files from `.js` files.
@@ -241,16 +242,16 @@ def ts_project(
             Instructs Bazel *not* to expect `.js` or `.js.map` outputs for `.ts` sources.
         ts_build_info_file: The user-specified value of `tsBuildInfoFile` from the tsconfig.
             Helps Bazel to predict the path where the .tsbuildinfo output is written.
-        supports_workers: Whether the worker protocol is enabled. 
+        supports_workers: Whether the worker protocol is enabled.
             To disable worker mode for a particular target set `supports_workers` to `False`.
             Worker mode can be controlled as well via `--spawn_strategy` and `mnemonic` and  using .bazelrc.
-            
+
             Putting this to your .bazelrc will disable it globally.
 
             ```
             build --spawn_strategy=TsProject=sandboxed
             ```
-            
+
             Checkout https://docs.bazel.build/versions/main/user-manual.html#flag--spawn_strategy for more
         **kwargs: passed through to underlying [`ts_project_rule`](#ts_project_rule), eg. `visibility`, `tags`
     """
@@ -405,7 +406,7 @@ def ts_project(
         )
 
         # Default target produced by the macro gives the js and map outs, with the transitive dependencies.
-        ts_declaration(
+        js_library(
             name = name,
             srcs = js_outs + map_outs,
             # Include the tsc target so that this js_library can be a valid dep for downstream ts_project
