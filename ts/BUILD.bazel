@@ -11,8 +11,8 @@ bzl_library(
     visibility = ["//visibility:public"],
     deps = [
         "//ts/private:ts_config",
-        "//ts/private:ts_declaration",
         "//ts/private:ts_project",
+        "@aspect_rules_js//js:defs",
         "@bazel_skylib//lib:partial",
         "@bazel_skylib//rules:build_test",
         "@rules_nodejs//nodejs/private:bzl",  # keep
