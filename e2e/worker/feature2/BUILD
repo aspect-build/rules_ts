@@ -4,7 +4,6 @@ ts_project(
     name = "feature2",
     srcs = ["index.ts"],
     declaration = True,
-    supports_workers = True,
     visibility = ["//visibility:public"],   
     tsconfig = {},
 )

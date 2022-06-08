@@ -9,7 +9,6 @@ ts_project(
         "//feature4/src/logic3"
     ],
     declaration = True,
-    supports_workers = True,
     visibility = ["//visibility:public"],
     tsconfig = {},
 )
@@ -20,7 +19,6 @@ ts_project(
     srcs = ["src/logic1.ts"],
     deps = ["//feature4/helper"],
     declaration = True,
-    supports_workers = True,
     tsconfig = {},
 )
 
@@ -29,7 +27,6 @@ ts_project(
     srcs = ["src/logic2.ts"],
     deps = ["//feature4/helper"],
     declaration = True,
-    supports_workers = True,
     tsconfig = {},
 )
 

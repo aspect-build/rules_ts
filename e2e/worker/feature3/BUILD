@@ -14,7 +14,6 @@ ts_project(
     name = "feature3",
     srcs = ["index.ts", "big.ts"],
     declaration = True,
-    supports_workers = True,
     visibility = ["//visibility:public"],   
     tsconfig = {},
 )
