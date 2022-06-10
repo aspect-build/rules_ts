@@ -11,14 +11,13 @@ load("//ts/private:versions.bzl", TS_VERSIONS = "VERSIONS")
 versions = struct(
     bazel_lib = "0.12.1",
     rules_nodejs = "5.4.0",
-    rules_js = "0.9.1",
 )
 
 worker_versions = struct(
     bazel_worker_version = "5.4.2",
     bazel_worker_integrity = "sha512-wQZ1ybgiCPkuITaiPfh91zB/lBYqBglf1XYh9hJZCQnWZ+oz9krCnZcywI/i1U9/E9p3A+4Y1ni5akAwTMmfUA==",
     google_protobuf_version = "3.20.1",
-    google_protobuf_integrity = "sha512-XMf1+O32FjYIV3CYu6Tuh5PNbfNEU5Xu22X+Xkdb/DUexFlCzhvv7d5Iirm4AOwn8lv4al1YvIhzGrg2j9Zfzw=="
+    google_protobuf_integrity = "sha512-XMf1+O32FjYIV3CYu6Tuh5PNbfNEU5Xu22X+Xkdb/DUexFlCzhvv7d5Iirm4AOwn8lv4al1YvIhzGrg2j9Zfzw==",
 )
 
 LATEST_VERSION = TS_VERSIONS.keys()[-1]
@@ -57,7 +56,7 @@ def _http_archive_version_impl(rctx):
     build_file_substitutions.update(**rctx.attr.build_file_substitutions)
     rctx.template(
         "BUILD.bazel",
-        rctx.path(rctx.attr.build_file), 
+        rctx.path(rctx.attr.build_file),
         substitutions = build_file_substitutions,
         executable = False,
     )
@@ -122,9 +121,9 @@ def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrit
     maybe(
         http_archive,
         name = "aspect_rules_js",
-        sha256 = "f4693a937c5852e660d1da773436fc3dc3a6274b25f735c233a8cffc12ed2dbb",
-        strip_prefix = "rules_js-0.11.0",
-        url = "https://github.com/aspect-build/rules_js/archive/refs/tags/v0.11.0.tar.gz",
+        sha256 = "6b218d2ab2e365807d1d403580b2c865a771e7fda9449171b2abd9765d0299b3",
+        strip_prefix = "rules_js-0.12.1",
+        url = "https://github.com/aspect-build/rules_js/archive/refs/tags/v0.12.1.tar.gz",
     )
 
     maybe(
@@ -160,8 +159,7 @@ def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrit
         build_file = "@aspect_rules_ts//ts:BUILD.typescript",
         build_file_substitutions = {
             "bazel_worker_version": worker_versions.bazel_worker_version,
-            "google_protobuf_version": worker_versions.google_protobuf_version
+            "google_protobuf_version": worker_versions.google_protobuf_version,
         },
         urls = ["https://registry.npmjs.org/typescript/-/typescript-{}.tgz"],
     )
-
