@@ -70,9 +70,9 @@ npm_package(
 npm_link_package(
     name = "node_modules/@bazel/worker",
     src = "npm_at_bazel_worker",
-    deps = [
-        ":node_modules/google-protobuf"
-    ],
+    deps = {
+        ":node_modules/google-protobuf/store/0.0.0": "",
+    },
     visibility = ["//visibility:public"],
 )
 
