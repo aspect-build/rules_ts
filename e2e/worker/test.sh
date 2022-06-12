@@ -82,4 +82,11 @@ message "# Case 6: Builds with local strategy"
 bazel clean
 bazel build :lib --strategy=TsProject=local
 
+message "# Case 7: Should dump traces"
+bazel clean
+tracepath="/tmp/tsctraces"
+rm -rf $tracepath
+bazel build //trace
+[ ! -d $tracepath ] && exit_with_message "Case 7: Expected tsc to write traces"
+
 message "All tests have passed"
