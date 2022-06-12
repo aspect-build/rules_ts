@@ -1,0 +1,13 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+
+ts_project(
+    name = "trace",
+    srcs = ["index.ts"],
+    tsconfig = {},
+    args = [
+        "--generateTrace",
+        "/tmp/tsctraces"
+    ]
+)
+

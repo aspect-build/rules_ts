@@ -12,7 +12,7 @@ function timingStart(label) {
 }
 function timingEnd(label) {
     ts.performance.mark(`after${label}`);
-    ts.performance.measure(`TsProject ${label}`, `before${label}`, `after${label}`);
+    ts.performance.measure(`${MNEMONIC} ${label}`, `before${label}`, `after${label}`);
 }
 
 function getArgsFromParamFile() {
@@ -26,8 +26,11 @@ function getArgsFromParamFile() {
     return fs.readFileSync(paramFilePath).toString().trim().split('\n');
 }
 
+
+const libCache = new Map();
+
 // TODO: support overloading with https://github.com/microsoft/TypeScript/blob/ab2523bbe0352d4486f67b73473d2143ad64d03d/src/compiler/builder.ts#L1008
-function createEmitCacheAndDiagnosticsProgram(
+function createEmitAndLibCacheAndDiagnosticsProgram(
     rootNames,
     options,
     host,
@@ -43,6 +46,8 @@ function createEmitCacheAndDiagnosticsProgram(
         configFileParsingDiagnostics,
         projectReferences
     );
+
+    /** Emit Cache */
     /** @type {Map} */
     const emittedFiles = (host.emittedFiles = host.emittedFiles || new Map());
     /** @type {Map} */
@@ -72,6 +77,25 @@ function createEmitCacheAndDiagnosticsProgram(
         return emit(targetSourceFile, writeF, cancellationToken, emitOnlyDtsFiles, customTransformers);
     };
 
+    /** Lib Cache */
+    const getSourceFile = host.getSourceFile;
+    host.getSourceFile = (fileName) => {
+        if (libCache.has(fileName)) {
+            host.debuglog?.(`cache hit for default lib ${fileName}`)
+            return libCache.get(fileName);
+        }
+        const sf = getSourceFile(fileName);
+        if (sf && 
+            fileName.includes('external') && 
+            fileName.includes('typescript@') && 
+            fileName.includes('node_modules/typescript/lib')
+        ) {
+            host.debuglog?.(`putting default lib ${fileName} into cache.`)
+            libCache.set(fileName, sf);
+        }
+        return sf;
+    }
+
     return builder;
 }
 
@@ -96,21 +120,13 @@ function isAncestorDirectory(ancestor, child) {
 /** @type {Map<string, ReturnType<createProgram> & {previousInputs?: import("@bazel/worker").Inputs}>} */
 const workers = new Map();
 
-function getTsConfigPath(args) {
-    return args[args.indexOf('--project') + 1];
-}
-
 function createProgram(args, initialInputs) {
-    const parsedArgs = ts.parseCommandLine(args);
-    const extendedDiagnostics = parsedArgs.options.extendedDiagnostics;
+    const {options} = ts.parseCommandLine(args);
+    const compilerOptions = {...options}
 
-    const tsconfig = getTsConfigPath(args);
-    const execRoot = path.resolve(process.cwd(), '..', '..', '..');
     const bin = process.cwd();
-    
-    debuglog(`tsconfig: ${tsconfig}`);
-    debuglog(`execroot ${execRoot}`);
-
+    const execRoot = path.resolve(bin, '..', '..', '..');
+    const tsconfig = path.relative(execRoot, path.resolve(bin, options.project));
 
     const directoryWatchers = new Map();
     const fileWatchers = new Map();
@@ -137,11 +153,13 @@ function createProgram(args, initialInputs) {
         ...strictSys,
     };
 
+    enablePerformanceAndTracingIfNeeded();
+
     const host = ts.createWatchCompilerHost(
-        tsconfig,
-        parsedArgs.options,
+        compilerOptions.project,
+        compilerOptions,
         sys,
-        createEmitCacheAndDiagnosticsProgram,
+        createEmitAndLibCacheAndDiagnosticsProgram,
         noop,
         noop
     );
@@ -150,12 +168,46 @@ function createProgram(args, initialInputs) {
     host.applyChanges = () => applyChanges();
     host.debuglog = debuglog;
 
+    debuglog(`tsconfig: ${tsconfig}`);
+    debuglog(`execroot ${execRoot}`);
+
     const program = ts.createWatchProgram(host);
 
-    return { host, program };
+    return { host, program, checkAndApplyArgs };
+
+    function enablePerformanceAndTracingIfNeeded() {
+        if (compilerOptions.extendedDiagnostics) {
+            ts.performance.enable();
+        }
+        // tracing is only available in 4.1 and above
+        // See: https://github.com/microsoft/TypeScript/wiki/Performance-Tracing
+        if (compilerOptions.generateTrace && ts.startTracing) {
+            ts.startTracing('build', compilerOptions.generateTrace);
+        }
+    }
+
+    function checkAndApplyArgs(newArgs) {
+        // This function works based on the assumption that parseConfigFile of createWatchProgram
+        // will always reread compilerOptions with its reference.
+        // See: https://github.com/microsoft/TypeScript/blob/2ecde2718722d6643773d43390aa57c3e3199365/src/compiler/watchPublic.ts#L735
+        // and: https://github.com/microsoft/TypeScript/blob/2ecde2718722d6643773d43390aa57c3e3199365/src/compiler/watchPublic.ts#L296
+        if (args.join(' ') != newArgs.join(' ')) {
+            const {options} = ts.parseCommandLine(newArgs);
+            for (const key in compilerOptions) {
+                delete compilerOptions[key];
+            }
+            for (const key in options) {
+                compilerOptions[key] = options[key];
+            }         
+            enablePerformanceAndTracingIfNeeded();
+            // invalidating tsconfig will cause parseConfigFile to be invoked
+            invalidate(tsconfig, ts.FileWatcherEventKind.Changed);
+            args = newArgs;
+        }
+    }
 
     function debuglog(message) {
-        extendedDiagnostics && host.trace?.(message)
+        compilerOptions.extendedDiagnostics && host.trace?.(message)
     }
 
     function getDirectoryWatcherForPath(path) {
@@ -294,33 +346,35 @@ function createProgram(args, initialInputs) {
 
 
 function getOrCreateWorker(args, inputs) {
-    const tsconfig = getTsConfigPath(args);
+    const project = args[args.indexOf('--project') + 1]
     const outDir = args[args.lastIndexOf("--outDir") + 1]
     const declarationDir = args[args.lastIndexOf("--declarationDir") + 1]
     const rootDir = args[args.lastIndexOf("--rootDir") + 1]
-    const key = `${tsconfig} @ ${outDir} @ ${declarationDir} @ ${rootDir}`
+    const key = `${project} @ ${outDir} @ ${declarationDir} @ ${rootDir}`
     if (!workers.has(key)) {
-        const { program, host } = createProgram(args, inputs);
+        const { program, host, checkAndApplyArgs } = createProgram(args, inputs);
         host.debuglog(`Created a new worker for ${key}`);
         workers.set(key, {
             program,
             host,
+            checkAndApplyArgs
         });
     }
     return workers.get(key);
 }
 
-async function emit(args, inputs) {
-    ts.performance.enable();
-    timingStart('compile');
 
-    timingStart('createWorker');
+function emit(args, inputs) {
     const workir = getOrCreateWorker(args, Object.keys(inputs));
-    timingEnd('createWorker');
+
     const host = workir.host;
     const lastRequestTimestamp = Date.now();
     const previousInputs = workir.previousInputs;
-    const extendedDiagnostics = workir.program.getCurrentProgram().getCompilerOptions().extendedDiagnostics;
+
+    timingStart('checkAndApplyArgs');
+    workir.checkAndApplyArgs(args);
+    timingEnd('checkAndApplyArgs');
+
 
     if (previousInputs) {
         timingStart(`invalidate`);
@@ -374,12 +428,14 @@ async function emit(args, inputs) {
 
     workir.previousInputs = inputs;
 
-    timingEnd('compile');
-
-    if (extendedDiagnostics && ts.performance.isEnabled()) {
+    if (ts.performance.isEnabled()) {
         ts.performance.forEachMeasure((name, duration) => host.debuglog(`${name} time: ${duration}`));
         // Disabling performance will reset counters for the next compilation
         ts.performance.disable()
+    }
+
+    if (ts.tracing) {
+        ts.tracing.stopTracing()
     }
 
     return succeded;
