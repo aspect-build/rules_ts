@@ -14,6 +14,7 @@
 
 "tsconfig.json files using extends"
 
+load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_file_to_bin_action", "copy_files_to_bin_actions")
 load(":ts_lib.bzl", _lib = "lib")
 
 TsConfigInfo = provider(
@@ -26,14 +27,14 @@ TsConfigInfo = provider(
 )
 
 def _ts_config_impl(ctx):
-    files = depset([ctx.file.src])
+    files = [copy_file_to_bin_action(ctx, ctx.file.src)]
     transitive_deps = []
     for dep in ctx.attr.deps:
         if TsConfigInfo in dep:
             transitive_deps.extend(dep[TsConfigInfo].deps)
     return [
-        DefaultInfo(files = files),
-        TsConfigInfo(deps = [ctx.file.src] + ctx.files.deps + transitive_deps),
+        DefaultInfo(files = depset(files)),
+        TsConfigInfo(deps = files + copy_files_to_bin_actions(ctx, ctx.files.deps) + transitive_deps),
     ]
 
 ts_config = rule(
