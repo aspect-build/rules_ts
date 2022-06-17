@@ -15,6 +15,7 @@
 "tsconfig.json files using extends"
 
 load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_file_to_bin_action", "copy_files_to_bin_actions")
+load("@bazel_skylib//lib:paths.bzl", "paths")
 load(":ts_lib.bzl", _lib = "lib")
 
 TsConfigInfo = provider(
@@ -59,16 +60,13 @@ extended configuration file as well, to pass them both to the TypeScript compile
 """,
 )
 
-def _join(*elements):
-    return "/".join([f for f in elements if f])
-
 def _relative_path(bindir, tsconfig, dest):
     relative_to = tsconfig.dirname
     destpath = dest.path
     if dest.is_source:
         # We assume that sources will be copied to the output folder by the time
         # typescript tries to load them.
-        destpath = _join(bindir.path, destpath)
+        destpath = paths.join(bindir.path, destpath)
 
     # Bazel guarantees that srcs are beneath the package directory, and we disallow
     # tsconfig.json being generated with a "/" in the name.
