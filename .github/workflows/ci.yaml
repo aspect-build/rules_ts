@@ -20,6 +20,7 @@ jobs:
             matrix:
                 folder:
                     - '.'
+                    - 'e2e/bzlmod'
                     - 'e2e/workspace'
                     - 'e2e/worker'
 
