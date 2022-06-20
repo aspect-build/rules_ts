@@ -244,15 +244,15 @@ def ts_project(
             Helps Bazel to predict the path where the .tsbuildinfo output is written.
         supports_workers: Whether the worker protocol is enabled.
             To disable worker mode for a particular target set `supports_workers` to `False`.
-            Worker mode can be controlled as well via `--spawn_strategy` and `mnemonic` and  using .bazelrc.
+            Worker mode can be controlled as well via `--strategy` and `mnemonic` and  using .bazelrc.
 
             Putting this to your .bazelrc will disable it globally.
 
             ```
-            build --spawn_strategy=TsProject=sandboxed
+            build --strategy=TsProject=sandboxed
             ```
 
-            Checkout https://docs.bazel.build/versions/main/user-manual.html#flag--spawn_strategy for more
+            Checkout https://docs.bazel.build/versions/main/user-manual.html#flag--strategy for more
         **kwargs: passed through to underlying [`ts_project_rule`](#ts_project_rule), eg. `visibility`, `tags`
     """
 
