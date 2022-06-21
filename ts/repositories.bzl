@@ -9,10 +9,6 @@ load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 load("//ts/private:npm_repositories.bzl", "npm_dependencies")
 load("//ts/private:versions.bzl", TS_VERSIONS = "VERSIONS")
 
-versions = struct(
-    rules_nodejs = "5.5.0",
-)
-
 LATEST_VERSION = TS_VERSIONS.keys()[-1]
 
 # WARNING: any additions to this function may be BREAKING CHANGES for users
@@ -53,23 +49,23 @@ def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrit
         http_archive,
         name = "rules_nodejs",
         sha256 = "4d48998e3fa1e03c684e6bdf7ac98051232c7486bfa412e5b5475bbaec7bb257",
-        urls = ["https://github.com/bazelbuild/rules_nodejs/releases/download/{0}/rules_nodejs-core-{0}.tar.gz".format(versions.rules_nodejs)],
+        urls = ["https://github.com/bazelbuild/rules_nodejs/releases/download/5.5.0/rules_nodejs-core-5.5.0.tar.gz"],
     )
 
     maybe(
         http_archive,
         name = "aspect_rules_js",
-        sha256 = "1fe40fd2819745ad19b5bec8f97a82087145fc6f145d3c84b0147899bf3490ca",
-        strip_prefix = "rules_js-0.13.0",
-        url = "https://github.com/aspect-build/rules_js/archive/refs/tags/v0.13.0.tar.gz",
+        sha256 = "529a7100fd757d1fe6d39901688b0ae4cfe033b7d432e9c4cfc022f33e3ec7fc",
+        strip_prefix = "rules_js-1.0.0-beta.2",
+        url = "https://github.com/aspect-build/rules_js/archive/refs/tags/v1.0.0-beta.2.tar.gz",
     )
 
     maybe(
         http_archive,
         name = "aspect_bazel_lib",
-        sha256 = "8860aab705fe9f427fbebe388bdfacf8a6b267cb3c0d71ebeaf1dcceedd29193",
-        strip_prefix = "bazel-lib-1.3.0",
-        url = "https://github.com/aspect-build/bazel-lib/archive/refs/tags/v1.3.0.tar.gz",
+        sha256 = "4ef2f746bae7bd7f1ec39dc9b53a9d7e8002f18233ea2c2ee4702bbb5283c7ca",
+        strip_prefix = "bazel-lib-1.3.1",
+        url = "https://github.com/aspect-build/bazel-lib/archive/refs/tags/v1.3.1.tar.gz",
     )
 
     npm_dependencies(ts_version_from = ts_version_from, ts_version = ts_version, ts_integrity = ts_integrity)
