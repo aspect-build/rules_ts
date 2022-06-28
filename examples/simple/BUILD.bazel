@@ -5,6 +5,7 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
 _DEPS = [
     "//examples:node_modules/@myorg/js_lib",
     "//examples:node_modules/@types/node",
+    "//examples:node_modules/date-fns",
 ]
 
 # Type-checks, and emits output to
