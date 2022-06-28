@@ -1,6 +1,6 @@
 "Adapter from the Babel CLI to the ts_project#transpiler interface"
 
-load("@npm//examples/@babel/cli:package_json.bzl", "bin")
+load("@npm//examples:@babel/cli/package_json.bzl", "bin")
 
 # buildifier: disable=function-docstring
 def babel(name, srcs, js_outs, map_outs, **kwargs):
