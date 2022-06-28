@@ -1,7 +1,21 @@
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 
+# Uses tsconfig.json in this source folder by default
 ts_project(
     name = "main",
     srcs = ["main.ts"],
     extends = "//examples/extends_chain:tsconfig_node",
+)
+
+# Alternately, we could define tsconfig dictionary
+ts_project(
+    name = "config_dict",
+    srcs = ["main.ts"],
+    extends = "//examples/extends_chain:tsconfig_node",
+    out_dir = "config_dict",
+    tsconfig = {
+        "compilerOptions": {
+            "declaration": False,
+        },
+    },
 )

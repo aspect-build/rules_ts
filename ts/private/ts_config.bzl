@@ -14,8 +14,8 @@
 
 "tsconfig.json files using extends"
 
+load("@aspect_bazel_lib//lib:paths.bzl", "relative_file")
 load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_file_to_bin_action", "copy_files_to_bin_actions")
-load("@bazel_skylib//lib:paths.bzl", "paths")
 load(":ts_lib.bzl", _lib = "lib")
 
 TsConfigInfo = provider(
@@ -60,24 +60,6 @@ extended configuration file as well, to pass them both to the TypeScript compile
 """,
 )
 
-def _relative_path(bindir, tsconfig, dest):
-    relative_to = tsconfig.dirname
-    destpath = dest.path
-    if dest.is_source:
-        # We assume that sources will be copied to the output folder by the time
-        # typescript tries to load them.
-        destpath = paths.join(bindir.path, destpath)
-
-    # Bazel guarantees that srcs are beneath the package directory, and we disallow
-    # tsconfig.json being generated with a "/" in the name.
-    # So we can calculate a relative path from e.g.
-    # bazel-out/darwin-fastbuild/bin/packages/typescript/test/ts_project/generated_tsconfig/gen_src
-    # to <generated file packages/typescript/test/ts_project/generated_tsconfig/gen_src/subdir/a.ts>
-    result = destpath[len(relative_to) + 1:]
-    if not result.startswith("."):
-        result = "./" + result
-    return result
-
 def _filter_input_files(files, allow_js, resolve_json_module):
     return [
         f
@@ -91,14 +73,14 @@ def _write_tsconfig_rule(ctx):
     if ctx.attr.extends:
         content = content.replace(
             "__extends__",
-            _relative_path(ctx.bin_dir, ctx.outputs.out, ctx.file.extends),
+            relative_file(ctx.file.extends.short_path, ctx.outputs.out.short_path),
         )
 
     filtered_files = _filter_input_files(ctx.files.files, ctx.attr.allow_js, ctx.attr.resolve_json_module)
     if filtered_files:
         content = content.replace(
             "\"__files__\"",
-            str([_relative_path(ctx.bin_dir, ctx.outputs.out, f) for f in filtered_files]),
+            str([relative_file(f.short_path, ctx.outputs.out.short_path) for f in filtered_files]),
         )
     ctx.actions.write(
         output = ctx.outputs.out,
