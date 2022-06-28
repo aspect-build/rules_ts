@@ -1,16 +1,14 @@
 "BUILD file inserted into @npm_typescript repository"
 load("@aspect_rules_js//js:defs.bzl", "js_binary")
-load("@aspect_rules_js//npm/private:npm_package_internal.bzl", npm_package = "npm_package_internal")
+load("@aspect_rules_js//npm/private:npm_package_internal.bzl", "npm_package_internal")
 load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
 load("@aspect_bazel_lib//lib:directory_path.bzl", "directory_path")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 
-npm_package(
+npm_package_internal(
     name = "npm_typescript",
     src = "package",
-    # optimization to prevent an additional copy
-    provide_source_directory = True,
     package = "typescript",
     version = "ts_version",
 )
@@ -50,7 +48,7 @@ js_binary(
 )
 
 # tsc worker
-npm_package(
+npm_package_internal(
     name = "npm_google_protobuf",
     src = "@npm_google_protobuf//:package",
     package = "google-protobuf",
@@ -63,7 +61,7 @@ npm_link_package(
     visibility = ["//visibility:public"],
 )
 
-npm_package(
+npm_package_internal(
     name = "npm_at_bazel_worker",
     src = "@npm_at_bazel_worker//:package",
     package = "@bazel/worker",
