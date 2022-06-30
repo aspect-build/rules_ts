@@ -1,0 +1,32 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "out_dir-tsconfig",
+    srcs = ["main.ts"],
+    tsconfig = {
+        "compilerOptions": {
+            "outDir": "tsconfig",
+            "declaration": True,
+            "declarationMap": True
+        }
+    }
+)
+
+ts_project(
+    name = "out_dir-params",
+    srcs = ["main.ts"],
+    out_dir = "param",
+    declaration = True,
+    declaration_map = True,
+    tsconfig = {}
+)
+
+ts_project(
+    name = "out_dir-declaration_dir",
+    srcs = ["main.ts"],
+    out_dir = "declaration_dir",
+    declaration_dir = "decl_map",
+    declaration = True,
+    declaration_map = True,
+    tsconfig = {}
+)
