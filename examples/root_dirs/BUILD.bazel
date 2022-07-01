@@ -1,0 +1,24 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "lib",
+    srcs = ["src/lib.ts"],
+    out_dir = "dist",
+    declaration = True,
+    tsconfig = {},
+)
+
+ts_project(
+    name = "specs",
+    srcs = ["src/spec.ts"],
+    deps = [":lib"],
+    out_dir = "test",
+    tsconfig = {
+      "compilerOptions": {
+            "rootDirs": [
+                ".",
+                "dist",
+            ],
+        },
+    },
+)
