@@ -1,0 +1,17 @@
+load("@aspect_rules_js//npm:defs.bzl", "npm_package")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "ts_project",
+    srcs = ["index.js"],
+    tsconfig = {},
+    visibility = ["//examples:__subpackages__"],
+    deps = ["//examples:node_modules/@myorg/js_lib"],
+)
+
+npm_package(
+    name = "npm_package",
+    srcs = [":ts_project"],
+    package = "@myorg/js_lib2",
+    visibility = ["//examples:__subpackages__"],
+)

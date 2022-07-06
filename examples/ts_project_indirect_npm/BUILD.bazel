@@ -1,0 +1,22 @@
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@aspect_rules_js//js:defs.bzl", "js_test")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+# Importing js_lib2 via linked npm package
+ts_project(
+    name = "named-import",
+    srcs = ["import-named.ts"],
+    tsconfig = {},
+    deps = ["//examples:node_modules/@myorg/js_lib2"],
+)
+
+js_test(
+    name = "test-runner",
+    data = ["//examples:node_modules/@myorg/js_lib2"],
+    entry_point = "import-named.js",
+)
+
+build_test(
+    name = "test",
+    targets = [":test-runner"],
+)

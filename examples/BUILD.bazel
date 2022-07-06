@@ -10,5 +10,12 @@ npm_link_package(
     visibility = ["//examples:__subpackages__"],
 )
 
+npm_link_package(
+    name = "node_modules/@myorg/js_lib2",
+    src = "//examples/js_lib2:npm_package",
+    root_package = "examples",
+    visibility = ["//examples:__subpackages__"],
+)
+
 # This macro expands to a npm_link_package for each third-party package in package.json
 npm_link_all_packages(name = "node_modules")
