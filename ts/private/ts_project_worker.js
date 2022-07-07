@@ -26,6 +26,105 @@ function getArgsFromParamFile() {
     return fs.readFileSync(paramFilePath).toString().trim().split('\n');
 }
 
+function createFilesystemTree(root, inputs) {
+    const hashes = new Map();
+    const tree = {};
+
+    for (const p in inputs) {
+        add(p, inputs[p]);
+    }
+
+    function getNode(p) {
+        const parts = p.split(path.sep);
+        let backtrack = tree;
+    
+        for (const part of parts) {
+            backtrack = backtrack[part];
+            if (!backtrack) {
+                return undefined;
+            }
+            if (backtrack.symlinkTo) {
+                backtrack = getNode(backtrack.symlinkTo);
+            }
+        }
+        return backtrack;
+    }
+
+    function add(p, hash) {
+        const parts = p.split(path.sep);
+        let backtrack = tree;
+        for (const part of parts) {
+            if (typeof backtrack[part] != "object") {
+                backtrack[part] = {};
+            }
+            backtrack = backtrack[part];
+        }
+        if (hash == null) {
+            const realpath = ts.sys.realpath(path.join(root, p));
+            const relative = path.relative(root, realpath);
+            if (relative != p) {
+                backtrack.symlinkTo = relative;
+            }
+        }
+        hashes.set(p, hash);
+    }
+
+    function remove(p) {
+        const parts = p.split(path.sep);
+        const lastPart = parts.pop();
+        let backtrack = tree;
+        for (const part of parts) {
+            if (typeof backtrack[part] == "object") {
+                backtrack = backtrack[part];
+            } else {
+                return // couldn't find it.
+            }
+        }
+        // TODO: clean up orphan nodes by walking up.
+        delete backtrack[lastPart]
+        hashes.delete(p)
+    }
+
+    function fileExists(p) {
+        const node = getNode(p);
+        return typeof node == "object";
+    }
+
+    function directoryExists(p) {
+        const node = getNode(p);
+        return typeof node == "object";
+    }
+
+    function readDirectory(p, extensions, exclude, include, depth) {
+        const node = getNode(p);
+        if (!node) {
+            return []
+        }
+        return Object.keys(node);
+    }
+
+    function getDirectories(p) {
+        const node = getNode(p);
+        if (!node) {
+            return []
+        }
+        const dirs = [];
+        for (const np in node) {
+            if (Object.keys(node[np]).length > 0) {
+                dirs.push(np);
+            }
+        }
+        return dirs
+    }
+
+    return { add, remove, fileExists, directoryExists, readDirectory, getDirectories }
+}
+
+function isExternalLib(path) {
+    return  path.includes('external') && 
+            path.includes('typescript@') && 
+            path.includes('node_modules/typescript/lib')
+}
 
 const libCache = new Map();
 
@@ -87,11 +186,7 @@ function createEmitAndLibCacheAndDiagnosticsProgram(
             return libCache.get(fileName);
         }
         const sf = getSourceFile(fileName);
-        if (sf && 
-            fileName.includes('external') && 
-            fileName.includes('typescript@') && 
-            fileName.includes('node_modules/typescript/lib')
-        ) {
+        if (sf && isExternalLib(fileName)) {
             host.debuglog?.(`putting default lib ${fileName} into cache.`)
             libCache.set(fileName, sf);
         }
@@ -132,7 +227,8 @@ function createProgram(args, initialInputs) {
 
     const directoryWatchers = new Map();
     const fileWatchers = new Map();
-    const knownInputs = new Set(initialInputs);
+
+    const filesystemTree = createFilesystemTree(execRoot, initialInputs);
 
     const outputs = new Set();
 
@@ -145,12 +241,12 @@ function createProgram(args, initialInputs) {
         clearTimeout: () => applyChanges = () => {},
         fileExists: fileExists,
         readFile: readFile,
-        writeFile: writeFile,
         readDirectory: readDirectory,
         directoryExists: directoryExists,
         getDirectories: getDirectories,
         watchFile: watchFile,
         watchDirectory: watchDirectory,
+        exit: noop
     };
     const sys = {
         ...ts.sys,
@@ -237,77 +333,45 @@ function createProgram(args, initialInputs) {
         }
     }
 
-    function writeFile(path, data, writeByteOrderMark) {
-        debuglog(`writeFile ${path}`);
-        ts.sys.writeFile(path, data, writeByteOrderMark);
-    }
-
     function readFile(filePath, encoding) {
-        debuglog(`readFile ${filePath}`);
         const relative = path.relative(execRoot, filePath);
-        /** if it is under node_modules just allow file reads as we don't have a list of deps */
-        if (!filePath.includes('node_modules') && !knownInputs.has(relative) && !outputs.has(relative)) {
-            throw new Error(`tsc tried to read file (${filePath}) that wasn't an input or output to it.`);
+        // external lib are transitive sources thus not listed in the inputs map reported by bazel.
+        if (!filesystemTree.fileExists(path.relative(execRoot, filePath)) && !isExternalLib(filePath) && !outputs.has(relative)) {
+            throw new Error(`tsc tried to read file that wasn't an input to it.`);
         }
         return ts.sys.readFile(filePath, encoding);
     }
 
-    function directoryExists(directory) {
-        if (!directory.startsWith(bin)) {
+    function directoryExists(directoryPath) {
+        if (!directoryPath.startsWith(bin)) {
             return false;
         }
-        const exists = ts.sys.directoryExists(directory);
-        debuglog(`directoryExists ${directory} ${exists}`);
-        return exists;
+        return filesystemTree.directoryExists(path.relative(execRoot, directoryPath));
     }
 
-    function getDirectories(directory) {
-        const dirs = ts.sys.getDirectories(directory);
-        debuglog(`getDirectories ${directory}`, dirs);
-        return dirs;
+    function getDirectories(directoryPath) {
+        return filesystemTree.getDirectories(path.relative(execRoot, directoryPath));
     }
 
     function fileExists(filePath) {
-        // TreeArtifact inputs are absent from input list so we have no way of knowing node_modules inputs.
-        if (filePath.includes('node_modules')) {
-            return ts.sys.fileExists(filePath)
-        }
-        const relative = path.relative(execRoot, filePath);
-        debuglog(`fileExists ${filePath} ${knownInputs.has(relative)}`);
-        return knownInputs.has(relative);
+        return filesystemTree.fileExists(path.relative(execRoot, filePath));
     }
 
-    function readDirectory(directory, extensions, exclude, include, depth) {
-        const files = ts.sys.readDirectory(directory, extensions, exclude, include, depth);
-
-        if (directory.includes('node_modules')) {
-            return files;
-        }
-
-        const strictView = [];
-
-        for (const file of files) {
-            const relativePath = path.relative(execRoot, file);
-            if (knownInputs.has(relativePath)) {
-                strictView.push(file);
-            } else {
-                debuglog(`Skipping ${relativePath} as it is not input to current compilation.`);
-            }
-        }
-
-        debuglog(`readDirectory ${directory} ${strictView}`);
-
-        return strictView;
+    function readDirectory(directoryPath, extensions, exclude, include, depth) {
+        return filesystemTree.readDirectory(
+            path.relative(execRoot, directoryPath), 
+            extensions, exclude, include, depth
+        ).map(p => path.isAbsolute(p) ? p : path.join(execRoot, p))
     }
 
-    function invalidate(filePath, kind) {
+    function invalidate(filePath, kind, digest) {
         if (filePath.endsWith('.params')) return;
         debuglog(`invalidate ${filePath} : ${ts.FileWatcherEventKind[kind]}`);
 
         if (kind === ts.FileWatcherEventKind.Created) {
-            knownInputs.add(filePath);
+            filesystemTree.add(filePath, digest);
         } else if (kind === ts.FileWatcherEventKind.Deleted) {
-            knownInputs.delete(filePath);
+            filesystemTree.remove(filePath);
         }
 
         const directoryWatcher = getDirectoryWatcherForPath(filePath)
@@ -379,7 +443,7 @@ function getOrCreateWorker(args, inputs) {
 
 
 function emit(args, inputs) {
-    const workir = getOrCreateWorker(args, Object.keys(inputs));
+    const workir = getOrCreateWorker(args, inputs);
 
     const host = workir.host;
     const lastRequestTimestamp = Date.now();
@@ -399,9 +463,9 @@ function emit(args, inputs) {
         }
         for (const [input, digest] of Object.entries(inputs)) {
             if (!(input in previousInputs)) {
-                host.invalidate(input, ts.FileWatcherEventKind.Created);
+                host.invalidate(input, ts.FileWatcherEventKind.Created, digest);
             } else if (previousInputs[input] != digest) {
-                host.invalidate(input, ts.FileWatcherEventKind.Changed);
+                host.invalidate(input, ts.FileWatcherEventKind.Changed, digest);
             }
         }
         timingEnd('invalidate');
