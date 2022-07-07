@@ -43,6 +43,9 @@ def _is_file_missing(label):
     file_glob = native.glob([file_rel])
     return len(file_glob) == 0
 
+_tsc = "@npm_typescript//:tsc"
+_tsc_worker = "@npm_typescript//:tsc_worker"
+
 def ts_project(
         name,
         tsconfig = None,
@@ -62,8 +65,8 @@ def ts_project(
         emit_declaration_only = False,
         transpiler = None,
         ts_build_info_file = None,
-        tsc = "@npm_typescript//:tsc",
-        tsc_worker = "@npm_typescript//:tsc_worker",
+        tsc = _tsc,
+        tsc_worker = _tsc_worker,
         validate = True,
         validator = "@npm_typescript//:validator",
         declaration_dir = None,
@@ -255,6 +258,10 @@ def ts_project(
             Checkout https://docs.bazel.build/versions/main/user-manual.html#flag--strategy for more
         **kwargs: passed through to underlying [`ts_project_rule`](#ts_project_rule), eg. `visibility`, `tags`
     """
+
+    # Disable workers if a custom tsc was provided but not a custom tsc_worker.
+    if tsc != _tsc and tsc_worker == _tsc_worker:
+        supports_workers = False
 
     if srcs == None:
         include = ["**/*.ts", "**/*.tsx"]
