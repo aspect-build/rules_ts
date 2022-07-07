@@ -1,6 +1,8 @@
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 
+package(default_visibility = ["//examples:__pkg__"])
+
 # Dependencies for all targets in this package
 _DEPS = [
     "//examples:node_modules/@myorg/js_lib",

@@ -1,5 +1,7 @@
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 
+package(default_visibility = ["//examples:__pkg__"])
+
 # Demonstrates the --resolveJsonModule feature of TypeScript
 ts_project(
     name = "ts",

@@ -1,5 +1,6 @@
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 
 # Building this target results in bazel-bin/examples/node_modules/@myorg/js_lib, so that
 # TypeScript and other node programs beneath bazel-bin/examples are able to resolve its location.
@@ -12,3 +13,16 @@ npm_link_package(
 
 # This macro expands to a npm_link_package for each third-party package in package.json
 npm_link_all_packages(name = "node_modules")
+
+
+build_test(
+    name = "test",
+    targets = [
+        "//examples/simple:ts",
+        "//examples/ts_project_dep/b:ts",
+        "//examples/out_dir:out_dir-tsconfig",
+        "//examples/out_dir:out_dir-params",
+        "//examples/out_dir:out_dir-declaration_dir",
+        "//examples/json:ts",
+    ],
+)
