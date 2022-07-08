@@ -59,6 +59,10 @@ function createFilesystemTree(root, inputs) {
             }
             backtrack = backtrack[part];
         }
+
+        // Digest is empty when the input is a symlink which we use as an indicator to limit number of 
+        // realpath calls we make.
+        // See: https://github.com/bazelbuild/bazel/pull/14002#issuecomment-977790796 for what it can be empty.
         if (hash == null) {
             const realpath = ts.sys.realpath(path.join(root, p));
             const relative = path.relative(root, realpath);
@@ -80,19 +84,18 @@ function createFilesystemTree(root, inputs) {
                 return // couldn't find it.
             }
         }
-        // TODO: clean up orphan nodes by walking up.
         delete backtrack[lastPart]
         hashes.delete(p)
     }
 
     function fileExists(p) {
         const node = getNode(p);
-        return typeof node == "object";
+        return typeof node == "object" && Object.keys(node).length == 0;
     }
 
     function directoryExists(p) {
         const node = getNode(p);
-        return typeof node == "object";
+        return typeof node == "object" && Object.keys(node).length > 0;
     }
 
     function readDirectory(p, extensions, exclude, include, depth) {
@@ -553,10 +556,10 @@ function emitOnce(args) {
     return succeded;
 }
 
-if (worker.runAsWorker(process.argv)) {
+if (require.main === module && worker.runAsWorker(process.argv)) {
     worker.log(`Running ${MNEMONIC} as a Bazel worker`);
     worker.runWorkerLoop(emit);
-} else {
+} else if (require.main === module) {
     worker.log(`WARNING: Running ${MNEMONIC} as a standalone process`);
     worker.log(
         `Started a standalone process to perform this action but this might lead to some unexpected behavior with tsc due to being run non-sandboxed.`
@@ -569,3 +572,5 @@ if (worker.runAsWorker(process.argv)) {
         process.exit(1);
     }
 }
+
+module.exports = {createFilesystemTree: createFilesystemTree};
