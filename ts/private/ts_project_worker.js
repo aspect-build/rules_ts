@@ -84,6 +84,13 @@ function createFilesystemTree(root, inputs) {
                 return // couldn't find it.
             }
         }
+        // Bazel never reports empty TreeArtifacts within the inputs map. Meaning if a directory contains nothing then bazel will never tell us about that input.
+        // 
+        // Ideally, after a removal operation we should be checking for orphan parent nodes within the tree of that given path and remove them.
+        // This could be done by to walking up nodes and removing them if they are being orphaned as a result of this action. However, since this would 
+        // be a costly operation given the recursive calls that we have to do, we decide to do nothing about them given that 
+        // this neither a correctness nor reproducibility issue. 
+        // Reason behind this is tsc itself. It does not affect tsc if an empty folder is there or not, as it only looks for `<name>/index.ts` or `<name>.ts`
         delete backtrack[lastPart]
         hashes.delete(p)
     }
@@ -446,14 +453,14 @@ function getOrCreateWorker(args, inputs) {
 
 
 function emit(args, inputs) {
-    const workir = getOrCreateWorker(args, inputs);
+    const _worker = getOrCreateWorker(args, inputs);
 
-    const host = workir.host;
+    const host = _worker.host;
     const lastRequestTimestamp = Date.now();
-    const previousInputs = workir.previousInputs;
+    const previousInputs = _worker.previousInputs;
 
     timingStart('checkAndApplyArgs');
-    workir.checkAndApplyArgs(args);
+    _worker.checkAndApplyArgs(args);
     timingEnd('checkAndApplyArgs');
 
 
@@ -479,7 +486,7 @@ function emit(args, inputs) {
     timingEnd('applyChanges')
 
     timingStart('getProgram');
-    const program = workir.program.getCurrentProgram()
+    const program = _worker.program.getCurrentProgram()
     timingEnd('getProgram');
 
     const cancellationToken = {
@@ -507,7 +514,7 @@ function emit(args, inputs) {
         printDiagnostics(diagnostics);
     }
 
-    workir.previousInputs = inputs;
+    _worker.previousInputs = inputs;
 
     if (ts.performance.isEnabled()) {
         ts.performance.forEachMeasure((name, duration) => host.debuglog(`${name} time: ${duration}`));
