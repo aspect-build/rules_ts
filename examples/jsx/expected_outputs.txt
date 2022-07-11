@@ -1,0 +1,7 @@
+examples/jsx/out/a.d.ts
+examples/jsx/out/a.d.ts.map
+examples/jsx/out/b.d.ts
+examples/jsx/out/b.d.ts.map
+examples/jsx/out/a.jsx
+examples/jsx/out/a.jsx.map
+examples/jsx/out/b.jsx
