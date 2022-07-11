@@ -23,6 +23,8 @@ write_file(
 ts_project(
     name = "babel",
     srcs = ["big.ts"],
+    declaration = True,
     out_dir = "build-babel",
+    source_map = True,
     transpiler = babel,
 )
