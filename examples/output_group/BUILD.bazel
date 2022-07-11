@@ -1,0 +1,23 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@aspect_bazel_lib//lib:write_source_files.bzl", "write_source_files")
+
+ts_project(
+    name = "output_group",
+    srcs = ["index.ts"],
+    declaration = True,
+)
+
+
+filegroup(
+    name = "types",
+    srcs = [":output_group"],
+    output_group = "types",
+)
+
+
+write_source_files(
+    name = "write_dts",
+    files = {
+        "index.d.ts_": ":types",
+    },
+) 
