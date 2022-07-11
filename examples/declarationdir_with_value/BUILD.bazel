@@ -1,0 +1,40 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@aspect_bazel_lib//lib:write_source_files.bzl", "write_source_files")
+load("@aspect_bazel_lib//lib:params_file.bzl", "params_file")
+
+ts_project(
+    name = "transpile",
+    srcs = ["dir/lib.ts"],
+    declaration = True,
+    declaration_dir = "out/types",
+    declaration_map = True,
+    out_dir = "out/code",
+    root_dir = "dir",
+    source_map = True,
+)
+
+filegroup(
+    name = "types",
+    srcs = [":transpile"],
+    output_group = "types",
+)
+
+params_file(
+    name = "params",
+    data = [
+        ":transpile",
+        ":types",
+    ],
+    args = [
+        "$(rootpaths :types)",
+        "$(rootpaths :transpile)",
+    ],
+    out = "params.txt"
+)
+
+write_source_files(
+    name = "write_params",
+    files = {
+        "params.out": "params.txt",
+    },
+)
