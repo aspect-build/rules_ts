@@ -70,9 +70,11 @@ function createEmitAndLibCacheAndDiagnosticsProgram(
 
         const writeF = (fileName, data, writeByteOrderMark, onError, sourceFiles) => {
             writeFile(fileName, data, writeByteOrderMark, onError, sourceFiles);
-            host.debuglog?.(`putting ${fileName} into emit cache`);
-            emittingMap.set(fileName, sourceFiles[0].fileName);
-            emittedFiles.set(fileName, data);
+            if (sourceFiles && sourceFiles.length !== 0) {
+                host.debuglog?.(`putting ${fileName} into emit cache`);
+                emittingMap.set(fileName, sourceFiles[0].fileName);
+                emittedFiles.set(fileName, data);
+            }
         };
         return emit(targetSourceFile, writeF, cancellationToken, emitOnlyDtsFiles, customTransformers);
     };
@@ -132,6 +134,8 @@ function createProgram(args, initialInputs) {
     const fileWatchers = new Map();
     const knownInputs = new Set(initialInputs);
 
+    const outputs = new Set();
+
     let applyChanges = () => {}
     /** @type {ts.System} */
     const strictSys = {
@@ -154,6 +158,7 @@ function createProgram(args, initialInputs) {
     };
 
     enablePerformanceAndTracingIfNeeded();
+    updateOutputs();
 
     const host = ts.createWatchCompilerHost(
         compilerOptions.project,
@@ -186,6 +191,14 @@ function createProgram(args, initialInputs) {
         }
     }
 
+    function updateOutputs() {
+        outputs.clear();
+        if (compilerOptions.tsBuildInfoFile) {
+            const p = path.relative(execRoot, path.join(bin, compilerOptions.tsBuildInfoFile));
+            outputs.add(p);
+        }
+    }
+
     function checkAndApplyArgs(newArgs) {
         // This function works based on the assumption that parseConfigFile of createWatchProgram
         // will always reread compilerOptions with its reference.
@@ -198,8 +211,9 @@ function createProgram(args, initialInputs) {
             }
             for (const key in options) {
                 compilerOptions[key] = options[key];
-            }         
+            }
             enablePerformanceAndTracingIfNeeded();
+            updateOutputs();
             // invalidating tsconfig will cause parseConfigFile to be invoked
             invalidate(tsconfig, ts.FileWatcherEventKind.Changed);
             args = newArgs;
@@ -232,8 +246,8 @@ function createProgram(args, initialInputs) {
         debuglog(`readFile ${filePath}`);
         const relative = path.relative(execRoot, filePath);
         /** if it is under node_modules just allow file reads as we don't have a list of deps */
-        if (!filePath.includes('node_modules') && !knownInputs.has(relative)) {
-            throw new Error(`tsc tried to read file (${filePath}) that wasn't an input to it.`);
+        if (!filePath.includes('node_modules') && !knownInputs.has(relative) && !outputs.has(relative)) {
+            throw new Error(`tsc tried to read file (${filePath}) that wasn't an input or output to it.`);
         }
         return ts.sys.readFile(filePath, encoding);
     }
