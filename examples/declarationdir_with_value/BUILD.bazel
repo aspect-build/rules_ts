@@ -29,12 +29,12 @@ params_file(
         "$(rootpaths :types)",
         "$(rootpaths :transpile)",
     ],
-    out = "params.txt"
+    out = "outputs.txt"
 )
 
 write_source_files(
     name = "write_params",
     files = {
-        "params.out": "params.txt",
+        "expected_outputs.txt": "outputs.txt",
     },
 )
