@@ -65,7 +65,7 @@ def _ts_project_impl(ctx):
             declaration_dir = "."
         arguments.add_all([
             "--declarationDir",
-           declaration_dir,
+            declaration_dir,
         ])
 
     # When users report problems, we can ask them to re-build with
@@ -126,7 +126,7 @@ def _ts_project_impl(ctx):
     runtime_outputs = json_outs + js_outs + map_outs
     typings_outputs = typings_outs + typing_maps_outs + [s for s in ctx.files.srcs if s.path.endswith(".d.ts")]
 
-    if not js_outs and not typings_outputs and not ctx.attr.deps:
+    if len(js_outs) + len(typings_outputs) < 1:
         label = "//{}:{}".format(ctx.label.package, ctx.label.name)
         if ctx.attr.transpile:
             no_outs_msg = """ts_project target %s is configured to produce no outputs.
