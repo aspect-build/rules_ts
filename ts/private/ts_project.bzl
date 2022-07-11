@@ -124,11 +124,27 @@ def _ts_project_impl(ctx):
         ])
         outputs.append(ctx.outputs.buildinfo_out)
     runtime_outputs = json_outs + js_outs + map_outs
-    typings_outputs = typings_outs + typing_maps_outs + [s for s in ctx.files.srcs if s.path.endswith(".d.ts")]
+    typings_srcs = [s for s in ctx.files.srcs if s.path.endswith(".d.ts")]
 
-    if len(js_outs) + len(typings_outputs) < 1:
+    if len(js_outs) + len(typings_outs) < 1:
         label = "//{}:{}".format(ctx.label.package, ctx.label.name)
-        if ctx.attr.transpile:
+        if len(typings_srcs) > 0:
+            no_outs_msg = """ts_project target {target} only has typings in srcs.
+Since there is no `tsc` action to perform, there are no generated outputs.
+
+> ts_project doesn't support "typecheck-only"; see https://github.com/aspect-build/rules_ts/issues/88
+
+This should be changed to js_library, which can be done by running:
+
+    buildozer 'new_load @aspect_rules_js//js:defs.bzl js_library' //{pkg}:__pkg__
+    buildozer 'set kind js_library' {target}
+    buildozer 'remove declaration' {target}
+
+""".format(
+                target = label,
+                pkg = ctx.label.package,
+            )
+        elif ctx.attr.transpile:
             no_outs_msg = """ts_project target %s is configured to produce no outputs.
 
 This might be because
@@ -141,6 +157,7 @@ This might be because
 This is an error because Bazel does not run actions unless their outputs are needed for the requested targets to build.
 """)
 
+    typings_outputs = typings_outs + typing_maps_outs + typings_srcs
     if ctx.attr.transpile:
         default_outputs_depset = depset(runtime_outputs) if len(runtime_outputs) else depset(typings_outputs)
     else:
