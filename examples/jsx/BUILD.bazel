@@ -1,0 +1,43 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@aspect_bazel_lib//lib:write_source_files.bzl", "write_source_files")
+load("@aspect_bazel_lib//lib:params_file.bzl", "params_file")
+
+ts_project(
+    name = "jsx",
+    srcs = [
+        "a.tsx",
+        "b.jsx",
+    ],
+    allow_js = True,
+    declaration = True,
+    declaration_map = True,
+    out_dir = "out",
+    preserve_jsx = True,
+    source_map = True,
+)
+
+filegroup(
+    name = "types",
+    srcs = [":jsx"],
+    output_group = "types",
+)
+
+params_file(
+    name = "params",
+    data = [
+        ":jsx",
+        ":types",
+    ],
+    args = [
+        "$(rootpaths :types)",
+        "$(rootpaths :jsx)",
+    ],
+    out = "outputs.txt"
+)
+
+write_source_files(
+    name = "write_params",
+    files = {
+        "expected_outputs.txt": "outputs.txt",
+    },
+)
