@@ -83,9 +83,19 @@ copy_file(
     out = "ts_project_worker.js",
 )
 
+write_file(
+    name = "package_json",
+    content = ["{\"type\": \"commonjs\"}"],
+    out = "package.json"
+)
+
 js_binary(
     name = "tsc_worker",
-    data = [":node_modules/typescript", ":node_modules/@bazel/worker"],
+    data = [
+        ":package_json",
+        ":node_modules/typescript", 
+        ":node_modules/@bazel/worker"
+    ],
     entry_point = "copy_ts_project_worker",
     visibility = ["//visibility:public"],
 )
