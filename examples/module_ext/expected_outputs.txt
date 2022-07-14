@@ -1,0 +1,14 @@
+examples/module_ext/out/a.d.mts
+examples/module_ext/out/a.d.mts.map
+examples/module_ext/out/b.d.mts
+examples/module_ext/out/b.d.mts.map
+examples/module_ext/out/c.d.cts
+examples/module_ext/out/c.d.cts.map
+examples/module_ext/out/d.d.cts
+examples/module_ext/out/d.d.cts.map
+examples/module_ext/out/a.mjs
+examples/module_ext/out/a.mjs.map
+examples/module_ext/out/b.mjs
+examples/module_ext/out/c.cjs
+examples/module_ext/out/c.cjs.map
+examples/module_ext/out/d.cjs
