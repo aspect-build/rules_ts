@@ -218,12 +218,6 @@ function printDiagnostics(diagnostics) {
     worker.log(ts.formatDiagnostics(diagnostics, formatDiagnosticHost));
 }
 
-function isAncestorDirectory(ancestor, child) {
-    const ancestorChunks = ancestor.split(path.sep).filter((i) => !!i);
-    const childChunks = child.split(path.sep).filter((i) => !!i);
-    return ancestorChunks.every((chunk, i) => childChunks[i] === chunk);
-}
-
 /** @type {Map<string, ReturnType<createProgram> & {previousInputs?: import("@bazel/worker").Inputs}>} */
 const workers = new Map();
 
@@ -242,13 +236,14 @@ function createProgram(args, initialInputs) {
 
     const outputs = new Set();
 
-    let applyChanges = () => {}
+    const taskQueue = new Set();
+
     /** @type {ts.System} */
     const strictSys = {
         write: worker.log,
         writeOutputIsTTY: () => false,
-        setTimeout: (cb) => applyChanges = () => cb(),
-        clearTimeout: () => applyChanges = () => {},
+        setTimeout: setTimeout,
+        clearTimeout: clearTimeout, 
         fileExists: fileExists,
         readFile: readFile,
         readDirectory: readDirectory,
@@ -276,7 +271,7 @@ function createProgram(args, initialInputs) {
     );
 
     host.invalidate = invalidate;
-    host.applyChanges = () => applyChanges();
+    host.applyChanges = applyChanges;
     host.debuglog = debuglog;
 
     debuglog(`tsconfig: ${tsconfig}`);
@@ -285,6 +280,23 @@ function createProgram(args, initialInputs) {
     const program = ts.createWatchProgram(host);
 
     return { host, program, checkAndApplyArgs };
+
+    function setTimeout(cb) {
+        taskQueue.add(cb);
+        return cb;
+    }
+
+    function clearTimeout(cb) {
+        taskQueue.delete(cb)
+    }
+
+    function applyChanges() {
+        debuglog("Applying changes");
+        for (const task of taskQueue) {
+            taskQueue.delete(task);
+            task();
+        }
+    }
 
     function enablePerformanceAndTracingIfNeeded() {
         if (compilerOptions.extendedDiagnostics) {
@@ -330,16 +342,15 @@ function createProgram(args, initialInputs) {
         compilerOptions.extendedDiagnostics && host.trace?.(message)
     }
 
-    function getDirectoryWatcherForPath(path) {
-        for (const [directory, callbacks] of directoryWatchers.entries()) {
-            if (isAncestorDirectory(directory, path)) {
-                debuglog(`found a directory watcher for ${path} ${directory}`);
-                return (filePath) => {
-                    for (const callback of callbacks) {
-                        callback(filePath)
-                    }
-                };
-            }
+    function getDirectoryWatcherForPath(fileName) {
+        const p = path.dirname(fileName); 
+        const callbacks = directoryWatchers.get(p);
+        if (callbacks) {
+            return (filePath) => {
+                for (const callback of callbacks) {
+                    callback(filePath)
+                }
+            };
         }
     }
 
@@ -384,12 +395,25 @@ function createProgram(args, initialInputs) {
             filesystemTree.remove(filePath);
         }
 
-        const directoryWatcher = getDirectoryWatcherForPath(filePath)
-        directoryWatcher?.(path.dirname(filePath));
-        directoryWatcher?.(filePath);
+        // We need to signal that directory containing the missing sources is present to properly
+        // invalidate failed lookups cache of tsc.
+        // 
+        // When `bazel-out/darwin_arm64-fastbuild/bin/feature1/index.d.ts` invalidated with kind 
+        // we need to do following;
+        //
+        // First, Get the directory watcher for `bazel-out/darwin_arm64-fastbuild/bin/feature1/index.d.ts`
+        // and invoke it with `bazel-out/darwin_arm64-fastbuild/bin/feature1/index.d.ts`
+        // 
+        // Then, in case the directory containing index.d.ts is in failed lookups 
+        // we need repeat the first step for containing directory as well.
+        // Get the directory watcher for `bazel-out/darwin_arm64-fastbuild/bin/feature1`
+        // and invoke it with `bazel-out/darwin_arm64-fastbuild/bin/feature1`
+        const dir = path.dirname(filePath);
+        getDirectoryWatcherForPath(dir)?.(dir);
+
+        getDirectoryWatcherForPath(filePath)?.(filePath);
 
         let callback = fileWatchers.get(filePath);
-
         callback?.(kind);
     }
 
@@ -397,7 +421,7 @@ function createProgram(args, initialInputs) {
         directoryPath = path.relative(execRoot, directoryPath);
         // since rules_js runs everything under bazel-out we shouldn't care about anything outside of it.
         if (!directoryPath.startsWith('bazel-out')) {
-            return { close: () => {} };
+            return { close: noop };
         }
         debuglog(`watchDirectory ${directoryPath}`);
 
@@ -414,7 +438,6 @@ function createProgram(args, initialInputs) {
                 if (callbacks.size === 0) {
                     directoryWatchers.delete(directoryPath)
                 }
-                debuglog(`watchDirectory@close ${directoryPath}`);
             },
         };
     }
@@ -423,12 +446,7 @@ function createProgram(args, initialInputs) {
         debuglog(`watchFile ${filePath} ${interval}`);
         const relativeFilePath = path.relative(execRoot, filePath);
         fileWatchers.set(relativeFilePath, (kind) => callback(filePath, kind));
-        return {
-            close: () => {
-                fileWatchers.delete(relativeFilePath);
-                debuglog(`watchFile@close ${filePath}`);
-            },
-        };
+        return { close: () => fileWatchers.delete(relativeFilePath) };
     }
 }
 
@@ -474,6 +492,8 @@ function emit(args, inputs) {
         for (const [input, digest] of Object.entries(inputs)) {
             if (!(input in previousInputs)) {
                 host.invalidate(input, ts.FileWatcherEventKind.Created, digest);
+                host.applyChanges();
+                host.invalidate(input, ts.FileWatcherEventKind.Changed, digest);
             } else if (previousInputs[input] != digest) {
                 host.invalidate(input, ts.FileWatcherEventKind.Changed, digest);
             }
