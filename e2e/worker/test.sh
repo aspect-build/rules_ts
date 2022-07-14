@@ -15,7 +15,6 @@ exit_with_message() {
 
 add_trap() {
     traps="$@; $traps"
-    echo $traps
     trap "(set +e; $traps)" EXIT
 }
 
