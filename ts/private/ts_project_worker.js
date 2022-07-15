@@ -342,18 +342,6 @@ function createProgram(args, initialInputs) {
         compilerOptions.extendedDiagnostics && host.trace?.(message)
     }
 
-    function getDirectoryWatcherForPath(fileName) {
-        const p = path.dirname(fileName); 
-        const callbacks = directoryWatchers.get(p);
-        if (callbacks) {
-            return (filePath) => {
-                for (const callback of callbacks) {
-                    callback(filePath)
-                }
-            };
-        }
-    }
-
     function readFile(filePath, encoding) {
         const relative = path.relative(execRoot, filePath);
         // external lib are transitive sources thus not listed in the inputs map reported by bazel.
@@ -378,11 +366,24 @@ function createProgram(args, initialInputs) {
         return filesystemTree.fileExists(path.relative(execRoot, filePath));
     }
 
+    
     function readDirectory(directoryPath, extensions, exclude, include, depth) {
         return filesystemTree.readDirectory(
             path.relative(execRoot, directoryPath), 
             extensions, exclude, include, depth
         ).map(p => path.isAbsolute(p) ? p : path.join(execRoot, p))
+    }
+
+    function getDirectoryWatcherForPath(fileName) {
+        const p = path.dirname(fileName); 
+        const callbacks = directoryWatchers.get(p);
+        if (callbacks) {
+            return (filePath) => {
+                for (const callback of callbacks) {
+                    callback(filePath)
+                }
+            };
+        }
     }
 
     function invalidate(filePath, kind, digest) {
@@ -397,24 +398,26 @@ function createProgram(args, initialInputs) {
 
         // We need to signal that directory containing the missing sources is present to properly
         // invalidate failed lookups cache of tsc.
-        // 
-        // When `bazel-out/darwin_arm64-fastbuild/bin/feature1/index.d.ts` invalidated with kind 
-        // we need to do following;
         //
-        // First, Get the directory watcher for `bazel-out/darwin_arm64-fastbuild/bin/feature1/index.d.ts`
-        // and invoke it with `bazel-out/darwin_arm64-fastbuild/bin/feature1/index.d.ts`
-        // 
-        // Then, in case the directory containing index.d.ts is in failed lookups 
-        // we need repeat the first step for containing directory as well.
-        // Get the directory watcher for `bazel-out/darwin_arm64-fastbuild/bin/feature1`
+        // Assume that `filePath` is `bazel-out/darwin_arm64-fastbuild/bin/feature1/index.d.ts`
+        
+        // First, in case the directory containing `index.d.ts is` in failed lookups, we need to 
+        // get the directory watcher for `bazel-out/darwin_arm64-fastbuild/bin/feature1`
+        // which is `bazel-out/darwin_arm64-fastbuild/bin`
         // and invoke it with `bazel-out/darwin_arm64-fastbuild/bin/feature1`
         const dir = path.dirname(filePath);
-        getDirectoryWatcherForPath(dir)?.(dir);
+        const directoryWatcherForGrandParentDirectory = getDirectoryWatcherForPath(dir)
+        directoryWatcherForGrandParentDirectory?.(dir);
 
-        getDirectoryWatcherForPath(filePath)?.(filePath);
+        // Then, get the directory watcher for `bazel-out/darwin_arm64-fastbuild/bin/feature1/index.d.ts`
+        // which is `bazel-out/darwin_arm64-fastbuild/bin/feature1`
+        // and invoke it with `bazel-out/darwin_arm64-fastbuild/bin/feature1/index.d.ts`
+        const directoryForParentDirectory = getDirectoryWatcherForPath(filePath)
+        directoryForParentDirectory?.(filePath);
 
-        let callback = fileWatchers.get(filePath);
-        callback?.(kind);
+        // Then finally a fileWatcher for the filePath and invoke it.
+        const fileWatcherCallback = fileWatchers.get(filePath);
+        fileWatcherCallback?.(kind);
     }
 
     function watchDirectory(directoryPath, callback, recursive, options) {
