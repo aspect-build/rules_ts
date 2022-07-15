@@ -17,4 +17,3 @@ nodejs_register_toolchains(
     name = "node",
     node_version = DEFAULT_NODE_VERSION,
 )
-

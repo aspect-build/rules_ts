@@ -4,7 +4,7 @@ ts_project(
     name = "feature",
     srcs = ["index.ts"],
     declaration = True,
-    visibility = ["//visibility:public"],   
+    visibility = ["//visibility:public"],
     deps = [
         ":sub",
     ],
@@ -13,8 +13,8 @@ ts_project(
 ts_project(
     name = "sub",
     srcs = glob(["sub/*.ts"]),
-    tsconfig = {},
     declaration = True,
     resolve_json_module = True,
+    tsconfig = {},
     validate = False,
 )
