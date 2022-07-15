@@ -153,9 +153,13 @@ def _relative_to_package(path, ctx):
     return path
 
 def _is_ts_src(src, allow_js):
-    if not src.endswith(".d.ts") and (src.endswith(".ts") or src.endswith(".tsx")):
-        return True
-    return allow_js and (src.endswith(".js") or src.endswith(".jsx"))
+    if (src.endswith(".ts") or src.endswith(".tsx") or src.endswith(".mts") or src.endswith(".cts")):
+        return not (src.endswith(".d.ts") or src.endswith(".d.mts") or src.endswith(".d.cts"))
+
+    if allow_js:
+        return (src.endswith(".js") or src.endswith(".jsx") or src.endswith(".mjs") or src.endswith(".cjs"))
+
+    return False
 
 def _is_json_src(src, resolve_json_module):
     return resolve_json_module and src.endswith(".json")
@@ -189,9 +193,16 @@ def _calculate_js_outs(srcs, out_dir, root_dir, allow_js, preserve_jsx, emit_dec
 
     exts = {
         "*": ".js",
-        ".jsx": ".jsx",
-        ".tsx": ".jsx",
-    } if preserve_jsx else {"*": ".js"}
+        ".mts": ".mjs",
+        ".mjs": ".mjs",
+        ".cjs": ".cjs",
+        ".cts": ".cjs",
+    }
+
+    if preserve_jsx:
+        exts[".jsx"] = ".jsx"
+        exts[".tsx"] = ".jsx"
+
     return _out_paths(srcs, out_dir, root_dir, allow_js, exts)
 
 def _calculate_map_outs(srcs, out_dir, root_dir, source_map, preserve_jsx, emit_declaration_only):
@@ -200,20 +211,42 @@ def _calculate_map_outs(srcs, out_dir, root_dir, source_map, preserve_jsx, emit_
 
     exts = {
         "*": ".js.map",
-        ".tsx": ".jsx.map",
-    } if preserve_jsx else {"*": ".js.map"}
+        ".mts": ".mjs.map",
+        ".cts": ".cjs.map",
+        ".mjs": ".mjs.map",
+        ".cjs": ".cjs.map",
+    }
+    if preserve_jsx:
+        exts[".tsx"] = ".jsx.map"
+
     return _out_paths(srcs, out_dir, root_dir, False, exts)
 
 def _calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, composite, allow_js, include_srcs = True):
     if not (declaration or composite):
         return []
-    return _out_paths(srcs, typings_out_dir, root_dir, allow_js, {"*": ".d.ts"})
+
+    exts = {
+        "*": ".d.ts",
+        ".mts": ".d.mts",
+        ".cts": ".d.cts",
+        ".mjs": ".d.mts",
+        ".cjs": ".d.cts",
+    }
+
+    return _out_paths(srcs, typings_out_dir, root_dir, allow_js, exts)
 
 def _calculate_typing_maps_outs(srcs, typings_out_dir, root_dir, declaration_map, allow_js):
     if not declaration_map:
         return []
 
-    exts = {"*": ".d.ts.map"}
+    exts = {
+        "*": ".d.ts.map",
+        ".mts": ".d.mts.map",
+        ".cts": ".d.cts.map",
+        ".mjs": ".d.mts.map",
+        ".cjs": ".d.cts.map",
+    }
+
     return _out_paths(srcs, typings_out_dir, root_dir, allow_js, exts)
 
 def _calculate_root_dir(ctx):
