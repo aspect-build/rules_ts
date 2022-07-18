@@ -17,12 +17,15 @@ LATEST_VERSION = TS_VERSIONS.keys()[-1]
 # ours took precedence. Such breakages are challenging for users, so any
 # changes in this function should be marked as BREAKING in the commit message
 # and released only in semver majors.
-def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrity = None):
+def rules_ts_dependencies(name = "npm_typescript", ts_version_from = None, ts_version = None, ts_integrity = None):
     """Dependencies needed by users of rules_ts.
 
     To skip fetching the typescript package, define repository called 'npm_typescript' before calling this.
+    
+    To have multiple version of typescript in the same workspace you may call this more than once with different names.
 
     Args:
+        name: name of the repository
         ts_version_from: label of a json file (typically `package.json`) which declares an exact typescript version
             in a dependencies or devDependencies property.
             Exactly one of `ts_version` or `ts_version_from` must be set.
@@ -68,4 +71,4 @@ def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrit
         url = "https://github.com/aspect-build/bazel-lib/archive/refs/tags/v1.5.0.tar.gz",
     )
 
-    npm_dependencies(ts_version_from = ts_version_from, ts_version = ts_version, ts_integrity = ts_integrity)
+    npm_dependencies(name = name, ts_version_from = ts_version_from, ts_version = ts_version, ts_integrity = ts_integrity)

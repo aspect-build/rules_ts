@@ -260,7 +260,7 @@ def ts_project(
     """
 
     # Disable workers if a custom tsc was provided but not a custom tsc_worker.
-    if tsc != _tsc and tsc_worker == _tsc_worker:
+    if tsc != _tsc and tsc_worker == _tsc_worker and supports_workers == None:
         supports_workers = False
 
     if srcs == None:

@@ -1,4 +1,4 @@
-"BUILD file inserted into @npm_typescript repository"
+"BUILD file inserted into @{repository_name}_typescript repository"
 load("@aspect_rules_js//js:defs.bzl", "js_binary")
 load("@aspect_rules_js//npm/private:npm_package_internal.bzl", "npm_package_internal")
 load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
@@ -10,7 +10,7 @@ npm_package_internal(
     name = "npm_typescript",
     src = "package",
     package = "typescript",
-    version = "ts_version",
+    version = "{ts_version}",
 )
 
 npm_link_package(
@@ -50,9 +50,9 @@ js_binary(
 # tsc worker
 npm_package_internal(
     name = "npm_google_protobuf",
-    src = "@npm_google_protobuf//:package",
+    src = "@{repository_name}_google_protobuf//:package",
     package = "google-protobuf",
-    version = "bazel_worker_version",
+    version = "{bazel_worker_version}",
 )
 
 npm_link_package(
@@ -63,9 +63,9 @@ npm_link_package(
 
 npm_package_internal(
     name = "npm_at_bazel_worker",
-    src = "@npm_at_bazel_worker//:package",
+    src = "@{repository_name}_at_bazel_worker//:package",
     package = "@bazel/worker",
-    version = "bazel_worker_version",
+    version = "{bazel_worker_version}",
 )
 
 npm_link_package(

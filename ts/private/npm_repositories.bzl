@@ -68,13 +68,13 @@ http_archive_version = repository_rule(
 )
 
 # buildifier: disable=function-docstring
-def npm_dependencies(ts_version_from = None, ts_version = None, ts_integrity = None):
+def npm_dependencies(name = "npm_typescript", ts_version_from = None, ts_version = None, ts_integrity = None):
     if (ts_version and ts_version_from) or (not ts_version_from and not ts_version):
         fail("""Exactly one of `ts_version` or `ts_version_from` must be set.""")
 
     maybe(
         http_archive,
-        name = "npm_google_protobuf",
+        name = "{name}_google_protobuf".format(name = name),
         build_file = "@aspect_rules_ts//ts:BUILD.package",
         integrity = worker_versions.google_protobuf_integrity,
         urls = ["https://registry.npmjs.org/google-protobuf/-/google-protobuf-{}.tgz".format(worker_versions.google_protobuf_version)],
@@ -82,7 +82,7 @@ def npm_dependencies(ts_version_from = None, ts_version = None, ts_integrity = N
 
     maybe(
         http_archive,
-        name = "npm_at_bazel_worker",
+        name = "{name}_at_bazel_worker".format(name = name),
         integrity = worker_versions.bazel_worker_integrity,
         build_file = "@aspect_rules_ts//ts:BUILD.package",
         urls = ["https://registry.npmjs.org/@bazel/worker/-/worker-{}.tgz".format(worker_versions.bazel_worker_version)],
@@ -90,14 +90,15 @@ def npm_dependencies(ts_version_from = None, ts_version = None, ts_integrity = N
 
     maybe(
         http_archive_version,
-        name = "npm_typescript",
+        name = name,
         version = ts_version,
         version_from = ts_version_from,
         integrity = ts_integrity,
         build_file = "@aspect_rules_ts//ts:BUILD.typescript",
         build_file_substitutions = {
-            "bazel_worker_version": worker_versions.bazel_worker_version,
-            "google_protobuf_version": worker_versions.google_protobuf_version,
+            "{bazel_worker_version}": worker_versions.bazel_worker_version,
+            "{google_protobuf_version}": worker_versions.google_protobuf_version,
+            "{repository_name}": name,
         },
         urls = ["https://registry.npmjs.org/typescript/-/typescript-{}.tgz"],
     )
