@@ -1,86 +1,30 @@
+load("@aspect_rules_ts//ts/private:versions.bzl", "VERSIONS")
+
+# simple semver version parser. 
+# only supports <version core> portion of SemVer specification.
+# does not perform any validation on SemVer parts.
+# https://semver.org/#backusnaur-form-grammar-for-valid-semver-versions
+def semver_parse(version_str):
+    parts = version_str.split(".")
+    if len(parts) > 3:
+        fail("semver_parse does not support semver strings that have more than <version core> SemVer strings.")
+    return parts
+
+def _cmp(a, b):
+    """Return negative if a<b, zero if a==b, positive if a>b."""
+    return int(a > b) - int(a < b)
+
+def semver_compare(version_str, compared_str):
+    """Returns 1 if version_str is greater than compared_str, 0 if equals, and -1 if less.""" 
+    version = semver_parse(version_str)
+    compared = semver_parse(compared_str)
+    return _cmp(version, compared)
+
+def semver_gt(version_str, compared_str):
+    return semver_compare(version_str, compared_str) == 1
+
 SUPPORTED_VERSIONS = [
-    # "2.7.1",
-    # "2.7.2",
-    # "2.8.1",
-    # "2.8.3",
-    # "2.8.4",
-    # "2.9.1",
-    # "2.9.2",
-    # "3.0.1",
-    # "3.0.3",
-    # "3.1.1",
-    # "3.1.2",
-    # "3.1.3",
-    # "3.1.4",
-    # "3.1.5",
-    # "3.1.6",
-    # "3.1.7",
-    # "3.1.8",
-    # "3.2.1",
-    # "3.2.2",
-    # "3.2.4",
-    # "3.3.1",
-    # "3.3.3",
-    # "3.3.3333",
-    # "3.3.4000",
-    # "3.4.1",
-    # "3.4.2",
-    # "3.4.3",
-    # "3.4.4",
-    # "3.4.5",
-    # "3.5.1",
-    # "3.5.2",
-    # "3.5.3",
-    # "3.6.2",
-    # "3.6.3",
-    # "3.6.4",
-    # "3.6.5",
-    # "3.7.2",
-    # "3.7.3",
-    # "3.7.4",
-    # "3.7.5",
-    # "3.7.6",
-    # "3.7.7",
-    # "3.8.2",
-    # "3.8.3",
-    # "3.9.2",
-    # "3.9.3",
-    # "3.9.4",
-    # "3.9.5",
-    # "3.9.6",
-    # "3.9.7",
-    # "3.9.8",
-    # "3.9.9",
-    # "3.9.10",
-    # "4.0.2",
-    # "4.0.3",
-    # "4.0.5",
-    # "4.0.6",
-    # "4.0.7",
-    # "4.0.8",
-    "4.1.2",
-    "4.1.3",
-    "4.1.4",
-    "4.1.5",
-    "4.1.6",
-    "4.2.2",
-    "4.2.3",
-    "4.2.4",
-    "4.3.2",
-    "4.3.3",
-    "4.3.4",
-    "4.3.5",
-    "4.4.2",
-    "4.4.3",
-    "4.4.4",
-    "4.5.2",
-    "4.5.3",
-    "4.5.4",
-    "4.5.5",
-    "4.6.2",
-    "4.6.3",
-    "4.6.4",
-    "4.7.2",
-    "4.7.3",
-    "4.7.4"
-] 
+    version
+    for version in VERSIONS.keys()
+    if semver_gt(version, "4.0.8")
+]
