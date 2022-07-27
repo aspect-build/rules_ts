@@ -1,0 +1,9 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "b",
+    srcs = ["index.ts"],
+    declaration = True,
+    tsconfig = "//examples/deps_lib:tsconfig",
+    visibility = ["//examples/deps_lib:__subpackages__"],
+)
