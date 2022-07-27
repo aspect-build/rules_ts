@@ -12,8 +12,11 @@ write_file(
 
 ts_project(
     name = "feature1",
-    srcs = ["index.ts", "big.ts"],
+    srcs = [
+        "big.ts",
+        "index.ts",
+    ],
     declaration = True,
-    visibility = ["//visibility:public"],   
     tsconfig = {},
+    visibility = ["//visibility:public"],
 )
