@@ -218,12 +218,6 @@ function printDiagnostics(diagnostics) {
     worker.log(ts.formatDiagnostics(diagnostics, formatDiagnosticHost));
 }
 
-function isAncestorDirectory(ancestor, child) {
-    const ancestorChunks = ancestor.split(path.sep).filter((i) => !!i);
-    const childChunks = child.split(path.sep).filter((i) => !!i);
-    return ancestorChunks.every((chunk, i) => childChunks[i] === chunk);
-}
-
 /** @type {Map<string, ReturnType<createProgram> & {previousInputs?: import("@bazel/worker").Inputs}>} */
 const workers = new Map();
 
@@ -242,13 +236,14 @@ function createProgram(args, initialInputs) {
 
     const outputs = new Set();
 
-    let applyChanges = () => {}
+    const taskQueue = new Set();
+
     /** @type {ts.System} */
     const strictSys = {
         write: worker.log,
         writeOutputIsTTY: () => false,
-        setTimeout: (cb) => applyChanges = () => cb(),
-        clearTimeout: () => applyChanges = () => {},
+        setTimeout: setTimeout,
+        clearTimeout: clearTimeout, 
         fileExists: fileExists,
         readFile: readFile,
         readDirectory: readDirectory,
@@ -276,7 +271,7 @@ function createProgram(args, initialInputs) {
     );
 
     host.invalidate = invalidate;
-    host.applyChanges = () => applyChanges();
+    host.applyChanges = applyChanges;
     host.debuglog = debuglog;
 
     debuglog(`tsconfig: ${tsconfig}`);
@@ -285,6 +280,23 @@ function createProgram(args, initialInputs) {
     const program = ts.createWatchProgram(host);
 
     return { host, program, checkAndApplyArgs };
+
+    function setTimeout(cb) {
+        taskQueue.add(cb);
+        return cb;
+    }
+
+    function clearTimeout(cb) {
+        taskQueue.delete(cb)
+    }
+
+    function applyChanges() {
+        debuglog("Applying changes");
+        for (const task of taskQueue) {
+            taskQueue.delete(task);
+            task();
+        }
+    }
 
     function enablePerformanceAndTracingIfNeeded() {
         if (compilerOptions.extendedDiagnostics) {
@@ -330,19 +342,6 @@ function createProgram(args, initialInputs) {
         compilerOptions.extendedDiagnostics && host.trace?.(message)
     }
 
-    function getDirectoryWatcherForPath(path) {
-        for (const [directory, callbacks] of directoryWatchers.entries()) {
-            if (isAncestorDirectory(directory, path)) {
-                debuglog(`found a directory watcher for ${path} ${directory}`);
-                return (filePath) => {
-                    for (const callback of callbacks) {
-                        callback(filePath)
-                    }
-                };
-            }
-        }
-    }
-
     function readFile(filePath, encoding) {
         const relative = path.relative(execRoot, filePath);
         // external lib are transitive sources thus not listed in the inputs map reported by bazel.
@@ -367,11 +366,24 @@ function createProgram(args, initialInputs) {
         return filesystemTree.fileExists(path.relative(execRoot, filePath));
     }
 
+    
     function readDirectory(directoryPath, extensions, exclude, include, depth) {
         return filesystemTree.readDirectory(
             path.relative(execRoot, directoryPath), 
             extensions, exclude, include, depth
         ).map(p => path.isAbsolute(p) ? p : path.join(execRoot, p))
+    }
+
+    function getDirectoryWatcherForPath(fileName) {
+        const p = path.dirname(fileName); 
+        const callbacks = directoryWatchers.get(p);
+        if (callbacks) {
+            return (filePath) => {
+                for (const callback of callbacks) {
+                    callback(filePath)
+                }
+            };
+        }
     }
 
     function invalidate(filePath, kind, digest) {
@@ -384,20 +396,35 @@ function createProgram(args, initialInputs) {
             filesystemTree.remove(filePath);
         }
 
-        const directoryWatcher = getDirectoryWatcherForPath(filePath)
-        directoryWatcher?.(path.dirname(filePath));
-        directoryWatcher?.(filePath);
+        // We need to signal that directory containing the missing sources is present to properly
+        // invalidate failed lookups cache of tsc.
+        //
+        // Assume that `filePath` is `bazel-out/darwin_arm64-fastbuild/bin/feature1/index.d.ts`
+        
+        // First, in case the directory containing `index.d.ts is` in failed lookups, we need to 
+        // get the directory watcher for `bazel-out/darwin_arm64-fastbuild/bin/feature1`
+        // which is `bazel-out/darwin_arm64-fastbuild/bin`
+        // and invoke it with `bazel-out/darwin_arm64-fastbuild/bin/feature1`
+        const dir = path.dirname(filePath);
+        const directoryWatcherForGrandParentDirectory = getDirectoryWatcherForPath(dir)
+        directoryWatcherForGrandParentDirectory?.(dir);
 
-        let callback = fileWatchers.get(filePath);
+        // Then, get the directory watcher for `bazel-out/darwin_arm64-fastbuild/bin/feature1/index.d.ts`
+        // which is `bazel-out/darwin_arm64-fastbuild/bin/feature1`
+        // and invoke it with `bazel-out/darwin_arm64-fastbuild/bin/feature1/index.d.ts`
+        const directoryForParentDirectory = getDirectoryWatcherForPath(filePath)
+        directoryForParentDirectory?.(filePath);
 
-        callback?.(kind);
+        // Then finally a fileWatcher for the filePath and invoke it.
+        const fileWatcherCallback = fileWatchers.get(filePath);
+        fileWatcherCallback?.(kind);
     }
 
     function watchDirectory(directoryPath, callback, recursive, options) {
         directoryPath = path.relative(execRoot, directoryPath);
         // since rules_js runs everything under bazel-out we shouldn't care about anything outside of it.
         if (!directoryPath.startsWith('bazel-out')) {
-            return { close: () => {} };
+            return { close: noop };
         }
         debuglog(`watchDirectory ${directoryPath}`);
 
@@ -414,7 +441,6 @@ function createProgram(args, initialInputs) {
                 if (callbacks.size === 0) {
                     directoryWatchers.delete(directoryPath)
                 }
-                debuglog(`watchDirectory@close ${directoryPath}`);
             },
         };
     }
@@ -423,12 +449,7 @@ function createProgram(args, initialInputs) {
         debuglog(`watchFile ${filePath} ${interval}`);
         const relativeFilePath = path.relative(execRoot, filePath);
         fileWatchers.set(relativeFilePath, (kind) => callback(filePath, kind));
-        return {
-            close: () => {
-                fileWatchers.delete(relativeFilePath);
-                debuglog(`watchFile@close ${filePath}`);
-            },
-        };
+        return { close: () => fileWatchers.delete(relativeFilePath) };
     }
 }
 
@@ -474,6 +495,8 @@ function emit(args, inputs) {
         for (const [input, digest] of Object.entries(inputs)) {
             if (!(input in previousInputs)) {
                 host.invalidate(input, ts.FileWatcherEventKind.Created, digest);
+                host.applyChanges();
+                host.invalidate(input, ts.FileWatcherEventKind.Changed, digest);
             } else if (previousInputs[input] != digest) {
                 host.invalidate(input, ts.FileWatcherEventKind.Changed, digest);
             }

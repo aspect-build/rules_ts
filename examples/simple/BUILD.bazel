@@ -4,6 +4,7 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
 # Dependencies for all targets in this package
 _DEPS = [
     "//examples:node_modules/@myorg/js_lib",
+    "//examples:node_modules/@myorg/dts_lib",
     "//examples:node_modules/@types/node",
     "//examples:node_modules/date-fns",
 ]
