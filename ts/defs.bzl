@@ -72,7 +72,7 @@ def ts_project(
         declaration_dir = None,
         out_dir = None,
         root_dir = None,
-        supports_workers = True,
+        supports_workers = None,
         **kwargs):
     """Compiles one TypeScript project using `tsc --project`.
 
@@ -248,6 +248,7 @@ def ts_project(
         supports_workers: Whether the worker protocol is enabled.
             To disable worker mode for a particular target set `supports_workers` to `False`.
             Worker mode can be controlled as well via `--strategy` and `mnemonic` and  using .bazelrc.
+            supports_workers will default to `True` when `supports_workers` is `None` either implicitly or explicitly.
 
             Putting this to your .bazelrc will disable it globally.
 
@@ -262,6 +263,9 @@ def ts_project(
     # Disable workers if a custom tsc was provided but not a custom tsc_worker.
     if tsc != _tsc and tsc_worker == _tsc_worker and supports_workers == None:
         supports_workers = False
+    # If the default value is still `None` then turn on the worker mode.
+    elif supports_workers == None:
+        supports_workers = True
 
     if srcs == None:
         include = ["**/*.ts", "**/*.tsx"]
