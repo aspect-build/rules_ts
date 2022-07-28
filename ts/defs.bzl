@@ -415,10 +415,10 @@ def ts_project(
         # Default target produced by the macro gives the js and map outs, with the transitive dependencies.
         js_library(
             name = name,
-            srcs = js_outs + map_outs,
-            # Include the tsc target so that this js_library can be a valid dep for downstream ts_project
-            # or other DeclarationInfo-aware rules.
-            deps = deps + [tsc_target_name],
+            # Include the tsc target in srcs to pick-up both the direct & transitive declaration outputs so
+            # that this js_library can be a valid dep for downstream ts_project or other DeclarationInfo-aware rules.
+            srcs = js_outs + map_outs + [tsc_target_name],
+            deps = deps,
             **common_kwargs
         )
 
