@@ -150,6 +150,7 @@ This should be changed to js_library, which can be done by running:
 This might be because
 - you configured it with `noEmit`
 - the `srcs` are empty
+- `srcs` has elements producing non-ts outputs
 """ % label
         else:
             no_outs_msg = "ts_project target %s with custom transpiler needs `declaration = True`." % label
