@@ -30,44 +30,67 @@ function createFilesystemTree(root, inputs) {
     const hashes = new Map();
     const tree = {};
 
+    const TYPE = {
+        DIR: 1,
+        FILE: 2,
+        SYMLINK: 3
+    }
+
+    const TypeBrand = Symbol.for("fileSystemTree#type");
+    const Symlink = Symbol.for("fileSystemTree#symlink");
+
+
     for (const p in inputs) {
         add(p, inputs[p]);
     }
 
-    function getNode(p) {
+    function getNode(p, from = tree) {
         const parts = p.split(path.sep);
-        let backtrack = tree;
-    
+        let node = from;
         for (const part of parts) {
-            backtrack = backtrack[part];
-            if (!backtrack) {
+            if (!(part in node)) {
                 return undefined;
             }
-            if (backtrack.symlinkTo) {
-                backtrack = getNode(backtrack.symlinkTo);
+            node = node[part];
+            if (node[TypeBrand] == TYPE.SYMLINK) {
+                node = getNode(node[Symlink]);
             }
         }
-        return backtrack;
+        return node;
     }
 
     function add(p, hash) {
-        const parts = p.split(path.sep);
-        let backtrack = tree;
-        for (const part of parts) {
-            if (typeof backtrack[part] != "object") {
-                backtrack[part] = {};
+        const parts = path.parse(p);
+        let node = tree;
+
+        for (const part of parts.dir.split(path.sep)) {
+            if (part == "") {
+                continue;
             }
-            backtrack = backtrack[part];
+            if (typeof node[part] != "object") {
+                node[part] = {
+                    [TypeBrand]: TYPE.DIR 
+                };
+            }
+            node = node[part];
         }
+
 
         // Digest is empty when the input is a symlink which we use as an indicator to limit number of 
         // realpath calls we make.
-        // See: https://github.com/bazelbuild/bazel/pull/14002#issuecomment-977790796 for what it can be empty.
+        // See: https://github.com/bazelbuild/bazel/pull/14002#issuecomment-977790796 for why it can be empty.
         if (hash == null) {
             const realpath = ts.sys.realpath(path.join(root, p));
             const relative = path.relative(root, realpath);
             if (relative != p) {
-                backtrack.symlinkTo = relative;
+                node[parts.base] = {
+                    [TypeBrand]: TYPE.SYMLINK,
+                    [Symlink]: relative
+                }
+            }
+        } else if (parts.base) {
+            node[parts.base] = {
+                [TypeBrand]: TYPE.FILE
             }
         }
         hashes.set(p, hash);
@@ -75,39 +98,41 @@ function createFilesystemTree(root, inputs) {
 
     function remove(p) {
         const parts = p.split(path.sep);
-        const lastPart = parts.pop();
-        let backtrack = tree;
+        let track = {parent: undefined, part: undefined, node: tree};
         for (const part of parts) {
-            if (typeof backtrack[part] == "object") {
-                backtrack = backtrack[part];
+            if (typeof track.node[part] == "object") {
+                track = {parent: track, segment: part, node: track.node[part]}
             } else {
-                return // couldn't find it.
+                throw new Error(`Could not find ${p}`);
             }
         }
-        // Bazel never reports empty TreeArtifacts within the inputs map. Meaning if a directory contains nothing then bazel will never tell us about that input.
-        // 
-        // Ideally, after a removal operation we should be checking for orphan parent nodes within the tree of that given path and remove them.
-        // This could be done by to walking up nodes and removing them if they are being orphaned as a result of this action. However, since this would 
-        // be a costly operation given the recursive calls that we have to do, we decide to do nothing about them given that 
-        // this neither a correctness nor reproducibility issue. 
-        // Reason behind this is tsc itself. It does not affect tsc if an empty folder is there or not, as it only looks for `<name>/index.ts` or `<name>.ts`
-        delete backtrack[lastPart]
+
+        delete track.parent.node[track.segment];
+        let removal = track.parent;
+
+        while(removal.parent) {
+            if (Object.keys(removal.node).length == 0 && removal.node[TypeBrand] == TYPE.DIR) {
+                delete removal.parent.node[removal.segment];
+            }
+            removal = removal.parent;
+        }
+
         hashes.delete(p)
     }
 
     function fileExists(p) {
         const node = getNode(p);
-        return typeof node == "object" && Object.keys(node).length == 0;
+        return typeof node == "object" && node[TypeBrand] == TYPE.FILE;
     }
 
     function directoryExists(p) {
         const node = getNode(p);
-        return typeof node == "object" && Object.keys(node).length > 0;
+        return typeof node == "object" && node[TypeBrand] == TYPE.DIR;
     }
 
     function readDirectory(p, extensions, exclude, include, depth) {
         const node = getNode(p);
-        if (!node) {
+        if (!node || node[TypeBrand] != TYPE.DIR) {
             return []
         }
         return Object.keys(node);
@@ -120,7 +145,7 @@ function createFilesystemTree(root, inputs) {
         }
         const dirs = [];
         for (const np in node) {
-            if (Object.keys(node[np]).length > 0) {
+            if (node[np][TypeBrand] == TYPE.DIR) {
                 dirs.push(np);
             }
         }
