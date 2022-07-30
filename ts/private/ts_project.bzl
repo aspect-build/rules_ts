@@ -125,7 +125,7 @@ def _ts_project_impl(ctx):
         ])
         outputs.append(ctx.outputs.buildinfo_out)
     output_sources = json_outs + js_outs + map_outs
-    typings_srcs = [s for s in ctx.files.srcs if s.path.endswith(".d.ts")]
+    typings_srcs = [s for s in ctx.files.srcs if _lib.is_typings_src(s.path)]
 
     if len(js_outs) + len(typings_outs) < 1:
         label = "//{}:{}".format(ctx.label.package, ctx.label.name)
