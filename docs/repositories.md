@@ -16,7 +16,7 @@ rules_ts_dependencies(<a href="#rules_ts_dependencies-ts_version_from">ts_versio
 
 Dependencies needed by users of rules_ts.
 
-To skip fetching the typescript package, define repository called 'npm_typescript' before calling this.
+To skip fetching the typescript package, define repository called `npm_typescript` before calling this.
 
 
 **PARAMETERS**

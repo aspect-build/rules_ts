@@ -2,7 +2,8 @@
 
 load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_files_to_bin_actions")
 load("@bazel_skylib//lib:dicts.bzl", "dicts")
-load("@rules_nodejs//nodejs:providers.bzl", "DeclarationInfo", "declaration_info", "js_module_info")
+load("@aspect_rules_js//js:providers.bzl", "js_info")
+load("@aspect_rules_js//js:libs.bzl", "js_lib_helpers")
 load(":ts_lib.bzl", "COMPILER_OPTION_ATTRS", "OUTPUT_ATTRS", "STD_ATTRS", "ValidOptionsInfo", _lib = "lib")
 load(":ts_config.bzl", "TsConfigInfo")
 load(":ts_validate_options.bzl", _validate_lib = "lib")
@@ -84,17 +85,17 @@ def _ts_project_impl(ctx):
             "--extendedDiagnostics",
         ])
 
-    deps_depsets = []
     inputs = ctx.files.srcs[:]
     for dep in ctx.attr.deps:
-        if TsConfigInfo in dep:
-            deps_depsets.append(dep[TsConfigInfo].deps)
-        if DeclarationInfo in dep:
-            deps_depsets.append(dep[DeclarationInfo].transitive_declarations)
         if ValidOptionsInfo in dep:
             inputs.append(dep[ValidOptionsInfo].marker)
 
-    inputs.extend(depset(transitive = deps_depsets).to_list())
+    inputs.extend(js_lib_helpers.gather_files_from_js_providers(
+        targets = ctx.attr.srcs + ctx.attr.deps,
+        include_transitive_sources = True,
+        include_declarations = True,
+        include_npm_linked_packages = True,
+    ))
 
     # Gather TsConfig info from both the direct (tsconfig) and indirect (extends) attribute
     tsconfig_inputs = copy_files_to_bin_actions(ctx, _validate_lib.tsconfig_inputs(ctx))
@@ -123,7 +124,7 @@ def _ts_project_impl(ctx):
             ctx.outputs.buildinfo_out.short_path,
         ])
         outputs.append(ctx.outputs.buildinfo_out)
-    runtime_outputs = json_outs + js_outs + map_outs
+    output_sources = json_outs + js_outs + map_outs
     typings_srcs = [s for s in ctx.files.srcs if s.path.endswith(".d.ts")]
 
     if len(js_outs) + len(typings_outs) < 1:
@@ -153,22 +154,28 @@ This might be because
 - `srcs` has elements producing non-ts outputs
 """ % label
         else:
-            no_outs_msg = "ts_project target %s with custom transpiler needs `declaration = True`." % label
+            no_outs_msg = "ts_project target %s with custom transpiler needs 'declaration = True'." % label
         fail(no_outs_msg + """
 This is an error because Bazel does not run actions unless their outputs are needed for the requested targets to build.
 """)
 
-    typings_outputs = typings_outs + typing_maps_outs + typings_srcs
+    output_declarations = typings_outs + typing_maps_outs + typings_srcs
+
+    # Default outputs (DefaultInfo files) is what you see on the command-line for a built
+    # library, and determines what files are used by a simple non-provider-aware downstream
+    # library. Only the JavaScript outputs are intended for use in non-TS-aware dependents.
     if ctx.attr.transpile:
-        default_outputs_depset = depset(runtime_outputs) if len(runtime_outputs) else depset(typings_outputs)
+        # Special case case where there are no source outputs and we don't have a custom
+        # transpiler so we add output_declarations to the default outputs
+        default_outputs = output_sources[:] if len(output_sources) else output_declarations[:]
     else:
         # We must avoid tsc writing any JS files in this case, as tsc was only run for typings, and some other
         # action will try to write the JS files. We must avoid collisions where two actions write the same file.
         arguments.add("--emitDeclarationOnly")
 
         # We don't produce any DefaultInfo outputs in this case, because we avoid running the tsc action
-        # unless the DeclarationInfo is requested.
-        default_outputs_depset = depset([])
+        # unless the output_declarations are requested.
+        default_outputs = []
 
     if len(outputs) > 0:
         ctx.actions.run(
@@ -187,30 +194,49 @@ This is an error because Bazel does not run actions unless their outputs are nee
             },
         )
 
+    transitive_sources = js_lib_helpers.gather_transitive_sources(output_sources, ctx.attr.srcs + ctx.attr.deps)
+
+    transitive_declarations = js_lib_helpers.gather_transitive_declarations(output_declarations, ctx.attr.srcs + ctx.attr.deps)
+
+    npm_linked_packages = js_lib_helpers.gather_npm_linked_packages(
+        srcs = ctx.attr.srcs,
+        deps = ctx.attr.deps,
+    )
+
+    npm_package_stores = js_lib_helpers.gather_npm_package_stores(
+        targets = ctx.attr.data,
+    )
+
+    runfiles = js_lib_helpers.gather_runfiles(
+        ctx = ctx,
+        sources = output_sources,
+        data = ctx.attr.data,
+        deps = ctx.attr.srcs + ctx.attr.deps,
+    )
+
     providers = [
-        # DefaultInfo is what you see on the command-line for a built library,
-        # and determines what files are used by a simple non-provider-aware
-        # downstream library.
-        # Only the JavaScript outputs are intended for use in non-TS-aware
-        # dependents.
         DefaultInfo(
-            files = default_outputs_depset,
-            runfiles = ctx.runfiles(
-                transitive_files = depset(ctx.files.data, transitive = [
-                    default_outputs_depset,
-                ]),
-                collect_default = True,
-            ),
+            files = depset(default_outputs),
+            runfiles = runfiles,
         ),
-        js_module_info(
-            sources = depset(runtime_outputs),
-            deps = ctx.attr.deps,
+        js_info(
+            declarations = output_declarations,
+            npm_linked_packages = npm_linked_packages.direct,
+            npm_package_stores = npm_package_stores.direct,
+            sources = output_sources,
+            transitive_declarations = transitive_declarations,
+            transitive_npm_linked_packages = npm_linked_packages.transitive,
+            transitive_npm_package_stores = npm_package_stores.transitive,
+            transitive_sources = transitive_sources,
         ),
         TsConfigInfo(deps = depset(tsconfig_inputs, transitive = [
             dep[TsConfigInfo].deps
             for dep in ctx.attr.deps
             if TsConfigInfo in dep
         ])),
+        OutputGroupInfo(
+            types = depset(output_declarations),
+        ),
         coverage_common.instrumented_files_info(
             ctx,
             source_attributes = ["srcs"],
@@ -218,13 +244,6 @@ This is an error because Bazel does not run actions unless their outputs are nee
             extensions = ["ts", "tsx"],
         ),
     ]
-
-    # Only provide DeclarationInfo if there are some typings.
-    # Improves error messaging if a ts_project is missing declaration = True
-    typings_in_deps = [d for d in ctx.attr.deps if DeclarationInfo in d]
-    if len(typings_outputs) or len(typings_in_deps):
-        providers.append(declaration_info(depset(typings_outputs), typings_in_deps))
-        providers.append(OutputGroupInfo(types = depset(typings_outputs)))
 
     return providers
 

@@ -22,8 +22,6 @@ npm_link_package(
     src = "//examples/deps_lib",
     root_package = "examples",
     visibility = ["//examples:__subpackages__"],
-    # TODO: propagate this dependency from //examples/deps_lib: https://github.com/aspect-build/rules_ts/issues/96
-    deps = {":.aspect_rules_js/node_modules/date-fns/2.29.1": ""},
 )
 
 # This macro expands to a npm_link_package for each third-party package in package.json

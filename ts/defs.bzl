@@ -400,7 +400,7 @@ def ts_project(
         native.filegroup(
             name = typecheck_target_name,
             srcs = [tsc_target_name],
-            # This causes the DeclarationInfo to be produced, which in turn triggers the tsc action to typecheck
+            # This causes the declarations to be produced, which in turn triggers the tsc action to typecheck
             output_group = "types",
             **common_kwargs
         )
@@ -416,7 +416,7 @@ def ts_project(
         js_library(
             name = name,
             # Include the tsc target in srcs to pick-up both the direct & transitive declaration outputs so
-            # that this js_library can be a valid dep for downstream ts_project or other DeclarationInfo-aware rules.
+            # that this js_library can be a valid dep for downstream ts_project or other rules_js derivative rules.
             srcs = js_outs + map_outs + [tsc_target_name],
             deps = deps,
             **common_kwargs

@@ -10,6 +10,11 @@ ts_config(
 ts_project(
     name = "deps_ts",
     srcs = ["index.ts"],
+    data = [
+        # Also propagate the date-fns npm package downstream so it is an runtime dependency
+        # of any linked npm_package that this target is used by.
+        "//examples:node_modules/date-fns",
+    ],
     declaration = True,
     # TODO: fix worker mode flaky bug when there are multiple ts_project targets in a package
     supports_workers = False,
@@ -23,10 +28,6 @@ npm_package(
     name = "deps_lib",
     srcs = [
         ":deps_ts",
-        # TODO: This seems undesirable to have to specify the transitive closure of ts_project
-        # targets. However, if npm_package is meant to use DefaultInfo then this _is_ technically
-        # the correct behavior.
-        "//examples/deps_lib:b",
     ],
     package = "@myorg/deps_lib",
     visibility = ["//examples:__subpackages__"],

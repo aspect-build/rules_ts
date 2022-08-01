@@ -1,13 +1,13 @@
 "Unit tests for starlark API of ts_project with custom transpiler"
 
 load("@bazel_skylib//lib:unittest.bzl", "asserts", "unittest")
-load("@rules_nodejs//nodejs:providers.bzl", "DeclarationInfo")
+load("@aspect_rules_js//js:providers.bzl", "JsInfo")
 
 def _impl0(ctx):
     env = unittest.begin(ctx)
 
     decls = []
-    for decl in ctx.attr.lib[DeclarationInfo].declarations.to_list():
+    for decl in ctx.attr.lib[JsInfo].declarations:
         decls.append(decl.basename)
     asserts.equals(env, ctx.attr.expected_declarations, sorted(decls))
 
