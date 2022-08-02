@@ -24,8 +24,9 @@ bzl_library(
         ":ts_validate_options",
         "@aspect_bazel_lib//lib:copy_to_bin",
         "@aspect_bazel_lib//lib:utils",
+        "@aspect_rules_js//js:libs",
+        "@aspect_rules_js//js:providers",
         "@bazel_skylib//lib:dicts",
-        "@rules_nodejs//nodejs/private/providers:bzl",  # keep
     ],
 )
 
@@ -40,7 +41,7 @@ bzl_library(
     name = "ts_lib",
     srcs = ["ts_lib.bzl"],
     visibility = ["//ts:__subpackages__"],
-    deps = ["@rules_nodejs//nodejs:bzl"],  # keep
+    deps = ["@aspect_rules_js//js:providers"],
 )
 
 bzl_library(

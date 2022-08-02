@@ -20,7 +20,7 @@ LATEST_VERSION = TS_VERSIONS.keys()[-1]
 def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrity = None):
     """Dependencies needed by users of rules_ts.
 
-    To skip fetching the typescript package, define repository called 'npm_typescript' before calling this.
+    To skip fetching the typescript package, define repository called `npm_typescript` before calling this.
 
     Args:
         ts_version_from: label of a json file (typically `package.json`) which declares an exact typescript version
@@ -55,9 +55,9 @@ def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrit
     maybe(
         http_archive,
         name = "aspect_rules_js",
-        sha256 = "b82da82edf64ba7e07e568193d645fc09b0a4ec92e0d82bd4e53d1a0e28ff681",
-        strip_prefix = "rules_js-1.0.0-rc.3",
-        url = "https://github.com/aspect-build/rules_js/archive/refs/tags/v1.0.0-rc.3.tar.gz",
+        sha256 = "f2b36aac9d3368e402c9083c884ad9b26ca6fa21e83b53c12482d6cb2e949451",
+        strip_prefix = "rules_js-1.0.0-rc.4",
+        url = "https://github.com/aspect-build/rules_js/archive/refs/tags/v1.0.0-rc.4.tar.gz",
     )
 
     maybe(

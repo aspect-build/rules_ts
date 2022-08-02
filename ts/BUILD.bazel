@@ -15,7 +15,6 @@ bzl_library(
         "@aspect_rules_js//js:defs",
         "@bazel_skylib//lib:partial",
         "@bazel_skylib//rules:build_test",
-        "@rules_nodejs//nodejs/private:bzl",  # keep
     ],
 )
 

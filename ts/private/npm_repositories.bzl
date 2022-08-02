@@ -26,10 +26,10 @@ def _http_archive_version_impl(rctx):
         elif "dependencies" in p.keys() and "typescript" in p["dependencies"]:
             ts = p["dependencies"]["typescript"]
         else:
-            fail("key `typescript` not found in either dependencies or devDependencies of %s" % json_path)
+            fail("key 'typescript' not found in either dependencies or devDependencies of %s" % json_path)
         if any([not seg.isdigit() for seg in ts.split(".")]):
             fail("""typescript version in package.json must be exactly specified, not a semver range: %s.
-            You can supply an exact `ts_version` attribute to `rules_ts_dependencies` to bypass this check.""" % ts)
+            You can supply an exact 'ts_version' attribute to 'rules_ts_dependencies' to bypass this check.""" % ts)
         version = ts
 
     if rctx.attr.integrity:
@@ -38,7 +38,7 @@ def _http_archive_version_impl(rctx):
         integrity = TS_VERSIONS[version]
     else:
         fail("""typescript version {} is not mirrored in rules_ts, is this a real version?
-            If so, you must manually set `ts_integrity`.
+            If so, you must manually set 'ts_integrity'.
             See documentation on rules_ts_dependencies.""".format(version))
 
     rctx.download_and_extract(
@@ -70,7 +70,7 @@ http_archive_version = repository_rule(
 # buildifier: disable=function-docstring
 def npm_dependencies(ts_version_from = None, ts_version = None, ts_integrity = None):
     if (ts_version and ts_version_from) or (not ts_version_from and not ts_version):
-        fail("""Exactly one of `ts_version` or `ts_version_from` must be set.""")
+        fail("""Exactly one of 'ts_version' or 'ts_version_from' must be set.""")
 
     maybe(
         http_archive,
