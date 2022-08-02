@@ -62,7 +62,7 @@ message "# Case 4; assert that tsc does not read a file that's been removed from
 for i in $(seq 0 9)
 do
     echo "const a = $i" > "_addendum_$i.ts"
-    add_trap "rm _addendum_$i.ts"
+    add_trap "rm -f _addendum_$i.ts"
 
     bazel build :ts
     rm "_addendum_$i.ts"
@@ -79,7 +79,7 @@ add_trap "git checkout HEAD -- tsconfig.json"
 echo '{"compilerOptions": {"module": "ES2015", "moduleResolution": "node"}}' > tsconfig.json
 rm "_addendum_$i.ts"
 
-add_trap "rm _addendum_${i}_$i.ts"
+add_trap "rm -f _addendum_${i}_$i.ts"
 echo "const a = $i" > "_addendum_${i}_$i.ts"
 
 bazel build :ts
@@ -106,7 +106,7 @@ do
     buildozer "remove deps //feature$i" :ts
 
     message="error TS2307: Cannot find module './feature$i' or its corresponding type declarations."
-    bazel build :ts || echo "failed"
+    bazel build :ts | grep "$message" && exit_with_message "Case 8: Expected worker to report missing deps"
 
     buildozer "add deps //feature$i" :ts
     bazel build :ts
@@ -132,4 +132,7 @@ bazel build :ts 2>&1 | grep "$message1" || exit_with_message "Case 9: expected w
 bazel build :ts 2>&1 | grep "$message2" || exit_with_message "Case 9: expected worker to report \"$message2\""
 bazel build :ts 2>&1 | grep "$message3" && exit_with_message "Case 9: expected worker to not report \"$message3\""
 
-message "All tests have passed"
+
+echo "###########################"
+echo "## All tests have passed ##"
+echo "###########################"

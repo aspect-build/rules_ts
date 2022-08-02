@@ -93,3 +93,43 @@ assert.ok(tree.fileExists("correct_remove/to/input.js"));
 assert.ok(tree.directoryExists("correct_remove/to"));
 assert.ok(!tree.directoryExists("correct_remove/to/path"));
 assert.ok(!tree.fileExists("correct_remove/to/path/input.js"));
+
+// Watcher
+let calls = [];
+let clean = tree.watchDirectory("inputs", (p) => calls.push(p));
+tree.add("inputs/1.js", "1");
+assert.deepEqual(calls, ["inputs", "inputs/1.js"]);
+clean();
+
+calls = [];
+tree.add("inputs/to/2.js", "1");
+clean = tree.watchDirectory("inputs/to", (p) => calls.push(p));
+tree.add("inputs/to/1.js", "1");
+assert.deepEqual(calls, ["inputs/to/1.js"]);
+clean();
+tree.remove("inputs");
+
+
+calls = [];
+clean = tree.watchFile("inputs/1.js", (p) => calls.push(p));
+tree.add("inputs/1.js", "1");
+assert.deepEqual(calls, ["inputs/1.js"]);
+clean();
+
+
+calls = [];
+tree.add("inputs/1.js", "1");
+let clean1 = tree.watchDirectory("inputs", (p) => calls.push(p));
+let clean2 = tree.watchFile("inputs/1.js", (p) => calls.push(p));
+tree.remove("inputs/1.js");
+assert.deepEqual(calls, ["inputs/1.js", "inputs/1.js", "inputs"]);
+clean1();
+clean2();
+
+
+calls = [];
+tree.add("inputs/1.js", "1");
+clean = tree.watchFile("inputs/1.js", (p) => calls.push(p));
+tree.update("inputs/1.js", "2");
+assert.deepEqual(calls, ["inputs/1.js"]);
+clean();

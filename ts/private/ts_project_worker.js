@@ -29,6 +29,7 @@ function getArgsFromParamFile() {
 function createFilesystemTree(root, inputs) {
     const hashes = new Map();
     const tree = {};
+    const watchingTree = {};
 
     const TYPE = {
         DIR: 1,
@@ -36,23 +37,29 @@ function createFilesystemTree(root, inputs) {
         SYMLINK: 3
     }
 
-    const TypeBrand = Symbol.for("fileSystemTree#type");
-    const Symlink = Symbol.for("fileSystemTree#symlink");
+    const EVENT_TYPE = {
+        ADDED: 0,
+        UPDATED: 1,
+        REMOVED: 2,
+    }
 
+    const Type = Symbol.for("fileSystemTree#type");
+    const Symlink = Symbol.for("fileSystemTree#symlink");
+    const Watcher = Symbol.for("fileSystemTree#watcher");
 
     for (const p in inputs) {
         add(p, inputs[p]);
     }
 
-    function getNode(p, from = tree) {
+    function getNode(p) {
         const parts = p.split(path.sep);
-        let node = from;
+        let node = tree;
         for (const part of parts) {
             if (!(part in node)) {
                 return undefined;
             }
             node = node[part];
-            if (node[TypeBrand] == TYPE.SYMLINK) {
+            if (node[Type] == TYPE.SYMLINK) {
                 node = getNode(node[Symlink]);
             }
         }
@@ -60,38 +67,37 @@ function createFilesystemTree(root, inputs) {
     }
 
     function add(p, hash) {
-        const parts = path.parse(p);
+        const parts = path.parse(p);        
+        const dirs = parts.dir.split(path.sep).filter(p => p != "");
+
         let node = tree;
 
-        for (const part of parts.dir.split(path.sep)) {
-            if (part == "") {
-                continue;
-            }
+        for (const [i, part] of dirs.entries()) {
             if (typeof node[part] != "object") {
                 node[part] = {
-                    [TypeBrand]: TYPE.DIR 
+                    [Type]: TYPE.DIR 
                 };
+                notifyWatchers(dirs.slice(0, i - 2), part, TYPE.DIR, EVENT_TYPE.ADDED);
             }
             node = node[part];
         }
 
-
-        // Digest is empty when the input is a symlink which we use as an indicator to limit number of 
-        // realpath calls we make.
+        // Digest is empty when the input is a symlink which we use as an indicator to limit number of realpath calls made.
         // See: https://github.com/bazelbuild/bazel/pull/14002#issuecomment-977790796 for why it can be empty.
         if (hash == null) {
             const realpath = ts.sys.realpath(path.join(root, p));
             const relative = path.relative(root, realpath);
             if (relative != p) {
                 node[parts.base] = {
-                    [TypeBrand]: TYPE.SYMLINK,
+                    [Type]: TYPE.SYMLINK,
                     [Symlink]: relative
                 }
             }
         } else if (parts.base) {
             node[parts.base] = {
-                [TypeBrand]: TYPE.FILE
+                [Type]: TYPE.FILE
             }
+            notifyWatchers(dirs, parts.base, TYPE.FILE, EVENT_TYPE.ADDED);
         }
         hashes.set(p, hash);
     }
@@ -108,31 +114,53 @@ function createFilesystemTree(root, inputs) {
         }
 
         delete track.parent.node[track.segment];
-        let removal = track.parent;
+        notifyWatchers(parts.slice(0, - 1), track.segment, track.node[Type], EVENT_TYPE.REMOVED)
 
+        let removal = track.parent;
+        let removal_parts = parts.slice(0, -1)
         while(removal.parent) {
-            if (Object.keys(removal.node).length == 0 && removal.node[TypeBrand] == TYPE.DIR) {
-                delete removal.parent.node[removal.segment];
+            if (Object.keys(removal.node).length == 0) {
+                if (removal.node[Type] == TYPE.DIR) {
+                    delete removal.parent.node[removal.segment];
+                    notifyWatchers(removal_parts.slice(0, -1), removal.segment, TYPE.DIR, EVENT_TYPE.REMOVED)
+                }
+                removal = removal.parent;
+                removal_parts.pop();
+            } else {
+                break;
             }
-            removal = removal.parent;
         }
 
         hashes.delete(p)
     }
 
+    function update(p, hash) {
+        let node = getNode(p);
+        const parts = p.split(path.sep);
+        const base = parts.pop();
+        notifyWatchers(parts, base, node[Type], EVENT_TYPE.UPDATED);
+        hashes.set(p, hash);
+    }
+
+    // TODO: file an issue to typescript repo?
+    function notify(p) {
+        const parts = p.split(path.sep);
+        const base = parts.pop();
+        notifyWatchers(parts, base, TYPE.DIR, EVENT_TYPE.UPDATED);
+    }
     function fileExists(p) {
         const node = getNode(p);
-        return typeof node == "object" && node[TypeBrand] == TYPE.FILE;
+        return typeof node == "object" && node[Type] == TYPE.FILE;
     }
 
     function directoryExists(p) {
         const node = getNode(p);
-        return typeof node == "object" && node[TypeBrand] == TYPE.DIR;
+        return typeof node == "object" && node[Type] == TYPE.DIR;
     }
 
     function readDirectory(p, extensions, exclude, include, depth) {
         const node = getNode(p);
-        if (!node || node[TypeBrand] != TYPE.DIR) {
+        if (!node || node[Type] != TYPE.DIR) {
             return []
         }
         return Object.keys(node);
@@ -145,14 +173,60 @@ function createFilesystemTree(root, inputs) {
         }
         const dirs = [];
         for (const np in node) {
-            if (node[np][TypeBrand] == TYPE.DIR) {
+            if (node[np][Type] == TYPE.DIR) {
                 dirs.push(np);
             }
         }
         return dirs
     }
 
-    return { add, remove, fileExists, directoryExists, readDirectory, getDirectories }
+    function notifyWatchers(parts, part, type, eventType) {
+        const dest_parts = [...parts, part];
+        if (type == TYPE.FILE) {
+            notifyWatcher(parts, dest_parts, eventType);
+        } else if (type == TYPE.DIR) {
+            notifyWatcher(parts, parts, eventType);
+        }
+        notifyWatcher(dest_parts, dest_parts, eventType);
+    }
+
+    function notifyWatcher(parent, parts, eventType) {
+        let node = getWatcherNode(parent, watchingTree);
+        if (typeof node == "object" && Watcher in node) {
+            for (const callback of node[Watcher]) {
+                callback(parts.join(path.sep), eventType);
+            }
+        }
+    }
+
+    function getWatcherNode(parts) {
+        let node = watchingTree;
+        for (const part of parts) {
+            if (!(part in node)) {
+                return undefined;
+            }
+            node = node[part];
+        }
+        return node;
+    }
+
+    function watch(p, callback) {
+        const parts = p.split(path.sep);
+        let node = watchingTree;
+        for (const part of parts) {
+            if (!(part in node)) {
+                node[part] = {};
+            }
+            node = node[part];
+        }
+        if (!(Watcher in node)) {
+            node[Watcher] = new Array();
+        }
+        let i = node[Watcher].push(callback) - 1;
+        return () => node[Watcher].splice(i, 1);
+    }
+
+    return { add, remove, update, notify, fileExists, directoryExists, readDirectory, getDirectories, watchDirectory: watch, watchFile: watch }
 }
 
 function isExternalLib(path) {
@@ -254,14 +328,10 @@ function createProgram(args, initialInputs) {
     const execRoot = path.resolve(bin, '..', '..', '..');
     const tsconfig = path.relative(execRoot, path.resolve(bin, options.project));
 
-    const directoryWatchers = new Map();
-    const fileWatchers = new Map();
-
     const filesystemTree = createFilesystemTree(execRoot, initialInputs);
-
     const outputs = new Set();
 
-    const taskQueue = new Set();
+    const taskQueue = new Array();
 
     /** @type {ts.System} */
     const strictSys = {
@@ -307,18 +377,17 @@ function createProgram(args, initialInputs) {
     return { host, program, checkAndApplyArgs };
 
     function setTimeout(cb) {
-        taskQueue.add(cb);
-        return cb;
+        return taskQueue.push(cb) - 1;
     }
 
-    function clearTimeout(cb) {
-        taskQueue.delete(cb)
+    function clearTimeout(i) {
+        taskQueue.splice(0, i);
     }
 
     function applyChanges() {
-        debuglog("Applying changes");
-        for (const task of taskQueue) {
-            taskQueue.delete(task);
+        debuglog(`Applying changes ${taskQueue.length}`);
+        while(taskQueue.length) {
+            const task = taskQueue.shift();
             task();
         }
     }
@@ -399,82 +468,44 @@ function createProgram(args, initialInputs) {
         ).map(p => path.isAbsolute(p) ? p : path.join(execRoot, p))
     }
 
-    function getDirectoryWatcherForPath(fileName) {
-        const p = path.dirname(fileName); 
-        const callbacks = directoryWatchers.get(p);
-        if (callbacks) {
-            return (filePath) => {
-                for (const callback of callbacks) {
-                    callback(filePath)
-                }
-            };
-        }
-    }
-
     function invalidate(filePath, kind, digest) {
         if (filePath.endsWith('.params')) return;
         debuglog(`invalidate ${filePath} : ${ts.FileWatcherEventKind[kind]}`);
 
         if (kind === ts.FileWatcherEventKind.Created) {
             filesystemTree.add(filePath, digest);
+            // TODO: explain why tsc (i hate you) decides not to invalidate failed lookups based
+            // on simple path logic.
+            filesystemTree.notify(path.dirname(filePath));
         } else if (kind === ts.FileWatcherEventKind.Deleted) {
             filesystemTree.remove(filePath);
+        } else {
+            filesystemTree.update(filePath);
         }
-
-        // We need to signal that directory containing the missing sources is present to properly
-        // invalidate failed lookups cache of tsc.
-        //
-        // Assume that `filePath` is `bazel-out/darwin_arm64-fastbuild/bin/feature1/index.d.ts`
-        
-        // First, in case the directory containing `index.d.ts is` in failed lookups, we need to 
-        // get the directory watcher for `bazel-out/darwin_arm64-fastbuild/bin/feature1`
-        // which is `bazel-out/darwin_arm64-fastbuild/bin`
-        // and invoke it with `bazel-out/darwin_arm64-fastbuild/bin/feature1`
-        const dir = path.dirname(filePath);
-        const directoryWatcherForGrandParentDirectory = getDirectoryWatcherForPath(dir)
-        directoryWatcherForGrandParentDirectory?.(dir);
-
-        // Then, get the directory watcher for `bazel-out/darwin_arm64-fastbuild/bin/feature1/index.d.ts`
-        // which is `bazel-out/darwin_arm64-fastbuild/bin/feature1`
-        // and invoke it with `bazel-out/darwin_arm64-fastbuild/bin/feature1/index.d.ts`
-        const directoryForParentDirectory = getDirectoryWatcherForPath(filePath)
-        directoryForParentDirectory?.(filePath);
-
-        // Then finally a fileWatcher for the filePath and invoke it.
-        const fileWatcherCallback = fileWatchers.get(filePath);
-        fileWatcherCallback?.(kind);
     }
 
     function watchDirectory(directoryPath, callback, recursive, options) {
-        directoryPath = path.relative(execRoot, directoryPath);
         // since rules_js runs everything under bazel-out we shouldn't care about anything outside of it.
-        if (!directoryPath.startsWith('bazel-out')) {
+        if (!directoryPath.startsWith(execRoot)) {
             return { close: noop };
         }
-        debuglog(`watchDirectory ${directoryPath}`);
+        const close = filesystemTree.watchDirectory(
+            path.relative(execRoot, directoryPath),
+            (input) => callback(path.join(execRoot, input))
+        );
 
-        const cb = (input) => callback(path.join(execRoot, input))
-
-        const callbacks = directoryWatchers.get(directoryPath) || new Set();
-        callbacks.add(cb)
-        directoryWatchers.set(directoryPath, callbacks);
-
-        return {
-            close: () => {
-                const callbacks = directoryWatchers.get(directoryPath);
-                callbacks.delete(cb);
-                if (callbacks.size === 0) {
-                    directoryWatchers.delete(directoryPath)
-                }
-            },
-        };
+        return {close};
     }
 
     function watchFile(filePath, callback, interval) {
-        debuglog(`watchFile ${filePath} ${interval}`);
-        const relativeFilePath = path.relative(execRoot, filePath);
-        fileWatchers.set(relativeFilePath, (kind) => callback(filePath, kind));
-        return { close: () => fileWatchers.delete(relativeFilePath) };
+        if (!filePath.startsWith(filePath)) {
+            return { close: noop };
+        }
+        const close = filesystemTree.watchFile(
+            path.relative(execRoot, filePath),
+            (_, kind) => callback(filePath, kind)
+        )
+        return {close};
     }
 }
 
@@ -512,7 +543,7 @@ function emit(args, inputs) {
 
     if (previousInputs) {
         timingStart(`invalidate`);
-        for (const input of Object.keys(previousInputs)) {
+        for (const input in previousInputs) {
             if (!inputs[input]) {
                 host.invalidate(input, ts.FileWatcherEventKind.Deleted);
             }
@@ -520,8 +551,6 @@ function emit(args, inputs) {
         for (const [input, digest] of Object.entries(inputs)) {
             if (!(input in previousInputs)) {
                 host.invalidate(input, ts.FileWatcherEventKind.Created, digest);
-                host.applyChanges();
-                host.invalidate(input, ts.FileWatcherEventKind.Changed, digest);
             } else if (previousInputs[input] != digest) {
                 host.invalidate(input, ts.FileWatcherEventKind.Changed, digest);
             }
