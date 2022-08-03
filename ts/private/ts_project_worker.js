@@ -27,7 +27,6 @@ function getArgsFromParamFile() {
 }
 
 function createFilesystemTree(root, inputs) {
-    const hashes = new Map();
     const tree = {};
     const watchingTree = {};
 
@@ -99,7 +98,6 @@ function createFilesystemTree(root, inputs) {
             }
             notifyWatchers(dirs, parts.base, TYPE.FILE, EVENT_TYPE.ADDED);
         }
-        hashes.set(p, hash);
     }
 
     function remove(p) {
@@ -130,16 +128,13 @@ function createFilesystemTree(root, inputs) {
                 break;
             }
         }
-
-        hashes.delete(p)
     }
 
-    function update(p, hash) {
+    function update(p) {
         let node = getNode(p);
         const parts = p.split(path.sep);
         const base = parts.pop();
         notifyWatchers(parts, base, node[Type], EVENT_TYPE.UPDATED);
-        hashes.set(p, hash);
     }
 
     function notify(p) {
@@ -381,14 +376,16 @@ function createProgram(args, initialInputs) {
     }
 
     function clearTimeout(i) {
-        taskQueue.splice(0, i);
+        taskQueue[i] = null;
     }
 
     function applyChanges() {
         debuglog(`Applying changes ${taskQueue.length}`);
         while(taskQueue.length) {
             const task = taskQueue.shift();
-            task();
+            if (task) {
+                task();
+            }  
         }
     }
 
@@ -427,7 +424,7 @@ function createProgram(args, initialInputs) {
             enablePerformanceAndTracingIfNeeded();
             updateOutputs();
             // invalidating tsconfig will cause parseConfigFile to be invoked
-            invalidate(tsconfig, ts.FileWatcherEventKind.Changed);
+            filesystemTree.update(tsconfig);
             args = newArgs;
         }
     }
@@ -498,7 +495,9 @@ function createProgram(args, initialInputs) {
     }
 
     function watchFile(filePath, callback, interval) {
-        if (!filePath.startsWith(execRoot)) {
+        if (!path.isAbsolute(filePath)) {
+            filePath = path.resolve(filePath);
+        } else if (!filePath.startsWith(execRoot)) {
             return { close: noop };
         }
         const close = filesystemTree.watchFile(
