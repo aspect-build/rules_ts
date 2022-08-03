@@ -20,7 +20,7 @@ LATEST_VERSION = TS_VERSIONS.keys()[-1]
 def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrity = None):
     """Dependencies needed by users of rules_ts.
 
-    To skip fetching the typescript package, define repository called 'npm_typescript' before calling this.
+    To skip fetching the typescript package, define repository called `npm_typescript` before calling this.
 
     Args:
         ts_version_from: label of a json file (typically `package.json`) which declares an exact typescript version
@@ -55,17 +55,17 @@ def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrit
     maybe(
         http_archive,
         name = "aspect_rules_js",
-        sha256 = "d01c514f7471db19cd86d8c15fe95409fca34750969afac2087668761121ee6a",
-        strip_prefix = "rules_js-be1ee2e8f65ff9e086487110c1115a5eb4934231",
-        url = "https://github.com/aspect-build/rules_js/archive/be1ee2e8f65ff9e086487110c1115a5eb4934231.tar.gz",
+        sha256 = "f2b36aac9d3368e402c9083c884ad9b26ca6fa21e83b53c12482d6cb2e949451",
+        strip_prefix = "rules_js-1.0.0-rc.4",
+        url = "https://github.com/aspect-build/rules_js/archive/refs/tags/v1.0.0-rc.4.tar.gz",
     )
 
     maybe(
         http_archive,
         name = "aspect_bazel_lib",
-        sha256 = "1cbbf62315d303c8083d5019a4657623d4f58e925fb51bdc8a41bad4a131f5c9",
-        strip_prefix = "bazel-lib-1.8.1",
-        url = "https://github.com/aspect-build/bazel-lib/archive/refs/tags/v1.8.1.tar.gz",
+        sha256 = "e034e4aea098c91ac05ac7e08f01a302275378a0bc0814c4939e96552c912212",
+        strip_prefix = "bazel-lib-1.9.2",
+        url = "https://github.com/aspect-build/bazel-lib/archive/refs/tags/v1.9.2.tar.gz",
     )
 
     npm_dependencies(ts_version_from = ts_version_from, ts_version = ts_version, ts_integrity = ts_integrity)

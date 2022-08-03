@@ -1,6 +1,7 @@
 "Utilities functions for selecting and filtering ts and other files"
 
-load("@rules_nodejs//nodejs:providers.bzl", "DeclarationInfo")
+load("@aspect_rules_js//js:providers.bzl", "JsInfo")
+load("@aspect_rules_js//js:libs.bzl", "js_lib_helpers")
 
 ValidOptionsInfo = provider(
     doc = "Internal: whether the validator ran successfully",
@@ -12,7 +13,7 @@ ValidOptionsInfo = provider(
 
 # Targets in deps must provide one or the other of these
 DEPS_PROVIDERS = [
-    [DeclarationInfo],
+    [JsInfo],
     [ValidOptionsInfo],
 ]
 
@@ -21,11 +22,7 @@ STD_ATTRS = {
     "args": attr.string_list(
         doc = "https://www.typescriptlang.org/docs/handbook/compiler-options.html",
     ),
-    "data": attr.label_list(
-        doc = "Runtime dependencies to include in binaries/tests that depend on this TS code",
-        default = [],
-        allow_files = True,
-    ),
+    "data": js_lib_helpers.JS_LIBRARY_DATA_ATTR,
     "declaration_dir": attr.string(
         doc = "https://www.typescriptlang.org/tsconfig#declarationDir",
     ),
