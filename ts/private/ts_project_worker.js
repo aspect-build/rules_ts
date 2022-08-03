@@ -512,7 +512,8 @@ function createProgram(args, initialInputs) {
     function watchFile(filePath, callback, interval) {
         if (!path.isAbsolute(filePath)) {
             filePath = path.resolve(filePath);
-        } else if (!filePath.startsWith(execRoot)) {
+        }
+        if (!filePath.startsWith(execRoot)) {
             return { close: noop };
         }
         const close = filesystemTree.watchFile(
