@@ -3,6 +3,13 @@ import * as feature2 from "./feature2";
 import * as feature3 from "./feature3";
 import * as feature4 from "./feature4";
 import * as feature from "./feature";
+import * as debug from "debug";
+
+import * as common from "@nestjs/common";
+import * as core from  "@nestjs/core";
+import * as rxjs from "rxjs";
+
+console.log(common, core, rxjs);
 
 const features = [
     feature.name,
@@ -14,6 +21,6 @@ const features = [
 
 function sayhello(should_i) {
     if (should_i) {
-        console.log(features)
+        debug.log(features);
     }
 }

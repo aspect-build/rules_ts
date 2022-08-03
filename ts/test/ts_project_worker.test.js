@@ -130,7 +130,7 @@ clean2();
 calls = [];
 tree.add("inputs/1.js", "1");
 clean = tree.watchFile("inputs/1.js", (p) => calls.push(p));
-tree.update("inputs/1.js", "2");
+tree.update("inputs/1.js");
 assert.deepEqual(calls, ["inputs/1.js"]);
 clean();
 
@@ -146,3 +146,34 @@ tree.add("inputs/1.js", "2");
 assert.deepEqual(calls, ["watcher3", "watcher4"]);
 watcher3();
 watcher4();
+
+
+calls = [];
+clean = tree.watchDirectory("recursive", (p) => calls.push(p), true);
+tree.add("recursive/1.js", "2");
+tree.add("recursive/to/1.js", "2");
+tree.add("recursive/to/deep/1.js", "2");
+assert.deepEqual(calls, [
+    "recursive", 
+    "recursive/1.js", 
+    "recursive/to", 
+    "recursive/to/1.js",
+    "recursive/to/deep",
+    "recursive/to/deep/1.js"
+]);
+tree.remove("recursive");
+clean();
+
+
+calls = [];
+let clean3 = tree.watchDirectory("recursive", (p) => calls.push(p), true);
+let clean4 = tree.watchDirectory("recursive", (p) => calls.push(p));
+tree.add("recursive/1.js", "2");
+assert.deepEqual(calls, [
+    "recursive", 
+    "recursive", 
+    "recursive/1.js", 
+    "recursive/1.js", 
+]);
+clean3();
+clean4();

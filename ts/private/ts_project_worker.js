@@ -76,7 +76,7 @@ function createFilesystemTree(root, inputs) {
                 node[part] = {
                     [Type]: TYPE.DIR 
                 };
-                notifyWatchers(dirs.slice(0, i - 2), part, TYPE.DIR, EVENT_TYPE.ADDED);
+                notifyWatchers(dirs.slice(0, i), part, TYPE.DIR, EVENT_TYPE.ADDED);
             }
             node = node[part];
         }
@@ -92,6 +92,7 @@ function createFilesystemTree(root, inputs) {
                     [Symlink]: relative
                 }
             }
+            notifyWatchers(dirs, parts.base, TYPE.SYMLINK, EVENT_TYPE.ADDED);
         } else if (parts.base) {
             node[parts.base] = {
                 [Type]: TYPE.FILE
@@ -104,11 +105,13 @@ function createFilesystemTree(root, inputs) {
         const parts = p.split(path.sep);
         let track = {parent: undefined, part: undefined, node: tree};
         for (const part of parts) {
-            if (typeof track.node[part] == "object") {
-                track = {parent: track, segment: part, node: track.node[part]}
-            } else {
+            let node = track.node[part];
+            if (!node) {
+                // It is not likely to end up here unless fstree does something undesired. 
+                // So we'll let it hard fail 
                 throw new Error(`Could not find ${p}`);
             }
+            track = {parent: track, segment: part, node: node }
         }
 
         delete track.parent.node[track.segment];
@@ -179,17 +182,27 @@ function createFilesystemTree(root, inputs) {
         const dest_parts = [...parts, part];
         if (type == TYPE.FILE) {
             notifyWatcher(parts, dest_parts, eventType);
-        } else if (type == TYPE.DIR) {
-            notifyWatcher(parts, parts, eventType);
+        } else {
+            notifyWatcher(parts, dest_parts, eventType);
         }
-        notifyWatcher(dest_parts, dest_parts, eventType);
+        notifyWatcher(dest_parts, dest_parts, eventType, null);
+
+        let recursive_parts = dest_parts;
+        let fore_parts = [];
+        while(recursive_parts.length) {
+            fore_parts.unshift(recursive_parts.pop());
+            notifyWatcher(recursive_parts, recursive_parts.concat(fore_parts), eventType, true);
+        }
     }
 
-    function notifyWatcher(parent, parts, eventType) {
+    function notifyWatcher(parent, parts, eventType, recursive = false) {
         let node = getWatcherNode(parent, watchingTree);
         if (typeof node == "object" && Watcher in node) {
-            for (const callback of node[Watcher]) {
-                callback(parts.join(path.sep), eventType);
+            for (const watcher of node[Watcher]) {
+                if (recursive != null && watcher.recursive != recursive) {
+                    continue;
+                }
+                watcher.callback(parts.join(path.sep), eventType);
             }
         }
     }
@@ -205,7 +218,7 @@ function createFilesystemTree(root, inputs) {
         return node;
     }
 
-    function watch(p, callback) {
+    function watch(p, callback, recursive = false) {
         const parts = p.split(path.sep);
         let node = watchingTree;
         for (const part of parts) {
@@ -216,9 +229,10 @@ function createFilesystemTree(root, inputs) {
         }
         if (!(Watcher in node)) {
             node[Watcher] = new Set();
-        }
-        node[Watcher].add(callback);
-        return () => node[Watcher].delete(callback)
+        }  
+        const watcher = {callback, recursive};
+        node[Watcher].add(watcher);
+        return () => node[Watcher].delete(watcher)
     }
 
     return { add, remove, update, notify, fileExists, directoryExists, readDirectory, getDirectories, watchDirectory: watch, watchFile: watch }
@@ -488,7 +502,8 @@ function createProgram(args, initialInputs) {
         }
         const close = filesystemTree.watchDirectory(
             path.relative(execRoot, directoryPath),
-            (input) => callback(path.join(execRoot, input))
+            (input) => callback(path.join(execRoot, input)),
+            recursive
         );
 
         return {close};
@@ -543,7 +558,7 @@ function emit(args, inputs) {
     if (previousInputs) {
         timingStart(`invalidate`);
         for (const input in previousInputs) {
-            if (!inputs[input]) {
+            if (!(input in inputs)) {
                 host.invalidate(input, ts.FileWatcherEventKind.Deleted);
             }
         }
