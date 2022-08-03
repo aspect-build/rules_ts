@@ -142,12 +142,12 @@ function createFilesystemTree(root, inputs) {
         hashes.set(p, hash);
     }
 
-    // TODO: file an issue to typescript repo?
     function notify(p) {
         const parts = p.split(path.sep);
         const base = parts.pop();
         notifyWatchers(parts, base, TYPE.DIR, EVENT_TYPE.UPDATED);
     }
+
     function fileExists(p) {
         const node = getNode(p);
         return typeof node == "object" && node[Type] == TYPE.FILE;
@@ -220,10 +220,10 @@ function createFilesystemTree(root, inputs) {
             node = node[part];
         }
         if (!(Watcher in node)) {
-            node[Watcher] = new Array();
+            node[Watcher] = new Set();
         }
-        let i = node[Watcher].push(callback) - 1;
-        return () => node[Watcher].splice(i, 1);
+        node[Watcher].add(callback);
+        return () => node[Watcher].delete(callback)
     }
 
     return { add, remove, update, notify, fileExists, directoryExists, readDirectory, getDirectories, watchDirectory: watch, watchFile: watch }
@@ -474,7 +474,7 @@ function createProgram(args, initialInputs) {
 
         if (kind === ts.FileWatcherEventKind.Created) {
             filesystemTree.add(filePath, digest);
-            // TODO: explain why tsc (i hate you) decides not to invalidate failed lookups based
+            // TODO: explain why tsc decides not to invalidate failed lookups based
             // on simple path logic.
             filesystemTree.notify(path.dirname(filePath));
         } else if (kind === ts.FileWatcherEventKind.Deleted) {
@@ -498,7 +498,7 @@ function createProgram(args, initialInputs) {
     }
 
     function watchFile(filePath, callback, interval) {
-        if (!filePath.startsWith(filePath)) {
+        if (!filePath.startsWith(execRoot)) {
             return { close: noop };
         }
         const close = filesystemTree.watchFile(

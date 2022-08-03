@@ -133,3 +133,16 @@ clean = tree.watchFile("inputs/1.js", (p) => calls.push(p));
 tree.update("inputs/1.js", "2");
 assert.deepEqual(calls, ["inputs/1.js"]);
 clean();
+
+
+calls = [];
+let watcher1 = tree.watchFile("inputs/1.js", (p) => calls.push("watcher1"));
+let watcher2 = tree.watchFile("inputs/1.js", (p) => calls.push("watcher2"));
+let watcher3 = tree.watchFile("inputs/1.js", (p) => calls.push("watcher3"));
+let watcher4 = tree.watchFile("inputs/1.js", (p) => calls.push("watcher4"));
+watcher1();
+watcher2();
+tree.add("inputs/1.js", "2");
+assert.deepEqual(calls, ["watcher3", "watcher4"]);
+watcher3();
+watcher4();
