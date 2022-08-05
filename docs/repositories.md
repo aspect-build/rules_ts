@@ -6,7 +6,7 @@ These are needed for local dev, and users must install them as well.
 See https://docs.bazel.build/versions/main/skylark/deploying.html#dependencies
 
 
-<a id="#rules_ts_dependencies"></a>
+<a id="rules_ts_dependencies"></a>
 
 ## rules_ts_dependencies
 
