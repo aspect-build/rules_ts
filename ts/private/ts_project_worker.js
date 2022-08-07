@@ -27,8 +27,24 @@ function getArgsFromParamFile() {
 }
 
 function createFilesystemTree(root, inputs) {
-    const hashes = new Map();
     const tree = {};
+    const watchingTree = {};
+
+    const TYPE = {
+        DIR: 1,
+        FILE: 2,
+        SYMLINK: 3
+    }
+
+    const EVENT_TYPE = {
+        ADDED: 0,
+        UPDATED: 1,
+        REMOVED: 2,
+    }
+
+    const Type = Symbol.for("fileSystemTree#type");
+    const Symlink = Symbol.for("fileSystemTree#symlink");
+    const Watcher = Symbol.for("fileSystemTree#watcher");
 
     for (const p in inputs) {
         add(p, inputs[p]);
@@ -36,78 +52,113 @@ function createFilesystemTree(root, inputs) {
 
     function getNode(p) {
         const parts = p.split(path.sep);
-        let backtrack = tree;
-    
+        let node = tree;
         for (const part of parts) {
-            backtrack = backtrack[part];
-            if (!backtrack) {
+            if (!(part in node)) {
                 return undefined;
             }
-            if (backtrack.symlinkTo) {
-                backtrack = getNode(backtrack.symlinkTo);
+            node = node[part];
+            if (node[Type] == TYPE.SYMLINK) {
+                node = getNode(node[Symlink]);
             }
         }
-        return backtrack;
+        return node;
     }
 
     function add(p, hash) {
-        const parts = p.split(path.sep);
-        let backtrack = tree;
-        for (const part of parts) {
-            if (typeof backtrack[part] != "object") {
-                backtrack[part] = {};
+        const parts = path.parse(p);        
+        const dirs = parts.dir.split(path.sep).filter(p => p != "");
+
+        let node = tree;
+
+        for (const [i, part] of dirs.entries()) {
+            if (typeof node[part] != "object") {
+                node[part] = {
+                    [Type]: TYPE.DIR 
+                };
+                notifyWatchers(dirs.slice(0, i), part, TYPE.DIR, EVENT_TYPE.ADDED);
             }
-            backtrack = backtrack[part];
+            node = node[part];
         }
 
-        // Digest is empty when the input is a symlink which we use as an indicator to limit number of 
-        // realpath calls we make.
-        // See: https://github.com/bazelbuild/bazel/pull/14002#issuecomment-977790796 for what it can be empty.
+        // Digest is empty when the input is a symlink which we use as an indicator to limit number of realpath calls made.
+        // See: https://github.com/bazelbuild/bazel/pull/14002#issuecomment-977790796 for why it can be empty.
         if (hash == null) {
             const realpath = ts.sys.realpath(path.join(root, p));
             const relative = path.relative(root, realpath);
             if (relative != p) {
-                backtrack.symlinkTo = relative;
+                node[parts.base] = {
+                    [Type]: TYPE.SYMLINK,
+                    [Symlink]: relative
+                }
             }
+            notifyWatchers(dirs, parts.base, TYPE.SYMLINK, EVENT_TYPE.ADDED);
+        } else if (parts.base) {
+            node[parts.base] = {
+                [Type]: TYPE.FILE
+            }
+            notifyWatchers(dirs, parts.base, TYPE.FILE, EVENT_TYPE.ADDED);
         }
-        hashes.set(p, hash);
     }
 
     function remove(p) {
         const parts = p.split(path.sep);
-        const lastPart = parts.pop();
-        let backtrack = tree;
+        let track = {parent: undefined, part: undefined, node: tree};
         for (const part of parts) {
-            if (typeof backtrack[part] == "object") {
-                backtrack = backtrack[part];
+            let node = track.node[part];
+            if (!node) {
+                // It is not likely to end up here unless fstree does something undesired. 
+                // So we'll let it hard fail 
+                throw new Error(`Could not find ${p}`);
+            }
+            track = {parent: track, segment: part, node: node }
+        }
+
+        delete track.parent.node[track.segment];
+        notifyWatchers(parts.slice(0, - 1), track.segment, track.node[Type], EVENT_TYPE.REMOVED)
+
+        let removal = track.parent;
+        let removal_parts = parts.slice(0, -1)
+        while(removal.parent) {
+            if (Object.keys(removal.node).length == 0) {
+                if (removal.node[Type] == TYPE.DIR) {
+                    delete removal.parent.node[removal.segment];
+                    notifyWatchers(removal_parts.slice(0, -1), removal.segment, TYPE.DIR, EVENT_TYPE.REMOVED)
+                }
+                removal = removal.parent;
+                removal_parts.pop();
             } else {
-                return // couldn't find it.
+                break;
             }
         }
-        // Bazel never reports empty TreeArtifacts within the inputs map. Meaning if a directory contains nothing then bazel will never tell us about that input.
-        // 
-        // Ideally, after a removal operation we should be checking for orphan parent nodes within the tree of that given path and remove them.
-        // This could be done by to walking up nodes and removing them if they are being orphaned as a result of this action. However, since this would 
-        // be a costly operation given the recursive calls that we have to do, we decide to do nothing about them given that 
-        // this neither a correctness nor reproducibility issue. 
-        // Reason behind this is tsc itself. It does not affect tsc if an empty folder is there or not, as it only looks for `<name>/index.ts` or `<name>.ts`
-        delete backtrack[lastPart]
-        hashes.delete(p)
+    }
+
+    function update(p) {
+        let node = getNode(p);
+        const parts = p.split(path.sep);
+        const base = parts.pop();
+        notifyWatchers(parts, base, node[Type], EVENT_TYPE.UPDATED);
+    }
+
+    function notify(p) {
+        const parts = p.split(path.sep);
+        const base = parts.pop();
+        notifyWatchers(parts, base, TYPE.DIR, EVENT_TYPE.UPDATED);
     }
 
     function fileExists(p) {
         const node = getNode(p);
-        return typeof node == "object" && Object.keys(node).length == 0;
+        return typeof node == "object" && node[Type] == TYPE.FILE;
     }
 
     function directoryExists(p) {
         const node = getNode(p);
-        return typeof node == "object" && Object.keys(node).length > 0;
+        return typeof node == "object" && node[Type] == TYPE.DIR;
     }
 
     function readDirectory(p, extensions, exclude, include, depth) {
         const node = getNode(p);
-        if (!node) {
+        if (!node || node[Type] != TYPE.DIR) {
             return []
         }
         return Object.keys(node);
@@ -120,14 +171,71 @@ function createFilesystemTree(root, inputs) {
         }
         const dirs = [];
         for (const np in node) {
-            if (Object.keys(node[np]).length > 0) {
+            if (node[np][Type] == TYPE.DIR) {
                 dirs.push(np);
             }
         }
         return dirs
     }
 
-    return { add, remove, fileExists, directoryExists, readDirectory, getDirectories }
+    function notifyWatchers(parts, part, type, eventType) {
+        const dest_parts = [...parts, part];
+        if (type == TYPE.FILE) {
+            notifyWatcher(parts, dest_parts, eventType);
+        } else {
+            notifyWatcher(parts, dest_parts, eventType);
+        }
+        notifyWatcher(dest_parts, dest_parts, eventType, null);
+
+        let recursive_parts = dest_parts;
+        let fore_parts = [];
+        while(recursive_parts.length) {
+            fore_parts.unshift(recursive_parts.pop());
+            notifyWatcher(recursive_parts, recursive_parts.concat(fore_parts), eventType, true);
+        }
+    }
+
+    function notifyWatcher(parent, parts, eventType, recursive = false) {
+        let node = getWatcherNode(parent, watchingTree);
+        if (typeof node == "object" && Watcher in node) {
+            for (const watcher of node[Watcher]) {
+                if (recursive != null && watcher.recursive != recursive) {
+                    continue;
+                }
+                watcher.callback(parts.join(path.sep), eventType);
+            }
+        }
+    }
+
+    function getWatcherNode(parts) {
+        let node = watchingTree;
+        for (const part of parts) {
+            if (!(part in node)) {
+                return undefined;
+            }
+            node = node[part];
+        }
+        return node;
+    }
+
+    function watch(p, callback, recursive = false) {
+        const parts = p.split(path.sep);
+        let node = watchingTree;
+        for (const part of parts) {
+            if (!(part in node)) {
+                node[part] = {};
+            }
+            node = node[part];
+        }
+        if (!(Watcher in node)) {
+            node[Watcher] = new Set();
+        }  
+        const watcher = {callback, recursive};
+        node[Watcher].add(watcher);
+        return () => node[Watcher].delete(watcher)
+    }
+
+    return { add, remove, update, notify, fileExists, directoryExists, readDirectory, getDirectories, watchDirectory: watch, watchFile: watch }
 }
 
 function isExternalLib(path) {
@@ -229,14 +337,10 @@ function createProgram(args, initialInputs) {
     const execRoot = path.resolve(bin, '..', '..', '..');
     const tsconfig = path.relative(execRoot, path.resolve(bin, options.project));
 
-    const directoryWatchers = new Map();
-    const fileWatchers = new Map();
-
     const filesystemTree = createFilesystemTree(execRoot, initialInputs);
-
     const outputs = new Set();
 
-    const taskQueue = new Set();
+    const taskQueue = new Array();
 
     /** @type {ts.System} */
     const strictSys = {
@@ -282,19 +386,20 @@ function createProgram(args, initialInputs) {
     return { host, program, checkAndApplyArgs };
 
     function setTimeout(cb) {
-        taskQueue.add(cb);
-        return cb;
+        return taskQueue.push(cb) - 1;
     }
 
-    function clearTimeout(cb) {
-        taskQueue.delete(cb)
+    function clearTimeout(i) {
+        taskQueue[i] = null;
     }
 
     function applyChanges() {
-        debuglog("Applying changes");
-        for (const task of taskQueue) {
-            taskQueue.delete(task);
-            task();
+        debuglog(`Applying changes ${taskQueue.length}`);
+        while(taskQueue.length) {
+            const task = taskQueue.shift();
+            if (task) {
+                task();
+            }  
         }
     }
 
@@ -333,7 +438,7 @@ function createProgram(args, initialInputs) {
             enablePerformanceAndTracingIfNeeded();
             updateOutputs();
             // invalidating tsconfig will cause parseConfigFile to be invoked
-            invalidate(tsconfig, ts.FileWatcherEventKind.Changed);
+            filesystemTree.update(tsconfig);
             args = newArgs;
         }
     }
@@ -374,82 +479,48 @@ function createProgram(args, initialInputs) {
         ).map(p => path.isAbsolute(p) ? p : path.join(execRoot, p))
     }
 
-    function getDirectoryWatcherForPath(fileName) {
-        const p = path.dirname(fileName); 
-        const callbacks = directoryWatchers.get(p);
-        if (callbacks) {
-            return (filePath) => {
-                for (const callback of callbacks) {
-                    callback(filePath)
-                }
-            };
-        }
-    }
-
     function invalidate(filePath, kind, digest) {
         if (filePath.endsWith('.params')) return;
         debuglog(`invalidate ${filePath} : ${ts.FileWatcherEventKind[kind]}`);
 
         if (kind === ts.FileWatcherEventKind.Created) {
             filesystemTree.add(filePath, digest);
+            // TODO: explain why tsc decides not to invalidate failed lookups based
+            // on simple path logic.
+            filesystemTree.notify(path.dirname(filePath));
         } else if (kind === ts.FileWatcherEventKind.Deleted) {
             filesystemTree.remove(filePath);
+        } else {
+            filesystemTree.update(filePath);
         }
-
-        // We need to signal that directory containing the missing sources is present to properly
-        // invalidate failed lookups cache of tsc.
-        //
-        // Assume that `filePath` is `bazel-out/darwin_arm64-fastbuild/bin/feature1/index.d.ts`
-        
-        // First, in case the directory containing `index.d.ts is` in failed lookups, we need to 
-        // get the directory watcher for `bazel-out/darwin_arm64-fastbuild/bin/feature1`
-        // which is `bazel-out/darwin_arm64-fastbuild/bin`
-        // and invoke it with `bazel-out/darwin_arm64-fastbuild/bin/feature1`
-        const dir = path.dirname(filePath);
-        const directoryWatcherForGrandParentDirectory = getDirectoryWatcherForPath(dir)
-        directoryWatcherForGrandParentDirectory?.(dir);
-
-        // Then, get the directory watcher for `bazel-out/darwin_arm64-fastbuild/bin/feature1/index.d.ts`
-        // which is `bazel-out/darwin_arm64-fastbuild/bin/feature1`
-        // and invoke it with `bazel-out/darwin_arm64-fastbuild/bin/feature1/index.d.ts`
-        const directoryForParentDirectory = getDirectoryWatcherForPath(filePath)
-        directoryForParentDirectory?.(filePath);
-
-        // Then finally a fileWatcher for the filePath and invoke it.
-        const fileWatcherCallback = fileWatchers.get(filePath);
-        fileWatcherCallback?.(kind);
     }
 
     function watchDirectory(directoryPath, callback, recursive, options) {
-        directoryPath = path.relative(execRoot, directoryPath);
         // since rules_js runs everything under bazel-out we shouldn't care about anything outside of it.
-        if (!directoryPath.startsWith('bazel-out')) {
+        if (!directoryPath.startsWith(execRoot)) {
             return { close: noop };
         }
-        debuglog(`watchDirectory ${directoryPath}`);
+        const close = filesystemTree.watchDirectory(
+            path.relative(execRoot, directoryPath),
+            (input) => callback(path.join(execRoot, input)),
+            recursive
+        );
 
-        const cb = (input) => callback(path.join(execRoot, input))
-
-        const callbacks = directoryWatchers.get(directoryPath) || new Set();
-        callbacks.add(cb)
-        directoryWatchers.set(directoryPath, callbacks);
-
-        return {
-            close: () => {
-                const callbacks = directoryWatchers.get(directoryPath);
-                callbacks.delete(cb);
-                if (callbacks.size === 0) {
-                    directoryWatchers.delete(directoryPath)
-                }
-            },
-        };
+        return {close};
     }
 
     function watchFile(filePath, callback, interval) {
-        debuglog(`watchFile ${filePath} ${interval}`);
-        const relativeFilePath = path.relative(execRoot, filePath);
-        fileWatchers.set(relativeFilePath, (kind) => callback(filePath, kind));
-        return { close: () => fileWatchers.delete(relativeFilePath) };
+        if (!path.isAbsolute(filePath)) {
+            filePath = path.resolve(filePath);
+        }
+        if (!filePath.startsWith(execRoot)) {
+            return { close: noop };
+        }
+        const close = filesystemTree.watchFile(
+            path.relative(execRoot, filePath),
+            (_, kind) => callback(filePath, kind)
+        )
+        return {close};
     }
 }
 
@@ -487,16 +558,14 @@ function emit(args, inputs) {
 
     if (previousInputs) {
         timingStart(`invalidate`);
-        for (const input of Object.keys(previousInputs)) {
-            if (!inputs[input]) {
+        for (const input in previousInputs) {
+            if (!(input in inputs)) {
                 host.invalidate(input, ts.FileWatcherEventKind.Deleted);
             }
         }
         for (const [input, digest] of Object.entries(inputs)) {
             if (!(input in previousInputs)) {
                 host.invalidate(input, ts.FileWatcherEventKind.Created, digest);
-                host.applyChanges();
-                host.invalidate(input, ts.FileWatcherEventKind.Changed, digest);
             } else if (previousInputs[input] != digest) {
                 host.invalidate(input, ts.FileWatcherEventKind.Changed, digest);
             }

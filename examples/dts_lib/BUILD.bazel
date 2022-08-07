@@ -9,8 +9,6 @@ ts_project(
         "lib_types.d.ts",
     ],
     declaration = True,
-    # TODO: fix worker mode flaky bug when there are multiple ts_project targets in a package
-    supports_workers = False,
 )
 
 js_library(
@@ -29,8 +27,6 @@ ts_project(
     name = "importer_rel_ts",
     srcs = ["importer_rel.ts"],
     declaration = True,
-    # TODO: fix worker mode flaky bug when there are multiple ts_project targets in a package
-    supports_workers = False,
     deps = [
         ":lib",
     ],
@@ -40,8 +36,6 @@ ts_project(
     name = "importer_linked_ts",
     srcs = ["importer_linked.ts"],
     declaration = True,
-    # TODO: fix worker mode flaky bug when there are multiple ts_project targets in a package
-    supports_workers = False,
     deps = [
         "//examples:node_modules/@myorg/dts_lib",
     ],

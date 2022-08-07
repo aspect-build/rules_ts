@@ -1,6 +1,9 @@
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+
+npm_link_all_packages(name = "node_modules")
 
 ts_project(
     name = "ts",
@@ -12,6 +15,12 @@ ts_project(
         ],
     ),
     deps = [
+        ":node_modules/@nestjs/common",
+        ":node_modules/@nestjs/core",
+        ":node_modules/@types/debug",
+        ":node_modules/@types/node",
+        ":node_modules/debug",
+        ":node_modules/rxjs",
         "//feature",
         "//feature1",
         "//feature2",
