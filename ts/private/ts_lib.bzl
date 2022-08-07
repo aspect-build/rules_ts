@@ -149,9 +149,12 @@ def _relative_to_package(path, ctx):
             path = path[len(prefix):]
     return path
 
+def _is_typings_src(src):
+    return src.endswith(".d.ts") or src.endswith(".d.mts") or src.endswith(".d.cts")
+
 def _is_ts_src(src, allow_js):
     if (src.endswith(".ts") or src.endswith(".tsx") or src.endswith(".mts") or src.endswith(".cts")):
-        return not (src.endswith(".d.ts") or src.endswith(".d.mts") or src.endswith(".d.cts"))
+        return not _is_typings_src(src)
 
     if allow_js:
         return (src.endswith(".js") or src.endswith(".jsx") or src.endswith(".mjs") or src.endswith(".cjs"))
@@ -263,6 +266,7 @@ lib = struct(
     declare_outputs = _declare_outputs,
     join = _join,
     relative_to_package = _relative_to_package,
+    is_typings_src = _is_typings_src,
     is_ts_src = _is_ts_src,
     is_json_src = _is_json_src,
     out_paths = _out_paths,
