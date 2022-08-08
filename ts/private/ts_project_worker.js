@@ -170,9 +170,16 @@ function createFilesystemTree(root, inputs) {
             return []
         }
         const dirs = [];
-        for (const np in node) {
-            if (node[np][Type] == TYPE.DIR) {
-                dirs.push(np);
+        for (const part in node) {
+            let subnode = node[part];
+
+            if (subnode[Type] == TYPE.SYMLINK) {
+                // get the node where the symlink points to
+                subnode = getNode(subnode[Symlink]);
+            }
+
+            if (subnode[Type] == TYPE.DIR) {
+                dirs.push(part);
             }
         }
         return dirs
