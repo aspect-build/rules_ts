@@ -27,26 +27,33 @@ mock("@bazel/worker", { log: console.log })
 const worker = require("./ts_project_worker");
 
 
-
-
 // Tests
 const root = process.env.GTEST_TMP_DIR;
+const tree = worker.createFilesystemTree(root, {});
+
+tree.add("tree/subtree/input.js", "1");
+tree.add("tree/input.js", "2");
+assert.deepStrictEqual(tree.getDirectories("tree"), ["subtree"]);
+assert.deepStrictEqual(tree.readDirectory("tree"), ["subtree", "input.js"]);
+assert.ok(tree.directoryExists("tree"));
+assert.ok(tree.directoryExists("tree/subtree"));
+assert.ok(!tree.directoryExists("tree/subtree/input.js"));
+assert.ok(tree.fileExists("tree/subtree/input.js"));
+assert.ok(!tree.fileExists("tree/subtree"));
+assert.ok(!tree.fileExists("tree"));
+
+
+// Symlinks
+fs.mkdirSync(path.join(root, 'not_a_symlink_but_null', 'deep'), {recursive: true});
+fs.writeFileSync(path.join(root, 'not_a_symlink_but_null', 'deep', "input.js"), "");
+tree.add("not_a_symlink_but_null/deep/input.js", null);
+assert.deepStrictEqual(tree.readDirectory("not_a_symlink_but_null"), ["deep"])
+
 
 fs.mkdirSync(path.join(root, "symlink"));
 fs.symlinkSync(path.join(root, "symlink"), path.join(root, "symlinked"), "dir");
-
-fs.mkdirSync(path.join(root, 'not_a_symlink_but_null', 'deep'), {recursive: true});
-fs.writeFileSync(path.join(root, 'not_a_symlink_but_null', 'deep', "input.js"), "")
-
-const tree = worker.createFilesystemTree(root, {
-    "tree/subtree/input.js": "1",
-    "tree/input.js": "2",
-    "symlink/to/me/input.js": "3",
-    "symlinked": null,
-    "not_a_symlink_but_null/deep/input.js": null,
-});
-
-
+tree.add("symlink/to/me/input.js", "3");
+tree.add("symlinked", null);
 assert.ok(tree.directoryExists("symlinked/to/me"));
 assert.ok(!tree.fileExists("symlinked/to/me"));
 assert.ok(!tree.fileExists("symlinked"));
@@ -54,21 +61,6 @@ assert.ok(tree.directoryExists("symlinked"));
 assert.deepStrictEqual(tree.getDirectories("symlinked"), ["to"])
 assert.deepStrictEqual(tree.readDirectory("symlinked"), ["to"])
 assert.deepStrictEqual(tree.readDirectory("symlinked/to/me"), ["input.js"])
-
-assert.deepStrictEqual(tree.readDirectory("not_a_symlink_but_null"), ["deep"])
-
-
-assert.deepStrictEqual(tree.getDirectories("tree"), ["subtree"]);
-assert.deepStrictEqual(tree.readDirectory("tree"), ["subtree", "input.js"]);
-
-
-assert.ok(tree.directoryExists("tree"));
-assert.ok(tree.directoryExists("tree/subtree"));
-assert.ok(!tree.directoryExists("tree/subtree/input.js"));
-
-assert.ok(tree.fileExists("tree/subtree/input.js"));
-assert.ok(!tree.fileExists("tree/subtree"));
-assert.ok(!tree.fileExists("tree"));
 
 
 tree.remove("symlinked");
@@ -86,6 +78,19 @@ assert.ok(!tree.directoryExists("symlinked"));
 assert.ok(!tree.directoryExists("symlinked/to"));
 
 
+fs.mkdirSync(path.join(root, "dir"));
+fs.mkdirSync(path.join(root, "sym"));
+fs.symlinkSync(path.join(root, "dir"), path.join(root, "sym", "s1"), "dir");
+fs.symlinkSync(path.join(root, "dir"), path.join(root, "sym", "s2"), "dir");
+
+tree.add("dir/input.js", "1");
+tree.add("sym/to/input.js", "1");
+tree.add("sym/s1", null);
+tree.add("sym/s2", null);
+assert.deepStrictEqual(tree.getDirectories("sym"), ["to", "s1", "s2"])
+
+
+// Remove
 tree.add("correct_remove/to/input.js", "1")
 tree.add("correct_remove/to/path/input.js", "1")
 tree.remove("correct_remove/to/path/input.js");
