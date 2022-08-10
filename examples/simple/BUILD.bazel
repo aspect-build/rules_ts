@@ -39,6 +39,7 @@ ts_project(
         "foo.ts",
         "generated.ts",
     ],
+    extends = "tsconfig.json",
     # A tsconfig.json file will be generated with this content
     tsconfig = {
         "compilerOptions": {

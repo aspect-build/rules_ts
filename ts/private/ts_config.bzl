@@ -71,10 +71,14 @@ def _write_tsconfig_rule(ctx):
     # TODO: is it useful to expand Make variables in the content?
     content = "\n".join(ctx.attr.content)
     if ctx.attr.extends:
-        content = content.replace(
-            "__extends__",
-            relative_file(ctx.file.extends.short_path, ctx.outputs.out.short_path),
-        )
+        # Unlike other paths in the tsconfig file, the "extends" property
+        # is documented: "The path may use Node.js style resolution."
+        # https://www.typescriptlang.org/tsconfig#extends
+        # That means that we must start with explicit "./" segment.
+        extends_path = relative_file(ctx.file.extends.short_path, ctx.outputs.out.short_path)
+        if not extends_path.startswith("../"):
+            extends_path = "./" + extends_path
+        content = content.replace("__extends__", extends_path)
 
     filtered_files = _filter_input_files(ctx.files.files, ctx.attr.allow_js, ctx.attr.resolve_json_module)
     if filtered_files:
