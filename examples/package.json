@@ -1,6 +1,7 @@
 {
     "private": true,
     "dependencies": {
+        "@aws-sdk/client-s3": "^3.150.0",
         "@babel/cli": "7.18.9",
         "@babel/core": "7.18.9",
         "@babel/preset-typescript": "7.18.6",

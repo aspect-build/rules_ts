@@ -1,0 +1,11 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "ts",
+    srcs = ["index.ts"],
+    declaration = True,
+    deps = [
+        "//examples:node_modules/@aws-sdk",
+        "//examples:node_modules/@types/node",
+    ],
+)
