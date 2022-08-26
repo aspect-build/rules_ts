@@ -7,7 +7,7 @@ def _impl0(ctx):
     env = unittest.begin(ctx)
 
     decls = []
-    for decl in ctx.attr.lib[JsInfo].declarations:
+    for decl in ctx.attr.lib[JsInfo].declarations.to_list():
         decls.append(decl.basename)
     asserts.equals(env, ctx.attr.expected_declarations, sorted(decls))
 

@@ -1,10 +1,9 @@
-load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@aspect_rules_js//npm:defs.bzl", "npm_package")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 
 ts_project(
-    name = "lib_ts",
+    name = "lib",
     srcs = [
         "index.ts",
         "lib_types.d.ts",
@@ -13,14 +12,9 @@ ts_project(
     declaration = True,
 )
 
-js_library(
-    name = "lib",
-    deps = [":lib_ts"],
-)
-
 npm_package(
     name = "dts_lib",
-    srcs = [":lib_ts"],
+    srcs = [":lib"],
     package = "@myorg/dts_lib",
     visibility = ["//examples:__subpackages__"],
 )

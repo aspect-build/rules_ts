@@ -22,6 +22,14 @@ load("@aspect_rules_js//npm:npm_import.bzl", "npm_translate_lock")
 
 npm_translate_lock(
     name = "npm",
+    # Running lifecycle hooks on npm package @nestjs/core@9.0.8_9fad833c066e70b3b5e6d773402fdc0f fails in a dramatic way:
+    # ```
+    # SyntaxError: Unexpected strict mode reserved word
+    # at ESMLoader.moduleStrategy (node:internal/modules/esm/translators:117:18)
+    # at ESMLoader.moduleProvider (node:internal/modules/esm/loader:337:14)
+    # at async link (node:internal/modules/esm/module_job:70:21)
+    # ```
+    lifecycle_hooks_no_sandbox = False,
     pnpm_lock = "//:pnpm-lock.yaml",
 )
 
