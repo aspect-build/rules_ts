@@ -21,7 +21,9 @@ def _ts_project_impl(ctx):
     Returns:
         list of providers
     """
-    srcs = [_lib.relative_to_package(src.path, ctx) for src in ctx.files.srcs]
+    srcs_inputs = copy_files_to_bin_actions(ctx, ctx.files.srcs)
+
+    srcs = [_lib.relative_to_package(src.path, ctx) for src in srcs_inputs]
 
     # Recalculate outputs inside the rule implementation.
     # The outs are first calculated in the macro in order to try to predetermine outputs so they can be declared as
@@ -85,17 +87,10 @@ def _ts_project_impl(ctx):
             "--extendedDiagnostics",
         ])
 
-    inputs = ctx.files.srcs[:]
+    inputs = srcs_inputs[:]
     for dep in ctx.attr.deps:
         if ValidOptionsInfo in dep:
             inputs.append(dep[ValidOptionsInfo].marker)
-
-    inputs.extend(js_lib_helpers.gather_files_from_js_providers(
-        targets = ctx.attr.srcs + ctx.attr.deps,
-        include_transitive_sources = True,
-        include_declarations = True,
-        include_npm_linked_packages = True,
-    ))
 
     # Gather TsConfig info from both the direct (tsconfig) and indirect (extends) attribute
     tsconfig_inputs = copy_files_to_bin_actions(ctx, _validate_lib.tsconfig_inputs(ctx))
@@ -111,7 +106,7 @@ def _ts_project_impl(ctx):
         rootdir_replace_pattern = ctx.attr.root_dir + "/" if ctx.attr.root_dir else ""
         json_outs = _lib.declare_outputs(ctx, [
             _lib.join(ctx.attr.out_dir, src.short_path[pkg_len:].replace(rootdir_replace_pattern, ""))
-            for src in ctx.files.srcs
+            for src in srcs_inputs
             if src.basename.endswith(".json") and src.is_source
         ])
     else:
@@ -125,7 +120,7 @@ def _ts_project_impl(ctx):
         ])
         outputs.append(ctx.outputs.buildinfo_out)
     output_sources = json_outs + js_outs + map_outs
-    typings_srcs = [s for s in ctx.files.srcs if _lib.is_typings_src(s.path)]
+    typings_srcs = [s for s in srcs_inputs if _lib.is_typings_src(s.path)]
 
     if len(js_outs) + len(typings_outs) < 1:
         label = "//{}:{}".format(ctx.label.package, ctx.label.name)
@@ -178,9 +173,19 @@ This is an error because Bazel does not run actions unless their outputs are nee
         default_outputs = []
 
     if len(outputs) > 0:
+        inputs = depset(
+            copy_files_to_bin_actions(ctx, inputs),
+            transitive = [js_lib_helpers.gather_files_from_js_providers(
+                targets = ctx.attr.srcs + ctx.attr.deps,
+                include_transitive_sources = True,
+                include_declarations = True,
+                include_npm_linked_packages = True,
+            )],
+        )
+
         ctx.actions.run(
             executable = executable,
-            inputs = copy_files_to_bin_actions(ctx, inputs),
+            inputs = inputs,
             arguments = [arguments],
             outputs = outputs,
             mnemonic = "TsProject",
@@ -203,13 +208,16 @@ This is an error because Bazel does not run actions unless their outputs are nee
         deps = ctx.attr.deps,
     )
 
-    npm_package_stores = js_lib_helpers.gather_npm_package_stores(
+    npm_package_store_deps = js_lib_helpers.gather_npm_package_store_deps(
         targets = ctx.attr.data,
     )
 
+    output_declarations_depset = depset(output_declarations)
+    output_sources_depset = depset(output_sources)
+
     runfiles = js_lib_helpers.gather_runfiles(
         ctx = ctx,
-        sources = output_sources,
+        sources = output_sources_depset,
         data = ctx.attr.data,
         deps = ctx.attr.srcs + ctx.attr.deps,
     )
@@ -220,13 +228,14 @@ This is an error because Bazel does not run actions unless their outputs are nee
             runfiles = runfiles,
         ),
         js_info(
-            declarations = output_declarations,
+            declarations = output_declarations_depset,
+            npm_linked_package_files = npm_linked_packages.direct_files,
             npm_linked_packages = npm_linked_packages.direct,
-            npm_package_stores = npm_package_stores.direct,
-            sources = output_sources,
+            npm_package_store_deps = npm_package_store_deps,
+            sources = output_sources_depset,
             transitive_declarations = transitive_declarations,
+            transitive_npm_linked_package_files = npm_linked_packages.transitive_files,
             transitive_npm_linked_packages = npm_linked_packages.transitive,
-            transitive_npm_package_stores = npm_package_stores.transitive,
             transitive_sources = transitive_sources,
         ),
         TsConfigInfo(deps = depset(tsconfig_inputs, transitive = [
@@ -235,7 +244,7 @@ This is an error because Bazel does not run actions unless their outputs are nee
             if TsConfigInfo in dep
         ])),
         OutputGroupInfo(
-            types = depset(output_declarations),
+            types = output_declarations_depset,
         ),
         coverage_common.instrumented_files_info(
             ctx,
