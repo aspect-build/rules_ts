@@ -17,12 +17,23 @@ jobs:
         runs-on: ubuntu-latest
 
         strategy:
+            fail-fast: false
             matrix:
+                config:
+                    - 'local'
+                    - 'rbe'
                 folder:
                     - '.'
                     - 'e2e/bzlmod'
                     - 'e2e/workspace'
                     - 'e2e/worker'
+                exclude:
+                    # bzlmod broken at 5.3.0 which the RBE bazel fork is bazed on
+                    - config: rbe
+                      folder: e2e/bzlmod
+                    # TODO: e2e/worker needs a bit of to be configured for RBE
+                    - config: rbe
+                      folder: e2e/worker
 
         # Steps represent a sequence of tasks that will be executed as part of the job
         steps:
@@ -47,17 +58,29 @@ jobs:
                       "~/.cache/bazel-repo"
                   key: bazel-cache-${{ hashFiles('**/BUILD.bazel', '**/*.bzl', 'WORKSPACE') }}
                   restore-keys: bazel-cache-
+            - name: Write engflow credentials
+              if: ${{ matrix.config == 'rbe' }}
+              working-directory: ${{ matrix.folder }}
+              run: |
+                  touch engflow.crt engflow.key
+                  chmod 0600 engflow.crt engflow.key
+                  echo "$ENGFLOW_CLIENT_CRT" > engflow.crt
+                  echo "$ENGFLOW_PRIVATE_KEY" > engflow.key
+                  echo "USE_BAZEL_VERSION=aspect-build/6.0.0-aspect1" >> $GITHUB_ENV
+              env:
+                  ENGFLOW_CLIENT_CRT: ${{ secrets.ENGFLOW_CLIENT_CRT }}
+                  ENGFLOW_PRIVATE_KEY: ${{ secrets.ENGFLOW_PRIVATE_KEY }}
             - name: bazel test //...
               env:
                   # Bazelisk will download bazel to here, ensure it is cached between runs.
                   XDG_CACHE_HOME: ~/.cache/bazel-repo
               working-directory: ${{ matrix.folder }}
-              run: bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc --bazelrc=.bazelrc test //...
+              run: bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc --bazelrc=.bazelrc test --config=${{ matrix.config }} //...
             # Some tests need buildozer to manipulate BUILD files.
             - uses: actions/setup-go@v3
               if: ${{ hashFiles(format('{0}/test.sh', matrix.folder)) != '' }}
               with:
-                go-version: '1.17.0'
+                  go-version: '1.17.0'
             - run: go install github.com/bazelbuild/buildtools/buildozer@latest
               if: ${{ hashFiles(format('{0}/test.sh', matrix.folder)) != '' }}
             - name: run ./test.sh
