@@ -89,6 +89,18 @@ tree.add("sym/s1", null);
 tree.add("sym/s2", null);
 assert.deepStrictEqual(tree.getDirectories("sym"), ["to", "s1", "s2"])
 
+// Dangling
+fs.mkdirSync(path.join(root, "dangle"));
+fs.symlinkSync(path.join(root, "dangle"), path.join(root, "may_dangle"), "dir");
+tree.add("may_dangle", null)
+assert.equal(tree.directoryExists("may_dangle"), false)
+assert.equal(tree.directoryExists("may_dangle/underneath"), false)
+assert.equal(tree.fileExists("may_dangle"), false)
+assert.equal(tree.fileExists("may_dangle/file.js"), false)
+assert.deepEqual(tree.readDirectory("may_dangle"), [])
+assert.deepEqual(tree.getDirectories("may_dangle"), [])
+assert.deepEqual(tree.readDirectory("may_dangle/underneath"), [])
+assert.deepEqual(tree.getDirectories("may_dangle/underneath"), [])
 
 // Remove
 tree.add("correct_remove/to/input.js", "1")

@@ -60,6 +60,12 @@ function createFilesystemTree(root, inputs) {
             node = node[part];
             if (node[Type] == TYPE.SYMLINK) {
                 node = getNode(node[Symlink]);
+                // Having dangling symlinks are commong outside of bazel but less likely using bazel 
+                // unless a rule makes use of ctx.actions.declare_symlink and provide a path that may
+                // dangle.
+                if (!node) {
+                    return undefined;
+                }
             }
         }
         return node;
