@@ -19,6 +19,10 @@ load("//ts:repositories.bzl", "rules_ts_dependencies")
 # bazel run -- @npm_typescript//:tsc --version
 rules_ts_dependencies(ts_version_from = "//examples:package.json")
 
+load("@aspect_bazel_lib//lib:repositories.bzl", "aspect_bazel_lib_dependencies")
+
+aspect_bazel_lib_dependencies(override_local_config_platform = True)
+
 load("@rules_nodejs//nodejs:repositories.bzl", "nodejs_register_toolchains")
 
 nodejs_register_toolchains(
