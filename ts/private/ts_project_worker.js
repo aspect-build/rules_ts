@@ -464,7 +464,7 @@ function createProgram(args, initialInputs) {
         const relative = path.relative(execRoot, filePath);
         // external lib are transitive sources thus not listed in the inputs map reported by bazel.
         if (!filesystemTree.fileExists(path.relative(execRoot, filePath)) && !isExternalLib(filePath) && !outputs.has(relative)) {
-            throw new Error(`tsc tried to read file that wasn't an input to it.`);
+            throw new Error(`tsc tried to read file (${filePath}) that wasn't an input to it.`);
         }
         return ts.sys.readFile(filePath, encoding);
     }
