@@ -41,6 +41,12 @@ write_file(
     content = ["export const a: string = \"1\";"],
 )
 
+write_file(
+    name = "gen_deep_src",
+    out = "root/deep/root/deep_src.ts",
+    content = ["export const a: string = \"1\";"],
+)
+
 ts_project(
     name = "transpile",
     srcs = ["big.ts"],
@@ -90,6 +96,14 @@ ts_project(
 
 transpiler_test_suite()
 
+# Ensure that when determining output location, the `root_dir` attribute is only removed once.
+ts_project(
+    name = "rootdir_works_with_repeated_directory",
+    srcs = ["root/deep/root/deep_src.ts"],
+    transpiler = mock,
+    tsconfig = _TSCONFIG,
+    root_dir = "root",
+)
 
 copy_file(
     name = "copy_ts_project_worker",
