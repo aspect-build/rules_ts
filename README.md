@@ -17,4 +17,4 @@ From the release you wish to use:
 <https://github.com/aspect-build/rules_ts/releases>
 copy the WORKSPACE snippet into your `WORKSPACE` file.
 
-Please note that rules_ts does not work with `--worker_sandboxing` (https://github.com/aspect-build/rules_ts/issues/127).
+Please note that rules_ts does not work with `--worker_sandboxing`.
