@@ -1,0 +1,26 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@aspect_rules_js//js:defs.bzl", "js_test")
+
+ts_project(
+    name = "compile",
+    srcs = ["test.ts"],
+    tsconfig = {
+        "compilerOptions": {
+            "inlineSourceMap": True,
+        },
+    },
+)
+
+# If run with
+#
+# ```
+# bazel run //examples/js_test:test --config=debug
+# ```
+#
+# will start a debug session that can be connected to with Visual Studio Code. VSCode will follow
+# the inline source maps to the TypeScript source files (their copies in the output tree) so the
+# debugger will show the TypeScript sources when stepping through code.
+js_test(
+    name = "test",
+    entry_point = "test.js",
+)
