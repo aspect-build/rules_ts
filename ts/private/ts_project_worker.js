@@ -399,21 +399,24 @@ function createProgram(args, initialInputs) {
     return { host, program, checkAndApplyArgs };
 
     function setTimeout(cb) {
-        return taskQueue.push(cb) - 1;
+        // NB: tsc will never clearTimeout if the index is 0 hence timeout must be truthy. :|
+        // https://github.com/microsoft/TypeScript/blob/d0bfd8caed521bfd24fc44960d9936a891744bb7/src/compiler/watchPublic.ts#L681
+        return taskQueue.push(cb);
     }
-
+ 
     function clearTimeout(i) {
-        taskQueue[i] = null;
+        delete taskQueue[i - 1];
     }
 
     function applyChanges() {
-        debuglog(`Applying changes ${taskQueue.length}`);
-        while(taskQueue.length) {
-            const task = taskQueue.shift();
+        for (let i = 0; i < taskQueue.length; i++) {
+            const task = taskQueue[i];
+            delete taskQueue[i]
             if (task) {
                 task();
             }  
         }
+        taskQueue.length = 0;
     }
 
     function enablePerformanceAndTracingIfNeeded() {
@@ -531,7 +534,7 @@ function createProgram(args, initialInputs) {
         }
         const close = filesystemTree.watchFile(
             path.relative(execRoot, filePath),
-            (_, kind) => callback(filePath, kind)
+            (input, kind) => callback(path.join(execRoot, input), kind)
         )
         return {close};
     }
@@ -569,6 +572,7 @@ function emit(args, inputs) {
     timingEnd('checkAndApplyArgs');
 
 
+    const failedLookups = new Map();
     if (previousInputs) {
         timingStart(`invalidate`);
         for (const input in previousInputs) {
@@ -579,6 +583,7 @@ function emit(args, inputs) {
         for (const [input, digest] of Object.entries(inputs)) {
             if (!(input in previousInputs)) {
                 host.invalidate(input, ts.FileWatcherEventKind.Created, digest);
+                failedLookups.set(input, digest);
             } else if (previousInputs[input] != digest) {
                 host.invalidate(input, ts.FileWatcherEventKind.Changed, digest);
             }
@@ -588,6 +593,14 @@ function emit(args, inputs) {
 
     timingStart('applyChanges')
     host.applyChanges();
+    if (failedLookups.size) {
+        timingStart('applyChanges for failedLookups');
+        for (const [input, digest] of failedLookups) {
+            host.invalidate(input, ts.FileWatcherEventKind.Changed, digest);
+        }
+        host.applyChanges();
+        timingEnd('applyChanges for failedLookups');
+    }
     timingEnd('applyChanges')
 
     timingStart('getProgram');

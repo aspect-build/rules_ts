@@ -1,0 +1,41 @@
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "rebus_ts",
+    srcs = [
+        "index.ts",
+    ],
+    declaration = True,
+    tsconfig = "//:tsconfig",
+)
+
+js_library(
+    name = "rebus",
+    srcs = [
+        ":rebus_ts",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+ts_project(
+    name = "rebus_test_ts",
+    srcs = [
+        "index.spec.ts",
+    ],
+    declaration = True,
+    tsconfig = "//:tsconfig",
+    deps = [
+        ":rebus",
+        "//:node_modules/@types/jest",
+        "//:node_modules/@types/node",
+    ],
+)
+
+js_library(
+    name = "rebus_test_lib",
+    srcs = [
+        ":rebus",
+        ":rebus_test_ts",
+    ],
+)
