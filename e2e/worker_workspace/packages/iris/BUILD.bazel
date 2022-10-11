@@ -1,0 +1,35 @@
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@aspect_rules_js//npm:defs.bzl", "npm_package")
+
+npm_link_all_packages()
+
+ts_project(
+    name = "iris_ts",
+    srcs = [
+        "index.ts",
+    ],
+    declaration = True,
+    tsconfig = "//:tsconfig",
+    deps = [
+        "//packages/iris/abra",
+        "//packages/iris/pitch",
+    ],
+)
+
+js_library(
+    name = "iris_lib",
+    srcs = [
+        "package.json",
+        ":iris_ts",
+    ],
+)
+
+npm_package(
+    name = "iris",
+    srcs = [
+        ":iris_lib",
+    ],
+    visibility = ["//visibility:public"],
+)

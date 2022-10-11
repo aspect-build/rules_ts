@@ -45,6 +45,7 @@ jobs:
                     # - 'e2e/bzlmod'
                     - 'e2e/workspace'
                     - 'e2e/worker'
+                    - 'e2e/worker_workspace'
                 exclude:
                     # bzlmod broken at 5.3.0 which the RBE bazel fork is bazed on
                     - config: rbe
@@ -52,6 +53,8 @@ jobs:
                     # TODO: e2e/worker needs a bit of to be configured for RBE
                     - config: rbe
                       folder: e2e/worker
+                    - config: rbe
+                      folder: e2e/worker_workspace
 
         # Steps represent a sequence of tasks that will be executed as part of the job
         steps:
