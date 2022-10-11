@@ -150,6 +150,17 @@ function main(_a) {
         )
         return 1
     }
+    if (options.preserveSymlinks) {
+        console.error(
+            'ERROR: ts_project rule ' +
+                target +
+                " cannot be built because the 'preserveSymlinks' option is set."
+        )
+        console.error(
+            'This is not compatible with ts_project due to the rules_js use of symlinks.'
+        )
+        return 1
+    }
     check('allowJs', 'allow_js')
     check('declarationMap', 'declaration_map')
     check('emitDeclarationOnly', 'emit_declaration_only')
