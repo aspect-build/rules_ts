@@ -325,7 +325,7 @@ def ts_project(
         # user supplied a tsconfig.json InputArtifact
         tsconfig = "tsconfig_%s.json" % name
 
-    elif validate:
+    if validate:
         validate_options(
             name = "_validate_%s_options" % name,
             target = "//%s:%s" % (native.package_name(), name),
