@@ -1,0 +1,38 @@
+load("@aspect_rules_jasmine//jasmine:defs.bzl", "jasmine_test")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+package(default_visibility = ["//examples/project_references:__subpackages__"])
+
+ts_project(
+    name = "lib_b",
+    srcs = ["index.ts"],
+    composite = True,
+    declaration = True,
+    extends = "//examples/project_references:tsconfig-base",
+    deps = ["//examples/project_references/lib_a"],
+)
+
+ts_project(
+    name = "transpile_test",
+    testonly = True,
+    srcs = [":index.spec.ts"],
+    composite = True,
+    declaration = True,
+    extends = "//examples/project_references:tsconfig-base",
+    tsconfig = "tsconfig-test.json",
+    deps = [
+        ":lib_b",
+        "//examples:node_modules/@types/jasmine",
+        "//examples:node_modules/@types/node",
+    ],
+)
+
+jasmine_test(
+    name = "test",
+    args = ["*.spec.js"],
+    chdir = package_name(),
+    data = [
+        "index.spec.js",
+        ":lib_b",
+    ],
+)

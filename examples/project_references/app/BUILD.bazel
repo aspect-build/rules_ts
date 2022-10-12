@@ -1,0 +1,10 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "compile",
+    composite = True,
+    declaration = True,
+    extends = "//examples/project_references:tsconfig-base",
+    tsconfig = "tsconfig.json",
+    deps = ["//examples/project_references/lib_b"],
+)
