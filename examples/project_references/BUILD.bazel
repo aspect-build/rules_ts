@@ -1,0 +1,14 @@
+load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_config")
+
+package(default_visibility = ["//examples/project_references:__subpackages__"])
+
+ts_config(
+    name = "tsconfig",
+    src = "tsconfig-base.json",
+)
+
+copy_to_bin(
+    name = "tsconfig-base",
+    srcs = ["tsconfig-base.json"],
+)

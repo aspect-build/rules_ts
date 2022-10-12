@@ -52,3 +52,11 @@ def rules_ts_internal_deps():
             "https://github.com/bazelbuild/stardoc/releases/download/0.5.2/stardoc-0.5.2.tar.gz",
         ],
     )
+
+    maybe(
+        http_archive,
+        name = "aspect_rules_jasmine",
+        sha256 = "938a2818100fd89e7600a45b7ba4fcd4114c11c5b5741db30ff7c6e0dcb2ea4b",
+        strip_prefix = "rules_jasmine-0.1.0",
+        url = "https://github.com/aspect-build/rules_jasmine/archive/refs/tags/v0.1.0.tar.gz",
+    )

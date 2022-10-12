@@ -89,6 +89,13 @@ def _ts_project_impl(ctx):
 
     inputs = srcs_inputs[:]
     for dep in ctx.attr.deps:
+        # When TypeScript builds a composite project, our compilation will want to read the tsconfig.json of
+        # composite projects we reference.
+        # Otherwise we'd get an error like
+        # examples/project_references/lib_b/tsconfig.json(5,9): error TS6053:
+        # File 'execroot/aspect_rules_ts/bazel-out/k8-fastbuild/bin/examples/project_references/lib_a/tsconfig.json' not found.
+        if ctx.attr.composite and TsConfigInfo in dep:
+            inputs.extend(dep[TsConfigInfo].deps.to_list())
         if ValidOptionsInfo in dep:
             inputs.append(dep[ValidOptionsInfo].marker)
 
