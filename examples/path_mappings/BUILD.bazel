@@ -1,0 +1,27 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+
+# Example of named modules using tsconfig path mapping instead of
+# rules_js linking.
+
+# Dependencies for all targets in this package
+_DEPS = [
+    "//examples/js_lib:lib",
+    "//examples/dts_lib:lib",
+]
+
+# Type-checks, and emits output to
+# bazel-bin/examples/path_mappings/foo.js
+# bazel-bin/examples/path_mappings/foo.d.ts
+ts_project(
+    name = "path_mappings",
+    srcs = ["foo.ts"],
+    declaration = True,
+    tsconfig = "tsconfig.json",
+    deps = _DEPS,
+)
+
+build_test(
+    name = "path_mappings_test",
+    targets = [":path_mappings"],
+)
