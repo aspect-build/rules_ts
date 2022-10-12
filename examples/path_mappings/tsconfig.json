@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+        "declaration": true,
+        "baseUrl": ".",
+        // Path Mapping the examples folder as '@myorg/*'.
+        "paths": {
+            "@myorg/*": ["../*"]
+        }
+    }
+}

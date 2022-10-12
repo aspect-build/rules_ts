@@ -10,6 +10,7 @@ ts_project(
         "lib_types_2.d.mts",
     ],
     declaration = True,
+    visibility = ["//examples:__subpackages__"],
 )
 
 npm_package(
