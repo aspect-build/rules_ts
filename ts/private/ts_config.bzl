@@ -29,13 +29,13 @@ TsConfigInfo = provider(
 
 def _ts_config_impl(ctx):
     files = [copy_file_to_bin_action(ctx, ctx.file.src)]
-    transitive_deps = []
+    transitive_deps = [depset(copy_files_to_bin_actions(ctx, ctx.files.deps))]
     for dep in ctx.attr.deps:
         if TsConfigInfo in dep:
-            transitive_deps.extend(dep[TsConfigInfo].deps)
+            transitive_deps.append(dep[TsConfigInfo].deps)
     return [
         DefaultInfo(files = depset(files)),
-        TsConfigInfo(deps = files + copy_files_to_bin_actions(ctx, ctx.files.deps) + transitive_deps),
+        TsConfigInfo(deps = depset(files, transitive = transitive_deps)),
     ]
 
 ts_config = rule(
