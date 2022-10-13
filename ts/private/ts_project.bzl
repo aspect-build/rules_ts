@@ -88,6 +88,7 @@ def _ts_project_impl(ctx):
         ])
 
     inputs = srcs_inputs[:]
+    transitive_inputs = []
     for dep in ctx.attr.deps:
         # When TypeScript builds a composite project, our compilation will want to read the tsconfig.json of
         # composite projects we reference.
@@ -95,12 +96,12 @@ def _ts_project_impl(ctx):
         # examples/project_references/lib_b/tsconfig.json(5,9): error TS6053:
         # File 'execroot/aspect_rules_ts/bazel-out/k8-fastbuild/bin/examples/project_references/lib_a/tsconfig.json' not found.
         if ctx.attr.composite and TsConfigInfo in dep:
-            inputs.extend(dep[TsConfigInfo].deps.to_list())
+            transitive_inputs.append(dep[TsConfigInfo].deps)
         if ValidOptionsInfo in dep:
             inputs.append(dep[ValidOptionsInfo].marker)
 
     # Gather TsConfig info from both the direct (tsconfig) and indirect (extends) attribute
-    tsconfig_inputs = copy_files_to_bin_actions(ctx, _validate_lib.tsconfig_inputs(ctx))
+    tsconfig_inputs = copy_files_to_bin_actions(ctx, _validate_lib.tsconfig_inputs(ctx).to_list())
     inputs.extend(tsconfig_inputs)
 
     # We do not try to predeclare json_outs, because their output locations generally conflict with their path in the source tree.
@@ -182,7 +183,7 @@ This is an error because Bazel does not run actions unless their outputs are nee
     if len(outputs) > 0:
         inputs = depset(
             copy_files_to_bin_actions(ctx, inputs),
-            transitive = [js_lib_helpers.gather_files_from_js_providers(
+            transitive = transitive_inputs + [js_lib_helpers.gather_files_from_js_providers(
                 targets = ctx.attr.srcs + ctx.attr.deps,
                 include_transitive_sources = True,
                 include_declarations = True,
