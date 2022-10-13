@@ -121,6 +121,26 @@ Validates that some tsconfig.json properties match attributes on ts_project.
 | <a id="validate_options-validator"></a>validator |  -   | <a href="https://bazel.build/concepts/labels">Label</a> | required |  |
 
 
+<a id="TsConfigInfo"></a>
+
+## TsConfigInfo
+
+<pre>
+TsConfigInfo(<a href="#TsConfigInfo-deps">deps</a>)
+</pre>
+
+Provides TypeScript configuration, in the form of a tsconfig.json file
+        along with any transitively referenced tsconfig.json files chained by the
+        "extends" feature
+
+**FIELDS**
+
+
+| Name  | Description |
+| :------------- | :------------- |
+| <a id="TsConfigInfo-deps"></a>deps |  all tsconfig.json files needed to configure TypeScript    |
+
+
 <a id="ts_project"></a>
 
 ## ts_project
