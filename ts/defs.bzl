@@ -56,7 +56,7 @@ def ts_project(
         deps = [],
         extends = None,
         allow_js = False,
-        declaration = False,
+        declaration = None,
         source_map = False,
         declaration_map = False,
         resolve_json_module = None,
@@ -291,6 +291,9 @@ def ts_project(
             tsconfig = "tsconfig.json"
 
     if type(tsconfig) == type(dict()):
+        # Output declarations by default if unspecified and not extending a config which may specify
+        declaration = False if declaration == False or extends else True
+
         # Copy attributes <-> tsconfig properties
         # TODO: fail if compilerOptions includes a conflict with an attribute?
         compiler_options = tsconfig.setdefault("compilerOptions", {})

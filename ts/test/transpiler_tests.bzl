@@ -18,7 +18,7 @@ transitive_declarations_test = unittest.make(_impl0, attrs = {
     "expected_declarations": attr.string_list(default = ["big.d.ts"]),
 })
 
-def _impl1(ctx):
+def _expected_js_impl(ctx):
     env = unittest.begin(ctx)
 
     js_files = []
@@ -28,27 +28,24 @@ def _impl1(ctx):
 
     return unittest.end(env)
 
-transpile_with_failing_typecheck_test = unittest.make(_impl1, attrs = {
+transpile_with_failing_typecheck_test = unittest.make(_expected_js_impl, attrs = {
     "lib": attr.label(default = "transpile_with_typeerror"),
     "expected_js": attr.string_list(default = ["typeerror.js", "typeerror.js.map"]),
 })
 
-def _impl2(ctx):
-    env = unittest.begin(ctx)
-
-    js_files = []
-    for js in ctx.attr.lib[DefaultInfo].files.to_list():
-        js_files.append(js.basename)
-    asserts.equals(env, ctx.attr.expected_js, sorted(js_files))
-
-    return unittest.end(env)
-
-transpile_with_dts_test = unittest.make(_impl2, attrs = {
+transpile_with_dts_test = unittest.make(_expected_js_impl, attrs = {
     "lib": attr.label(default = "transpile_with_dts"),
     "expected_js": attr.string_list(default = ["index.js", "index.js.map"]),
+})
+
+transpile_with_default_dts_test = unittest.make(_expected_js_impl, attrs = {
+    "lib": attr.label(default = "transpile_with_default_dts_test"),
+    "expected_js": attr.string_list(default = ["index2.js"]),
+    "expected_declarations": attr.string_list(default = ["index2.d.ts"]),
 })
 
 def transpiler_test_suite():
     unittest.suite("t0", transitive_declarations_test)
     unittest.suite("t1", transpile_with_failing_typecheck_test)
     unittest.suite("t2", transpile_with_dts_test)
+    unittest.suite("t3", transpile_with_default_dts_test)

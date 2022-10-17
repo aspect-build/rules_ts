@@ -10,6 +10,13 @@ def mock(name, srcs, js_outs, map_outs, **kwargs):
 
     In real usage you would wrap a rule like
     https://github.com/aspect-build/rules_swc/blob/main/docs/swc.md
+
+    Args:
+        name: rule name prefix
+        srcs: ts sources
+        js_outs: js files to generate
+        map_outs: map files to generate
+        **kwargs: unused
     """
 
     for i, s in enumerate(srcs):
@@ -19,8 +26,9 @@ def mock(name, srcs, js_outs, map_outs, **kwargs):
             out = js_outs[i],
         )
 
-        write_file(
-            name = "_{}_{}_map".format(name, s),
-            out = map_outs[i],
-            content = [_DUMMY_SOURCEMAP % s],
-        )
+        if i < len(map_outs):
+            write_file(
+                name = "_{}_{}_map".format(name, s),
+                out = map_outs[i],
+                content = [_DUMMY_SOURCEMAP % s],
+            )

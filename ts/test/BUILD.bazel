@@ -6,7 +6,6 @@ load(":transpiler_tests.bzl", "transpiler_test_suite")
 load("//ts:defs.bzl", "ts_project")
 load("@aspect_rules_js//js:defs.bzl", "js_test")
 
-
 _TSCONFIG = {
     "compilerOptions": {
         "declaration": True,
@@ -39,6 +38,12 @@ write_file(
     name = "gen_index_ts",
     out = "index.ts",
     content = ["export const a: string = \"1\";"],
+)
+
+write_file(
+    name = "gen_index2_ts",
+    out = "index2.ts",
+    content = ["export const b: string = \"2\";"],
 )
 
 write_file(
@@ -94,15 +99,23 @@ ts_project(
     tsconfig = _TSCONFIG,
 )
 
+ts_project(
+    name = "transpile_with_default_dts_test",
+    srcs = ["index2.ts"],
+    tags = ["manual"],
+    transpiler = mock,
+    tsconfig = {},
+)
+
 transpiler_test_suite()
 
 # Ensure that when determining output location, the `root_dir` attribute is only removed once.
 ts_project(
     name = "rootdir_works_with_repeated_directory",
     srcs = ["root/deep/root/deep_src.ts"],
+    root_dir = "root",
     transpiler = mock,
     tsconfig = _TSCONFIG,
-    root_dir = "root",
 )
 
 copy_file(
@@ -113,8 +126,8 @@ copy_file(
 
 js_test(
     name = "worker_test",
-    entry_point = ":ts_project_worker.test.js",
     data = [
-        ":ts_project_worker.js"
-    ]
+        ":ts_project_worker.js",
+    ],
+    entry_point = ":ts_project_worker.test.js",
 )
