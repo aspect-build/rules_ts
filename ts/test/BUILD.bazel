@@ -1,11 +1,9 @@
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+
 load(":mock_transpiler.bzl", "mock")
 load(":transpiler_tests.bzl", "transpiler_test_suite")
 load("//ts:defs.bzl", "ts_project")
-load("@aspect_rules_js//js:defs.bzl", "js_test")
-
 
 _TSCONFIG = {
     "compilerOptions": {
@@ -103,18 +101,4 @@ ts_project(
     transpiler = mock,
     tsconfig = _TSCONFIG,
     root_dir = "root",
-)
-
-copy_file(
-    name = "copy_ts_project_worker",
-    src = "//ts/private:ts_project_worker.js",
-    out = "ts_project_worker.js",
-)
-
-js_test(
-    name = "worker_test",
-    entry_point = ":ts_project_worker.test.js",
-    data = [
-        ":ts_project_worker.js"
-    ]
 )

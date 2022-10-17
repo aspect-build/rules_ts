@@ -2,6 +2,7 @@ const fs = require('fs');
 const ts = require('typescript');
 const path = require('path');
 const worker = require('@bazel/worker');
+const v8 = require('v8');
 const MNEMONIC = 'TsProject';
 
 function noop() {}
@@ -339,9 +340,6 @@ function printDiagnostics(diagnostics) {
     worker.log(ts.formatDiagnostics(diagnostics, formatDiagnosticHost));
 }
 
-/** @type {Map<string, ReturnType<createProgram> & {previousInputs?: import("@bazel/worker").Inputs}>} */
-const workers = new Map();
-
 function createProgram(args, initialInputs) {
     const {options} = ts.parseCommandLine(args);
     const compilerOptions = {...options}
@@ -540,6 +538,28 @@ function createProgram(args, initialInputs) {
     }
 }
 
+// How much (%) of memory should be free at all times. 
+const NEAR_OOM_ZONE = 20
+
+function isNearOomZone() {
+    const stat = v8.getHeapStatistics();
+    const used = (100 / stat.heap_size_limit) * stat.used_heap_size
+    return 100 - used < NEAR_OOM_ZONE
+}
+
+/** @type {Map<string, ReturnType<createProgram> & {previousInputs?: import("@bazel/worker").Inputs}>} */
+const workers = new Map();
+
+function sweepLeastRecentlyUsedWorkers() {
+    for (const [k, w] of workers) {
+        w.program.close();
+        workers.delete(k);
+        // stop killing workers as soon as the worker is out the oom zone 
+        if (!isNearOomZone()) {
+            break;
+        }
+    }
+}
 
 function getOrCreateWorker(args, inputs) {
     const project = args[args.indexOf('--project') + 1]
@@ -547,16 +567,20 @@ function getOrCreateWorker(args, inputs) {
     const declarationDir = args[args.lastIndexOf("--declarationDir") + 1]
     const rootDir = args[args.lastIndexOf("--rootDir") + 1]
     const key = `${project} @ ${outDir} @ ${declarationDir} @ ${rootDir}`
-    if (!workers.has(key)) {
-        const { program, host, checkAndApplyArgs } = createProgram(args, inputs);
+
+    let worker = workers.get(key)
+    if (!worker) {
+        if (isNearOomZone()) {
+            sweepLeastRecentlyUsedWorkers();
+        }
+        worker = createProgram(args, inputs);
         host.debuglog(`Created a new worker for ${key}`);
-        workers.set(key, {
-            program,
-            host,
-            checkAndApplyArgs
-        });
+    } else {
+        // NB: removed from the map intentionally. to achieve LRU effect on the workers map.
+        workers.delete(key)
     }
-    return workers.get(key);
+    workers.set(key, worker)
+    return worker;
 }
 
 
@@ -698,4 +722,4 @@ if (require.main === module && worker.runAsWorker(process.argv)) {
     }
 }
 
-module.exports = {createFilesystemTree: createFilesystemTree};
+module.exports = {createFilesystemTree: createFilesystemTree, emit: emit};

@@ -1,31 +1,13 @@
 const assert = require("node:assert");
 const path = require("node:path");
 const fs = require("node:fs");
-const mod = require('node:module');
-
-function mock(name, exports) {
-    const p = path.resolve(name);
-    require.cache[p] = {
-        id: name,
-        file: p,
-        loaded: true,
-        exports: exports
-    };
-    const realres = mod._resolveFilename;
-    mod._resolveFilename = function (request, parent) {
-        if (request == name) {
-            return p;
-        }
-        return realres(request, parent);
-    };
-}
+const mock = require("./mock");
 
 mock("typescript", { sys: { getCurrentDirectory: () => {}, realpath: fs.realpathSync } });
 mock("@bazel/worker", { log: console.log })
 
-/** @type {import("../private/ts_project_worker")} */
+/** @type {import("../../private/ts_project_worker")} */
 const worker = require("./ts_project_worker");
-
 
 // Tests
 const root = process.env.GTEST_TMP_DIR;

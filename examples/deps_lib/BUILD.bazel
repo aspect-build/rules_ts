@@ -16,8 +16,6 @@ ts_project(
         "//examples:node_modules/date-fns",
     ],
     declaration = True,
-    # TODO: fix worker mode flaky bug when there are multiple ts_project targets in a package
-    supports_workers = False,
     deps = [
         "//examples:node_modules/date-fns",
         "//examples/deps_lib/b",
@@ -37,8 +35,6 @@ ts_project(
     name = "importer_rel_ts",
     srcs = ["importer_rel.ts"],
     declaration = True,
-    # TODO: fix worker mode flaky bug when there are multiple ts_project targets in a package
-    supports_workers = False,
     deps = [
         ":deps_ts",
     ],
@@ -48,8 +44,6 @@ ts_project(
     name = "importer_linked_ts",
     srcs = ["importer_linked.ts"],
     declaration = True,
-    # TODO: fix worker mode flaky bug when there are multiple ts_project targets in a package
-    supports_workers = False,
     deps = [
         "//examples:node_modules/@myorg/deps_lib",
     ],
