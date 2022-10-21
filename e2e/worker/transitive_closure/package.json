@@ -1,0 +1,6 @@
+{
+    "name": "transitive_closure",
+    "dependencies": {
+        "@transitive_closure/a": "workspace:*"
+    }
+}

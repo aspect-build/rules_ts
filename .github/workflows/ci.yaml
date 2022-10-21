@@ -134,6 +134,10 @@ jobs:
 
             - run: go install github.com/bazelbuild/buildtools/buildozer@latest
               if: ${{ hashFiles(format('{0}/test.sh', matrix.folder)) != '' }}
+            
+            - uses: pnpm/action-setup@v2
+              with:
+                version: '7.14.2'
 
             - name: run ./test.sh
               working-directory: ${{ matrix.folder }}
@@ -142,7 +146,7 @@ jobs:
               run: |
                   cp -f $GITHUB_WORKSPACE/.github/workflows/ci.bazelrc .bazelrc.test
                   echo "build --config=${{ matrix.config }}" >> .bazelrc.test
-                  echo "build --disk_cache=" >> .bazelrc.test
+                  echo "build --disk_cache=/tmp/cache" >> .bazelrc.test
                   bazel clean
                   ./test.sh
                   ./test.sh
@@ -154,7 +158,7 @@ jobs:
               run: |
                   cp -f $GITHUB_WORKSPACE/.github/workflows/ci.bazelrc .bazelrc.test
                   echo "build --config=${{ matrix.config }}" >> .bazelrc.test
-                  echo "build --disk_cache=" >> .bazelrc.test
+                  echo "build --disk_cache=/tmp/cache" >> .bazelrc.test
                   echo "build --noexperimental_allow_unresolved_symlinks" >> ".bazelrc.test"
                   bazel clean
                   ./test.sh

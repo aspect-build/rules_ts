@@ -154,6 +154,25 @@ message "# Case 12: .tsbuildinfo file should be written when analysis cache is d
 bazel build //composite || exit_with_message "Case 12: expected worker to build without errors."
 bazel build //composite --action_env=ANALYSIS_CACHE_BUST=1 || exit_with_message "Case 12: expected worker to build without errors. (subsequent)"
 
+
+message "# Case 13: should not ignore new transitive deps"
+
+message="error TS2307: Cannot find module '@transitive_closure/b' or its corresponding type declarations."
+bazel build //transitive_closure 2>&1 | grep "$message" || exit_with_message "Case 13: expected worker to report \"$message\""
+
+lockfile_backup=$(mktemp)
+cat pnpm-lock.yaml > $lockfile_backup
+add_trap "cat $lockfile_backup > pnpm-lock.yaml"
+
+
+tmp=$(mktemp -d)
+jq '.pnpm.packageExtensions["@transitive_closure/a"].dependencies["@transitive_closure/b"] = "workspace:*"' package.json > "$tmp/package.json"
+pnpm install --lockfile-only --dir "$tmp" --store-dir $(mktemp -d) --virtual-store-dir $(mktemp -d)
+cat "$tmp/pnpm-lock.yaml" > pnpm-lock.yaml
+
+bazel build //transitive_closure 2>&1  | grep "$message" && exit_with_message "Case 13: expected worker to not report \"$message\""
+
+
 message "# Case X: Should dump traces"
 bazel build //trace
 
