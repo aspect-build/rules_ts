@@ -574,7 +574,7 @@ function getOrCreateWorker(args, inputs) {
             sweepLeastRecentlyUsedWorkers();
         }
         worker = createProgram(args, inputs);
-        host.debuglog(`Created a new worker for ${key}`);
+        worker.host.debuglog(`Created a new worker for ${key}`);
     } else {
         // NB: removed from the map intentionally. to achieve LRU effect on the workers map.
         workers.delete(key)
