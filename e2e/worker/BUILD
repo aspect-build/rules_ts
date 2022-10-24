@@ -3,7 +3,14 @@ load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 
+package(default_visibility = ["//:__subpackages__"])
+
 npm_link_all_packages(name = "node_modules")
+
+copy_to_bin(
+    name = "tsconfig",
+    srcs = ["tsconfig.json"],
+)
 
 ts_project(
     name = "ts",
@@ -32,16 +39,12 @@ ts_project(
 ts_project(
     name = "lib",
     srcs = ["lib.ts"],
-    declaration = True,
-    tsconfig = {},
 )
 
 ts_project(
     name = "should_fail",
     srcs = ["fail.ts"],
-    declaration = True,
     tags = ["manual"],
-    tsconfig = {},
 )
 
 # this is here to ensure that package.json#type=module does not affect worker.

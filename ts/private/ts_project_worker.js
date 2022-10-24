@@ -279,32 +279,36 @@ function createEmitAndLibCacheAndDiagnosticsProgram(
     );
 
     /** Emit Cache */
-    /** @type {Map} */
-    const emittedFiles = (host.emittedFiles = host.emittedFiles || new Map());
-    /** @type {Map} */
-    const emittingMap = (host.emittedFilesWeak = host.emittedFilesWeak || new Map());
+    const NOT_FROM_SOURCE = Symbol.for("NOT_FROM_SOURCE")
+    /** @type {Map<string, string>} */
+    const outputSourceMapping = (host.outputSourceMapping = host.outputSourceMapping || new Map());
+    /** @type {Map<string, {text: string, writeByteOrderMark: boolean}>} */
+    const outputCache = (host.outputCache = host.outputCache || new Map());
 
     const emit = builder.emit;
     builder.emit = (targetSourceFile, writeFile, cancellationToken, emitOnlyDtsFiles, customTransformers) => {
         writeFile = writeFile || host.writeFile;
         if (!targetSourceFile) {
-            for (const [path, content] of emittedFiles.entries()) {
-                const sourcePath = emittingMap.get(path);
-                if (!builder.getSourceFile(sourcePath)) {
-                    emittedFiles.delete(path);
-                    emittingMap.delete(path);
-                } else {
-                    writeFile(path, content);
-                }
+            for (const [path, entry] of outputCache.entries()) {
+                const sourcePath = outputSourceMapping.get(path);
+                // if the source is not part of the program anymore, then drop the output from the output cache.
+                if (sourcePath != NOT_FROM_SOURCE && !builder.getSourceFile(sourcePath)) {
+                    outputSourceMapping.delete(path);
+                    outputCache.delete(path);
+                    continue;
+                } 
+                writeFile(path, entry.text, entry.writeByteOrderMark);
             }
         }
 
-        const writeF = (fileName, data, writeByteOrderMark, onError, sourceFiles) => {
-            writeFile(fileName, data, writeByteOrderMark, onError, sourceFiles);
-            if (sourceFiles && sourceFiles.length !== 0) {
-                host.debuglog?.(`putting ${fileName} into emit cache`);
-                emittingMap.set(fileName, sourceFiles[0].fileName);
-                emittedFiles.set(fileName, data);
+        const writeF = (fileName, text, writeByteOrderMark, onError, sourceFiles) => {
+            writeFile(fileName, text, writeByteOrderMark, onError, sourceFiles);
+            outputCache.set(fileName, {text, writeByteOrderMark});
+            if (sourceFiles?.length > 0) {
+                outputSourceMapping.set(fileName, sourceFiles[0].fileName)
+            } else {
+                // if the file write is not the result of a source mark it as not from source not avoid cache drops.
+                outputSourceMapping.set(fileName, NOT_FROM_SOURCE)
             }
         };
         return emit(targetSourceFile, writeF, cancellationToken, emitOnlyDtsFiles, customTransformers);
@@ -355,7 +359,7 @@ function createProgram(args, initialInputs) {
 
     /** @type {ts.System} */
     const strictSys = {
-        write: worker.log,
+        write: (s) => process.stderr.write(s),
         writeOutputIsTTY: () => false,
         setTimeout: setTimeout,
         clearTimeout: clearTimeout, 
@@ -394,7 +398,7 @@ function createProgram(args, initialInputs) {
 
     const program = ts.createWatchProgram(host);
 
-    return { host, program, checkAndApplyArgs };
+    return { host, program, checkAndApplyArgs, enablePerformanceAndTracingIfNeeded };
 
     function setTimeout(cb) {
         // NB: tsc will never clearTimeout if the index is 0 hence timeout must be truthy. :|
@@ -423,7 +427,7 @@ function createProgram(args, initialInputs) {
         }
         // tracing is only available in 4.1 and above
         // See: https://github.com/microsoft/TypeScript/wiki/Performance-Tracing
-        if (compilerOptions.generateTrace && ts.startTracing) {
+        if (compilerOptions.generateTrace && ts.startTracing && !ts.tracing) {
             ts.startTracing('build', compilerOptions.generateTrace);
         }
     }
@@ -458,6 +462,7 @@ function createProgram(args, initialInputs) {
     }
 
     function debuglog(message) {
+        // TODO: https://github.com/aspect-build/rules_ts/issues/189
         compilerOptions.extendedDiagnostics && host.trace?.(message)
     }
 
@@ -595,6 +600,9 @@ function emit(args, inputs) {
     _worker.checkAndApplyArgs(args);
     timingEnd('checkAndApplyArgs');
 
+    timingStart('enablePerformanceAndTracingIfNeeded');
+    _worker.enablePerformanceAndTracingIfNeeded();
+    timingEnd('enablePerformanceAndTracingIfNeeded');
 
     const failedLookups = new Map();
     if (previousInputs) {
