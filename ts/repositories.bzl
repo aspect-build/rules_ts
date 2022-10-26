@@ -9,7 +9,11 @@ load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 load("//ts/private:npm_repositories.bzl", "npm_dependencies")
 load("//ts/private:versions.bzl", TS_VERSIONS = "VERSIONS")
 
+# Default TypeScript version
 LATEST_VERSION = TS_VERSIONS.keys()[-1]
+
+# Default npm registry
+DEFAULT_REGISTRY = "https://registry.npmjs.org"
 
 # WARNING: any additions to this function may be BREAKING CHANGES for users
 # because we'll fetch a dependency which may be different from one that
@@ -17,7 +21,7 @@ LATEST_VERSION = TS_VERSIONS.keys()[-1]
 # ours took precedence. Such breakages are challenging for users, so any
 # changes in this function should be marked as BREAKING in the commit message
 # and released only in semver majors.
-def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrity = None):
+def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrity = None, npm_registry = DEFAULT_REGISTRY):
     """Dependencies needed by users of rules_ts.
 
     To skip fetching the typescript package, define repository called `npm_typescript` before calling this.
@@ -32,6 +36,7 @@ def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrit
             By default, uses values mirrored into rules_ts.
             For example, to get the integrity of version 4.6.3 you could run
             `curl --silent https://registry.npmjs.org/typescript/4.6.3 | jq -r '.dist.integrity'`
+        npm_registry: the npm registry to fetch TypeScript npm packages from
     """
 
     # The minimal version of bazel_skylib we require
@@ -68,4 +73,4 @@ def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrit
         url = "https://github.com/aspect-build/bazel-lib/archive/refs/tags/v1.12.1.tar.gz",
     )
 
-    npm_dependencies(ts_version_from = ts_version_from, ts_version = ts_version, ts_integrity = ts_integrity)
+    npm_dependencies(ts_version_from = ts_version_from, ts_version = ts_version, ts_integrity = ts_integrity, npm_registry = npm_registry)

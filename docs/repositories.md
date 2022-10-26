@@ -11,7 +11,7 @@ See https://docs.bazel.build/versions/main/skylark/deploying.html#dependencies
 ## rules_ts_dependencies
 
 <pre>
-rules_ts_dependencies(<a href="#rules_ts_dependencies-ts_version_from">ts_version_from</a>, <a href="#rules_ts_dependencies-ts_version">ts_version</a>, <a href="#rules_ts_dependencies-ts_integrity">ts_integrity</a>)
+rules_ts_dependencies(<a href="#rules_ts_dependencies-ts_version_from">ts_version_from</a>, <a href="#rules_ts_dependencies-ts_version">ts_version</a>, <a href="#rules_ts_dependencies-ts_integrity">ts_integrity</a>, <a href="#rules_ts_dependencies-npm_registry">npm_registry</a>)
 </pre>
 
 Dependencies needed by users of rules_ts.
@@ -27,5 +27,6 @@ To skip fetching the typescript package, define repository called `npm_typescrip
 | <a id="rules_ts_dependencies-ts_version_from"></a>ts_version_from |  label of a json file (typically <code>package.json</code>) which declares an exact typescript version in a dependencies or devDependencies property. Exactly one of <code>ts_version</code> or <code>ts_version_from</code> must be set.   |  <code>None</code> |
 | <a id="rules_ts_dependencies-ts_version"></a>ts_version |  version of the TypeScript compiler. Exactly one of <code>ts_version</code> or <code>ts_version_from</code> must be set.   |  <code>None</code> |
 | <a id="rules_ts_dependencies-ts_integrity"></a>ts_integrity |  integrity hash for the npm package. By default, uses values mirrored into rules_ts. For example, to get the integrity of version 4.6.3 you could run <code>curl --silent https://registry.npmjs.org/typescript/4.6.3 | jq -r '.dist.integrity'</code>   |  <code>None</code> |
+| <a id="rules_ts_dependencies-npm_registry"></a>npm_registry |  the npm registry to fetch TypeScript npm packages from   |  <code>"https://registry.npmjs.org"</code> |
 
 
