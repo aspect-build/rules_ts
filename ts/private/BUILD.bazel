@@ -60,3 +60,9 @@ bzl_library(
     srcs = ["versions.bzl"],
     visibility = ["//ts:__subpackages__"],
 )
+
+bzl_library(
+    name = "maybe",
+    srcs = ["maybe.bzl"],
+    visibility = ["//ts:__subpackages__"],
+)

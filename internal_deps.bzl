@@ -4,13 +4,12 @@ Users should *not* need to install these. If users see a load()
 statement from these, that's a bug in our distribution.
 """
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
+# buildifier: disable=bzl-visibility
+load("//ts/private:maybe.bzl", http_archive = "maybe_http_archive")
 
 def rules_ts_internal_deps():
     "Fetch deps needed for local development"
-    maybe(
-        http_archive,
+    http_archive(
         name = "io_bazel_rules_go",
         sha256 = "099a9fb96a376ccbbb7d291ed4ecbdfd42f6bc822ab77ae6f1b5cb9e914e94fa",
         urls = [
@@ -19,8 +18,7 @@ def rules_ts_internal_deps():
         ],
     )
 
-    maybe(
-        http_archive,
+    http_archive(
         name = "bazel_gazelle",
         sha256 = "501deb3d5695ab658e82f6f6f549ba681ea3ca2a5fb7911154b5aa45596183fa",
         urls = [
@@ -32,8 +30,7 @@ def rules_ts_internal_deps():
     # Override bazel_skylib distribution to fetch sources instead
     # so that the gazelle extension is included
     # see https://github.com/bazelbuild/bazel-skylib/issues/250
-    maybe(
-        http_archive,
+    http_archive(
         name = "bazel_skylib",
         sha256 = "07b4117379dde7ab382345c3b0f5edfc6b7cff6c93756eac63da121e0bbcc5de",
         strip_prefix = "bazel-skylib-1.1.1",
@@ -43,8 +40,7 @@ def rules_ts_internal_deps():
         ],
     )
 
-    maybe(
-        http_archive,
+    http_archive(
         name = "io_bazel_stardoc",
         sha256 = "05fb57bb4ad68a360470420a3b6f5317e4f722839abc5b17ec4ef8ed465aaa47",
         urls = [
@@ -53,8 +49,7 @@ def rules_ts_internal_deps():
         ],
     )
 
-    maybe(
-        http_archive,
+    http_archive(
         name = "aspect_rules_jasmine",
         sha256 = "938a2818100fd89e7600a45b7ba4fcd4114c11c5b5741db30ff7c6e0dcb2ea4b",
         strip_prefix = "rules_jasmine-0.1.0",
