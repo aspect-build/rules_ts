@@ -6,7 +6,7 @@ Differences:
 - didn't copy the whole doc string
 """
 
-load("@aspect_bazel_lib//lib:utils.bzl", "is_external_label", "to_label")
+load("@aspect_bazel_lib//lib:utils.bzl", "to_label")
 load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@bazel_skylib//lib:partial.bzl", "partial")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
@@ -342,7 +342,6 @@ def ts_project(
             allow_js = allow_js,
             tsconfig = tsconfig,
             extends = extends,
-            has_local_deps = len([d for d in deps if not is_external_label(d)]) > 0,
             validator = validator,
             **common_kwargs
         )
