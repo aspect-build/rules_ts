@@ -90,9 +90,9 @@ Implementation rule behind the ts_project macro.
 ## validate_options
 
 <pre>
-validate_options(<a href="#validate_options-name">name</a>, <a href="#validate_options-allow_js">allow_js</a>, <a href="#validate_options-composite">composite</a>, <a href="#validate_options-declaration">declaration</a>, <a href="#validate_options-declaration_map">declaration_map</a>, <a href="#validate_options-emit_declaration_only">emit_declaration_only</a>,
-                 <a href="#validate_options-extends">extends</a>, <a href="#validate_options-incremental">incremental</a>, <a href="#validate_options-preserve_jsx">preserve_jsx</a>, <a href="#validate_options-resolve_json_module">resolve_json_module</a>, <a href="#validate_options-source_map">source_map</a>, <a href="#validate_options-target">target</a>,
-                 <a href="#validate_options-ts_build_info_file">ts_build_info_file</a>, <a href="#validate_options-tsconfig">tsconfig</a>, <a href="#validate_options-validator">validator</a>)
+validate_options(<a href="#validate_options-name">name</a>, <a href="#validate_options-allow_js">allow_js</a>, <a href="#validate_options-composite">composite</a>, <a href="#validate_options-declaration">declaration</a>, <a href="#validate_options-declaration_map">declaration_map</a>, <a href="#validate_options-deps">deps</a>,
+                 <a href="#validate_options-emit_declaration_only">emit_declaration_only</a>, <a href="#validate_options-extends">extends</a>, <a href="#validate_options-incremental">incremental</a>, <a href="#validate_options-preserve_jsx">preserve_jsx</a>, <a href="#validate_options-resolve_json_module">resolve_json_module</a>,
+                 <a href="#validate_options-source_map">source_map</a>, <a href="#validate_options-target">target</a>, <a href="#validate_options-ts_build_info_file">ts_build_info_file</a>, <a href="#validate_options-tsconfig">tsconfig</a>, <a href="#validate_options-validator">validator</a>)
 </pre>
 
 Validates that some tsconfig.json properties match attributes on ts_project.
@@ -108,6 +108,7 @@ Validates that some tsconfig.json properties match attributes on ts_project.
 | <a id="validate_options-composite"></a>composite |  https://www.typescriptlang.org/tsconfig#composite   | Boolean | optional | False |
 | <a id="validate_options-declaration"></a>declaration |  https://www.typescriptlang.org/tsconfig#declaration   | Boolean | optional | False |
 | <a id="validate_options-declaration_map"></a>declaration_map |  https://www.typescriptlang.org/tsconfig#declarationMap   | Boolean | optional | False |
+| <a id="validate_options-deps"></a>deps |  -   | <a href="https://bazel.build/concepts/labels">List of labels</a> | required |  |
 | <a id="validate_options-emit_declaration_only"></a>emit_declaration_only |  https://www.typescriptlang.org/tsconfig#emitDeclarationOnly   | Boolean | optional | False |
 | <a id="validate_options-extends"></a>extends |  https://www.typescriptlang.org/tsconfig#extends   | <a href="https://bazel.build/concepts/labels">Label</a> | optional | None |
 | <a id="validate_options-incremental"></a>incremental |  https://www.typescriptlang.org/tsconfig#incremental   | Boolean | optional | False |
@@ -211,7 +212,7 @@ Any code that works with `tsc` should work with `ts_project` with a few caveats:
 | <a id="ts_project-ts_build_info_file"></a>ts_build_info_file |  The user-specified value of <code>tsBuildInfoFile</code> from the tsconfig. Helps Bazel to predict the path where the .tsbuildinfo output is written.   |  <code>None</code> |
 | <a id="ts_project-tsc"></a>tsc |  Label of the TypeScript compiler binary to run. This allows you to use a custom compiler.   |  <code>"@npm_typescript//:tsc"</code> |
 | <a id="ts_project-tsc_worker"></a>tsc_worker |  Label of a custom TypeScript compiler binary which understands Bazel's persistent worker protocol.   |  <code>"@npm_typescript//:tsc_worker"</code> |
-| <a id="ts_project-validate"></a>validate |  Whether to check that the tsconfig JSON settings match the attributes on this target. Set this to <code>False</code> to skip running our validator, in case you have a legitimate reason for these to differ, e.g. you have a setting enabled just for the editor but you want different behavior when Bazel runs <code>tsc</code>.   |  <code>True</code> |
+| <a id="ts_project-validate"></a>validate |  Whether to check that the dependencies are valid and the tsconfig JSON settings match the attributes on this target. Set this to <code>False</code> to skip running our validator, in case you have a legitimate reason for these to differ, e.g. you have a setting enabled just for the editor but you want different behavior when Bazel runs <code>tsc</code>.   |  <code>True</code> |
 | <a id="ts_project-validator"></a>validator |  Label of the tsconfig validator to run when <code>validate = True</code>.   |  <code>"@npm_typescript//:validator"</code> |
 | <a id="ts_project-declaration_dir"></a>declaration_dir |  String specifying a subdirectory under the bazel-out folder where generated declaration outputs are written. Equivalent to the TypeScript --declarationDir option. By default declarations are written to the out_dir.   |  <code>None</code> |
 | <a id="ts_project-out_dir"></a>out_dir |  String specifying a subdirectory under the bazel-out folder where outputs are written. Equivalent to the TypeScript --outDir option. Note that Bazel always requires outputs be written under a subdirectory matching the input package, so if your rule appears in path/to/my/package/BUILD.bazel and out_dir = "foo" then the .js files will appear in bazel-out/[arch]/bin/path/to/my/package/foo/*.js. By default the out_dir is '.', meaning the packages folder in bazel-out.   |  <code>None</code> |

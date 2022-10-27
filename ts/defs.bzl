@@ -200,7 +200,7 @@ def ts_project(
 
             Read more: https://blog.aspect.dev/typescript-speedup
 
-        validate: Whether to check that the tsconfig JSON settings match the attributes on this target.
+        validate: Whether to check that the dependencies are valid and the tsconfig JSON settings match the attributes on this target.
             Set this to `False` to skip running our validator, in case you have a legitimate reason for these to differ,
             e.g. you have a setting enabled just for the editor but you want different behavior when Bazel runs `tsc`.
 
@@ -342,6 +342,7 @@ def ts_project(
             allow_js = allow_js,
             tsconfig = tsconfig,
             extends = extends,
+            deps = deps,
             validator = validator,
             **common_kwargs
         )
