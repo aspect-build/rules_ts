@@ -4,8 +4,10 @@ module(
     version = "0.0.0",
 )
 
+# repeated here only because we use the platforms definitions for rbe
+bazel_dep(name = "aspect_rules_js", dev_dependency = True, version = "1.6.3")
 bazel_dep(name = "aspect_rules_ts", dev_dependency = True, version = "0.0.0")
-bazel_dep(name = "bazel_skylib", dev_dependency = True, version = "1.1.1")
+bazel_dep(name = "bazel_skylib", dev_dependency = True, version = "1.3.0")
 
 local_path_override(
     module_name = "aspect_rules_ts",
