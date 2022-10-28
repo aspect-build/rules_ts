@@ -1,0 +1,8 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "a",
+    composite = True,
+    tsconfig = "//composite:config",
+    visibility = ["//composite:__pkg__"]
+)

@@ -4,12 +4,16 @@ cd $( dirname -- "$BASH_SOURCE"; )
 
 
 message() {
+    echo ""
     echo "###########################"
-    echo "$1"
+    echo "#$1"
+    echo ""
 }
 
 exit_with_message() {
-    message "FAIL: $1"
+    echo ""
+    echo "## FAIL: $1"
+    echo ""
     exit 1
 }
 
@@ -19,11 +23,10 @@ add_trap() {
 }
 
 
-
 message "# Case 0; try to build a target that will never succeed"
 message="error TS2322: Type 'number' is not assignable to type 'string'."
 bazel build :should_fail 2>&1 | grep "$message" || exit_with_message "Case 0: expected worker to report \"$message\""
-# we want fail.ts to stay bazel-out to see if subsequent cases ever read that file. 
+# we want fail.ts to be present within bazel-out to see if subsequent cases ever try to read the file. 
 
 
 message "# Case 1; warmed up worker reporting errors of evil.ts"
@@ -71,35 +74,28 @@ done
 
 
 message "# Case 5; tsc can handle tsconfig change, file addendum and removal in one batch"
-add_trap "rm -f _addendum_$i.ts"
-echo "const a = $i" > "_addendum_$i.ts"
+
+add_trap "rm -f _addendum_1.ts"
+echo "const a1 = 1" > "_addendum_1.ts"
 bazel build :ts
 
 add_trap "git checkout HEAD -- tsconfig.json"
-echo '{"compilerOptions": {"module": "ES2015", "moduleResolution": "node"}}' > tsconfig.json
-rm "_addendum_$i.ts"
+echo '{"compilerOptions": {"module": "ES2015", "moduleResolution": "node"}}' > tsconfig.json # tsconfig change
 
-add_trap "rm -f _addendum_${i}_$i.ts"
-echo "const a = $i" > "_addendum_${i}_$i.ts"
+add_trap "rm -f _addendum_2.ts"
+echo "const a2 = 2" > "_addendum_2.ts" # add
+
+rm "_addendum_1.ts" # remove
 
 bazel build :ts
+rm "_addendum_2.ts"
 
 
-message "# Case 6: Builds with local strategy"
-bazel clean
-bazel build :lib --strategy=TsProject=local
-
-message "# Case 7: Should dump traces"
-bazel clean
-tracepath="/tmp/tsctraces"
-rm -rf $tracepath
-bazel build //trace
-[ ! -d $tracepath ] && exit_with_message "Case 7: Expected tsc to write traces"
+message "# Case 6: Builds with sandboxed strategy"
+bazel build :lib --strategy=TsProject=sandboxed
 
 
 message "# Case 8: Should report missing deps"
-
-bazel clean
 for i in $(seq 1 4)
 do
     add_trap "buildozer 'add deps //feature$i' :ts"
@@ -111,7 +107,6 @@ do
     buildozer "add deps //feature$i" :ts
     bazel build :ts
 done
-
 
 
 message "# Case 9: Should report multiple missing deps"
@@ -133,16 +128,16 @@ bazel build :ts 2>&1 | grep "$message2" || exit_with_message "Case 9: expected w
 bazel build :ts 2>&1 | grep "$message3" && exit_with_message "Case 9: expected worker to not report \"$message3\""
 
 
-message "# Case 9: Should report when @types/<pkg> and <pkg> is missing from deps."
+message "# Case 10: Should report when @types/<pkg> and <pkg> is missing from deps."
 
 add_trap "buildozer 'add deps //:node_modules/debug //:node_modules/@types/debug' :ts"
 buildozer "remove deps //:node_modules/debug //:node_modules/@types/debug" :ts
 message="error TS2307: Cannot find module 'debug' or its corresponding type declarations."
-bazel build :ts 2>&1 | grep "$message" || exit_with_message "Case 9: expected worker to report \"$message\""
+bazel build :ts 2>&1 | grep "$message" || exit_with_message "Case 10: expected worker to report \"$message\""
 buildozer "add deps //:node_modules/debug //:node_modules/@types/debug" :ts
 
 
-message "# Case 10: Should report missing third party deps"
+message "# Case 11: Should report missing third party deps"
 
 deps=( "@nestjs/core" "@nestjs/common" "rxjs" )
 
@@ -150,11 +145,36 @@ for dep in "${deps[@]}"; do
     add_trap "buildozer 'add deps //:node_modules/$dep' :ts"
     buildozer "remove deps //:node_modules/$dep" :ts
     message="error TS2307: Cannot find module '$dep' or its corresponding type declarations."
-    bazel build :ts 2>&1 | grep "$message" || exit_with_message "Case 10: expected worker to report \"$message\""
+    bazel build :ts 2>&1 | grep "$message" || exit_with_message "Case 11: expected worker to report \"$message\""
     buildozer "add deps //:node_modules/$dep"
 done
 
 
+message "# Case 12: .tsbuildinfo file should be written when analysis cache is discarded."
+bazel build //composite || exit_with_message "Case 12: expected worker to build without errors."
+bazel build //composite --action_env=ANALYSIS_CACHE_BUST=1 || exit_with_message "Case 12: expected worker to build without errors. (subsequent)"
+
+message "# Case X: Should dump traces"
+bazel build //trace
+
+traces=$(mktemp -d)
+rm -rf "$traces"
+echo $traces
+
+buildozer "add args --generateTrace $traces" //trace
+add_trap "buildozer 'remove args' //trace"
+
+bazel build //trace
+[ ! -d $traces ] && exit_with_message "Case X: Expected tsc to write traces"
+
+bazel build //trace --action_env=ANALYSIS_CACHE_BUST=1
+
+
+echo ""
 echo "###########################"
 echo "## All tests have passed ##"
 echo "###########################"
+echo ""
+
+echo "## Running cleanup"
+echo ""

@@ -1,0 +1,27 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
+load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
+
+package(default_visibility = ["//composite:__subpackages__"])
+
+copy_to_bin(
+    name = "tsconfig",
+    srcs = ["tsconfig.json"],
+)
+
+ts_config(
+    name = "config",
+    src = "tsconfig.json",
+    deps = [
+        "//:tsconfig",
+    ],
+)
+
+ts_project(
+    name = "composite",
+    composite = True,
+    tsconfig = ":tsconfig",
+    deps = [
+        "//composite/a",
+        "//composite/b",
+    ]
+)
