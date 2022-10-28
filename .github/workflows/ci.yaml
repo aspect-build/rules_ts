@@ -22,10 +22,10 @@ jobs:
             ENGFLOW_PRIVATE_KEY: ${{ secrets.ENGFLOW_PRIVATE_KEY }}
         steps:
             - id: local
-              run: echo "::set-output name=config::local"
+              run: echo "config=local" >> $GITHUB_OUTPUT
             - id: maybe-rbe
               if: ${{ env.ENGFLOW_PRIVATE_KEY != '' }}
-              run: echo "::set-output name=config::rbe"
+              run: echo "config=rbe" >> $GITHUB_OUTPUT
         outputs:
             # Will look like '["local", "rbe"]'
             configs: ${{ toJSON(steps.*.outputs.config) }}
