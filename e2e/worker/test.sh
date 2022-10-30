@@ -146,7 +146,7 @@ for dep in "${deps[@]}"; do
     buildozer "remove deps //:node_modules/$dep" :ts
     message="error TS2307: Cannot find module '$dep' or its corresponding type declarations."
     bazel build :ts 2>&1 | grep "$message" || exit_with_message "Case 11: expected worker to report \"$message\""
-    buildozer "add deps //:node_modules/$dep"
+    buildozer "add deps //:node_modules/$dep" :ts
 done
 
 

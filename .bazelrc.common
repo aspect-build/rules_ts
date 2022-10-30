@@ -77,7 +77,3 @@ build:openbsd --nolegacy_external_runfiles
 # on the host.
 # See https://github.com/angular/angular/issues/27514.
 build --incompatible_strict_action_env
-
-# Not yet supported with rules_ts
-# See https://github.com/aspect-build/rules_ts/pull/202
-build --noexperimental_allow_unresolved_symlinks

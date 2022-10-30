@@ -73,18 +73,11 @@ jobs:
                     # Don't test bzlmod with Bazel 5 (not supported)
                     - bazelversion: 5.3.2
                       folder: e2e/bzlmod
-                    # TODO: RBE requires --experimental_allow_unresolved_symlinks which is blocked on
-                    # https://github.com/aspect-build/rules_ts/pull/202
-                    - config: rbe
-                    # TODO: fix worker_workspace with Bazel 6
-                    - bazelversion: 6.0.0rc1
-                      folder: e2e/worker_workspace
                     # TODO: e2e/worker needs a bit of to be configured for RBE
                     - config: rbe
                       folder: e2e/worker
                     - config: rbe
                       folder: e2e/worker_workspace
-
         # Steps represent a sequence of tasks that will be executed as part of the job
         steps:
             # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -146,4 +139,19 @@ jobs:
               working-directory: ${{ matrix.folder }}
               # hashFiles returns an empty string if test.sh is absent
               if: ${{ hashFiles(format('{0}/test.sh', matrix.folder)) != '' }}
-              run: ./test.sh
+              run: |
+                  cp -f $GITHUB_WORKSPACE/.github/workflows/ci.bazelrc .bazelrc.test
+                  echo "build --config=${{ matrix.config }}" >> .bazelrc.test
+                  echo "build --disk_cache=" >> .bazelrc.test
+                  ./test.sh
+
+            - name: run ./test.sh with --noexperimental_allow_unresolved_symlinks
+              working-directory: ${{ matrix.folder }}
+              # hashFiles returns an empty string if test.sh is absent
+              if: ${{ hashFiles(format('{0}/test.sh', matrix.folder)) != '' }}
+              run: |
+                  cp -f $GITHUB_WORKSPACE/.github/workflows/ci.bazelrc .bazelrc.test
+                  echo "build --config=${{ matrix.config }}" >> .bazelrc.test
+                  echo "build --disk_cache=" >> .bazelrc.test
+                  echo "build --noexperimental_allow_unresolved_symlinks" >> ".bazelrc.test"
+                  ./test.sh

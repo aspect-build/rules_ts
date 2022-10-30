@@ -101,10 +101,22 @@ function createFilesystemTree(root, inputs) {
             }
             notifyWatchers(dirs, parts.base, TYPE.SYMLINK, EVENT_TYPE.ADDED);
         } else if (parts.base) {
-            node[parts.base] = {
-                [Type]: TYPE.FILE
+            const new_node = {
+                [Type]: TYPE.FILE,
             }
-            notifyWatchers(dirs, parts.base, TYPE.FILE, EVENT_TYPE.ADDED);
+            try {
+                const linkPath = path.join(root, p)
+                const readlink = fs.readlinkSync(linkPath);
+                const targetPath = path.isAbsolute(readlink) ? readlink : path.join(path.dirname(linkPath), readlink)
+                const relative = path.relative(root, targetPath);
+                if (relative != p) {
+                    new_node[Type] = TYPE.SYMLINK
+                    new_node[Symlink] = relative
+                }
+            } catch (e) { /* Can't determine if it's a symlink. move on */ }
+
+            node[parts.base] = new_node;
+            notifyWatchers(dirs, parts.base, new_node[Type], EVENT_TYPE.ADDED);
         }
     }
 
