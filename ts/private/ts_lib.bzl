@@ -133,7 +133,7 @@ OUTPUT_ATTRS = {
 }
 
 def _join(*elements):
-    segments = [f for f in elements if f]
+    segments = [f for f in elements if f and f != "."]
     if len(segments):
         return "/".join(segments)
     return "."
