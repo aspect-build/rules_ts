@@ -1,0 +1,27 @@
+"""Shows the use of an alternative compiler, in this case the ngc compiler from Angular.
+
+The compiler has to use the same CLI as `tsc` for this to work.
+"""
+
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@npm//examples:@angular/compiler-cli/package_json.bzl", "bin")
+
+bin.ngc_binary(
+    name = "ngc",
+)
+
+ts_project(
+    name = "compile",
+    srcs = [
+        # Shows that ts_project accepts any file@npm//examples:@angular/compiler-cli/s in srcs, because it can't assume
+        # the tsc compiler is the only one used.
+        "component.ng.html",
+        "component.ts",
+    ],
+    args = ["--listFiles"],
+    tsc = ":ngc",
+    deps = [
+        "//examples:node_modules/@angular/core",
+        "//examples:node_modules/@types/node",
+    ],
+)
