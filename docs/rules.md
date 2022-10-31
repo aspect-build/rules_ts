@@ -1,11 +1,9 @@
 <!-- Generated with Stardoc: http://skydoc.bazel.build -->
 
-Public API for TypeScript rules
+# Public API for TypeScript rules
 
-Nearly identical to the ts_project wrapper macro in npm @bazel/typescript.
-Differences:
-- uses the executables from @npm_typescript rather than what a user npm_install'ed
-- didn't copy the whole doc string
+The most commonly used is the [ts_project](#ts_project) macro which accepts TypeScript sources as
+inputs and produces JavaScript or declaration (.d.ts) outputs.
 
 
 <a id="ts_config"></a>
@@ -48,6 +46,9 @@ ts_project_rule(<a href="#ts_project_rule-name">name</a>, <a href="#ts_project_r
 
 Implementation rule behind the ts_project macro.
     Most users should use [ts_project](#ts_project) instead.
+
+    This skips conveniences like validation of the tsconfig attributes, default settings
+    for srcs and tsconfig, and pre-declaring output files.
     
 
 **ATTRIBUTES**
@@ -169,7 +170,7 @@ See https://www.typescriptlang.org/tsconfig for a listing of the TypeScript opti
 
 Any code that works with `tsc` should work with `ts_project` with a few caveats:
 
-- ts_project` always produces some output files, or else Bazel would never run it.
+- `ts_project` always produces some output files, or else Bazel would never run it.
   Therefore you shouldn't use it with TypeScript's `noEmit` option.
   If you only want to test that the code typechecks, use `tsc` directly;
   see [examples/typecheck_only](/examples/typecheck_only)
@@ -190,7 +191,7 @@ Any code that works with `tsc` should work with `ts_project` with a few caveats:
 | Name  | Description | Default Value |
 | :------------- | :------------- | :------------- |
 | <a id="ts_project-name"></a>name |  a name for this target   |  none |
-| <a id="ts_project-tsconfig"></a>tsconfig |  Label of the tsconfig.json file to use for the compilation. To support "chaining" of more than one extended config, this label could be a target that provides <code>TsConfigInfo</code> such as <code>ts_config</code>.<br><br>By default, if a "tsconfig.json" file is in the same folder with the ts_project rule, it is used.<br><br>Instead of a label, you can pass a dictionary of tsconfig keys. In this case, a tsconfig.json file will be generated for this compilation, in the following way: - all top-level keys will be copied by converting the dict to json.   So <code>tsconfig = {"compilerOptions": {"declaration": True}}</code>   will result in a generated <code>tsconfig.json</code> with <code>{"compilerOptions": {"declaration": true}}</code> - each file in srcs will be converted to a relative path in the <code>files</code> section. - the <code>extends</code> attribute will be converted to a relative path Note that you can mix and match attributes and compilerOptions properties, so these are equivalent: <pre><code> ts_project(     tsconfig = {         "compilerOptions": {             "declaration": True,         },     }, ) </code></pre> and <pre><code> ts_project(     declaration = True, ) </code></pre>   |  <code>None</code> |
+| <a id="ts_project-tsconfig"></a>tsconfig |  Label of the tsconfig.json file to use for the compilation. To support "chaining" of more than one extended config, this label could be a target that provides <code>TsConfigInfo</code> such as <code>ts_config</code>.<br><br>By default, if a "tsconfig.json" file is in the same folder with the ts_project rule, it is used.<br><br>Instead of a label, you can pass a dictionary matching the JSON schema.<br><br>See [/docs/tsconfig.md] for detailed information.   |  <code>None</code> |
 | <a id="ts_project-srcs"></a>srcs |  List of labels of TypeScript source files to be provided to the compiler.<br><br>If absent, the default is set as follows:<br><br>- Include <code>**/*.ts[x]</code> (all TypeScript files in the package). - If <code>allow_js</code> is set, include <code>**/*.js[x]</code> (all JavaScript files in the package). - If <code>resolve_json_module</code> is set, include <code>**/*.json</code> (all JSON files in the package),   but exclude <code>**/package.json</code>, <code>**/package-lock.json</code>, and <code>**/tsconfig*.json</code>.   |  <code>None</code> |
 | <a id="ts_project-args"></a>args |  List of strings of additional command-line arguments to pass to tsc. See https://www.typescriptlang.org/docs/handbook/compiler-options.html#compiler-options Typically useful arguments for debugging are <code>--listFiles</code> and <code>--listEmittedFiles</code>.   |  <code>[]</code> |
 | <a id="ts_project-data"></a>data |  Files needed at runtime by binaries or tests that transitively depend on this target. See https://bazel.build/reference/be/common-definitions#typical-attributes   |  <code>[]</code> |
@@ -205,7 +206,7 @@ Any code that works with `tsc` should work with `ts_project` with a few caveats:
 | <a id="ts_project-composite"></a>composite |  Whether the <code>composite</code> bit is set in the tsconfig. Instructs Bazel to expect a <code>.tsbuildinfo</code> output and a <code>.d.ts</code> output for each <code>.ts</code> source.   |  <code>False</code> |
 | <a id="ts_project-incremental"></a>incremental |  Whether the <code>incremental</code> bit is set in the tsconfig. Instructs Bazel to expect a <code>.tsbuildinfo</code> output.   |  <code>False</code> |
 | <a id="ts_project-emit_declaration_only"></a>emit_declaration_only |  Whether the <code>emitDeclarationOnly</code> bit is set in the tsconfig. Instructs Bazel *not* to expect <code>.js</code> or <code>.js.map</code> outputs for <code>.ts</code> sources.   |  <code>False</code> |
-| <a id="ts_project-transpiler"></a>transpiler |  A custom transpiler tool to run that produces the JavaScript outputs instead of <code>tsc</code>.<br><br>By default, <code>ts_project</code> expects <code>.js</code> outputs to be written in the same action that does the type-checking to produce <code>.d.ts</code> outputs. This is the simplest configuration, however <code>tsc</code> is slower than alternatives. It also means developers must wait for the type-checking in the developer loop.<br><br>This attribute accepts a rule or macro with this signature: <code>name, srcs, js_outs, map_outs, **kwargs</code> where the <code>**kwargs</code> attribute propagates the tags, visibility, and testonly attributes from <code>ts_project</code>. If you need to pass additional attributes to the transpiler rule, you can use a [partial](https://github.com/bazelbuild/bazel-skylib/blob/main/lib/partial.bzl) to bind those arguments at the "make site", then pass that partial to this attribute where it will be called with the remaining arguments. See the packages/typescript/test/ts_project/swc directory for an example.<br><br>When a custom transpiler is used, then the <code>ts_project</code> macro expands to these targets:<br><br>- <code>[name]</code> - the default target which can be included in the <code>deps</code> of downstream rules.     Note that it will successfully build *even if there are typecheck failures* because the <code>tsc</code> binary     is not needed to produce the default outputs.     This is considered a feature, as it allows you to have a faster development mode where type-checking     is not on the critical path. - <code>[name]_typecheck</code> - provides typings (<code>.d.ts</code> files) as the default output,    therefore building this target always causes the typechecker to run. - <code>[name]_typecheck_test</code> - a    [<code>build_test</code>](https://github.com/bazelbuild/bazel-skylib/blob/main/rules/build_test.bzl)    target which simply depends on the <code>[name]_typecheck</code> target.    This ensures that typechecking will be run under <code>bazel test</code> with    [<code>--build_tests_only</code>](https://docs.bazel.build/versions/main/user-manual.html#flag--build_tests_only). - <code>[name]_typings</code> - internal target which runs the binary from the <code>tsc</code> attribute -  Any additional target(s) the custom transpiler rule/macro produces.     Some rules produce one target per TypeScript input file.<br><br>Read more: https://blog.aspect.dev/typescript-speedup   |  <code>None</code> |
+| <a id="ts_project-transpiler"></a>transpiler |  A custom transpiler tool to run that produces the JavaScript outputs instead of <code>tsc</code>.<br><br>By default, <code>ts_project</code> expects <code>.js</code> outputs to be written in the same action that does the type-checking to produce <code>.d.ts</code> outputs. This is the simplest configuration, however <code>tsc</code> is slower than alternatives. It also means developers must wait for the type-checking in the developer loop.<br><br>See [/docs/transpiler.md] for more details.   |  <code>None</code> |
 | <a id="ts_project-ts_build_info_file"></a>ts_build_info_file |  The user-specified value of <code>tsBuildInfoFile</code> from the tsconfig. Helps Bazel to predict the path where the .tsbuildinfo output is written.   |  <code>None</code> |
 | <a id="ts_project-tsc"></a>tsc |  Label of the TypeScript compiler binary to run. This allows you to use a custom compiler.   |  <code>"@npm_typescript//:tsc"</code> |
 | <a id="ts_project-tsc_worker"></a>tsc_worker |  Label of a custom TypeScript compiler binary which understands Bazel's persistent worker protocol.   |  <code>"@npm_typescript//:tsc_worker"</code> |

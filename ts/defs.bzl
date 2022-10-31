@@ -1,9 +1,7 @@
-"""Public API for TypeScript rules
+"""# Public API for TypeScript rules
 
-Nearly identical to the ts_project wrapper macro in npm @bazel/typescript.
-Differences:
-- uses the executables from @npm_typescript rather than what a user npm_install'ed
-- didn't copy the whole doc string
+The most commonly used is the [ts_project](#ts_project) macro which accepts TypeScript sources as
+inputs and produces JavaScript or declaration (.d.ts) outputs.
 """
 
 load("@aspect_bazel_lib//lib:utils.bzl", "to_label")
@@ -28,6 +26,9 @@ validate_options = rule(
 ts_project_rule = rule(
     doc = """Implementation rule behind the ts_project macro.
     Most users should use [ts_project](#ts_project) instead.
+
+    This skips conveniences like validation of the tsconfig attributes, default settings
+    for srcs and tsconfig, and pre-declaring output files.
     """,
     implementation = _ts_project_lib.implementation,
     attrs = dict(_ts_project_lib.attrs),
@@ -92,7 +93,7 @@ def ts_project(
 
     Any code that works with `tsc` should work with `ts_project` with a few caveats:
 
-    - ts_project` always produces some output files, or else Bazel would never run it.
+    - `ts_project` always produces some output files, or else Bazel would never run it.
       Therefore you shouldn't use it with TypeScript's `noEmit` option.
       If you only want to test that the code typechecks, use `tsc` directly;
       see [examples/typecheck_only](/examples/typecheck_only)
@@ -129,29 +130,9 @@ def ts_project(
 
             By default, if a "tsconfig.json" file is in the same folder with the ts_project rule, it is used.
 
-            Instead of a label, you can pass a dictionary of tsconfig keys.
-            In this case, a tsconfig.json file will be generated for this compilation, in the following way:
-            - all top-level keys will be copied by converting the dict to json.
-              So `tsconfig = {"compilerOptions": {"declaration": True}}`
-              will result in a generated `tsconfig.json` with `{"compilerOptions": {"declaration": true}}`
-            - each file in srcs will be converted to a relative path in the `files` section.
-            - the `extends` attribute will be converted to a relative path
-            Note that you can mix and match attributes and compilerOptions properties, so these are equivalent:
-            ```
-            ts_project(
-                tsconfig = {
-                    "compilerOptions": {
-                        "declaration": True,
-                    },
-                },
-            )
-            ```
-            and
-            ```
-            ts_project(
-                declaration = True,
-            )
-            ```
+            Instead of a label, you can pass a dictionary matching the JSON schema.
+
+            See [/docs/tsconfig.md] for detailed information.
 
         extends: Label of the tsconfig file referenced in the `extends` section of tsconfig
             To support "chaining" of more than one extended config, this label could be a target that
@@ -168,34 +149,7 @@ def ts_project(
             This is the simplest configuration, however `tsc` is slower than alternatives.
             It also means developers must wait for the type-checking in the developer loop.
 
-            This attribute accepts a rule or macro with this signature:
-            `name, srcs, js_outs, map_outs, **kwargs`
-            where the `**kwargs` attribute propagates the tags, visibility, and testonly attributes from `ts_project`.
-            If you need to pass additional attributes to the transpiler rule, you can use a
-            [partial](https://github.com/bazelbuild/bazel-skylib/blob/main/lib/partial.bzl)
-            to bind those arguments at the "make site", then pass that partial to this attribute where it
-            will be called with the remaining arguments.
-            See the packages/typescript/test/ts_project/swc directory for an example.
-
-            When a custom transpiler is used, then the `ts_project` macro expands to these targets:
-
-            - `[name]` - the default target which can be included in the `deps` of downstream rules.
-                Note that it will successfully build *even if there are typecheck failures* because the `tsc` binary
-                is not needed to produce the default outputs.
-                This is considered a feature, as it allows you to have a faster development mode where type-checking
-                is not on the critical path.
-            - `[name]_typecheck` - provides typings (`.d.ts` files) as the default output,
-               therefore building this target always causes the typechecker to run.
-            - `[name]_typecheck_test` - a
-               [`build_test`](https://github.com/bazelbuild/bazel-skylib/blob/main/rules/build_test.bzl)
-               target which simply depends on the `[name]_typecheck` target.
-               This ensures that typechecking will be run under `bazel test` with
-               [`--build_tests_only`](https://docs.bazel.build/versions/main/user-manual.html#flag--build_tests_only).
-            - `[name]_typings` - internal target which runs the binary from the `tsc` attribute
-            -  Any additional target(s) the custom transpiler rule/macro produces.
-                Some rules produce one target per TypeScript input file.
-
-            Read more: https://blog.aspect.dev/typescript-speedup
+            See [/docs/transpiler.md] for more details.
 
         validate: Whether to check that the dependencies are valid and the tsconfig JSON settings match the attributes on this target.
             Set this to `False` to skip running our validator, in case you have a legitimate reason for these to differ,
