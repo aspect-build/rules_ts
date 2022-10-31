@@ -1,7 +1,14 @@
+"""Shows usage of ECMAScript module syntax vs. commonjs
+
+See https://nodejs.org/docs/latest/api/esm.html#esm_differences_between_es_modules_and_commonjs
+"""
+
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@aspect_bazel_lib//lib:write_source_files.bzl", "write_source_files")
 load("@aspect_bazel_lib//lib:params_file.bzl", "params_file")
+load("@aspect_bazel_lib//lib:testing.bzl", "assert_contains")
 
+# Demonstrate that ts_project accepts the dedicated file extensions.
 ts_project(
     name = "module_ts",
     srcs = [
@@ -17,6 +24,35 @@ ts_project(
     source_map = True,
 )
 
+# You can also produce different module syntaxt outputs from a .ts file.
+# Here, we demonstrate the list comprehension syntax to create multiple targets.
+# Note that this isn't compatible with all tooling, such as buildozer.
+[
+    ts_project(
+        name = "compile_%s" % format,
+        srcs = ["e.ts"],
+        allow_js = True,
+        # Shows that we can pass args directly to tsc, bypassing tsconfig altogether.
+        args = [
+            "--module",
+            format,
+            "--moduleResolution",
+            "node",
+        ],
+        declaration = True,
+        declaration_map = True,
+        # Write the output files to an extra nested directory
+        out_dir = format,
+        source_map = True,
+    )
+    for format in [
+        "commonjs",
+        "esnext",
+    ]
+]
+
+# Assert that we produced the matching .cjs/.mjs output files.
+
 filegroup(
     name = "types",
     srcs = [":module_ts"],
@@ -25,15 +61,15 @@ filegroup(
 
 params_file(
     name = "params",
-    data = [
-        ":module_ts",
-        ":types",
-    ],
+    out = "outputs.txt",
     args = [
         "$(rootpaths :types)",
         "$(rootpaths :module_ts)",
     ],
-    out = "outputs.txt"
+    data = [
+        ":module_ts",
+        ":types",
+    ],
 )
 
 write_source_files(
@@ -41,4 +77,17 @@ write_source_files(
     files = {
         "expected_outputs.txt": "outputs.txt",
     },
+)
+
+# Assert that we wrote correct output formats
+assert_contains(
+    name = "test_cjs_emit",
+    actual = "commonjs/e.js",
+    expected = "exports.e = 1",
+)
+
+assert_contains(
+    name = "test_mjs_emit",
+    actual = "esnext/e.js",
+    expected = "export var e = 1",
 )
