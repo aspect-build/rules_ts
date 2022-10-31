@@ -1,0 +1,19 @@
+"""Shows how https://www.typescriptlang.org/tsconfig/#resolveJsonModule can be used."""
+
+load("@aspect_bazel_lib//lib:testing.bzl", "assert_contains")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "ts",
+    srcs = [
+        "data.json",
+        "index.ts",
+    ],
+    resolve_json_module = True,
+)
+
+assert_contains(
+    name = "test",
+    actual = "index.js",
+    expected = """JSON.stringify(data_json_1["default"])""",
+)

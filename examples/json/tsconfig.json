@@ -1,9 +1,0 @@
-{
-    "compilerOptions": {
-        "esModuleInterop": true,
-        "resolveJsonModule": true,
-        // we can't use the current directory as outDir, because typescript wants to write a data.json file
-        // and that would collide with the source file we pass it.
-        "outDir": "build"
-    }
-}
