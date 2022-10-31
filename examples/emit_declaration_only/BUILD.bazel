@@ -1,0 +1,22 @@
+"""Show usage of https://www.typescriptlang.org/tsconfig/#emitDeclarationOnly
+
+This can be useful to type-check code as part of a `bazel build` even though `tsc` doesn't
+transpile to JavaScript, such as when TypeScript can be natively understood by the runtime.
+
+Note, to use an alternative transpiler, see the `transpiler` attribute instead.
+"""
+
+load("@aspect_bazel_lib//lib:testing.bzl", "assert_contains")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "declaration_only",
+    declaration = True,
+    emit_declaration_only = True,
+)
+
+assert_contains(
+    name = "test",
+    actual = "a.d.ts",
+    expected = "export declare const a",
+)
