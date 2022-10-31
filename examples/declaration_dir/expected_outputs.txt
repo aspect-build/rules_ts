@@ -1,0 +1,4 @@
+examples/declaration_dir/out/types/lib.d.ts
+examples/declaration_dir/out/types/lib.d.ts.map
+examples/declaration_dir/out/code/lib.js
+examples/declaration_dir/out/code/lib.js.map

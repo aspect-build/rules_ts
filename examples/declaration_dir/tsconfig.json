@@ -2,6 +2,6 @@
     "compilerOptions": {
         "sourceMap": true,
         "declaration": true,
-        "declarationMap": true,
+        "declarationMap": true
     }
 }
