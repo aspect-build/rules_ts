@@ -18,6 +18,7 @@ ts_project(
     srcs = ["foo.ts"],
     declaration = True,
     tsconfig = "tsconfig.json",
+    validate = False,
     deps = _DEPS,
 )
 
