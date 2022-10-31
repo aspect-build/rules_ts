@@ -1,1 +1,2 @@
-docs/*.md linguist-generated=true
+docs/rules.md linguist-generated=true
+docs/repositories.md linguist-generated=true

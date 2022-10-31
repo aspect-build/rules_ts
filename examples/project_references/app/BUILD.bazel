@@ -5,6 +5,5 @@ ts_project(
     composite = True,
     declaration = True,
     extends = "//examples/project_references:tsconfig-base",
-    tsconfig = "tsconfig.json",
     deps = ["//examples/project_references/lib_b"],
 )
