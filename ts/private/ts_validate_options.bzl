@@ -28,7 +28,14 @@ def _validate_options_impl(ctx):
     if not ctx.attr.allow_js:
         for d in ctx.attr.deps:
             if not d[JsInfo].declarations:
-                fail("ts_project '%s' does not contain any declarations" % d)
+                fail("""\
+ts_project '{1}' dependency '{0}' does does not contain any declarations (.d.ts or other type-check files).
+Generally, targets which produce no declarations aren't useful as dependencies to the TypeScript type-checker.
+This likely means you forgot to set 'declaration = true' in the compilerOptions for that target.
+
+To disable this check, set the validate attribute to False:
+  npx @bazel/buildozer 'set validate False' {1}
+""".format(d.label, ctx.attr.target))
 
     # External validation
     arguments = ctx.actions.args()
