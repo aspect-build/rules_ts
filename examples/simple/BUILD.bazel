@@ -16,6 +16,9 @@ ts_project(
     name = "ts",
     srcs = ["foo.ts"],
     declaration = True,
+    # "." is the same as default
+    # explicitly given as a regression test for https://github.com/aspect-build/rules_ts/issues/195
+    out_dir = ".",
     # Note, the tsconfig attribute defaults to the tsconfig.json file in this directory.
     # tsconfig = "<default>",
     deps = _DEPS,
