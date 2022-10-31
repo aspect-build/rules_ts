@@ -1,24 +1,31 @@
+"""Shows that rootDirs can be used to allow relative imports to stay the same
+even when files are resolved from a different directory.
+
+Note that rootDirs and rootDir are totally different features in TypeScript,
+despite their similar naming.
+"""
+
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 
 ts_project(
     name = "lib",
     srcs = ["src/lib.ts"],
-    out_dir = "dist",
     declaration = True,
+    out_dir = "dist",
     tsconfig = {},
 )
 
 ts_project(
     name = "specs",
     srcs = ["src/spec.ts"],
-    deps = [":lib"],
     out_dir = "test",
     tsconfig = {
-      "compilerOptions": {
+        "compilerOptions": {
             "rootDirs": [
                 ".",
                 "dist",
             ],
         },
     },
+    deps = [":lib"],
 )

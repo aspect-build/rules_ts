@@ -1,0 +1,63 @@
+"""Shows that rootDir can be used to strip a path prefix from source locations.
+
+Note that rootDirs and rootDir are totally different features in TypeScript,
+despite their similar naming.
+"""
+
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("//examples:testing.bzl", "assert_outputs")
+
+# By default, TypeScript calculates rootDir as the closest common ancestor
+# so you'd expect outDir/a.ts to be produced.
+# However under Bazel we set the rootDir to the package directory all the time,
+# to prevent you accidentally trying to produce outputs outside the current package,
+# which Bazel disallows.
+ts_project(
+    name = "default",
+)
+
+assert_outputs(
+    name = "default_test",
+    actual = "default",
+    expected = [
+        "examples/root_dir/subdir/a.js",
+        "examples/root_dir/subdir/deep/subdir/b.js",
+    ],
+)
+
+# You can use the root_dir setting to strip a prefix
+ts_project(
+    name = "strip",
+    tsconfig = {
+        # Demonstrating that rootDir compilerOption works the same as the
+        # root_dir attribute.
+        "compilerOptions": {
+            "rootDir": "subdir",
+        },
+    },
+)
+
+assert_outputs(
+    name = "strip_test",
+    actual = "strip",
+    expected = [
+        "examples/root_dir/a.js",
+        "examples/root_dir/deep/subdir/b.js",
+    ],
+)
+
+# You can use it in combination with out_dir to replace "subdir" with "otherdir"
+ts_project(
+    name = "replace",
+    out_dir = "otherdir",
+    root_dir = "subdir",
+)
+
+assert_outputs(
+    name = "replace_test",
+    actual = "replace",
+    expected = [
+        "examples/root_dir/otherdir/a.js",
+        "examples/root_dir/otherdir/deep/subdir/b.js",
+    ],
+)
