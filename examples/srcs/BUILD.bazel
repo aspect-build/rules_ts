@@ -1,0 +1,52 @@
+"""Shows different ways to pass source files into ts_project"""
+
+load("@aspect_bazel_lib//lib:params_file.bzl", "params_file")
+load("@aspect_bazel_lib//lib:testing.bzl", "assert_contains")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+# By default, the macro collects all .ts files in this directory.
+# See the docs on srcs for exactly which files are included.
+ts_project(
+    name = "srcs-auto",
+    out_dir = "auto",
+)
+
+# The sources can come from the default output of some other target.
+# In this case, the ts_project macro won't be able to enumerate individual files
+# so it cannot pre-declare the corresponding .js outputs.
+filegroup(
+    name = "srcs",
+    srcs = glob(["*.ts"]),
+)
+
+ts_project(
+    name = "srcs-filegroup",
+    srcs = [":srcs"],
+    out_dir = "filegroup",
+)
+
+# Testing what outputs are actually produced
+[
+    params_file(
+        name = "srcs-{}_mf".format(case),
+        out = "srcs-{}.mf".format(case),
+        args = ["$(rootpaths :srcs-{})".format(case)],
+        data = [":srcs-" + case],
+    )
+    for case in [
+        "auto",
+        "filegroup",
+    ]
+]
+
+[
+    assert_contains(
+        name = "test_" + case,
+        actual = "srcs-{}.mf".format(case),
+        expected = "examples/srcs/{}/a.js".format(case),
+    )
+    for case in [
+        "auto",
+        "filegroup",
+    ]
+]
