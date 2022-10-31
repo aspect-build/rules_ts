@@ -1,13 +1,7 @@
-load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
-load("@bazel_skylib//rules:write_file.bzl", "write_file")
+"""Simplest example of using ts_project to transpile and type-check a file"""
 
-# Dependencies for all targets in this package
-_DEPS = [
-    "//examples:node_modules/@myorg/js_lib",
-    "//examples:node_modules/@myorg/dts_lib",
-    "//examples:node_modules/@types/node",
-    "//examples:node_modules/date-fns",
-]
+load("@aspect_bazel_lib//lib:testing.bzl", "assert_contains")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 
 # Type-checks, and emits output to
 # bazel-bin/examples/simple/foo.js
@@ -21,33 +15,28 @@ ts_project(
     out_dir = ".",
     # Note, the tsconfig attribute defaults to the tsconfig.json file in this directory.
     # tsconfig = "<default>",
-    deps = _DEPS,
-)
-
-# Code generation tools can produce .ts outputs.
-# This example just writes one directly to bazel-bin.
-write_file(
-    name = "code_generation",
-    out = "generated.ts",
-    content = [
-        "export const data: string[] = []",
+    deps = [
+        # Two dependencies are linked from first-party code in this repo
+        # by the npm_link_package calls in /examples/BUILD.bazel
+        "//examples:node_modules/@myorg/js_lib",
+        "//examples:node_modules/@myorg/dts_lib",
+        # Two dependencies are linked from third-party npm packages
+        # by the npm_link_all_packages call in /examples/BUILD.bazel
+        "//examples:node_modules/@types/node",
+        "//examples:node_modules/date-fns",
     ],
 )
 
-# Writes output to bazel-bin/examples/simple/build/foo.js
-ts_project(
-    name = "outdir",
-    # Demonstrates that you can mix sources with generated files
-    srcs = [
-        "foo.ts",
-        "generated.ts",
-    ],
-    extends = "tsconfig.json",
-    # A tsconfig.json file will be generated with this content
-    tsconfig = {
-        "compilerOptions": {
-            "outDir": "build",
-        },
-    },
-    deps = _DEPS,
+# Assert that the output looks like what we expected.
+# Demonstrates that we can refer directly to "foo.js" as a pre-declared output.
+assert_contains(
+    name = "test_js",
+    actual = "foo.js",
+    expected = """var js_lib_1 = require("@myorg/js_lib")""",
+)
+
+assert_contains(
+    name = "test_dts",
+    actual = "foo.d.ts",
+    expected = "export declare const b: string",
 )
