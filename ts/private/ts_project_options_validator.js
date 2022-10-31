@@ -142,7 +142,8 @@ function main(_a) {
             'This is not compatible with ts_project, which always produces outputs.'
         )
         console.error(
-            '- If you mean to only typecheck the code, use the tsc_test rule instead.'
+            '- If you mean to only typecheck the code, use the tsc_test rule instead.' +
+                '  (see https://github.com/aspect-build/rules_ts/tree/main/examples/typecheck_only)'
         )
         console.error('  (See the Alternatives section in the documentation.)')
         console.error(

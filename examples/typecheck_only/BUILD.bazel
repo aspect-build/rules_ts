@@ -1,0 +1,22 @@
+"""Only type-checks the input file, but does no transpilation or output any typings files.
+
+As such, it cannot run as a Bazel action under `bazel build`, as Bazel will only run actions when
+their outputs are requested.
+
+Therefore this is a test target and should be run with `bazel test`.
+"""
+
+load("@npm//examples:typescript/package_json.bzl", "bin")
+
+bin.tsc_test(
+    name = "typecheck_only",
+    args = [
+        "--noEmit",
+        "$(location check-me.ts)",
+    ],
+    data = ["check-me.ts"],
+    # It should fail because we made a typing mistake
+    # TypeScript ReturnCode:
+    # OutputGeneratedWithErrors = 2,      // .js and .map generated with semantic errors
+    expected_exit_code = 2,
+)

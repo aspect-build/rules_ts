@@ -94,11 +94,8 @@ def ts_project(
 
     - ts_project` always produces some output files, or else Bazel would never run it.
       Therefore you shouldn't use it with TypeScript's `noEmit` option.
-      If you only want to test that the code typechecks, instead use
-      ```
-      load("@npm//typescript:package_json.bzl", "bin")
-      bin.tsc_test( ... )
-      ```
+      If you only want to test that the code typechecks, use `tsc` directly;
+      see [examples/typecheck_only](/examples/typecheck_only)
     - Your tsconfig settings for `outDir` and `declarationDir` are ignored.
       Bazel requires that the `outDir` (and `declarationDir`) be set beneath
       `bazel-out/[target architecture]/bin/path/to/package`.
