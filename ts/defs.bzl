@@ -114,10 +114,10 @@ def ts_project(
 
             If absent, the default is set as follows:
 
-            - Include `**/*.ts[x]` (all TypeScript files in the package).
-            - If `allow_js` is set, include `**/*.js[x]` (all JavaScript files in the package).
-            - If `resolve_json_module` is set, include `**/*.json` (all JSON files in the package),
-              but exclude `**/package.json`, `**/package-lock.json`, and `**/tsconfig*.json`.
+            - Include all TypeScript files in the package, recursively.
+            - If `allow_js` is set, include all JavaScript files in the package as well.
+            - If `resolve_json_module` is set, include all JSON files in the package,
+              but exclude `package.json`, `package-lock.json`, and `tsconfig*.json`.
 
         data: Files needed at runtime by binaries or tests that transitively depend on this target.
             See https://bazel.build/reference/be/common-definitions#typical-attributes
@@ -132,7 +132,7 @@ def ts_project(
 
             Instead of a label, you can pass a dictionary matching the JSON schema.
 
-            See [/docs/tsconfig.md] for detailed information.
+            See [docs/tsconfig.md](/docs/tsconfig.md) for detailed information.
 
         extends: Label of the tsconfig file referenced in the `extends` section of tsconfig
             To support "chaining" of more than one extended config, this label could be a target that
@@ -149,7 +149,7 @@ def ts_project(
             This is the simplest configuration, however `tsc` is slower than alternatives.
             It also means developers must wait for the type-checking in the developer loop.
 
-            See [/docs/transpiler.md] for more details.
+            See [docs/transpiler.md](/docs/transpiler.md) for more details.
 
         validate: Whether to check that the dependencies are valid and the tsconfig JSON settings match the attributes on this target.
             Set this to `False` to skip running our validator, in case you have a legitimate reason for these to differ,
@@ -163,10 +163,12 @@ def ts_project(
 
         out_dir: String specifying a subdirectory under the bazel-out folder where outputs are written.
             Equivalent to the TypeScript --outDir option.
+
             Note that Bazel always requires outputs be written under a subdirectory matching the input package,
-            so if your rule appears in path/to/my/package/BUILD.bazel and out_dir = "foo" then the .js files
-            will appear in bazel-out/[arch]/bin/path/to/my/package/foo/*.js.
-            By default the out_dir is '.', meaning the packages folder in bazel-out.
+            so if your rule appears in `path/to/my/package/BUILD.bazel` and out_dir = "foo" then the .js files
+            will appear in `bazel-out/[arch]/bin/path/to/my/package/foo/*.js`.
+
+            By default the out_dir is the package's folder under bazel-out.
 
         tsc: Label of the TypeScript compiler binary to run.
             This allows you to use a custom compiler.
@@ -174,13 +176,15 @@ def ts_project(
         validator: Label of the tsconfig validator to run when `validate = True`.
         allow_js: Whether TypeScript will read .js and .jsx files.
             When used with `declaration`, TypeScript will generate `.d.ts` files from `.js` files.
-        resolve_json_module: None | Boolean; Specifies whether TypeScript will read .json files. Defaults to None.
+        resolve_json_module: Boolean; specifies whether TypeScript will read .json files.
             If set to True or False and tsconfig is a dict, resolveJsonModule is set in the generated config file.
             If set to None and tsconfig is a dict, resolveJsonModule is unset in the generated config and typescript
             default or extended tsconfig value will be load bearing.
+
         declaration_dir: String specifying a subdirectory under the bazel-out folder where generated declaration
             outputs are written. Equivalent to the TypeScript --declarationDir option.
             By default declarations are written to the out_dir.
+
         declaration: Whether the `declaration` bit is set in the tsconfig.
             Instructs Bazel to expect a `.d.ts` output for each `.ts` source.
         source_map: Whether the `sourceMap` bit is set in the tsconfig.
@@ -197,17 +201,15 @@ def ts_project(
             Instructs Bazel *not* to expect `.js` or `.js.map` outputs for `.ts` sources.
         ts_build_info_file: The user-specified value of `tsBuildInfoFile` from the tsconfig.
             Helps Bazel to predict the path where the .tsbuildinfo output is written.
+
         supports_workers: Whether the worker protocol is enabled.
             To disable worker mode for a particular target set `supports_workers` to `False`.
             Worker mode can be controlled as well via `--strategy` and `mnemonic` and  using .bazelrc.
 
-            Putting this to your .bazelrc will disable it globally.
+            Put this in your .bazelrc to disable it globally: `build --strategy=TsProject=sandboxed`
 
-            ```
-            build --strategy=TsProject=sandboxed
-            ```
+            See https://docs.bazel.build/versions/main/user-manual.html#flag--strategy for more details.
 
-            Checkout https://docs.bazel.build/versions/main/user-manual.html#flag--strategy for more
         **kwargs: passed through to underlying [`ts_project_rule`](#ts_project_rule), eg. `visibility`, `tags`
     """
 
