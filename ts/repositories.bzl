@@ -37,18 +37,18 @@ def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrit
     http_archive(
         name = "bazel_skylib",
         sha256 = "74d544d96f4a5bb630d465ca8bbcfe231e3594e5aae57e1edbf17a6eb3ca2506",
-        urls = [
-            "https://github.com/bazelbuild/bazel-skylib/releases/download/1.3.0/bazel-skylib-1.3.0.tar.gz",
-            "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/releases/download/1.3.0/bazel-skylib-1.3.0.tar.gz",
-        ],
+        urls = ["https://github.com/bazelbuild/bazel-skylib/releases/download/1.3.0/bazel-skylib-1.3.0.tar.gz"],
     )
 
+    # TODO: figure out why updating to 5.7.0 or 5.7.1 breaks the e2e/worker tests
     http_archive(
         name = "rules_nodejs",
         sha256 = "bce105e7a3d2a3c5eb90dcd6436544bf11f82e97073fb29e4090321ba2b84d8f",
         urls = ["https://github.com/bazelbuild/rules_nodejs/releases/download/5.6.0/rules_nodejs-core-5.6.0.tar.gz"],
     )
 
+    # TODO: figure out why updating to 1.6.4 breaks the e2e/worker tests; possibly related to the
+    # fs patches caching perf improvements
     http_archive(
         name = "aspect_rules_js",
         sha256 = "d8eabcd1e05d93147505ea806fa21089926b771d8813f01b92af5dec36617033",
