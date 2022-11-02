@@ -6,9 +6,9 @@ See https://docs.bazel.build/versions/main/skylark/deploying.html#dependencies
 
 load("//ts/private:maybe.bzl", http_archive = "maybe_http_archive")
 load("//ts/private:npm_repositories.bzl", "npm_dependencies")
-load("//ts/private:versions.bzl", TS_VERSIONS = "VERSIONS")
+load("//ts/private:versions.bzl", "TOOL_VERSIONS")
 
-LATEST_VERSION = TS_VERSIONS.keys()[-1]
+LATEST_VERSION = TOOL_VERSIONS.keys()[-1]
 
 # WARNING: any additions to this function may be BREAKING CHANGES for users
 # because we'll fetch a dependency which may be different from one that

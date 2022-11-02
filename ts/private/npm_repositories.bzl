@@ -2,7 +2,7 @@
 
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 load("//ts/private:maybe.bzl", http_archive = "maybe_http_archive")
-load("//ts/private:versions.bzl", TS_VERSIONS = "VERSIONS")
+load("//ts/private:versions.bzl", "TOOL_VERSIONS")
 
 versions = struct(
     rules_nodejs = "5.5.0",
@@ -34,8 +34,8 @@ def _http_archive_version_impl(rctx):
 
     if rctx.attr.integrity:
         integrity = rctx.attr.integrity
-    elif version in TS_VERSIONS.keys():
-        integrity = TS_VERSIONS[version]
+    elif version in TOOL_VERSIONS.keys():
+        integrity = TOOL_VERSIONS[version]
     else:
         fail("""typescript version {} is not mirrored in rules_ts, is this a real version?
             If so, you must manually set 'ts_integrity'.
