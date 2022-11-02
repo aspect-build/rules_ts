@@ -3,7 +3,9 @@
 Update with: 
 curl --silent https://registry.npmjs.org/typescript | jq '[.versions[] | select(.version | test("^[0-9.]+$")) | {key: .version, value: .dist.integrity}] | from_entries'
 """
-VERSIONS = {
+
+# Versions should be ascending order so TOOL_VERSIONS.keys()[-1] is the latest version.
+TOOL_VERSIONS = {
     "0.8.0": "sha512-t4DYxzL6Gt3+TRuJXtmh+3KfcY5iSM8J4lzUgfQkTOr78xFbmor79x/dQEGMaiqO2HJBbFGO3RlIaxPzpP5JMA==",
     "0.8.1": "sha512-/cfem275IES0o4/zVD1UmXfE3k5j2OAianSI2Oa1gYzWhAJ44OjNlXv3LVIj5EZ0fgks/XBtzp8aXVsaYILTVg==",
     "0.8.2": "sha512-rc182AVnpWJ2d6mSAjzALdgEZMJqtsAwPjogw7ch8NRa7iTD8vGG2YoZto1R5Bkt5xCXFcg5SrkRenYtI+poHQ==",
