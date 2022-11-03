@@ -47,13 +47,11 @@ def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrit
         urls = ["https://github.com/bazelbuild/rules_nodejs/releases/download/5.6.0/rules_nodejs-core-5.6.0.tar.gz"],
     )
 
-    # TODO: figure out why updating to 1.6.4 breaks the e2e/worker tests; possibly related to the
-    # fs patches caching perf improvements
     http_archive(
         name = "aspect_rules_js",
-        sha256 = "d8eabcd1e05d93147505ea806fa21089926b771d8813f01b92af5dec36617033",
-        strip_prefix = "rules_js-1.6.3",
-        url = "https://github.com/aspect-build/rules_js/archive/refs/tags/v1.6.3.tar.gz",
+        sha256 = "a6c97d32e82f890bd3e62ab2bd1ab2610baf80c4ab9eaa9586685c5e0c7c5858",
+        strip_prefix = "rules_js-1.6.5",
+        url = "https://github.com/aspect-build/rules_js/archive/refs/tags/v1.6.5.tar.gz",
     )
 
     http_archive(
