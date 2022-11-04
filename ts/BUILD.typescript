@@ -24,6 +24,7 @@ directory_path(
     name = "tsc_entrypoint",
     directory = ":node_modules/typescript/dir",
     path = "bin/tsc",
+    visibility = ["//visibility:public"],
 )
 
 js_binary(
