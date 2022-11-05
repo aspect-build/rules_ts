@@ -171,7 +171,11 @@ def ts_project(
             By default the out_dir is the package's folder under bazel-out.
 
         tsc: Label of the TypeScript compiler binary to run.
-            This allows you to use a custom compiler.
+            This allows you to use a custom API-compatible compiler in place of the regular `tsc` such as a custom `js_binary` or Angular's `ngc`.
+            compatible with it such as Angular's `ngc`.
+
+            See examples of use in [examples/custom_compiler](/examples/custom_compiler/BUILD.bazel)
+
         tsc_worker: Label of a custom TypeScript compiler binary which understands Bazel's persistent worker protocol.
         validator: Label of the tsconfig validator to run when `validate = True`.
         allow_js: Whether TypeScript will read .js and .jsx files.

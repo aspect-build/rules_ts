@@ -1,27 +1,70 @@
-"""Shows the use of an alternative compiler, in this case the ngc compiler from Angular.
-
-The compiler has to use the same CLI as `tsc` for this to work.
+"""Shows the use of alternative compiler binaries.
 """
 
+load("@aspect_rules_js//js:defs.bzl", "js_binary")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@npm//examples:@angular/compiler-cli/package_json.bzl", "bin")
 
+write_file(
+    name = "bigts",
+    out = "big.ts",
+    content = [
+        "export const a{0}: number = {0}".format(x)
+        for x in range(10000)
+    ],
+)
+
+# The default value for ts_project#tsc is @npm_typescript//:tsc
+# We can inspect that using
+# $ bazel query --output=build @npm_typescript//:tsc
+# and see something like
+# js_binary(
+#   name = "tsc",
+#   data = ["@npm_typescript//:node_modules/typescript"],
+#   entry_point = "@npm_typescript//:tsc_entrypoint",
+# )
+#
+# So if we need to pass arguments to Node, we just need to make our own modified version of that.
+js_binary(
+    name = "tsc_with_more_heap",
+    data = ["@npm_typescript//:node_modules/typescript"],
+    entry_point = "@npm_typescript//:tsc_entrypoint",
+    node_options = ["--max-old-space-size=8192"],
+)
+
+ts_project(
+    name = "big",
+    srcs = ["big.ts"],
+    tsc = ":tsc_with_more_heap",
+)
+
+# The ngc compiler from Angular: https://angular.io/guide/aot-compiler
 bin.ngc_binary(
     name = "ngc",
 )
 
 ts_project(
-    name = "compile",
+    name = "angular",
     srcs = [
-        # Shows that ts_project accepts any file@npm//examples:@angular/compiler-cli/s in srcs, because it can't assume
-        # the tsc compiler is the only one used.
+        # Shows that ts_project accepts any files in srcs, because it can't assume the tsc compiler
+        # is the only one used. Normally `html` wouldn't make sense as a tsc input.
         "component.ng.html",
         "component.ts",
     ],
-    args = ["--listFiles"],
+    # Tell ts_project to run ngc. The compiler has to have a matching CLI as `tsc` for this to work.
     tsc = ":ngc",
     deps = [
         "//examples:node_modules/@angular/core",
         "//examples:node_modules/@types/node",
+    ],
+)
+
+build_test(
+    name = "test",
+    targets = [
+        ":angular",
+        ":big",
     ],
 )
