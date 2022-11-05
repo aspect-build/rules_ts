@@ -83,29 +83,19 @@ def ts_project(
     Unlike bare `tsc`, this rule understands the Bazel interop mechanism (Providers)
     so that this rule works with others that produce or consume TypeScript typings (`.d.ts` files).
 
-    One of the benefits of using ts_project is that it understands Bazel Worker Protocol which makes
-    JIT overhead one time cost. Worker mode is on by default to speed up build and typechecking process.
+    One of the benefits of using ts_project is that it understands the [Bazel Worker Protocol]
+    which makes the overhead of starting the compiler be a one-time cost.
+    Worker mode is on by default to speed up build and typechecking process.
 
     Some TypeScript options affect which files are emitted, and Bazel needs to predict these ahead-of-time.
     As a result, several options from the tsconfig file must be mirrored as attributes to ts_project.
     A validator action is run to help ensure that these are correctly mirrored.
     See https://www.typescriptlang.org/tsconfig for a listing of the TypeScript options.
 
-    Any code that works with `tsc` should work with `ts_project` with a few caveats:
+    If you have problems getting your `ts_project` to work correctly, read the dedicated
+    [troubleshooting guide](/docs/troubleshooting.md).
 
-    - `ts_project` always produces some output files, or else Bazel would never run it.
-      Therefore you shouldn't use it with TypeScript's `noEmit` option.
-      If you only want to test that the code typechecks, use `tsc` directly;
-      see [examples/typecheck_only](/examples/typecheck_only)
-    - Your tsconfig settings for `outDir` and `declarationDir` are ignored.
-      Bazel requires that the `outDir` (and `declarationDir`) be set beneath
-      `bazel-out/[target architecture]/bin/path/to/package`.
-    - Bazel expects that each output is produced by a single rule.
-      Thus if you have two `ts_project` rules with overlapping sources (the same `.ts` file
-      appears in more than one) then you get an error about conflicting `.js` output
-      files if you try to build both together.
-      Worse, if you build them separately then the output directory will contain whichever
-      one you happened to build most recently. This is highly discouraged.
+    [Bazel Worker Protocol]: https://bazel.build/remote/persistent
 
     Args:
         name: a name for this target
