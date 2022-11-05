@@ -5,7 +5,7 @@ load("@aspect_rules_js//js:defs.bzl", "js_binary")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("@npm//examples:@angular/compiler-cli/package_json.bzl", "bin")
+load("@npm//examples:ttypescript/package_json.bzl", ttsc_bin = "bin")
 
 write_file(
     name = "bigts",
@@ -41,22 +41,18 @@ ts_project(
 )
 
 # The ngc compiler from Angular: https://angular.io/guide/aot-compiler
-bin.ngc_binary(
-    name = "ngc",
+ttsc_bin.ttsc_binary(
+    name = "ttsc",
 )
 
 ts_project(
-    name = "angular",
+    name = "ttsc_bug",
     srcs = [
-        # Shows that ts_project accepts any files in srcs, because it can't assume the tsc compiler
-        # is the only one used. Normally `html` wouldn't make sense as a tsc input.
-        "component.ng.html",
         "component.ts",
     ],
     # Tell ts_project to run ngc. The compiler has to have a matching CLI as `tsc` for this to work.
-    tsc = ":ngc",
+    tsc = ":ttsc",
     deps = [
-        "//examples:node_modules/@angular/core",
         "//examples:node_modules/@types/node",
     ],
 )
@@ -64,7 +60,7 @@ ts_project(
 build_test(
     name = "test",
     targets = [
-        ":angular",
+        ":ttsc",
         ":big",
     ],
 )
