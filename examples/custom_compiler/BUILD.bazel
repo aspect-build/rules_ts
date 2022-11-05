@@ -54,6 +54,8 @@ ts_project(
     tsc = ":ttsc",
     deps = [
         "//examples:node_modules/@types/node",
+        "//examples:node_modules/@angular/core",
+        "//:node_modules/typescript",
     ],
 )
 
