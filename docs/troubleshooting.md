@@ -55,7 +55,7 @@ The `--explainFiles` flag in TS 4.2 also gives information about why a given fil
 
 Use the `--traceResolution` flag to `tsc` to understand where TypeScript looked for the file.
 
-Verify is that there is actually a `.d.ts` file for TypeScript to resolve. Check that the dependency library has the `declarations = True` flag set, and that the `.d.ts` files appear where you expect them under `bazel-out`.
+Verify that there is actually a `.d.ts` file for TypeScript to resolve. Check that the dependency library has the `declarations = True` flag set, and that the `.d.ts` files appear where you expect them under `bazel-out`.
 
 ## TS5033: EPERM 
 
