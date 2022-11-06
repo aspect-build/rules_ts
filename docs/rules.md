@@ -169,7 +169,7 @@ As a result, several options from the tsconfig file must be mirrored as attribut
 A validator action is run to help ensure that these are correctly mirrored.
 See https://www.typescriptlang.org/tsconfig for a listing of the TypeScript options.
 
-If you have problems getting your `ts_project` working correctly, read the dedicated
+If you have problems getting your `ts_project` to work correctly, read the dedicated
 [troubleshooting guide](/docs/troubleshooting.md).
 
 [Bazel Worker Protocol]: https://bazel.build/remote/persistent
