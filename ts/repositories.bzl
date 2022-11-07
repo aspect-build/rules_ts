@@ -40,27 +40,24 @@ def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrit
         urls = ["https://github.com/bazelbuild/bazel-skylib/releases/download/1.3.0/bazel-skylib-1.3.0.tar.gz"],
     )
 
-    # TODO: figure out why updating to 5.7.0 or 5.7.1 breaks the e2e/worker tests
     http_archive(
         name = "rules_nodejs",
-        sha256 = "bce105e7a3d2a3c5eb90dcd6436544bf11f82e97073fb29e4090321ba2b84d8f",
-        urls = ["https://github.com/bazelbuild/rules_nodejs/releases/download/5.6.0/rules_nodejs-core-5.6.0.tar.gz"],
+        sha256 = "50adf0b0ff6fc77d6909a790df02eefbbb3bc2b154ece3406361dda49607a7bd",
+        urls = ["https://github.com/bazelbuild/rules_nodejs/releases/download/5.7.1/rules_nodejs-core-5.7.1.tar.gz"],
     )
 
-    # TODO: figure out why updating to 1.6.4 breaks the e2e/worker tests; possibly related to the
-    # fs patches caching perf improvements
     http_archive(
         name = "aspect_rules_js",
-        sha256 = "d8eabcd1e05d93147505ea806fa21089926b771d8813f01b92af5dec36617033",
-        strip_prefix = "rules_js-1.6.3",
-        url = "https://github.com/aspect-build/rules_js/archive/refs/tags/v1.6.3.tar.gz",
+        sha256 = "6eaac9e07c6cac8d577fca0cd5362ca750ca5c60d20facac864ae358f39612a2",
+        strip_prefix = "rules_js-1.6.7",
+        url = "https://github.com/aspect-build/rules_js/archive/refs/tags/v1.6.7.tar.gz",
     )
 
     http_archive(
         name = "aspect_bazel_lib",
-        sha256 = "eae670935704ce5f9d050b2c23d426b4ae453458830eebdaac1f11a6a9da150b",
-        strip_prefix = "bazel-lib-1.15.0",
-        url = "https://github.com/aspect-build/bazel-lib/archive/refs/tags/v1.15.0.tar.gz",
+        sha256 = "88ac1874c9930c5f01482d25a4f25104a788a178bf1c20053c00322ea7059bd6",
+        strip_prefix = "bazel-lib-1.16.0",
+        url = "https://github.com/aspect-build/bazel-lib/archive/refs/tags/v1.16.0.tar.gz",
     )
 
     npm_dependencies(ts_version_from = ts_version_from, ts_version = ts_version, ts_integrity = ts_integrity)

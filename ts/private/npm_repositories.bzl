@@ -4,10 +4,6 @@ load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 load("//ts/private:maybe.bzl", http_archive = "maybe_http_archive")
 load("//ts/private:versions.bzl", "TOOL_VERSIONS")
 
-versions = struct(
-    rules_nodejs = "5.5.0",
-)
-
 worker_versions = struct(
     bazel_worker_version = "5.4.2",
     bazel_worker_integrity = "sha512-wQZ1ybgiCPkuITaiPfh91zB/lBYqBglf1XYh9hJZCQnWZ+oz9krCnZcywI/i1U9/E9p3A+4Y1ni5akAwTMmfUA==",

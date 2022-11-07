@@ -1,20 +1,15 @@
 const fs = require('fs');
-const ts = require('typescript');
 const path = require('path');
-const worker = require('@bazel/worker');
 const v8 = require('v8');
+const util = require("util")
+const ts = require('typescript');
+const worker = require('@bazel/worker');
+
+/** Constants */
 const MNEMONIC = 'TsProject';
 
+/** Utils */
 function noop() {}
-
-/** Timing */
-function timingStart(label) {
-    ts.performance.mark(`before${label}`);
-}
-function timingEnd(label) {
-    ts.performance.mark(`after${label}`);
-    ts.performance.measure(`${MNEMONIC} ${label}`, `before${label}`, `after${label}`);
-}
 
 function getArgsFromParamFile() {
     let paramFilePath = process.argv[process.argv.length - 1];
@@ -27,6 +22,17 @@ function getArgsFromParamFile() {
     return fs.readFileSync(paramFilePath).toString().trim().split('\n');
 }
 
+/** Performance */
+function timingStart(label) {
+    ts.performance.mark(`before${label}`);
+}
+function timingEnd(label) {
+    ts.performance.mark(`after${label}`);
+    ts.performance.measure(`${MNEMONIC} ${label}`, `before${label}`, `after${label}`);
+}
+
+
+/** Virtual FS */
 function createFilesystemTree(root, inputs) {
     const tree = {};
     const watchingTree = {};
@@ -264,6 +270,8 @@ function createFilesystemTree(root, inputs) {
     return { add, remove, update, notify, fileExists, directoryExists, readDirectory, getDirectories, watchDirectory: watch, watchFile: watch }
 }
 
+
+/** Program and Caching */
 function isExternalLib(path) {
     return  path.includes('external') && 
             path.includes('typescript@') && 
@@ -555,8 +563,8 @@ function createProgram(args, initialInputs) {
     }
 }
 
-// How much (%) of memory should be free at all times. 
-const NEAR_OOM_ZONE = 20
+/** Worker lifecycle */
+const NEAR_OOM_ZONE = 20 // How much (%) of memory should be free at all times. 
 
 function isNearOomZone() {
     const stat = v8.getHeapStatistics();
@@ -600,7 +608,7 @@ function getOrCreateWorker(args, inputs) {
     return worker;
 }
 
-
+/** Build */
 function emit(args, inputs) {
     const _worker = getOrCreateWorker(args, inputs);
 

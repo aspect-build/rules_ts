@@ -143,6 +143,8 @@ jobs:
                   cp -f $GITHUB_WORKSPACE/.github/workflows/ci.bazelrc .bazelrc.test
                   echo "build --config=${{ matrix.config }}" >> .bazelrc.test
                   echo "build --disk_cache=" >> .bazelrc.test
+                  bazel clean
+                  ./test.sh
                   ./test.sh
 
             - name: run ./test.sh with --noexperimental_allow_unresolved_symlinks
@@ -154,4 +156,6 @@ jobs:
                   echo "build --config=${{ matrix.config }}" >> .bazelrc.test
                   echo "build --disk_cache=" >> .bazelrc.test
                   echo "build --noexperimental_allow_unresolved_symlinks" >> ".bazelrc.test"
+                  bazel clean
+                  ./test.sh
                   ./test.sh
