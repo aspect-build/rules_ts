@@ -48,16 +48,16 @@ def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrit
 
     http_archive(
         name = "aspect_rules_js",
-        sha256 = "6eaac9e07c6cac8d577fca0cd5362ca750ca5c60d20facac864ae358f39612a2",
-        strip_prefix = "rules_js-1.6.7",
-        url = "https://github.com/aspect-build/rules_js/archive/refs/tags/v1.6.7.tar.gz",
+        sha256 = "99657daed85eb5e764663fc2a534d4488b3b157719d9ddc64fbac0fd4510b677",
+        strip_prefix = "rules_js-1.6.8",
+        url = "https://github.com/aspect-build/rules_js/archive/refs/tags/v1.6.8.tar.gz",
     )
 
     http_archive(
         name = "aspect_bazel_lib",
-        sha256 = "88ac1874c9930c5f01482d25a4f25104a788a178bf1c20053c00322ea7059bd6",
-        strip_prefix = "bazel-lib-1.16.0",
-        url = "https://github.com/aspect-build/bazel-lib/archive/refs/tags/v1.16.0.tar.gz",
+        sha256 = "3534a27621725fbbf1d3e53daa0c1dda055a2732d9031b8c579f917d7347b6c4",
+        strip_prefix = "bazel-lib-1.16.1",
+        url = "https://github.com/aspect-build/bazel-lib/archive/refs/tags/v1.16.1.tar.gz",
     )
 
     npm_dependencies(ts_version_from = ts_version_from, ts_version = ts_version, ts_integrity = ts_integrity)
