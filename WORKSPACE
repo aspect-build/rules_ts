@@ -59,9 +59,10 @@ load("@npm//:repositories.bzl", "npm_repositories")
 
 npm_repositories()
 
-load("@aspect_rules_jasmine//jasmine:repositories.bzl", "LATEST_VERSION", "rules_jasmine_repositories")
+load("@aspect_rules_jasmine//jasmine:repositories.bzl", "jasmine_repositories")
 
-rules_jasmine_repositories(
-    name = "jasmine",
-    jasmine_version = LATEST_VERSION,
-)
+jasmine_repositories(name = "jasmine")
+
+load("@jasmine//:npm_repositories.bzl", jasmine_npm_repositories = "npm_repositories")
+
+jasmine_npm_repositories()
