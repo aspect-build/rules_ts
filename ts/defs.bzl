@@ -298,16 +298,14 @@ def ts_project(
     typings_out_dir = declaration_dir if declaration_dir else out_dir
     tsbuildinfo_path = ts_build_info_file if ts_build_info_file else name + ".tsbuildinfo"
 
-    js_outs = _lib.calculate_js_outs(srcs, out_dir, root_dir, allow_js, preserve_jsx, emit_declaration_only)
-    map_outs = _lib.calculate_map_outs(srcs, out_dir, root_dir, source_map, preserve_jsx, emit_declaration_only)
-    typings_outs = _lib.calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, composite, allow_js)
-    typing_maps_outs = _lib.calculate_typing_maps_outs(srcs, typings_out_dir, root_dir, declaration_map, allow_js)
+    tsc_typings_outs = _lib.calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, composite, allow_js)
+    tsc_typing_maps_outs = _lib.calculate_typing_maps_outs(srcs, typings_out_dir, root_dir, declaration_map, allow_js)
 
     tsc_js_outs = []
     tsc_map_outs = []
     if not transpiler:
-        tsc_js_outs = js_outs
-        tsc_map_outs = map_outs
+        tsc_js_outs = _lib.calculate_js_outs(srcs, out_dir, root_dir, allow_js, preserve_jsx, emit_declaration_only)
+        tsc_map_outs = _lib.calculate_map_outs(srcs, out_dir, root_dir, source_map, preserve_jsx, emit_declaration_only)
         tsc_target_name = name
     else:
         # To stitch together a tree of ts_project where transpiler is a separate rule,
@@ -317,28 +315,17 @@ def ts_project(
         typecheck_target_name = "%s_typecheck" % name
         test_target_name = "%s_typecheck_test" % name
 
-        transpile_srcs = [s for s in srcs if _lib.is_ts_src(s, allow_js)]
-        if (len(transpile_srcs) != len(js_outs)):
-            fail("ERROR: illegal state: transpile_srcs has length {} but js_outs has length {}".format(
-                len(transpile_srcs),
-                len(js_outs),
-            ))
-
         if type(transpiler) == "function" or type(transpiler) == "rule":
             transpiler(
                 name = transpile_target_name,
-                srcs = transpile_srcs,
-                js_outs = js_outs,
-                map_outs = map_outs,
+                srcs = srcs,
                 **common_kwargs
             )
         elif partial.is_instance(transpiler):
             partial.call(
                 transpiler,
                 name = transpile_target_name,
-                srcs = transpile_srcs,
-                js_outs = js_outs,
-                map_outs = map_outs,
+                srcs = srcs,
                 **common_kwargs
             )
         else:
@@ -365,7 +352,7 @@ def ts_project(
             name = name,
             # Include the tsc target in srcs to pick-up both the direct & transitive declaration outputs so
             # that this js_library can be a valid dep for downstream ts_project or other rules_js derivative rules.
-            srcs = js_outs + map_outs + [tsc_target_name],
+            srcs = [transpile_target_name, tsc_target_name],
             deps = deps,
             **common_kwargs
         )
@@ -390,8 +377,8 @@ def ts_project(
         root_dir = root_dir,
         js_outs = tsc_js_outs,
         map_outs = tsc_map_outs,
-        typings_outs = typings_outs,
-        typing_maps_outs = typing_maps_outs,
+        typings_outs = tsc_typings_outs,
+        typing_maps_outs = tsc_typing_maps_outs,
         buildinfo_out = tsbuildinfo_path if composite or incremental else None,
         emit_declaration_only = emit_declaration_only,
         tsc = tsc,
