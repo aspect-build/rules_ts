@@ -126,6 +126,14 @@ jobs:
               working-directory: ${{ matrix.folder }}
               run: bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc --bazelrc=.bazelrc test --config=${{ matrix.config }} //...
 
+
+            - name: bazel test //... --worker_sandboxing
+              env:
+                  # Bazelisk will download bazel to here, ensure it is cached between runs.
+                  XDG_CACHE_HOME: ~/.cache/bazel-repo
+              working-directory: ${{ matrix.folder }}
+              run: bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc --bazelrc=.bazelrc test --config=${{ matrix.config }} --worker_sandboxing //...
+
             # Some tests need buildozer to manipulate BUILD files.
             - uses: actions/setup-go@v3
               if: ${{ hashFiles(format('{0}/test.sh', matrix.folder)) != '' }}
@@ -149,6 +157,16 @@ jobs:
                   echo "build --disk_cache=/tmp/cache" >> .bazelrc.test
                   bazel clean
                   ./test.sh
+                  ./test.sh
+            
+            - name: run ./test.sh with --worker_sandboxing
+              working-directory: ${{ matrix.folder }}
+              # hashFiles returns an empty string if test.sh is absent
+              if: ${{ hashFiles(format('{0}/test.sh', matrix.folder)) != '' }}
+              run: |
+                  cp -f $GITHUB_WORKSPACE/.github/workflows/ci.bazelrc .bazelrc.test
+                  echo "build --config=${{ matrix.config }}" >> .bazelrc.test
+                  echo "build --disk_cache=/tmp/cache" >> .bazelrc.test
                   ./test.sh
 
             - name: run ./test.sh with --noexperimental_allow_unresolved_symlinks
