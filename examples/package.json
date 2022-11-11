@@ -13,6 +13,7 @@
         "@types/node": "18.6.1",
         "date-fns": "2.29.1",
         "rxjs": "7",
-        "typescript": "4.8.2"
+        "typescript": "4.8.2",
+        "@tsconfig/node16-strictest-esm": "^1.0.3"
     }
 }
