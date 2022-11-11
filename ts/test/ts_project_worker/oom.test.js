@@ -42,27 +42,58 @@ mock("typescript", {
 mock("@bazel/worker", { log: console.log })
 
 /** @type {import("../../private/ts_project_worker")} */
-const worker = require("./ts_project_worker");
+const ts_project_worker = require("./ts_project_worker").__do_not_use_test_only__
 
-worker.emit(["--project", "p1", "--outDir", "p1", "--declarationDir", "p1", "--rootDir", "p1"], {})
-worker.emit(["--project", "p2", "--outDir", "p2", "--declarationDir", "p2", "--rootDir", "p2"], {})
-worker.emit(["--project", "p3", "--outDir", "p3", "--declarationDir", "p3", "--rootDir", "p3"], {})
-worker.emit(["--project", "p4", "--outDir", "p4", "--declarationDir", "p4", "--rootDir", "p4"], {})
-worker.emit(["--project", "p5", "--outDir", "p5", "--declarationDir", "p5", "--rootDir", "p5"], {})
+function killAllWorkers() {
+    heapStatistics.used_heap_size = 0;
+    program_counter = 0;
+    closed_programs.length = 0;
+    ts_project_worker.workers.clear();
+}
+
+ts_project_worker.emit(["--project", "p1", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+ts_project_worker.emit(["--project", "p2", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+ts_project_worker.emit(["--project", "p3", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+ts_project_worker.emit(["--project", "p4", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+ts_project_worker.emit(["--project", "p5", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+assert.deepStrictEqual(closed_programs, [1]);
+killAllWorkers();
+
+// Case: reuse p1 worker to prevent it from being the next victim by moving it to the end of the LRU cache. p2 should be the next victim.
+ts_project_worker.emit(["--project", "p1", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+ts_project_worker.emit(["--project", "p2", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+ts_project_worker.emit(["--project", "p3", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+
+ts_project_worker.emit(["--project", "p1", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+
+ts_project_worker.emit(["--project", "p4", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+ts_project_worker.emit(["--project", "p5", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+assert.deepStrictEqual(closed_programs, [2]);
+killAllWorkers();
+
+// Case: rescale p4
+ts_project_worker.emit(["--project", "p1", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+ts_project_worker.emit(["--project", "p2", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+ts_project_worker.emit(["--project", "p3", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+ts_project_worker.emit(["--project", "p4", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+ts_project_worker.emit(["--project", "p4", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
 assert.deepStrictEqual(closed_programs, [1]);
 
-// now reuse p2 worker to prevent it from being the next victim by moving it to the end of the LRU cache. p3 should be the next victim.
-worker.emit(["--project", "p2", "--outDir", "p2", "--declarationDir", "p2", "--rootDir", "p2"], {})
-worker.emit(["--project", "p6", "--outDir", "p6", "--declarationDir", "p6", "--rootDir", "p6"], {})
-assert.deepStrictEqual(closed_programs, [1,3]);
+heapStatistics.used_heap_size = 81;
+ts_project_worker.emit(["--project", "p4", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+assert.deepStrictEqual(closed_programs, [1,2]);
+killAllWorkers();
 
-// reuse p4 so that p5 is the next victim.
-worker.emit(["--project", "p4", "--outDir", "p4", "--declarationDir", "p4", "--rootDir", "p4"], {})
-worker.emit(["--project", "p7", "--outDir", "p7", "--declarationDir", "p7", "--rootDir", "p7"], {})
-assert.deepStrictEqual(closed_programs, [1,3,5]);
+// reuse p1, p3 to assert that they never get sweeped
+ts_project_worker.emit(["--project", "p1", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+ts_project_worker.emit(["--project", "p2", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
 
-// reuse p2, p4, p7 to assert that they never get sweeped
-worker.emit(["--project", "p2", "--outDir", "p2", "--declarationDir", "p2", "--rootDir", "p2"], {})
-worker.emit(["--project", "p4", "--outDir", "p4", "--declarationDir", "p4", "--rootDir", "p4"], {})
-worker.emit(["--project", "p7", "--outDir", "p7", "--declarationDir", "p7", "--rootDir", "p7"], {})
-assert.deepStrictEqual(closed_programs, [1,3,5]);
+ts_project_worker.emit(["--project", "p1", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+
+ts_project_worker.emit(["--project", "p3", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+ts_project_worker.emit(["--project", "p4", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+
+ts_project_worker.emit(["--project", "p3", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+
+ts_project_worker.emit(["--project", "p5", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+assert.deepStrictEqual(closed_programs, [2]);

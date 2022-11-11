@@ -581,6 +581,9 @@ function sweepLeastRecentlyUsedWorkers() {
 }
 
 function getOrCreateWorker(args, inputs) {
+    if (isNearOomZone()) {
+        sweepLeastRecentlyUsedWorkers();
+    }
     const project = args[args.indexOf('--project') + 1]
     const outDir = args[args.lastIndexOf("--outDir") + 1]
     const declarationDir = args[args.lastIndexOf("--declarationDir") + 1]
@@ -589,9 +592,6 @@ function getOrCreateWorker(args, inputs) {
 
     let worker = workers.get(key)
     if (!worker) {
-        if (isNearOomZone()) {
-            sweepLeastRecentlyUsedWorkers();
-        }
         worker = createProgram(args, inputs);
         worker.host.debuglog(`Created a new worker for ${key}`);
     } else {
@@ -744,4 +744,4 @@ if (require.main === module && worker.runAsWorker(process.argv)) {
     }
 }
 
-module.exports = {createFilesystemTree: createFilesystemTree, emit: emit};
+module.exports.__do_not_use_test_only__ = {createFilesystemTree: createFilesystemTree, emit: emit, workers: workers};
