@@ -7,7 +7,7 @@ mock("typescript", { sys: { getCurrentDirectory: () => {}, realpath: fs.realpath
 mock("@bazel/worker", { log: console.log })
 
 /** @type {import("../../private/ts_project_worker")} */
-const worker = require("./ts_project_worker");
+const worker = require("./ts_project_worker").__do_not_use_test_only__;
 
 // Tests
 const root = process.env.GTEST_TMP_DIR;
