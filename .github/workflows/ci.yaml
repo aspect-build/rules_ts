@@ -49,7 +49,11 @@ jobs:
 
     test:
         # The type of runner that the job will run on
-        runs-on: ubuntu-latest
+        runs-on: ${{ matrix.os.name }}
+
+        defaults:
+          run:
+            shell: ${{ matrix.os.shell }}
 
         needs:
             - matrix-prep-config
@@ -60,6 +64,13 @@ jobs:
             matrix:
                 config: ${{ fromJSON(needs.matrix-prep-config.outputs.configs) }}
                 bazelversion: ${{ fromJSON(needs.matrix-prep-bazelversion.outputs.bazelversions) }}
+                os:
+                    - name: windows-latest
+                      shell: msys2 {0}
+                    - name: ubuntu-latest
+                      shell: bash
+                    - name: macos-latest
+                      shell: bash
                 folder:
                     - '.'
                     - 'e2e/bzlmod'
@@ -82,6 +93,10 @@ jobs:
         steps:
             # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
             - uses: actions/checkout@v3
+
+            # Setup msys
+            - uses: msys2/setup-msys2@v2
+              if: ${{ matrix.os.name == 'windows-latest' }}
 
             # Cache build and external artifacts so that the next ci build is incremental.
             # Because github action caches cannot be updated after a build, we need to
