@@ -1,9 +1,15 @@
 const fs = require('fs');
 const path = require('path');
 const v8 = require('v8');
-const util = require("util")
 const ts = require('typescript');
 const worker = require('@bazel/worker');
+
+
+// workaround for the issue introduced in https://github.com/microsoft/TypeScript/pull/42095
+if (Array.isArray(ts.ignoredPaths)) {
+    ts.ignoredPaths = ts.ignoredPaths.filter(ignoredPath => ignoredPath != "/node_modules/.")
+}
+
 
 /** Constants */
 const MNEMONIC = 'TsProject';
@@ -78,7 +84,7 @@ function createFilesystemTree(root, inputs) {
         return node;
     }
 
-    function add(p, hash) {
+    function add(p) {
         const parts = path.parse(p);        
         const dirs = parts.dir.split(path.sep).filter(p => p != "");
 
@@ -94,35 +100,23 @@ function createFilesystemTree(root, inputs) {
             node = node[part];
         }
 
-        // Digest is empty when the input is a symlink which we use as an indicator to limit number of realpath calls made.
-        // See: https://github.com/bazelbuild/bazel/pull/14002#issuecomment-977790796 for why it can be empty.
-        if (hash == null) {
-            const realpath = ts.sys.realpath(path.join(root, p));
-            const relative = path.relative(root, realpath);
-            if (relative != p) {
-                node[parts.base] = {
-                    [Type]: TYPE.SYMLINK,
-                    [Symlink]: relative
-                }
+        const absolutePath = path.join(root, p)
+        const stat = fs.lstatSync(absolutePath)
+
+        if (stat.isSymbolicLink()) {
+            const linkpath = fs.readlinkSync(absolutePath);
+            const absLinkpath = path.isAbsolute(linkpath) ? linkpath : path.resolve(path.dirname(absolutePath, linkpath))
+            const relative = path.relative(root, absLinkpath)
+            node[parts.base] = {
+                [Type]: TYPE.SYMLINK,
+                [Symlink]: relative
             }
             notifyWatchers(dirs, parts.base, TYPE.SYMLINK, EVENT_TYPE.ADDED);
         } else if (parts.base) {
-            const new_node = {
+            node[parts.base] = {
                 [Type]: TYPE.FILE,
-            }
-            try {
-                const linkPath = path.join(root, p)
-                const readlink = fs.readlinkSync(linkPath);
-                const targetPath = path.isAbsolute(readlink) ? readlink : path.join(path.dirname(linkPath), readlink)
-                const relative = path.relative(root, targetPath);
-                if (relative != p) {
-                    new_node[Type] = TYPE.SYMLINK
-                    new_node[Symlink] = relative
-                }
-            } catch (e) { /* Can't determine if it's a symlink. move on */ }
-
-            node[parts.base] = new_node;
-            notifyWatchers(dirs, parts.base, new_node[Type], EVENT_TYPE.ADDED);
+            };
+            notifyWatchers(dirs, parts.base, TYPE.FILE, EVENT_TYPE.ADDED);
         }
     }
 
