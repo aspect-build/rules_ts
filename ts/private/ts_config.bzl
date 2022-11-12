@@ -16,6 +16,7 @@
 
 load("@aspect_bazel_lib//lib:paths.bzl", "relative_file")
 load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_file_to_bin_action", "copy_files_to_bin_actions")
+load("@aspect_rules_js//js:libs.bzl", "js_lib_helpers")
 load(":ts_lib.bzl", _lib = "lib")
 
 TsConfigInfo = provider(
@@ -29,7 +30,16 @@ TsConfigInfo = provider(
 
 def _ts_config_impl(ctx):
     files = [copy_file_to_bin_action(ctx, ctx.file.src)]
-    transitive_deps = [depset(copy_files_to_bin_actions(ctx, ctx.files.deps))]
+    transitive_deps = [
+        depset(copy_files_to_bin_actions(ctx, ctx.files.deps)),
+        js_lib_helpers.gather_files_from_js_providers(
+            targets = ctx.attr.deps,
+            include_transitive_sources = True,
+            include_declarations = True,
+            include_npm_linked_packages = True,
+        )
+    ]
+
     for dep in ctx.attr.deps:
         if TsConfigInfo in dep:
             transitive_deps.append(dep[TsConfigInfo].deps)
