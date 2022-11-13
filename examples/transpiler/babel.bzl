@@ -1,6 +1,5 @@
 "Adapter from the Babel CLI to the ts_project#transpiler interface"
 
-load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@npm//examples:@babel/cli/package_json.bzl", "bin")
 
 # buildifier: disable=function-docstring
@@ -24,6 +23,7 @@ def babel(name, srcs, **kwargs):
         if not src.endswith(".ts"):
             fail("babel example transpiler only supports source .ts files")
 
+        # Predict the output paths where babel will write
         js_out = src.replace(".ts", ".js")
         map_out = src.replace(".ts", ".js.map")
 
@@ -51,8 +51,8 @@ def babel(name, srcs, **kwargs):
         outs.append(js_out)
         outs.append(map_out)
 
-    # The target producing the js files which ts_project() will reference
-    js_library(
+    # The target whose default outputs are the js files which ts_project() will reference
+    native.filegroup(
         name = name,
         srcs = outs,
     )
