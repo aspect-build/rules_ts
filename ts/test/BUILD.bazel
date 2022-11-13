@@ -1,6 +1,5 @@
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
-
 load(":mock_transpiler.bzl", "mock")
 load(":transpiler_tests.bzl", "transpiler_test_suite")
 load("//ts:defs.bzl", "ts_project")
@@ -52,6 +51,15 @@ ts_project(
     tsconfig = _TSCONFIG,
 )
 
+# Ensure the output files are predeclared
+build_test(
+    name = "out_refs_test",
+    targets = [
+        "big.js",
+        "big.d.ts",
+    ],
+)
+
 # This target proves that transpilation doesn't require typechecking:
 #
 # $ bazel build examples/swc:transpile_with_typeerror
@@ -92,13 +100,42 @@ ts_project(
     tsconfig = _TSCONFIG,
 )
 
+# ts_project srcs containing a filegroup()
+write_file(
+    name = "src_filegroup_a",
+    out = "src_fg_a.ts",
+    content = ["export const a: string = \"1\";"],
+)
+
+write_file(
+    name = "src_filegroup_b",
+    out = "src_fg_b.ts",
+    content = ["export const b: string = \"2\";"],
+)
+
+filegroup(
+    name = "src_filegroup",
+    srcs = [
+        "src_fg_a.ts",
+        "src_fg_b.ts",
+    ],
+)
+
+ts_project(
+    name = "transpile_filegroup",
+    srcs = [":src_filegroup"],
+    tags = ["manual"],
+    transpiler = mock,
+    tsconfig = _TSCONFIG,
+)
+
 transpiler_test_suite()
 
 # Ensure that when determining output location, the `root_dir` attribute is only removed once.
 ts_project(
     name = "rootdir_works_with_repeated_directory",
     srcs = ["root/deep/root/deep_src.ts"],
+    root_dir = "root",
     transpiler = mock,
     tsconfig = _TSCONFIG,
-    root_dir = "root",
 )
