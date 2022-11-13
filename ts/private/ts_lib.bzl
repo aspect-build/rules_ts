@@ -187,7 +187,7 @@ def _out_paths(srcs, out_dir, root_dir, allow_js, ext_map):
                 outs.append(out)
     return outs
 
-def _calculate_js_outs(srcs, out_dir, root_dir, allow_js, preserve_jsx, emit_declaration_only):
+def _calculate_js_outs(srcs, out_dir = ".", root_dir = ".", allow_js = False, preserve_jsx = False, emit_declaration_only = False):
     if emit_declaration_only:
         return []
 
@@ -205,7 +205,7 @@ def _calculate_js_outs(srcs, out_dir, root_dir, allow_js, preserve_jsx, emit_dec
 
     return _out_paths(srcs, out_dir, root_dir, allow_js, exts)
 
-def _calculate_map_outs(srcs, out_dir, root_dir, source_map, preserve_jsx, emit_declaration_only):
+def _calculate_map_outs(srcs, out_dir = ".", root_dir = ".", source_map = True, preserve_jsx = False, emit_declaration_only = False):
     if not source_map or emit_declaration_only:
         return []
 
