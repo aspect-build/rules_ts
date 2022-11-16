@@ -4,6 +4,7 @@ load("@bazel_skylib//rules:build_test.bzl", "build_test")
 ts_project(
     name = "ts",
     srcs = ["foo.ts"],
+    supports_workers = False,
 )
 
 build_test(
