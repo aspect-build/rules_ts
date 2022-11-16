@@ -1,6 +1,7 @@
 "ts_project rule"
 
 load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_files_to_bin_actions")
+load("@aspect_bazel_lib//lib:platform_utils.bzl", "platform_utils")
 load("@bazel_skylib//lib:dicts.bzl", "dicts")
 load("@aspect_rules_js//js:providers.bzl", "js_info")
 load("@aspect_rules_js//js:libs.bzl", "js_lib_helpers")
@@ -40,7 +41,18 @@ def _ts_project_impl(ctx):
     execution_requirements = {}
     executable = ctx.executable.tsc
 
-    if ctx.attr.supports_workers:
+    supports_workers = ctx.attr.supports_workers
+    host_is_windows = platform_utils.host_platform_is_windows()
+    if host_is_windows and supports_workers:
+        supports_workers = False
+
+        # buildifier: disable=print
+        print("""
+WARNING: disabling ts_project workers which are not currently support on Windows hosts.
+See https://github.com/aspect-build/rules_ts/issues/228 for more details.
+""")
+
+    if supports_workers:
         # Set to use a multiline param-file for worker mode
         arguments.use_param_file("@%s", use_always = True)
         arguments.set_param_file_format("multiline")

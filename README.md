@@ -19,6 +19,7 @@ rules_ts is just a part of what Aspect provides:
 Known issues:
 
 -   Does not work with `--worker_sandboxing`. See https://github.com/aspect-build/rules_ts/issues/127#issuecomment-1312041592
+-   Workers are disabled and not currently supported on Windows hosts. See https://github.com/aspect-build/rules_ts/issues/228.
 
 ## Installation
 
