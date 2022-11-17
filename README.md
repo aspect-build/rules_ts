@@ -31,7 +31,7 @@ copy the WORKSPACE snippet into your `WORKSPACE` file.
 
 There are a number of examples in [the examples/ folder](./examples/).
 
-If you'd like an example added, you can file a Feature Request.
+If you'd like an example added, you can file a [Feature Request](https://github.com/aspect-build/rules_ts/issues/new/choose).
 
 ## Usage
 
