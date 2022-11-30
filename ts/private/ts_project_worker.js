@@ -84,6 +84,17 @@ function createFilesystemTree(root, inputs) {
         return node;
     }
 
+    function followSymlinkUsingRealFs(p) {
+        const absolutePath = path.join(root, p)
+        const stat = fs.lstatSync(absolutePath)
+        if (stat.isSymbolicLink()) {
+            const linkpath = fs.readlinkSync(absolutePath);
+            const absoluteLinkPath = path.isAbsolute(linkpath) ? linkpath : path.resolve(path.dirname(absolutePath, linkpath))
+            return path.relative(root, absoluteLinkPath);
+        }
+        return p;
+    }
+
     function add(p) {
         const parts = path.parse(p);        
         const dirs = parts.dir.split(path.sep).filter(p => p != "");
@@ -100,16 +111,12 @@ function createFilesystemTree(root, inputs) {
             node = node[part];
         }
 
-        const absolutePath = path.join(root, p)
-        const stat = fs.lstatSync(absolutePath)
+        const possiblyResolvedSymlinkPath = followSymlinkUsingRealFs(p)
 
-        if (stat.isSymbolicLink()) {
-            const linkpath = fs.readlinkSync(absolutePath);
-            const absLinkpath = path.isAbsolute(linkpath) ? linkpath : path.resolve(path.dirname(absolutePath, linkpath))
-            const relative = path.relative(root, absLinkpath)
+        if (possiblyResolvedSymlinkPath != p) {
             node[parts.base] = {
                 [Type]: TYPE.SYMLINK,
-                [Symlink]: relative
+                [Symlink]: possiblyResolvedSymlinkPath
             }
             notifyWatchers(dirs, parts.base, TYPE.SYMLINK, EVENT_TYPE.ADDED);
         } else if (parts.base) {
@@ -153,16 +160,23 @@ function createFilesystemTree(root, inputs) {
     }
 
     function update(p) {
-        let node = getNode(p);
-        const parts = p.split(path.sep);
-        const base = parts.pop();
-        notifyWatchers(parts, base, node[Type], EVENT_TYPE.UPDATED);
-    }
-
-    function notify(p) {
-        const parts = p.split(path.sep);
-        const base = parts.pop();
-        notifyWatchers(parts, base, TYPE.DIR, EVENT_TYPE.UPDATED);
+        const dirname = path.dirname(p);
+        const basename = path.basename(p);
+        // reason the node manipulated using the parent node is that the last node might be a symlink and `getNode` follows symlinks automatically.
+        // ideally a new followSymlinks option could be introduced to `getNode` but that would prevent following the grand parents.
+        // luckily, bazel does not allow complex symlinks structures such as symlink within symlink allowing this function to be dumb.
+        const parentNode = getNode(dirname);
+        const node = parentNode[basename];
+        if (node[Type] == TYPE.SYMLINK) {
+            const newSymlinkPath = followSymlinkUsingRealFs(p);
+            if (newSymlinkPath == p /* Not a symlink anymore */) {
+                node[Type] = TYPE.FILE;
+                delete node[Symlink];
+            } else if (node[Symlink] != newSymlinkPath) {
+                node[Symlink] = newSymlinkPath;
+            }
+        }
+        notifyWatchers(dirname.split(path.sep), basename, node[Type], EVENT_TYPE.UPDATED);
     }
 
     function fileExists(p) {
@@ -261,7 +275,7 @@ function createFilesystemTree(root, inputs) {
         return () => node[Watcher].delete(watcher)
     }
 
-    return { add, remove, update, notify, fileExists, directoryExists, readDirectory, getDirectories, watchDirectory: watch, watchFile: watch }
+    return { add, remove, update, fileExists, directoryExists, readDirectory, getDirectories, watchDirectory: watch, watchFile: watch }
 }
 
 
@@ -512,15 +526,12 @@ function createProgram(args, initialInputs) {
         ).map(p => path.isAbsolute(p) ? p : path.join(execRoot, p))
     }
 
-    function invalidate(filePath, kind, digest) {
+    function invalidate(filePath, kind) {
         if (filePath.endsWith('.params')) return;
         debuglog(`invalidate ${filePath} : ${ts.FileWatcherEventKind[kind]}`);
 
         if (kind === ts.FileWatcherEventKind.Created) {
-            filesystemTree.add(filePath, digest);
-            // TODO: explain why tsc decides not to invalidate failed lookups based
-            // on simple path logic.
-            filesystemTree.notify(path.dirname(filePath));
+            filesystemTree.add(filePath);
         } else if (kind === ts.FileWatcherEventKind.Deleted) {
             filesystemTree.remove(filePath);
         } else {
@@ -618,36 +629,42 @@ function emit(args, inputs) {
     _worker.enablePerformanceAndTracingIfNeeded();
     timingEnd('enablePerformanceAndTracingIfNeeded');
 
-    const failedLookups = new Map();
+    const changes = new Set(), creations = new Set();
+
     if (previousInputs) {
         timingStart(`invalidate`);
+        for (const [input, digest] of Object.entries(inputs)) {
+            if (!(input in previousInputs)) {
+                creations.add(input);
+            } else if (previousInputs[input] != digest) {
+                changes.add(input);
+            }
+        }
         for (const input in previousInputs) {
             if (!(input in inputs)) {
                 host.invalidate(input, ts.FileWatcherEventKind.Deleted);
             }
         }
-        for (const [input, digest] of Object.entries(inputs)) {
-            if (!(input in previousInputs)) {
-                host.invalidate(input, ts.FileWatcherEventKind.Created, digest);
-                failedLookups.set(input, digest);
-            } else if (previousInputs[input] != digest) {
-                host.invalidate(input, ts.FileWatcherEventKind.Changed, digest);
-            }
+        for (const input of creations) {
+            host.invalidate(input, ts.FileWatcherEventKind.Created);
+        }
+        for (const input of changes) {
+            host.invalidate(input, ts.FileWatcherEventKind.Changed);
         }
         timingEnd('invalidate');
     }
 
-    timingStart('applyChanges')
+    timingStart('applyChanges');
     host.applyChanges();
-    if (failedLookups.size) {
-        timingStart('applyChanges for failedLookups');
-        for (const [input, digest] of failedLookups) {
-            host.invalidate(input, ts.FileWatcherEventKind.Changed, digest);
+    if (creations.size) {
+        timingStart('applyChanges for changes');
+        for (const input of creations) {
+            host.invalidate(input, ts.FileWatcherEventKind.Changed);
         }
         host.applyChanges();
-        timingEnd('applyChanges for failedLookups');
+        timingEnd('applyChanges for changes');
     }
-    timingEnd('applyChanges')
+    timingEnd('applyChanges');
 
     timingStart('getProgram');
     const program = _worker.program.getCurrentProgram()

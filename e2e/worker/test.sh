@@ -126,6 +126,7 @@ buildozer "remove deps //feature1 //feature2" :ts
 bazel build :ts 2>&1 | grep "$message1" || exit_with_message "Case 9: expected worker to report \"$message1\""
 bazel build :ts 2>&1 | grep "$message2" || exit_with_message "Case 9: expected worker to report \"$message2\""
 bazel build :ts 2>&1 | grep "$message3" && exit_with_message "Case 9: expected worker to not report \"$message3\""
+buildozer 'add deps //feature1 //feature2 //feature3' :ts
 
 
 message "# Case 10: Should report when @types/<pkg> and <pkg> is missing from deps."
@@ -147,6 +148,7 @@ for dep in "${deps[@]}"; do
     message="error TS2307: Cannot find module '$dep' or its corresponding type declarations."
     bazel build :ts 2>&1 | grep "$message" || exit_with_message "Case 11: expected worker to report \"$message\""
     buildozer "add deps //:node_modules/$dep" :ts
+    bazel build :ts || exit_with_message "Case 11: expected worker to not fail"
 done
 
 
@@ -171,6 +173,31 @@ pnpm install --lockfile-only --dir "$tmp" --store-dir $(mktemp -d) --virtual-sto
 cat "$tmp/pnpm-lock.yaml" > pnpm-lock.yaml
 
 bazel build //transitive_closure 2>&1  | grep "$message" && exit_with_message "Case 13: expected worker to not report \"$message\""
+
+
+message "# Case 14: should handle dependency version change"
+
+lockfile_backup=$(mktemp)
+cat pnpm-lock.yaml > $lockfile_backup
+add_trap "cat $lockfile_backup > pnpm-lock.yaml"
+
+tmp=$(mktemp -d)
+
+jq '.dependencies["@types/node"] = "18.6.1"' package.json > "$tmp/package.json"
+pnpm install --lockfile-only --dir "$tmp"
+cat "$tmp/pnpm-lock.yaml" > pnpm-lock.yaml
+
+message="node_modules/.aspect_rules_js/@types+node@18.6.1/node_modules/@types/node/globals.d.ts(72,13): error TS2403: Subsequent variable declarations must have the same type.  Variable 'AbortSignal' must be of type '{ new (): AbortSignal; prototype: AbortSignal; abort(reason?: any): AbortSignal; timeout(milliseconds: number): AbortSignal; }', but here has type '{ new (): AbortSignal; prototype: AbortSignal; }'."
+bazel build :ts 2>&1  | grep "$message" || exit_with_message "Case 13: expected worker to report \"$message\""
+
+
+jq '.dependencies["@types/node"] = "18.11.9"' package.json > "$tmp/package.json"
+pnpm install --lockfile-only --dir "$tmp"
+cat "$tmp/pnpm-lock.yaml" > pnpm-lock.yaml
+
+cat BUILD
+bazel build :ts 2>&1 || exit_with_message "Case 14: expected worker to not fail"
+cat $lockfile_backup > pnpm-lock.yaml
 
 
 message "# Case X: Should dump traces"
