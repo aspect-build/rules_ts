@@ -57,3 +57,5 @@ def mock(name, srcs, source_map = False, **kwargs):
         map_outs = lib.calculate_map_outs(srcs) if source_map else [],
         **kwargs
     )
+
+    return [s for s in srcs if not s.endswith(".ts")]

@@ -1,0 +1,10 @@
+load("//ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "b",
+    srcs = ["dep.ts"],
+    declaration = True,
+    resolve_json_module = True,
+    tsconfig = "//ts/test/transitive_json_srcs:tsconfig",
+    deps = ["//ts/test/transitive_json_srcs/a"],
+)

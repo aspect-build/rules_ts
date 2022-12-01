@@ -1,0 +1,7 @@
+{
+    "compilerOptions": {
+        "resolveJsonModule": true,
+        "declaration": true
+    },
+    "include": ["**/*.ts", "**/*.json"]
+}

@@ -1,0 +1,15 @@
+load("//ts/test:mock_transpiler.bzl", "mock")
+load("//ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "a",
+    srcs = [
+        "data.json",
+        "uses_json.ts",
+    ],
+    declaration = True,
+    resolve_json_module = True,
+    transpiler = mock,
+    tsconfig = "//ts/test/transitive_json_srcs:tsconfig",
+    visibility = ["//ts/test:__subpackages__"],
+)
