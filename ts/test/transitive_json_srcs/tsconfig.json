@@ -1,7 +1,24 @@
 {
     "compilerOptions": {
         "resolveJsonModule": true,
-        "declaration": true
-    },
-    "include": ["**/*.ts", "**/*.json"]
+        "declaration": true,
+        "strict": true,
+        // Note: if composite is true, then it turns on "project references" behavior and we get an error
+        //
+        // ts/test/transitive_json_srcs/a/uses_json.ts(1,19): error TS6307:
+        // File 'execroot/aspect_rules_ts/bazel-out/k8-fastbuild/bin/ts/test/transitive_json_srcs/a/data.json'
+        // is not listed within the file list of project 'execroot/aspect_rules_ts/bazel-out/k8-fastbuild/bin/ts/test/transitive_json_srcs/tsconfig.json'.
+        // Projects must list all files or use an 'include' pattern.
+        //
+        // The include line below would resolve that error, but then it introduces a new problem since transitive json files get added to the program
+        // but they cannot be emitted:
+        //
+        // error TS6059: File 'execroot/aspect_rules_ts/bazel-out/k8-fastbuild/bin/ts/test/transitive_json_srcs/tsconfig.json'
+        // is not under 'rootDir' 'ts/test/transitive_json_srcs/a'. 'rootDir' is expected to contain all source files.
+        // The file is in the program because:
+        //   Matched by include pattern '**/*.json' in 'ts/test/transitive_json_srcs/tsconfig.json'
+        "composite": false
+    }
+    // Cannot have this line or it causes the TS6059 mentioned above
+    // "include": ["**/*.ts", "**/*.json"]
 }

@@ -3,6 +3,7 @@ load("//ts:defs.bzl", "ts_project")
 ts_project(
     name = "b",
     srcs = ["dep.ts"],
+    composite = False,
     declaration = True,
     resolve_json_module = True,
     tsconfig = "//ts/test/transitive_json_srcs:tsconfig",
