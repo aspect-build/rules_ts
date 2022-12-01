@@ -315,14 +315,24 @@ def ts_project(
         typecheck_target_name = "%s_typecheck" % name
         test_target_name = "%s_typecheck_test" % name
 
-        if type(transpiler) == "function" or type(transpiler) == "rule":
-            transpiler(
+        # To emulate resolveJsonModule in typescript, the transpiler should copy non-TS sources
+        # to the output tree. We do this just by checking if the transpiler reports that some srcs
+        # were unused (it didn't produce any outputs for them) and send those to our terminal
+        # js_library.
+        if type(transpiler) == "rule":
+            not_transpiled_srcs = transpiler(
+                name = transpile_target_name,
+                srcs = srcs,
+                **common_kwargs
+            )
+        elif type(transpiler) == "function":
+            not_transpiled_srcs = transpiler(
                 name = transpile_target_name,
                 srcs = srcs,
                 **common_kwargs
             )
         elif partial.is_instance(transpiler):
-            partial.call(
+            not_transpiled_srcs = partial.call(
                 transpiler,
                 name = transpile_target_name,
                 srcs = srcs,
@@ -352,7 +362,7 @@ def ts_project(
             name = name,
             # Include the tsc target in srcs to pick-up both the direct & transitive declaration outputs so
             # that this js_library can be a valid dep for downstream ts_project or other rules_js derivative rules.
-            srcs = [transpile_target_name, tsc_target_name],
+            srcs = [transpile_target_name, tsc_target_name] + (not_transpiled_srcs or []),
             deps = deps,
             **common_kwargs
         )

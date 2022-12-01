@@ -17,19 +17,26 @@ Read more: https://blog.aspect.dev/typescript-speedup
 
 ## ts_project#transpiler
 
-The `transpiler` attribute of `ts_project` lets you select which tool produces the JavaScript outputs. The default value of `None` means that `tsc` should do transpiling along with type-checking, as this is the simplest configuration without additional dependencies. However as noted above, it's also the slowest.
+The `transpiler` attribute of `ts_project` lets you select which tool produces the JavaScript outputs.
+The default value of `None` means that `tsc` should do transpiling along with type-checking,
+as this is the simplest configuration without additional dependencies.
+However as noted above, it's also the slowest.
 
 The `transpiler` attribute accepts a rule or macro with this signature:
-`name, srcs, **kwargs`
+`name, srcs, **kwargs => unused_srcs`
 where the `**kwargs` attribute propagates the tags, visibility, and testonly attributes from `ts_project`.
+The `unused_srcs` return value is optional, and is a list of containing the subset of `srcs` which were not transpiled.
+These non-transpiled `srcs` will be included in the `srcs` of the resulting `js_library`.
 
 If you need to pass additional attributes to the transpiler rule such as `out_dir`, you can use a
 [partial](https://github.com/bazelbuild/bazel-skylib/blob/main/lib/partial.bzl)
 to bind those arguments at the "make site", then pass that partial to this attribute where it will be called with the remaining arguments.
+
 The transpiler rule or macro is responsible for predicting and declaring outputs.
 If you want to pre-declare the outputs (so that they can be addressed by a Bazel label, like `//path/to:index.js`)
 then you should use a macro which calculates the predicted outputs and supplies them to a `ctx.attr.outputs` attribute
 on the rule.
+
 See the examples/transpiler directory for a simple example using Babel, or
 <https://github.com/aspect-build/bazel-examples/tree/main/ts_project_transpiler>
 for a more complete example that also shows usage of SWC.
