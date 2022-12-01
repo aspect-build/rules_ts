@@ -3,11 +3,33 @@
 load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_files_to_bin_actions")
 load("@aspect_bazel_lib//lib:platform_utils.bzl", "platform_utils")
 load("@bazel_skylib//lib:dicts.bzl", "dicts")
-load("@aspect_rules_js//js:providers.bzl", "js_info")
+load("@aspect_rules_js//js:providers.bzl", "JsInfo", "js_info")
 load("@aspect_rules_js//js:libs.bzl", "js_lib_helpers")
+load("@aspect_rules_js//npm:providers.bzl", "NpmPackageStoreInfo")
 load(":ts_lib.bzl", "COMPILER_OPTION_ATTRS", "OUTPUT_ATTRS", "STD_ATTRS", "ValidOptionsInfo", _lib = "lib")
 load(":ts_config.bzl", "TsConfigInfo")
 load(":ts_validate_options.bzl", _validate_lib = "lib")
+
+# Forked from js_lib_helpers.js_lib_helpers.gather_files_from_js_providers to not
+# include any sources; only transitive declarations & npm linked packages
+def _gather_declarations_from_js_providers(targets):
+    files_depsets = []
+    files_depsets.extend([
+        target[JsInfo].transitive_declarations
+        for target in targets
+        if JsInfo in target and hasattr(target[JsInfo], "transitive_declarations")
+    ])
+    files_depsets.extend([
+        target[JsInfo].transitive_npm_linked_package_files
+        for target in targets
+        if JsInfo in target and hasattr(target[JsInfo], "transitive_npm_linked_package_files")
+    ])
+    files_depsets.extend([
+        target[NpmPackageStoreInfo].transitive_files
+        for target in targets
+        if NpmPackageStoreInfo in target and hasattr(target[NpmPackageStoreInfo], "transitive_files")
+    ])
+    return depset([], transitive = files_depsets)
 
 def _ts_project_impl(ctx):
     """Creates the action which spawns `tsc`.
@@ -192,20 +214,16 @@ This is an error because Bazel does not run actions unless their outputs are nee
         # unless the output_declarations are requested.
         default_outputs = []
 
+    inputs_depset = depset()
     if len(outputs) > 0:
-        inputs = depset(
+        inputs_depset = depset(
             copy_files_to_bin_actions(ctx, inputs),
-            transitive = transitive_inputs + [js_lib_helpers.gather_files_from_js_providers(
-                targets = ctx.attr.srcs + ctx.attr.deps,
-                include_transitive_sources = True,
-                include_declarations = True,
-                include_npm_linked_packages = True,
-            )],
+            transitive = transitive_inputs + [_gather_declarations_from_js_providers(ctx.attr.srcs + ctx.attr.deps)],
         )
 
         ctx.actions.run(
             executable = executable,
-            inputs = inputs,
+            inputs = inputs_depset,
             arguments = [arguments],
             outputs = outputs,
             mnemonic = "TsProject",
@@ -265,6 +283,8 @@ This is an error because Bazel does not run actions unless their outputs are nee
         ])),
         OutputGroupInfo(
             types = output_declarations_depset,
+            # make the inputs to the tsc action available for analysis testing
+            _action_inputs = inputs_depset,
         ),
         coverage_common.instrumented_files_info(
             ctx,
