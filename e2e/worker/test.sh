@@ -195,7 +195,6 @@ jq '.dependencies["@types/node"] = "18.11.9"' package.json > "$tmp/package.json"
 pnpm install --lockfile-only --dir "$tmp"
 cat "$tmp/pnpm-lock.yaml" > pnpm-lock.yaml
 
-cat BUILD
 bazel build :ts 2>&1 || exit_with_message "Case 14: expected worker to not fail"
 cat $lockfile_backup > pnpm-lock.yaml
 
