@@ -4,7 +4,7 @@ const fs = require("node:fs");
 const mock = require("./mock");
 
 mock("typescript", { sys: { getCurrentDirectory: () => {}, realpath: fs.realpathSync } });
-mock("@bazel/worker", { log: console.log })
+mock("./worker", {})
 
 /** @type {import("../../private/ts_project_worker")} */
 const worker = require("./ts_project_worker").__do_not_use_test_only__;
@@ -24,7 +24,7 @@ tree.add("tree/subtree/input.js");
 createFile("tree/input.js");
 tree.add("tree/input.js");
 assert.deepStrictEqual(tree.getDirectories("tree"), ["subtree"]);
-assert.deepStrictEqual(tree.readDirectory("tree"), ["subtree", "input.js"]);
+assert.deepStrictEqual(tree.readDirectory("tree"), ["tree/subtree", "tree/input.js"]);
 assert.ok(tree.directoryExists("tree"));
 assert.ok(tree.directoryExists("tree/subtree"));
 assert.ok(!tree.directoryExists("tree/subtree/input.js"));
@@ -37,7 +37,7 @@ assert.ok(!tree.fileExists("tree"));
 fs.mkdirSync(path.join(root, 'not_a_symlink_but_null', 'deep'), {recursive: true});
 fs.writeFileSync(path.join(root, 'not_a_symlink_but_null', 'deep', "input.js"), "");
 tree.add("not_a_symlink_but_null/deep/input.js");
-assert.deepStrictEqual(tree.readDirectory("not_a_symlink_but_null"), ["deep"])
+assert.deepStrictEqual(tree.readDirectory("not_a_symlink_but_null"), ["not_a_symlink_but_null/deep"])
 
 
 
@@ -51,8 +51,8 @@ assert.ok(!tree.fileExists("symlinked/to/me"));
 assert.ok(!tree.fileExists("symlinked"));
 assert.ok(tree.directoryExists("symlinked"));
 assert.deepStrictEqual(tree.getDirectories("symlinked"), ["to"])
-assert.deepStrictEqual(tree.readDirectory("symlinked"), ["to"])
-assert.deepStrictEqual(tree.readDirectory("symlinked/to/me"), ["input.js"])
+assert.deepStrictEqual(tree.readDirectory("symlinked"), ["symlinked/to"])
+assert.deepStrictEqual(tree.readDirectory("symlinked/to/me"), ["symlinked/to/me/input.js"])
 
 
 tree.remove("symlinked");
@@ -110,10 +110,10 @@ assert.ok(!tree.fileExists("correct_remove/to/path/input.js"));
 
 // Watcher
 let calls = [];
-let clean = tree.watchDirectory("inputs", (p) => calls.push(p));
-createFile("inputs/1.js");
-tree.add("inputs/1.js");
-assert.deepEqual(calls, ["inputs", "inputs/1.js"]);
+let clean = tree.watchDirectory("test_inputs", (p) => calls.push(p));
+createFile("test_inputs/1.js");
+tree.add("test_inputs/1.js");
+assert.deepEqual(calls, ["test_inputs/1.js"]);
 clean();
 
 calls = [];
@@ -136,12 +136,14 @@ clean();
 
 
 calls = [];
+const calls2 = [];
 createFile("inputs/1.js");
 tree.add("inputs/1.js");
 let clean1 = tree.watchDirectory("inputs", (p) => calls.push(p));
-let clean2 = tree.watchFile("inputs/1.js", (p) => calls.push(p));
+let clean2 = tree.watchFile("inputs/1.js", (p) => calls2.push(p));
 tree.remove("inputs/1.js");
-assert.deepEqual(calls, ["inputs/1.js", "inputs/1.js", "inputs"]);
+assert.deepEqual(calls, ["inputs/1.js"]);
+assert.deepEqual(calls2, ["inputs/1.js"])
 clean1();
 clean2();
 
@@ -178,7 +180,7 @@ tree.add("recursive/to/1.js");
 createFile("recursive/to/deep/1.js");
 tree.add("recursive/to/deep/1.js");
 assert.deepEqual(calls, [
-    "recursive", 
+    "recursive/1.js", 
     "recursive/1.js", 
     "recursive/to", 
     "recursive/to/1.js",
@@ -190,14 +192,25 @@ clean();
 
 
 calls = [];
+clean = tree.watchDirectory("recursive_behavior", (p) => calls.push(p), true);
+
+createFile("recursive_behavior/1.js");
+tree.add("recursive_behavior/1.js");
+assert.deepEqual(calls, [
+    "recursive_behavior/1.js",
+    "recursive_behavior/1.js"
+]);
+
+clean();
+
+calls = [];
 let clean3 = tree.watchDirectory("recursive", (p) => calls.push(p), true);
 let clean4 = tree.watchDirectory("recursive", (p) => calls.push(p));
 createFile("recursive/1.js");
 tree.add("recursive/1.js");
 assert.deepEqual(calls, [
-    "recursive", 
-    "recursive", 
-    "recursive/1.js", 
+    "recursive/1.js",
+    "recursive/1.js",
     "recursive/1.js", 
 ]);
 clean3();

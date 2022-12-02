@@ -2,14 +2,12 @@ const fs = require('fs');
 const path = require('path');
 const v8 = require('v8');
 const ts = require('typescript');
-const worker = require('@bazel/worker');
-
+const worker_protocol = require('./worker');
 
 // workaround for the issue introduced in https://github.com/microsoft/TypeScript/pull/42095
 if (Array.isArray(ts.ignoredPaths)) {
     ts.ignoredPaths = ts.ignoredPaths.filter(ignoredPath => ignoredPath != "/node_modules/.")
 }
-
 
 /** Constants */
 const MNEMONIC = 'TsProject';
@@ -26,6 +24,17 @@ function getArgsFromParamFile() {
         paramFilePath = path.resolve('..', '..', '..', paramFilePath.slice(1));
     }
     return fs.readFileSync(paramFilePath).toString().trim().split('\n');
+}
+
+let VERBOSE = false;
+function debug(...args) {
+    VERBOSE && console.error(...args);
+}
+
+function setVerbosity(level) {
+    // bazel set verbosity to 10 when --worker_verbose is set. 
+    // See: https://bazel.build/remote/persistent#options
+    VERBOSE = level > 0;
 }
 
 /** Performance */
@@ -197,7 +206,7 @@ function createFilesystemTree(root, inputs) {
         if (!node || node[Type] != TYPE.DIR) {
             return []
         }
-        return Object.keys(node);
+        return Object.keys(node).map(node => path.join(p, node));
     }
 
     function getDirectories(p) {
@@ -224,11 +233,11 @@ function createFilesystemTree(root, inputs) {
     function notifyWatchers(parts, part, type, eventType) {
         const dest_parts = [...parts, part];
         if (type == TYPE.FILE) {
-            notifyWatcher(parts, dest_parts, eventType);
+            notifyWatcher(dest_parts, dest_parts, eventType);
+            notifyWatcher(parts, dest_parts, eventType, null);
         } else {
             notifyWatcher(parts, dest_parts, eventType);
         }
-        notifyWatcher(dest_parts, dest_parts, eventType, null);
 
         let recursive_parts = dest_parts;
         let fore_parts = [];
@@ -239,8 +248,9 @@ function createFilesystemTree(root, inputs) {
     }
 
     function notifyWatcher(parent, parts, eventType, recursive = false) {
-        let node = getWatcherNode(parent, watchingTree);
+        let node = getWatcherNode(parent);
         if (typeof node == "object" && Watcher in node) {
+            debug(`notifyWatcher: ${parent.join(path.sep)} ${parts.join(path.sep)} ${eventType}`)
             for (const watcher of node[Watcher]) {
                 if (recursive != null && watcher.recursive != recursive) {
                     continue;
@@ -349,12 +359,11 @@ function createEmitAndLibCacheAndDiagnosticsProgram(
     const getSourceFile = host.getSourceFile;
     host.getSourceFile = (fileName) => {
         if (libCache.has(fileName)) {
-            host.debuglog?.(`cache hit for default lib ${fileName}`)
             return libCache.get(fileName);
         }
         const sf = getSourceFile(fileName);
         if (sf && isExternalLib(fileName)) {
-            host.debuglog?.(`putting default lib ${fileName} into cache.`)
+            debug(`createEmitAndLibCacheAndDiagnosticsProgram: putting default lib ${fileName} into cache.`)
             libCache.set(fileName, sf);
         }
         return sf;
@@ -370,12 +379,11 @@ const formatDiagnosticHost = {
     getNewLine: () => ts.sys.newLine,
 };
 
-function printDiagnostics(diagnostics) {
-    worker.log('');
-    worker.log(ts.formatDiagnostics(diagnostics, formatDiagnosticHost));
+function formatDiagnostics(diagnostics) {
+    return `\n${ts.formatDiagnostics(diagnostics, formatDiagnosticHost)}\n`
 }
 
-function createProgram(args, initialInputs) {
+function createProgram(args, inputs, output) {
     const {options} = ts.parseCommandLine(args);
     const compilerOptions = {...options}
 
@@ -383,14 +391,14 @@ function createProgram(args, initialInputs) {
     const execRoot = path.resolve(bin, '..', '..', '..');
     const tsconfig = path.relative(execRoot, path.resolve(bin, options.project));
 
-    const filesystemTree = createFilesystemTree(execRoot, initialInputs);
+    const filesystemTree = createFilesystemTree(execRoot, inputs);
     const outputs = new Set();
 
     const taskQueue = new Array();
 
     /** @type {ts.System} */
     const strictSys = {
-        write: (s) => process.stderr.write(s),
+        write: write,
         writeOutputIsTTY: () => false,
         setTimeout: setTimeout,
         clearTimeout: clearTimeout, 
@@ -401,7 +409,7 @@ function createProgram(args, initialInputs) {
         getDirectories: getDirectories,
         watchFile: watchFile,
         watchDirectory: watchDirectory,
-        exit: noop
+        exit: exit
     };
     const sys = {
         ...ts.sys,
@@ -422,30 +430,45 @@ function createProgram(args, initialInputs) {
 
     host.invalidate = invalidate;
     host.applyChanges = applyChanges;
-    host.debuglog = debuglog;
 
-    debuglog(`tsconfig: ${tsconfig}`);
-    debuglog(`execroot ${execRoot}`);
+
+    debug(`tsconfig: ${tsconfig}`);
+    debug(`execroot: ${execRoot}`);
 
     const program = ts.createWatchProgram(host);
 
-    return { host, program, checkAndApplyArgs, enablePerformanceAndTracingIfNeeded };
+    return { host, program, checkAndApplyArgs, enablePerformanceAndTracingIfNeeded, setOutput };
+
+    function setOutput(newOutput) {
+        output = newOutput;
+    }
+
+    function write(chunk) {
+        output.write(chunk);
+    }
+
+    function exit(exitCode) {
+        debug(`program wanted to exit prematurely with code ${exitCode}`);
+    }
 
     function setTimeout(cb) {
         // NB: tsc will never clearTimeout if the index is 0 hence timeout must be truthy. :|
         // https://github.com/microsoft/TypeScript/blob/d0bfd8caed521bfd24fc44960d9936a891744bb7/src/compiler/watchPublic.ts#L681
+        debug(`Task scheduling: schedule ${cb.name}`);
         return taskQueue.push(cb);
     }
- 
+
     function clearTimeout(i) {
+        debug(`Task scheduling: cancel ${taskQueue[i - 1].name}`);
         delete taskQueue[i - 1];
     }
 
     function applyChanges() {
         for (let i = 0; i < taskQueue.length; i++) {
             const task = taskQueue[i];
-            delete taskQueue[i]
+            delete taskQueue[i];
             if (task) {
+                debug(`Task scheduling: invoking ${task.name}`);
                 task();
             }  
         }
@@ -492,11 +515,6 @@ function createProgram(args, initialInputs) {
         }
     }
 
-    function debuglog(message) {
-        // TODO: https://github.com/aspect-build/rules_ts/issues/189
-        compilerOptions.extendedDiagnostics && host.trace?.(message)
-    }
-
     function readFile(filePath, encoding) {
         const relative = path.relative(execRoot, filePath);
         // external lib are transitive sources thus not listed in the inputs map reported by bazel.
@@ -507,9 +525,7 @@ function createProgram(args, initialInputs) {
     }
 
     function directoryExists(directoryPath) {
-        if (!directoryPath.startsWith(bin)) {
-            return false;
-        }
+        if (!directoryPath.startsWith(bin)) return false;
         return filesystemTree.directoryExists(path.relative(execRoot, directoryPath));
     }
 
@@ -521,17 +537,13 @@ function createProgram(args, initialInputs) {
         return filesystemTree.fileExists(path.relative(execRoot, filePath));
     }
 
-    
     function readDirectory(directoryPath, extensions, exclude, include, depth) {
-        return filesystemTree.readDirectory(
-            path.relative(execRoot, directoryPath), 
-            extensions, exclude, include, depth
-        ).map(p => path.isAbsolute(p) ? p : path.join(execRoot, p))
+        return filesystemTree.readDirectory(path.relative(execRoot, directoryPath), extensions, exclude, include, depth)
     }
 
     function invalidate(filePath, kind) {
         if (filePath.endsWith('.params')) return;
-        debuglog(`invalidate ${filePath} : ${ts.FileWatcherEventKind[kind]}`);
+        debug(`invalidate ${filePath} : ${ts.FileWatcherEventKind[kind]}`);
 
         if (kind === ts.FileWatcherEventKind.Created) {
             filesystemTree.add(filePath);
@@ -571,6 +583,17 @@ function createProgram(args, initialInputs) {
     }
 }
 
+function createCancellationToken(signal) {
+    return {
+        isCancellationRequested: () => signal.aborted,
+        throwIfCancellationRequested: () => {
+            if (signal.aborted) {
+                throw new Error(signal.reason);
+            }
+        }
+    }
+}
+
 /** Worker lifecycle */
 const NEAR_OOM_ZONE = 20 // How much (%) of memory should be free at all times. 
 
@@ -585,16 +608,18 @@ const workers = new Map();
 
 function sweepLeastRecentlyUsedWorkers() {
     for (const [k, w] of workers) {
+        debug(`garbage collection: removing ${k} to free memory.`);
         w.program.close();
         workers.delete(k);
         // stop killing workers as soon as the worker is out the oom zone 
         if (!isNearOomZone()) {
+            debug(`garbage collection: finished`);
             break;
         }
     }
 }
 
-function getOrCreateWorker(args, inputs) {
+function getOrCreateWorker(args, inputs, output) {
     if (isNearOomZone()) {
         sweepLeastRecentlyUsedWorkers();
     }
@@ -606,8 +631,8 @@ function getOrCreateWorker(args, inputs) {
 
     let worker = workers.get(key)
     if (!worker) {
-        worker = createProgram(args, inputs);
-        worker.host.debuglog(`Created a new worker for ${key}`);
+        debug(`creating a new worker with the key ${key}`);
+        worker = createProgram(args, inputs, output);
     } else {
         // NB: removed from the map intentionally. to achieve LRU effect on the workers map.
         workers.delete(key)
@@ -617,24 +642,36 @@ function getOrCreateWorker(args, inputs) {
 }
 
 /** Build */
-function emit(args, inputs) {
-    const _worker = getOrCreateWorker(args, inputs);
+async function emit(request) {
+    setVerbosity(request.verbosity);
+    debug(`# Beginning new work`);
+    debug(`arguments: ${request.arguments.join(' ')}`)
 
-    const host = _worker.host;
-    const lastRequestTimestamp = Date.now();
-    const previousInputs = _worker.previousInputs;
+    const inputs = Object.fromEntries(
+        request.inputs.map(input => [
+            input.path, 
+            input.digest.byteLength ? Buffer.from(input.digest).toString("hex") : null
+        ])
+    ); 
+
+    const worker = getOrCreateWorker(request.arguments, inputs, request.output);
+    const host = worker.host;
+    const previousInputs = worker.previousInputs;
+    const cancellationToken = createCancellationToken(request.signal);
 
     timingStart('checkAndApplyArgs');
-    _worker.checkAndApplyArgs(args);
+    worker.checkAndApplyArgs(request.arguments);
     timingEnd('checkAndApplyArgs');
 
     timingStart('enablePerformanceAndTracingIfNeeded');
-    _worker.enablePerformanceAndTracingIfNeeded();
+    worker.enablePerformanceAndTracingIfNeeded();
     timingEnd('enablePerformanceAndTracingIfNeeded');
 
     const changes = new Set(), creations = new Set();
 
     if (previousInputs) {
+        worker.setOutput(request.output);
+
         timingStart(`invalidate`);
         for (const [input, digest] of Object.entries(inputs)) {
             if (!(input in previousInputs)) {
@@ -674,19 +711,8 @@ function emit(args, inputs) {
     timingEnd('applyChanges');
 
     timingStart('getProgram');
-    const program = _worker.program.getCurrentProgram()
+    const program = worker.program.getCurrentProgram()
     timingEnd('getProgram');
-
-    const cancellationToken = {
-        isCancellationRequested: function (timestamp) {
-            return timestamp !== lastRequestTimestamp;
-        }.bind(null, lastRequestTimestamp),
-        throwIfCancellationRequested: function (timestamp) {
-            if (timestamp !== lastRequestTimestamp) {
-                throw new ts.OperationCanceledException();
-            }
-        }.bind(null, lastRequestTimestamp),
-    };
 
     timingStart('emit');
     const result = program.emit(undefined, undefined, cancellationToken);
@@ -699,13 +725,13 @@ function emit(args, inputs) {
     const succeded = !result.emitSkipped && result?.diagnostics.length === 0 && diagnostics.length === 0;
 
     if (!succeded) {
-        printDiagnostics(diagnostics);
+        request.output.write(formatDiagnostics(diagnostics));
     }
 
-    _worker.previousInputs = inputs;
+    worker.previousInputs = inputs;
 
     if (ts.performance.isEnabled()) {
-        ts.performance.forEachMeasure((name, duration) => host.debuglog(`${name} time: ${duration}`));
+        ts.performance.forEachMeasure((name, duration) => request.output.write(`${name} time: ${duration}\n`));
         // Disabling performance will reset counters for the next compilation
         ts.performance.disable()
     }
@@ -713,14 +739,14 @@ function emit(args, inputs) {
     if (ts.tracing) {
         ts.tracing.stopTracing()
     }
-
-    return succeded;
+    debug(`# Finished the work`);
+    return succeded ? 0 : 1;
 }
 
 // Based on https://github.com/microsoft/TypeScript/blob/3fd8a6e44341f14681aa9d303dc380020ccb2147/src/executeCommandLine/executeCommandLine.ts#L465
 function emitOnce(args) {
     const currentDirectory = ts.sys.getCurrentDirectory();
-    const reportDiagnostic = ts.createDiagnosticReporter({ ...ts.sys, write: worker.log });
+    const reportDiagnostic = ts.createDiagnosticReporter(ts.sys);
     const commandLine = ts.parseCommandLine(args);
     const extendedConfigCache = new ts.Map();
     const commandLineOptions = ts.convertToOptionsWithAbsolutePaths(commandLine.options, (fileName) =>
@@ -745,21 +771,22 @@ function emitOnce(args) {
     const succeded = !result.emitSkipped && result?.diagnostics.length === 0 && diagnostics.length === 0;
 
     if (!succeded) {
-        printDiagnostics(diagnostics);
+        console.error(formatDiagnostics(diagnostics));
     }
 
     return succeded;
 }
 
-if (require.main === module && worker.runAsWorker(process.argv)) {
-    worker.log(`Running ${MNEMONIC} as a Bazel worker`);
-    worker.runWorkerLoop(emit);
+if (require.main === module && worker_protocol.shouldRunAsWorker(process.argv)) {
+    console.error(`Running ${MNEMONIC} as a Bazel worker`);
+    console.error(`TypeScript version: ${ts.version}`);
+    worker_protocol.enterWorkerLoop(emit);
 } else if (require.main === module) {
-    worker.log(`WARNING: Running ${MNEMONIC} as a standalone process`);
-    worker.log(
+    console.error(`WARNING: Running ${MNEMONIC} as a standalone process`);
+    console.error(
         `Started a standalone process to perform this action but this might lead to some unexpected behavior with tsc due to being run non-sandboxed.`
     );
-    worker.log(
+    console.error(
         `Your build might be misconfigured, try putting "build --strategy=${MNEMONIC}=worker" into your .bazelrc or add "supports_workers = False" attribute into this ts_project target.`
     );
     const args = getArgsFromParamFile();

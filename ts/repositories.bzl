@@ -46,13 +46,10 @@ def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrit
         urls = ["https://github.com/bazelbuild/rules_nodejs/releases/download/5.7.1/rules_nodejs-core-5.7.1.tar.gz"],
     )
 
-    http_archive(
+    native.local_repository(
         name = "aspect_rules_js",
-        # 1.10.0 pre-release that includes https://github.com/aspect-build/rules_js/commit/fba3aad6351d3f8ff577a1d63a01e6ad6da29250
-        # sha256 = "f58d7be1bb0e4b7edb7a0085f969900345f5914e4e647b4f0d2650d5252aa87d",
-        strip_prefix = "rules_js-fba3aad6351d3f8ff577a1d63a01e6ad6da29250",
-        url = "https://github.com/aspect-build/rules_js/archive/fba3aad6351d3f8ff577a1d63a01e6ad6da29250.tar.gz",
-    )
+        path = "/Users/thesayyn/Documents/rules/rules_js"
+    ) 
 
     http_archive(
         name = "aspect_bazel_lib",

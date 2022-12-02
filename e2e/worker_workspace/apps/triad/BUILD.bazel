@@ -11,11 +11,11 @@ ts_project(
     ],
     declaration = True,
     tsconfig = "//:tsconfig",
+    visibility = ["//visibility:public"],
     deps = [
         "//apps/triad/pivot",
         "//apps/triad/vibe",
     ],
-    visibility = ["//visibility:public"]
 )
 
 js_library(

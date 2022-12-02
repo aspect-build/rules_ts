@@ -188,7 +188,7 @@ pnpm install --lockfile-only --dir "$tmp"
 cat "$tmp/pnpm-lock.yaml" > pnpm-lock.yaml
 
 message="node_modules/.aspect_rules_js/@types+node@18.6.1/node_modules/@types/node/globals.d.ts(72,13): error TS2403: Subsequent variable declarations must have the same type.  Variable 'AbortSignal' must be of type '{ new (): AbortSignal; prototype: AbortSignal; abort(reason?: any): AbortSignal; timeout(milliseconds: number): AbortSignal; }', but here has type '{ new (): AbortSignal; prototype: AbortSignal; }'."
-bazel build :ts 2>&1  | grep "$message" || exit_with_message "Case 13: expected worker to report \"$message\""
+bazel build :ts 2>&1  | grep "$message" || exit_with_message "Case 14: expected worker to report \"$message\""
 
 
 jq '.dependencies["@types/node"] = "18.11.9"' package.json > "$tmp/package.json"
@@ -198,6 +198,20 @@ cat "$tmp/pnpm-lock.yaml" > pnpm-lock.yaml
 bazel build :ts 2>&1 || exit_with_message "Case 14: expected worker to not fail"
 cat $lockfile_backup > pnpm-lock.yaml
 
+message "# Case 15: should print diagnostics with --worker_verbose flag"
+
+bazel build :ts --worker_quit_after_build
+echo "const a = $(date +%s)" > "_addendum_x.ts"
+add_trap "rm -f _addendum_x.ts"
+
+OUTPUT=$(mktemp)
+bazel build :ts --worker_verbose 2> $OUTPUT
+LOGPATH=$(cat $OUTPUT | grep -o "/.*-TsProject.log")
+
+cat $LOGPATH | grep "# Beginning new work" || exit_with_message "Case 15: expected worker log to contain '# Beginning new work'"
+cat $LOGPATH | grep "# Finished the work" || exit_with_message "Case 15: expected worker log to contain '# Finished the work'"
+cat $LOGPATH | grep "creating a new worker with the key" || exit_with_message "Case 15: expected worker log to contain 'creating a new worker with the key'"
+rm -f _addendum_x.ts
 
 message "# Case X: Should dump traces"
 bazel build //trace

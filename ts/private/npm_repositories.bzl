@@ -1,7 +1,6 @@
 """Runtime dependencies fetched from npm"""
 
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
-load("//ts/private:maybe.bzl", http_archive = "maybe_http_archive")
 load("//ts/private:versions.bzl", "TOOL_VERSIONS")
 
 worker_versions = struct(
@@ -67,20 +66,6 @@ http_archive_version = repository_rule(
 def npm_dependencies(ts_version_from = None, ts_version = None, ts_integrity = None):
     if (ts_version and ts_version_from) or (not ts_version_from and not ts_version):
         fail("""Exactly one of 'ts_version' or 'ts_version_from' must be set.""")
-
-    http_archive(
-        name = "npm_google_protobuf",
-        build_file = "@aspect_rules_ts//ts:BUILD.package",
-        integrity = worker_versions.google_protobuf_integrity,
-        urls = ["https://registry.npmjs.org/google-protobuf/-/google-protobuf-{}.tgz".format(worker_versions.google_protobuf_version)],
-    )
-
-    http_archive(
-        name = "npm_at_bazel_worker",
-        integrity = worker_versions.bazel_worker_integrity,
-        build_file = "@aspect_rules_ts//ts:BUILD.package",
-        urls = ["https://registry.npmjs.org/@bazel/worker/-/worker-{}.tgz".format(worker_versions.bazel_worker_version)],
-    )
 
     maybe(
         http_archive_version,
