@@ -56,9 +56,9 @@ def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrit
 
     http_archive(
         name = "aspect_bazel_lib",
-        sha256 = "dee6d20f7c250a3808d601044ea187e41369a544f53f440b3bdafe0a7f53e553",
-        strip_prefix = "bazel-lib-1.17.0",
-        url = "https://github.com/aspect-build/bazel-lib/archive/refs/tags/v1.17.0.tar.gz",
+        sha256 = "be236556c7b9c7b91cb370e837fdcec62b6e8893408cd4465ae883c9d7c67024",
+        strip_prefix = "bazel-lib-1.18.0",
+        url = "https://github.com/aspect-build/bazel-lib/archive/refs/tags/v1.18.0.tar.gz",
     )
 
     npm_dependencies(ts_version_from = ts_version_from, ts_version = ts_version, ts_integrity = ts_integrity)
