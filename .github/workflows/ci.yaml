@@ -105,7 +105,10 @@ jobs:
 
             - name: Configure Bazel version
               working-directory: ${{ matrix.folder }}
-              run: echo "USE_BAZEL_VERSION=${{ matrix.bazelversion }}" >> $GITHUB_ENV
+              # Overwrite the .bazelversion instead of using USE_BAZEL_VERSION so that Bazelisk
+              # still bootstraps Aspect CLI from configuration in .bazeliskrc. Aspect CLI will
+              # then use .bazelversion to determine which Bazel version to use
+              run: echo "${{ matrix.bazelversion }}" > .bazelversion
 
             - name: Write engflow credentials
               if: ${{ matrix.config == 'rbe' }}
