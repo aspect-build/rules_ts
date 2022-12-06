@@ -87,6 +87,9 @@ function createFilesystemTree(root, inputs) {
     function followSymlinkUsingRealFs(p) {
         const absolutePath = path.join(root, p)
         const stat = fs.lstatSync(absolutePath)
+        // bazel does not expose any information on whether an input is a REGULAR FILE,DIR or SYMLINK
+        // therefore a real filesystem call has to be made for each input to determine the symlinks.
+        // NOTE: making a readlink call is more expensive than making a lstat call
         if (stat.isSymbolicLink()) {
             const linkpath = fs.readlinkSync(absolutePath);
             const absoluteLinkPath = path.isAbsolute(linkpath) ? linkpath : path.resolve(path.dirname(absolutePath, linkpath))
