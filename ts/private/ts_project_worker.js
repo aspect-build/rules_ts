@@ -642,7 +642,7 @@ function emit(args, inputs) {
             } else if (previousInputs[input] != digest) {
                 changes.add(input);
             } else if (previousInputs[input] == null && digest == null) {
-                // Assume symlinks always change. bazel < 5.3 will always report symlinks without a digest.
+                // Assume symlinks always change. bazel <= 5.3 will always report symlinks without a digest.
                 // therefore there is no way to determine if a symlink has changed. 
                 changes.add(input);
             }
