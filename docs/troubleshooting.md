@@ -30,6 +30,19 @@ The basic methodology for diagnosing problems is:
 1. Gather information from TypeScript, typically by adding flags to the `args` attribute of the failing `ts_project`, as described below. Be prepared to deal with a large volume of data, like by writing the output to a file and using tools like an editor or unix utilities to analyze it.
 1. Reason about whether TypeScript is looking for a file in the wrong place, or writing a file to the wrong place.
 
+## Non-deterministic behavior
+
+By default, we run `tsc` in a "watch mode" using the [Bazel Persistent Worker](https://bazel.build/remote/persistent) feature.
+However, this risks leaking state from one compilation to another, and you may still encounter such bugs, for example:
+- removing a required types package from `deps` but the compilation still succeeds
+- outputs created by a previous compilation are still produced even though the source file is deleted
+
+You can confirm that it's a worker bug by running `bazel shutdown` and trying again. If that resolves the issue, it means that some state was leaking.
+
+Please check for issues or file one if you find a bug with persistent workers.
+
+To disable persistent workers for a single target, use the `supports_workers` attribute of `ts_project`. To disable globally, add the line `build --strategy=TsProject=sandboxed` to your `.bazelrc`.
+
 ## Which files should be emitted
 
 TypeScript emits for each file in the "Program". `--listFiles` is a `tsc` flag to show what is in the program, and `--listEmittedFiles` shows what was written.
