@@ -164,7 +164,7 @@ def ts_project(
             This allows you to use a custom API-compatible compiler in place of the regular `tsc` such as a custom `js_binary` or Angular's `ngc`.
             compatible with it such as Angular's `ngc`.
 
-            See examples of use in [examples/custom_compiler](/examples/custom_compiler/BUILD.bazel)
+            See examples of use in [examples/custom_compiler](https://github.com/aspect-build/rules_ts/blob/main/examples/custom_compiler/BUILD.bazel)
 
         tsc_worker: Label of a custom TypeScript compiler binary which understands Bazel's persistent worker protocol.
         validator: Label of the tsconfig validator to run when `validate = True`.
