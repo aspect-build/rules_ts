@@ -5,7 +5,7 @@
 - `ts_project` always produces some output files, or else Bazel would never run it.
     Therefore you shouldn't use it with TypeScript's `noEmit` option.
     If you only want to test that the code typechecks, use `tsc` directly.
-    See [examples/typecheck_only](/examples/typecheck_only/BUILD.bazel)
+    See [examples/typecheck_only](https://github.com/aspect-build/rules_ts/blob/main/examples/typecheck_only/BUILD.bazel)
 - Your tsconfig settings for `outDir` and `declarationDir` are ignored.
     Bazel requires that the `outDir` (and `declarationDir`) be set beneath
     `bazel-out/[target architecture]/bin/path/to/package`.
