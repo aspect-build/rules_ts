@@ -60,4 +60,11 @@ def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrit
         url = "https://github.com/aspect-build/bazel-lib/archive/refs/tags/v1.19.0.tar.gz",
     )
 
+    http_archive(
+        name = "aspect_rules_swc",
+        sha256 = "71bff4030067e3898a98a60918745a168b166256393d1ea566f72b118460d4ef",
+        strip_prefix = "rules_swc-0.21.0",
+        url = "https://github.com/aspect-build/rules_swc/archive/refs/tags/v0.21.0.tar.gz",
+    )
+
     npm_dependencies(ts_version_from = ts_version_from, ts_version = ts_version, ts_integrity = ts_integrity)

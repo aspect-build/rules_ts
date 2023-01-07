@@ -43,10 +43,6 @@ The most common use is with the [`ts_project` macro](./docs/rules.md#ts_project)
 [`tsc` CLI](https://www.typescriptlang.org/docs/handbook/compiler-options.html) to transform
 source files like `.ts` files into outputs such as `.js` and `.d.ts` files.
 
-We encourage you to read about the `transpiler` property which lets you use a faster tool like
-Babel or SWC to produce the `.js` files, so you don't have to wait for type-checking in your fast
-development loop.
-
 ### In a macro
 
 Many organizations set default values, so it's common to write a [macro] to wrap `ts_project`, then

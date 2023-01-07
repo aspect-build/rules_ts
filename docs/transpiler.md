@@ -17,7 +17,10 @@ Read more: https://blog.aspect.dev/typescript-speedup
 
 ## ts_project#transpiler
 
-The `transpiler` attribute of `ts_project` lets you select which tool produces the JavaScript outputs. The default value of `None` means that `tsc` should do transpiling along with type-checking, as this is the simplest configuration without additional dependencies. However as noted above, it's also the slowest.
+The `transpiler` attribute of `ts_project` lets you select which tool produces the JavaScript outputs.
+By default, we use [SWC](https://swc.rs/).
+
+Using a value of `None` means that `tsc` should do transpiling along with type-checking. This is the simplest configuration without additional dependencies, however as noted above, it's also the slowest.
 
 The `transpiler` attribute accepts a rule or macro with this signature:
 `name, srcs, **kwargs`
@@ -36,7 +39,7 @@ for a more complete example that also shows usage of SWC.
 
 ## Macro expansion
 
-When a custom transpiler is used, then the `ts_project` macro expands to these targets:
+When a transpiler other than `tsc` is used, then the `ts_project` macro expands to these targets:
 
 - `[name]` - the default target which can be included in the `deps` of downstream rules.
     Note that it will successfully build *even if there are typecheck failures* because invoking `tsc` is not needed to produce the default outputs.

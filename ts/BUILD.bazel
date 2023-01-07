@@ -13,6 +13,7 @@ bzl_library(
         "//ts/private/docs:ts_config",
         "//ts/private/docs:ts_project",
         "@aspect_rules_js//js:defs",
+        "@aspect_rules_swc//swc:defs",
         "@bazel_skylib//lib:partial",
         "@bazel_skylib//rules:build_test",
     ],

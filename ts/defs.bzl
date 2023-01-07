@@ -6,6 +6,7 @@ inputs and produces JavaScript or declaration (.d.ts) outputs.
 
 load("@aspect_bazel_lib//lib:utils.bzl", "to_label")
 load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@aspect_rules_swc//swc:defs.bzl", "swc")
 load("@bazel_skylib//lib:partial.bzl", "partial")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("//ts/private:ts_config.bzl", "write_tsconfig", _TsConfigInfo = "TsConfigInfo", _ts_config = "ts_config")
@@ -65,7 +66,7 @@ def ts_project(
         composite = False,
         incremental = False,
         emit_declaration_only = False,
-        transpiler = None,
+        transpiler = swc,
         ts_build_info_file = None,
         tsc = _tsc,
         tsc_worker = _tsc_worker,
@@ -74,7 +75,7 @@ def ts_project(
         declaration_dir = None,
         out_dir = None,
         root_dir = None,
-        supports_workers = True,
+        supports_workers = False,
         **kwargs):
     """Compiles one TypeScript project using `tsc --project`.
 
@@ -134,9 +135,10 @@ def ts_project(
 
         transpiler: A custom transpiler tool to run that produces the JavaScript outputs instead of `tsc`.
 
-            By default, `ts_project` expects `.js` outputs to be written in the same action
+            You can use `tsc` an the transpiler and type-checker.
+            Set this to `None` so that outputs are written in the same action
             that does the type-checking to produce `.d.ts` outputs.
-            This is the simplest configuration, however `tsc` is slower than alternatives.
+            Note that `tsc` is slower than alternatives.
             It also means developers must wait for the type-checking in the developer loop.
 
             See [docs/transpiler.md](/docs/transpiler.md) for more details.

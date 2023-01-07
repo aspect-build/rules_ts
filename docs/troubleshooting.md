@@ -32,7 +32,7 @@ The basic methodology for diagnosing problems is:
 
 ## Non-deterministic behavior
 
-By default, we run `tsc` in a "watch mode" using the [Bazel Persistent Worker](https://bazel.build/remote/persistent) feature.
+You can opt-in to using "watch mode" using the [Bazel Persistent Worker](https://bazel.build/remote/persistent) feature.
 However, this risks leaking state from one compilation to another, and you may still encounter such bugs, for example:
 - removing a required types package from `deps` but the compilation still succeeds
 - outputs created by a previous compilation are still produced even though the source file is deleted
@@ -41,7 +41,8 @@ You can confirm that it's a worker bug by running `bazel shutdown` and trying ag
 
 Please check for issues or file one if you find a bug with persistent workers.
 
-To disable persistent workers for a single target, use the `supports_workers` attribute of `ts_project`. To disable globally, add the line `build --strategy=TsProject=sandboxed` to your `.bazelrc`.
+To enable persistent workers for a single target, use the `supports_workers` attribute of `ts_project`.
+To enable globally, add the line `build --strategy=TsProject=worker` to your `.bazelrc`.
 
 ## Which files should be emitted
 
