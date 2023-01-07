@@ -1,5 +1,5 @@
 {
-    "homepage": "https://docs.aspect.dev/rules_ts",
+    "homepage": "https://docs.aspect.build/rules/aspect_rules_ts",
     "maintainers": [
         {
             "email": "hello@aspect.dev",
@@ -7,6 +7,7 @@
             "name": "Aspect team"
         }
     ],
+    "repository": ["github:aspect-build/rules_ts"],
     "versions": [],
     "yanked_versions": {}
 }
