@@ -20,7 +20,7 @@ DEPS_PROVIDERS = [
 # Attributes common to all TypeScript rules
 STD_ATTRS = {
     "assets": attr.label_list(
-        doc = """Files which are needed by a downstraam build step such as a bundler.
+        doc = """Files which are needed by a downstream build step such as a bundler.
         See more details on the `assets` parameter of the `ts_project` macro.
         """,
         allow_files = True,
