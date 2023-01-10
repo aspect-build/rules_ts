@@ -161,7 +161,7 @@ See https://github.com/aspect-build/rules_ts/issues/228 for more details.
             ctx.outputs.buildinfo_out.short_path,
         ])
         outputs.append(ctx.outputs.buildinfo_out)
-    output_sources = json_outs + js_outs + map_outs
+    output_sources = json_outs + js_outs + map_outs + copy_files_to_bin_actions(ctx, ctx.files.assets)
     typings_srcs = [s for s in srcs_inputs if _lib.is_typings_src(s.path)]
 
     if len(js_outs) + len(typings_outs) < 1:
