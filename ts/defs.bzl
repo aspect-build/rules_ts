@@ -55,6 +55,7 @@ def ts_project(
         args = [],
         data = [],
         deps = [],
+        assets = [],
         extends = None,
         allow_js = False,
         declaration = False,
@@ -108,6 +109,29 @@ def ts_project(
             - If `allow_js` is set, include all JavaScript files in the package as well.
             - If `resolve_json_module` is set, include all JSON files in the package,
               but exclude `package.json`, `package-lock.json`, and `tsconfig*.json`.
+
+        assets: Files which are needed by a downstream build step such as a bundler.
+
+            These files are **not** included as inputs to any actions spawned by `ts_project`.
+            They are not transpiled, and are not visible to the type-checker.
+            Instead, these files appear among the *outputs* of this target.
+
+            A typical use is when your TypeScript code has an import that TS itself doesn't understand
+            such as
+
+            `import './my.scss'`
+
+            and the type-checker allows this because you have an "ambient" global type declaration like
+
+            `declare module '*.scss' { ... }`
+
+            A bundler like webpack will expect to be able to resolve the `./my.scss` import to a file
+            and doesn't care about the typing declaration. A bundler runs as a build step,
+            so it does not see files included in the `data` attribute.
+
+            Note that `data` is used for files that are resolved by some binary, including a test
+            target. Behind the scenes, `data` populates Bazel's Runfiles object in `DefaultInfo`,
+            while this attribute populates the `transitive_sources` of the `JsInfo`.
 
         data: Files needed at runtime by binaries or tests that transitively depend on this target.
             See https://bazel.build/reference/be/common-definitions#typical-attributes
@@ -361,6 +385,7 @@ def ts_project(
         name = tsc_target_name,
         srcs = srcs,
         args = args,
+        assets = assets,
         data = data,
         deps = tsc_deps,
         tsconfig = tsconfig,
