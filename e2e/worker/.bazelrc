@@ -5,3 +5,5 @@ import %workspace%/../../.bazelrc.common
 try-import %workspace%/.bazelrc.test
 
 build:verbose --define=VERBOSE_LOGS=1
+
+build --worker_verbose

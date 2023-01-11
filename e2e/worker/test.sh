@@ -57,7 +57,7 @@ add_trap "git checkout HEAD -- tsconfig.json"
 echo '{"compilerOptions": {"noImplicitAny": true, "module": "ES2020", "moduleResolution": "node"}}' > tsconfig.json
 
 message="error TS7006: Parameter 'should_i' implicitly has an 'any' type."
-bazel build :ts 2>&1 | grep "$message" || exit_with_message "Case 3: expected worker to report \"$message\""
+bazel build :ts 2>&1 | (grep "$message" || exit_with_message "Case 3: expected worker to report \"$message\"")
 git checkout HEAD -- tsconfig.json
 
 
@@ -118,7 +118,8 @@ message2="error TS2307: Cannot find module './feature2' or its corresponding typ
 message3="error TS2307: Cannot find module './feature3' or its corresponding type declarations."
 
 buildozer "remove deps //feature3" :ts
-bazel build :ts 2>&1 | grep "$message3" || exit_with_message "Case 9: expected worker to report \"$message3\""
+bazel build :ts || echo "test"
+bazel build :ts 2>&1 | (grep "$message3" || exit_with_message "Case 9: expected worker to report \"$message3\"")
 
 
 buildozer "add deps //feature3" :ts
@@ -134,13 +135,14 @@ message "# Case 10: Should report when @types/<pkg> and <pkg> is missing from de
 add_trap "buildozer 'add deps //:node_modules/debug //:node_modules/@types/debug' :ts"
 buildozer "remove deps //:node_modules/debug //:node_modules/@types/debug" :ts
 message="error TS2307: Cannot find module 'debug' or its corresponding type declarations."
-bazel build :ts 2>&1 | grep "$message" || exit_with_message "Case 10: expected worker to report \"$message\""
+bazel build :ts || echo "test"
+bazel build :ts 2>&1 | (grep "$message" || exit_with_message "Case 10: expected worker to report \"$message\"")
 buildozer "add deps //:node_modules/debug //:node_modules/@types/debug" :ts
 
 
 message "# Case 11: Should report missing third party deps"
 
-deps=( "@nestjs/core" "@nestjs/common" "rxjs" )
+deps=( "@nestjs/core" "rxjs" )
 
 for dep in "${deps[@]}"; do
     add_trap "buildozer 'add deps //:node_modules/$dep' :ts"

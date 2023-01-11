@@ -21,6 +21,10 @@ ts_project(
             "fail.ts",
         ],
     ),
+    args = [
+        "--extendedDiagnostics",
+        "--traceResolution",
+    ],
     deps = [
         ":node_modules/@nestjs/common",
         ":node_modules/@nestjs/core",
