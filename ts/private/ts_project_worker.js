@@ -71,6 +71,27 @@ function createFilesystemTree(root, inputs) {
         add(p, inputs[p]);
     }
 
+    function printTree() {
+        const output = ["."]
+        const walk = (node, prefix) => {
+            const subnodes = Object.keys(node).sort();
+            for (const [index, key] of subnodes.entries()) {
+                const subnode = node[key];
+                const parts = index == subnodes.length - 1 ? ["└── ", "    "] : ["├── ", "│   "];
+                if (subnode[Type] == TYPE.SYMLINK) {
+                    output.push(`${prefix}${parts[0]}${key} -> ${subnode[Symlink]}`);
+                } else if (subnode[Type] == TYPE.FILE) {
+                    output.push(`${prefix}${parts[0]}${key}`);
+                } else {
+                    output.push(`${prefix}${parts[0]}${key}`);
+                    walk(subnode, `${prefix}${parts[1]}`);
+                }
+            }
+        }
+        walk(tree, "");
+        debug(output.join("\n"))
+    }
+
     function getNode(p) {
         const parts = p.split(path.sep);
         let node = tree;
@@ -103,41 +124,44 @@ function createFilesystemTree(root, inputs) {
         // NOTE: making a readlink call is more expensive than making a lstat call
         if (stat.isSymbolicLink()) {
             const linkpath = fs.readlinkSync(absolutePath);
-            const absoluteLinkPath = path.isAbsolute(linkpath) ? linkpath : path.resolve(path.dirname(absolutePath, linkpath))
+            const absoluteLinkPath = path.isAbsolute(linkpath) ? linkpath : path.resolve(path.dirname(absolutePath), linkpath)
             return path.relative(root, absoluteLinkPath);
         }
         return p;
     }
 
-    function add(p) {
-        const parts = path.parse(p);        
-        const dirs = parts.dir.split(path.sep).filter(p => p != "");
-
+    function add(p) { 
+        const parts = p.split(path.sep).filter(p => p != "");
         let node = tree;
 
-        for (const [i, part] of dirs.entries()) {
+        for (const [i, part] of parts.entries()) {
+            if (node && node[Type] == TYPE.SYMLINK) {
+                // stop; this is possibly path to a file which points to symlinked treeartifact.
+                // bazel 6 has introduced a weird behavior where it expands treeartifact symlinks when --experimental_undeclared_symlink is turned off.
+                return;
+            }
+            const currentP = parts.slice(0, i + 1).join(path.sep)   
             if (typeof node[part] != "object") {
-                node[part] = {
-                    [Type]: TYPE.DIR 
-                };
-                notifyWatchers(dirs.slice(0, i), part, TYPE.DIR, EVENT_TYPE.ADDED);
+                const possiblyResolvedSymlinkPath = followSymlinkUsingRealFs(currentP)
+                if (possiblyResolvedSymlinkPath != currentP) {
+                    node[part] = {
+                        [Type]: TYPE.SYMLINK,
+                        [Symlink]: possiblyResolvedSymlinkPath
+                    }
+                    notifyWatchers(parts.slice(0, i + 1), part, TYPE.SYMLINK, EVENT_TYPE.ADDED);
+                    break;
+                } 
+
+                // last portion of the parts; which assumed to be a file
+                if (i == parts.length-1) {
+                    node[part] = { [Type]: TYPE.FILE };
+                    notifyWatchers(parts.slice(0, i + 1), part, TYPE.FILE, EVENT_TYPE.ADDED);
+                } else {
+                    node[part] = { [Type]: TYPE.DIR };
+                    notifyWatchers(parts.slice(0, i + 1), part, TYPE.DIR, EVENT_TYPE.ADDED);
+                }
             }
             node = node[part];
-        }
-
-        const possiblyResolvedSymlinkPath = followSymlinkUsingRealFs(p)
-
-        if (possiblyResolvedSymlinkPath != p) {
-            node[parts.base] = {
-                [Type]: TYPE.SYMLINK,
-                [Symlink]: possiblyResolvedSymlinkPath
-            }
-            notifyWatchers(dirs, parts.base, TYPE.SYMLINK, EVENT_TYPE.ADDED);
-        } else if (parts.base) {
-            node[parts.base] = {
-                [Type]: TYPE.FILE,
-            };
-            notifyWatchers(dirs, parts.base, TYPE.FILE, EVENT_TYPE.ADDED);
         }
     }
 
@@ -355,7 +379,7 @@ function createFilesystemTree(root, inputs) {
         return () => node[Watcher].delete(watcher)
     }
 
-    return { add, remove, update, notify, fileExists, directoryExists, isSymlink, realpath, readDirectory, getDirectories, watchDirectory: watch, watchFile: watch }
+    return { add, remove, update, notify, fileExists, directoryExists, isSymlink, realpath, readDirectory, getDirectories, watchDirectory: watch, watchFile: watch, printTree }
 }
 
 
@@ -514,7 +538,7 @@ function createProgram(args, inputs, output) {
 
     const program = ts.createWatchProgram(host);
 
-    return { host, program, checkAndApplyArgs, enablePerformanceAndTracingIfNeeded, setOutput, formatDiagnostics, flushWatchEvents, invalidate };
+    return { program, checkAndApplyArgs, enablePerformanceAndTracingIfNeeded, setOutput, formatDiagnostics, flushWatchEvents, invalidate, printFSTree: () => filesystemTree.printTree() };
 
     function formatDiagnostics(diagnostics) {
         return `\n${ts.formatDiagnostics(diagnostics, formatDiagnosticHost)}\n`
@@ -699,7 +723,6 @@ async function emit(request) {
     );
 
     const worker = getOrCreateWorker(request.arguments, inputs, process.stderr);
-    const host = worker.host;
     const previousInputs = worker.previousInputs;
     const cancellationToken = createCancellationToken(request.signal);
 
@@ -763,6 +786,7 @@ async function emit(request) {
 
     if (!succeded) {
         request.output.write(worker.formatDiagnostics(diagnostics));
+        VERBOSE && worker.printFSTree()
     }
 
     worker.previousInputs = inputs;

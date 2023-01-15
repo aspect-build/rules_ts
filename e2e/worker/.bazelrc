@@ -3,4 +3,4 @@ import %workspace%/../../.bazelrc.common
 
 build:local --worker_verbose
 build:no-disk-cache --disk_cache=/tmp/no-disk-cache
-build:dangling-symlinks --noexperimental_allow_unresolved_symlinks
+build:no-dangling-symlinks --noexperimental_allow_unresolved_symlinks
