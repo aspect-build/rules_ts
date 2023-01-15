@@ -2,6 +2,28 @@ set -o errexit
 
 cd $( dirname -- "$BASH_SOURCE"; )
 
+STARTUP_OPTIONS=( )
+ARGS=( )
+
+while (( $# > 0 )); do
+  case $1 in
+    (--bazelrc)
+      STARTUP_OPTIONS+=( "$2" )
+      shift
+      shift;;
+    (--bazelrc=*) 
+      STARTUP_OPTIONS+=( "$1" )
+      shift;;
+    (*) 
+      ARGS+=( "$1" )
+      shift;;
+  esac
+done
+
+bazel() {
+    command bazel "${STARTUP_OPTIONS[@]+"${STARTUP_OPTIONS[@]}"}" $@ "${ARGS[@]+"${ARGS[@]}"}"
+}
+
 
 message() {
     echo ""
@@ -24,7 +46,7 @@ add_trap() {
 
 
 message "# Case 0; try to build a target that will never succeed"
-message="error TS2322: Type 'number' is not assignable to type 'string'."
+message="error TS2322: Type 'number' is not assignable to type 'string'." 
 bazel build :should_fail 2>&1 | grep "$message" || exit_with_message "Case 0: expected worker to report \"$message\""
 # we want fail.ts to be present within bazel-out to see if subsequent cases ever try to read the file. 
 

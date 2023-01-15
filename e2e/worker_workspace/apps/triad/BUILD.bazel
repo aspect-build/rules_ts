@@ -12,10 +12,6 @@ ts_project(
     declaration = True,
     tsconfig = "//:tsconfig",
     visibility = ["//visibility:public"],
-    deps = [
-        "//apps/triad/pivot",
-        "//apps/triad/vibe",
-    ],
 )
 
 js_library(

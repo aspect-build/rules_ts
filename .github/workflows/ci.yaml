@@ -146,23 +146,10 @@ jobs:
               working-directory: ${{ matrix.folder }}
               # hashFiles returns an empty string if test.sh is absent
               if: ${{ hashFiles(format('{0}/test.sh', matrix.folder)) != '' }}
-              run: |
-                  cp -f $GITHUB_WORKSPACE/.github/workflows/ci.bazelrc .bazelrc.test
-                  echo "build --config=${{ matrix.config }}" >> .bazelrc.test
-                  echo "build --disk_cache=/tmp/cache" >> .bazelrc.test
-                  bazel clean
-                  ./test.sh
-                  ./test.sh
+              run: ./test.sh --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc --bazelrc=.bazelrc test --config=${{ matrix.config }}
 
             - name: run ./test.sh with --noexperimental_allow_unresolved_symlinks
               working-directory: ${{ matrix.folder }}
               # hashFiles returns an empty string if test.sh is absent
               if: ${{ hashFiles(format('{0}/test.sh', matrix.folder)) != '' }}
-              run: |
-                  cp -f $GITHUB_WORKSPACE/.github/workflows/ci.bazelrc .bazelrc.test
-                  echo "build --config=${{ matrix.config }}" >> .bazelrc.test
-                  echo "build --disk_cache=/tmp/cache" >> .bazelrc.test
-                  echo "build --noexperimental_allow_unresolved_symlinks" >> ".bazelrc.test"
-                  bazel clean
-                  ./test.sh
-                  ./test.sh
+              run: ./test.sh --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc --bazelrc=.bazelrc test --config=${{ matrix.config }} --config=no-disk-cache --config=dangling-symlinks
