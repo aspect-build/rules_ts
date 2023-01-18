@@ -26,7 +26,6 @@ ts_project(
         "--traceResolution",
     ],
     deps = [
-        ":node_modules/@nestjs/common",
         ":node_modules/@nestjs/core",
         ":node_modules/@types/debug",
         ":node_modules/@types/node",

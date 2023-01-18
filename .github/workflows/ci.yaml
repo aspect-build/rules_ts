@@ -152,4 +152,4 @@ jobs:
               working-directory: ${{ matrix.folder }}
               # hashFiles returns an empty string if test.sh is absent
               if: ${{ hashFiles(format('{0}/test.sh', matrix.folder)) != '' }}
-              run: ./test.sh --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc --bazelrc=.bazelrc test --config=${{ matrix.config }} --config=no-disk-cache --config=no-dangling-symlinks
+              run: ./test.sh --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc --bazelrc=.bazelrc test --config=${{ matrix.config }} --config=no-disk-cache --noexperimental_allow_unresolved_symlinks

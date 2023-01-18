@@ -20,8 +20,10 @@ while (( $# > 0 )); do
   esac
 done
 
+bzl=$(which bazel)
+
 bazel() {
-    command bazel "${STARTUP_OPTIONS[@]+"${STARTUP_OPTIONS[@]}"}" $@ "${ARGS[@]+"${ARGS[@]}"}"
+  "$bzl" "${STARTUP_OPTIONS[@]+"${STARTUP_OPTIONS[@]}"}" $@ "${ARGS[@]+"${ARGS[@]}"}"
 }
 
 
@@ -63,13 +65,12 @@ rm evil.ts
 
 
 message "# Case 2; warmed up worker stops reporting errors of removed file"
-bazel build :ts
 
-add_trap "rm -f evil.ts"
-echo "evilcode = 1" > evil.ts
+add_trap "rm -f stop.ts"
 
-bazel build :ts && exit_with_message "Case 2: expected ts worker to report errors for evil.ts" 
-rm evil.ts
+echo "evilcode = 1" > stop.ts
+bazel build :ts && exit_with_message "Case 2: expected ts worker to report errors for stop.ts" 
+rm stop.ts
 bazel build :ts || exit_with_message "Case 2: expected ts worker to not report any errors for evil.ts" 
 
 
@@ -193,7 +194,7 @@ add_trap "cat $lockfile_backup > pnpm-lock.yaml"
 
 tmp=$(mktemp -d)
 jq '.pnpm.packageExtensions["@transitive_closure/a"].dependencies["@transitive_closure/b"] = "workspace:*"' package.json > "$tmp/package.json"
-pnpm install --lockfile-only --dir "$tmp" --store-dir $(mktemp -d) --virtual-store-dir $(mktemp -d)
+pnpm install --lockfile-only --dir "$tmp" --store-dir "$(mktemp -d)" --virtual-store-dir "$(mktemp -d)"
 cat "$tmp/pnpm-lock.yaml" > pnpm-lock.yaml
 
 bazel build //transitive_closure 2>&1  | grep "$message" && exit_with_message "Case 13: expected worker to not report \"$message\""
@@ -206,21 +207,22 @@ cat pnpm-lock.yaml > $lockfile_backup
 add_trap "cat $lockfile_backup > pnpm-lock.yaml"
 
 tmp=$(mktemp -d)
+echo ""  > "$tmp/pnpm-workspace.yaml"
 
 jq '.dependencies["@types/node"] = "18.6.1"' package.json > "$tmp/package.json"
-pnpm install --lockfile-only --dir "$tmp"
+(cd "$tmp" && pnpm install --lockfile-only)
 cat "$tmp/pnpm-lock.yaml" > pnpm-lock.yaml
-
-message="node_modules/.aspect_rules_js/@types+node@18.6.1/node_modules/@types/node/globals.d.ts(72,13): error TS2403: Subsequent variable declarations must have the same type.  Variable 'AbortSignal' must be of type '{ new (): AbortSignal; prototype: AbortSignal; abort(reason?: any): AbortSignal; timeout(milliseconds: number): AbortSignal; }', but here has type '{ new (): AbortSignal; prototype: AbortSignal; }'."
+message="node_modules/.aspect_rules_js/@types+node@18.6.1/node_modules/@types/node/globals.d.ts(72,13): error TS2403: Subsequent variable declarations must have the same type."
 bazel build :ts 2>&1  | grep "$message" || exit_with_message "Case 14: expected worker to report \"$message\""
 
 
 jq '.dependencies["@types/node"] = "18.11.9"' package.json > "$tmp/package.json"
-pnpm install --lockfile-only --dir "$tmp"
+(cd "$tmp" && pnpm install --lockfile-only)
 cat "$tmp/pnpm-lock.yaml" > pnpm-lock.yaml
 
-bazel build :ts 2>&1 || exit_with_message "Case 14: expected worker to not fail"
+bazel build :ts || exit_with_message "Case 14: expected worker to not fail"
 cat $lockfile_backup > pnpm-lock.yaml
+bazel build :ts || exit_with_message "Case 14: expected worker to not fail after pnpm-lockfile put back."
 
 message "# Case 15: should print diagnostics with --worker_verbose flag"
 
