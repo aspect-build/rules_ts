@@ -14,17 +14,6 @@ const MNEMONIC = 'TsProject';
 /** Utils */
 function noop() {}
 
-function getArgsFromParamFile() {
-    let paramFilePath = process.argv[process.argv.length - 1];
-    if (paramFilePath.startsWith('@')) {
-        // paramFilePath is relative to execroot but we are in bazel-out so we have to go three times up to reach execroot.
-        // paramFilePath = bazel-out/darwin_arm64-fastbuild/bin/0.params
-        // currentDir =  bazel-out/darwin_arm64-fastbuild/bin
-        paramFilePath = path.resolve('..', '..', '..', paramFilePath.slice(1));
-    }
-    return fs.readFileSync(paramFilePath).toString().trim().split('\n');
-}
-
 let VERBOSE = false;
 function debug(...args) {
     VERBOSE && console.error(...args);
@@ -537,6 +526,10 @@ function createProgram(args, inputs, output) {
     const compilerOptions = {...options}
 
     compilerOptions.outDir = path.join("__synthetic__outdir__", compilerOptions.outDir);
+    if (!compilerOptions.sourceRoot) {
+        compilerOptions.sourceRoot = compilerOptions.rootDir
+    }
+    compilerOptions.mapRoot = path.join("__synthetic__outdir__", compilerOptions.outDir)
 
     const bin = process.cwd();
     const execRoot = path.resolve(bin, '..', '..', '..');
@@ -572,7 +565,9 @@ function createProgram(args, inputs, output) {
         getDirectories: filesystemTree.getDirectories,
         watchFile: watchFile,
         watchDirectory: watchDirectory,
-        getCurrentDirectory: () => "/"+cfg,
+        getCurrentDirectory: () => {
+            return "/" + cfg
+        },
         getExecutingFilePath: () => "/"+executingFilePath,
         exit: exit
     };
@@ -697,13 +692,20 @@ function createProgram(args, inputs, output) {
         // See: https://github.com/microsoft/TypeScript/blob/2ecde2718722d6643773d43390aa57c3e3199365/src/compiler/watchPublic.ts#L735
         // and: https://github.com/microsoft/TypeScript/blob/2ecde2718722d6643773d43390aa57c3e3199365/src/compiler/watchPublic.ts#L296
         if (args.join(' ') != newArgs.join(' ')) {
+            debug(`arguments have changed.`);
+            debug(`  current: ${newArgs.join(" ")}`);
+            debug(`  previous: ${args.join(" ")}`);
+         
             const {options} = ts.parseCommandLine(newArgs);
             for (const key in compilerOptions) {
-                delete compilerOptions[key];
+                if (!(key in options)) {
+                    delete compilerOptions[key];
+                }
             }
             for (const key in options) {
                 compilerOptions[key] = options[key];
             }
+  
             disableStatisticsAndTracing();
             enableStatisticsAndTracing();
             updateOutputs();
@@ -817,8 +819,6 @@ async function emit(request) {
         ])
     );
 
-    debug(inputs);
-
     const worker = getOrCreateWorker(request.arguments, inputs, process.stderr);
     const previousInputs = worker.previousInputs;
     const cancellationToken = createCancellationToken(request.signal);
@@ -888,56 +888,40 @@ async function emit(request) {
     return succeded ? 0 : 1;
 }
 
-// Based on https://github.com/microsoft/TypeScript/blob/3fd8a6e44341f14681aa9d303dc380020ccb2147/src/executeCommandLine/executeCommandLine.ts#L465
-function emitOnce(args) {
-    const currentDirectory = ts.sys.getCurrentDirectory();
-    const reportDiagnostic = ts.createDiagnosticReporter(ts.sys);
-    const commandLine = ts.parseCommandLine(args);
-    const extendedConfigCache = new ts.Map();
-    const commandLineOptions = ts.convertToOptionsWithAbsolutePaths(commandLine.options, (fileName) =>
-        ts.getNormalizedAbsolutePath(fileName, currentDirectory)
-    );
-    const configParseResult = ts.parseConfigFileWithSystem(
-        commandLine.options.project,
-        commandLineOptions,
-        extendedConfigCache,
-        commandLine.watchOptions,
-        ts.sys,
-        reportDiagnostic
-    );
-    const program = ts.createProgram({
-        options: configParseResult.options,
-        rootNames: configParseResult.fileNames,
-        projectReferences: configParseResult.projectReferences,
-        configFileParsingDiagnostics: configParseResult.errors,
-    });
-    const result = program.emit();
-    const diagnostics = ts.getPreEmitDiagnostics(program).concat(result?.diagnostics);
-    const succeded = !result.emitSkipped && result?.diagnostics.length === 0 && diagnostics.length === 0;
-
-    if (!succeded) {
-        console.error(formatDiagnostics(diagnostics));
-    }
-
-    return succeded;
-}
 
 if (require.main === module && worker_protocol.isPersistentWorker(process.argv)) {
     console.error(`Running ${MNEMONIC} as a Bazel worker`);
     console.error(`TypeScript version: ${ts.version}`);
     worker_protocol.enterWorkerLoop(emit);
 } else if (require.main === module) {
-    console.error(`WARNING: Running ${MNEMONIC} as a standalone process`);
-    console.error(
-        `Started a standalone process to perform this action but this might lead to some unexpected behavior with tsc due to being run non-sandboxed.`
-    );
-    console.error(
-        `Your build might be misconfigured, try putting "build --strategy=${MNEMONIC}=worker" into your .bazelrc or add "supports_workers = False" attribute into this ts_project target.`
-    );
-    const args = getArgsFromParamFile();
-    if (!emitOnce(args)) {
-        process.exit(1);
+    if (!process.cwd().includes("sandbox")) {
+        console.error(`WARNING: Running ${MNEMONIC} as a standalone process`);
+        console.error(
+            `Started a standalone process to perform this action but this might lead to some unexpected behavior with tsc due to being run non-sandboxed.`
+        );
+        console.error(
+            `Your build might be misconfigured, try putting "build --strategy=${MNEMONIC}=worker" into your .bazelrc or add "supports_workers = False" attribute into this ts_project target.`
+        );
     }
+
+    function executeCommandLine() {
+        // will execute tsc.
+        require("typescript/lib/tsc");
+    }
+
+    // newer versions of typescript exposes executeCommandLine function we will prefer to use. 
+    // if it's missing, due to older version of typescript, we'll use our implementation which calls tsc.js by requiring it.
+    const execute = ts.executeCommandLine || executeCommandLine;
+    let p = process.argv[process.argv.length - 1];
+    if (p.startsWith('@')) {
+        // p is relative to execroot but we are in bazel-out so we have to go three times up to reach execroot.
+        // p = bazel-out/darwin_arm64-fastbuild/bin/0.params
+        // currentDir =  bazel-out/darwin_arm64-fastbuild/bin
+        p = path.resolve('..', '..', '..', p.slice(1));
+    }
+    const args = fs.readFileSync(p).toString().trim().split('\n');
+    ts.sys.args = process.argv = [process.argv0, process.argv[1], ...args];
+    execute(ts.sys, ts.noop, args);
 }
 
 module.exports.__do_not_use_test_only__ = {createFilesystemTree: createFilesystemTree, emit: emit, workers: workers};

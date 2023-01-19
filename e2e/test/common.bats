@@ -52,7 +52,29 @@ EOF
 }
 
 function tsconfig() {
-    echo "{}" > tsconfig.json
+    local -a no_implicit_any="false"
+    local -a isolated_modules="false"
+    local -a extended_diagnostics="false"
+    local -a source_map="false"
+    while (( $# > 0 )); do
+        case "$1" in
+        --no-implicit-any) no_implicit_any="true"; shift ;;
+        --isolated-modules) isolated_modules="true"; shift ;;
+        --extended-diagnostics) extended_diagnostics="true"; shift ;;
+        --source-map) source_map="true"; shift ;;
+        *) break ;;
+        esac
+    done
+    cat > tsconfig.json <<EOF
+{
+    "compilerOptions": {
+        "noImplicitAny": $no_implicit_any,
+        "isolatedModules": $isolated_modules,
+        "extendedDiagnostics": $extended_diagnostics,
+        "sourceMap": $source_map
+    }
+}
+EOF
 }
 
 
@@ -62,6 +84,7 @@ function ts_project() {
     local -a name="foo"
     local -a tsconfig="tsconfig.json"
     local -a npm_link_all_packages="#"
+    local -a source_map=""
     while (( $# > 0 )); do
         case "$1" in
         --tsconfig) shift; tsconfig="$1"; shift ;;
@@ -69,6 +92,7 @@ function ts_project() {
         -l|--npm-link-all-packages) npm_link_all_packages=""; shift ;;
         -d|--dep) shift; deps+=( "\"$1"\" ); shift ;;
         -s|--src) shift; srcs+=( "\"$1\"" ); shift ;;
+        --source-map) shift; source_map="source_map = True,"; ;;
         --) shift; break ;;
         *) break ;;
         esac
@@ -84,7 +108,8 @@ ts_project(
     name = "${name}",
     srcs = [${srcs_joined}],
     tsconfig = "${tsconfig}",
-    deps = [${deps_joined}]
+    deps = [${deps_joined}],
+    $source_map
 )
 EOF
 }
