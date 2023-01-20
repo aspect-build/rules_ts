@@ -70,9 +70,9 @@ function createFilesystemTree(root, inputs) {
                 if (subnode[Type] == TYPE.SYMLINK) {
                     output.push(`${prefix}${parts[0]}${key} -> ${subnode[Symlink]}`);
                 } else if (subnode[Type] == TYPE.FILE) {
-                    output.push(`${prefix}${parts[0]}${key}`);
+                    output.push(`${prefix}${parts[0]}<file> ${key}`);
                 } else {
-                    output.push(`${prefix}${parts[0]}${key}`);
+                    output.push(`${prefix}${parts[0]}<dir> ${key}`);
                     walk(subnode, `${prefix}${parts[1]}`);
                 }
             }
@@ -526,10 +526,18 @@ function createProgram(args, inputs, output) {
     const compilerOptions = {...options}
 
     compilerOptions.outDir = path.join("__synthetic__outdir__", compilerOptions.outDir);
-    if (!compilerOptions.sourceRoot) {
-        compilerOptions.sourceRoot = compilerOptions.rootDir
+
+    if (compilerOptions.declarationDir) {
+        compilerOptions.declarationDir = path.join("__synthetic__outdir__", compilerOptions.declarationDir)
     }
-    compilerOptions.mapRoot = path.join("__synthetic__outdir__", compilerOptions.outDir)
+
+    if (compilerOptions.sourceMap || compilerOptions.inlineSourceMap) {
+        if (!compilerOptions.sourceRoot) {
+            compilerOptions.sourceRoot = compilerOptions.rootDir
+        }
+        compilerOptions.mapRoot = path.join("__synthetic__outdir__", compilerOptions.outDir)
+    }
+
 
     const bin = process.cwd();
     const execRoot = path.resolve(bin, '..', '..', '..');
@@ -639,12 +647,12 @@ function createProgram(args, inputs, output) {
         } else {
             filesystemTree.update(filePath);
         }
-        // if (filePath.indexOf("node_modules") != -1 && filesystemTree.isSymlink(filePath) && kind === ts.FileWatcherEventKind.Created) {
-        //     const expandedInputs = filesystemTree.readDirectory(filePath, undefined, undefined, undefined, Infinity);
-        //     for (const input of expandedInputs) {
-        //         filesystemTree.notify(input);
-        //     }
-        // }
+        if (filePath.indexOf("node_modules") != -1 && filesystemTree.isSymlink(filePath) && kind === ts.FileWatcherEventKind.Created) {
+            const expandedInputs = filesystemTree.readDirectory(filePath, undefined, undefined, undefined, Infinity);
+            for (const input of expandedInputs) {
+                filesystemTree.notify(input);
+            }
+        }
     }
 
     function enableStatisticsAndTracing() {

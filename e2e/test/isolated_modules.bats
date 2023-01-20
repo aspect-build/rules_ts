@@ -43,7 +43,7 @@ teardown() {
     refute_output -p "error"
 
     tsconfig --isolated-modules --extended-diagnostics
-    echo " " >> source.ts # TODO: figure out why the case above works but now this one.
+    echo " " >> source.ts # TODO: figure out why the case above works but not this one.
     run bazel build :foo
  
     assert_failure
