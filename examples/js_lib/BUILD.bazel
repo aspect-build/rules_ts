@@ -10,6 +10,8 @@ npm_package(
 
 js_library(
     name = "lib",
-    srcs = ["index.js"],
+    # Provide index.js as declarations available to downstream type checking rules
+    # since it has no corresponding .d.ts file.
+    declarations = ["index.js"],
     visibility = ["//examples:__subpackages__"],
 )

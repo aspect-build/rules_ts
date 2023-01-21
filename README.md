@@ -29,13 +29,13 @@ copy the WORKSPACE snippet into your `WORKSPACE` file.
 
 ## Examples
 
-There are a number of examples in [the examples/ folder](./examples/).
+There are a number of examples in [the examples/ folder](https://github.com/aspect-build/rules_ts/tree/main/examples).
 
 If you'd like an example added, you can file a [Feature Request](https://github.com/aspect-build/rules_ts/issues/new/choose).
 
 ## Usage
 
-See the API documentation in [the docs/ folder](./docs/).
+See the API documentation in [the docs/ folder](https://github.com/aspect-build/rules_ts/tree/main/docs).
 
 ### From a BUILD file
 

@@ -2,7 +2,6 @@
 # where missing deps are in place.
 # Discovered in: https://github.com/aspect-build/bazel-examples/tree/js_build_file_generation
 set -x
-bazel clean
 
 buildozer "remove deps //apps/triad/pivot //apps/triad/vibe" //apps/triad:triad_ts
 bazel build //apps/triad:triad_ts

@@ -5,7 +5,7 @@
 - `ts_project` always produces some output files, or else Bazel would never run it.
     Therefore you shouldn't use it with TypeScript's `noEmit` option.
     If you only want to test that the code typechecks, use `tsc` directly.
-    See [examples/typecheck_only](/examples/typecheck_only/BUILD.bazel)
+    See [examples/typecheck_only](https://github.com/aspect-build/rules_ts/blob/main/examples/typecheck_only/BUILD.bazel)
 - Your tsconfig settings for `outDir` and `declarationDir` are ignored.
     Bazel requires that the `outDir` (and `declarationDir`) be set beneath
     `bazel-out/[target architecture]/bin/path/to/package`.
@@ -35,6 +35,19 @@ The basic methodology for diagnosing problems is:
 Running your build with `--define=VERBOSE_LOGS=1` causes the `ts_project` rule to enable several
 flags for the TypeScript compiler. This produces a ton of output, so you'll probably want to 
 redirect the stdout to a file that you can analyze with power tools.
+
+## Non-deterministic behavior
+
+By default, we run `tsc` in a "watch mode" using the [Bazel Persistent Worker](https://bazel.build/remote/persistent) feature.
+However, this risks leaking state from one compilation to another, and you may still encounter such bugs, for example:
+- removing a required types package from `deps` but the compilation still succeeds
+- outputs created by a previous compilation are still produced even though the source file is deleted
+
+You can confirm that it's a worker bug by running `bazel shutdown` and trying again. If that resolves the issue, it means that some state was leaking.
+
+Please check for issues or file one if you find a bug with persistent workers.
+
+To disable persistent workers for a single target, use the `supports_workers` attribute of `ts_project`. To disable globally, add the line `build --strategy=TsProject=sandboxed` to your `.bazelrc`.
 
 ## Which files should be emitted
 
