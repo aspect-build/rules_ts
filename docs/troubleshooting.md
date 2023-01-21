@@ -30,6 +30,12 @@ The basic methodology for diagnosing problems is:
 1. Gather information from TypeScript, typically by adding flags to the `args` attribute of the failing `ts_project`, as described below. Be prepared to deal with a large volume of data, like by writing the output to a file and using tools like an editor or unix utilities to analyze it.
 1. Reason about whether TypeScript is looking for a file in the wrong place, or writing a file to the wrong place.
 
+## Verbose mode
+
+Running your build with `--define=VERBOSE_LOGS=1` causes the `ts_project` rule to enable several
+flags for the TypeScript compiler. This produces a ton of output, so you'll probably want to 
+redirect the stdout to a file that you can analyze with power tools.
+
 ## Non-deterministic behavior
 
 By default, we run `tsc` in a "watch mode" using the [Bazel Persistent Worker](https://bazel.build/remote/persistent) feature.
