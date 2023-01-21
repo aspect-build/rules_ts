@@ -18,5 +18,7 @@ teardown() {
     assert_success
     run cat bazel-bin/source.js.map
     assert_success
+    cat BUILD.bazel
+    bazel info output_base
     assert_output -p '{"version":3,"file":"source.js","sourceRoot":"./","sources":["source.ts"],"names":[],"mappings":"AAAA,IAAM,CAAC,GAAW,YAAY,CAAC"}'
 }
