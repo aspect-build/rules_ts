@@ -106,7 +106,7 @@ def ts_project(
         declaration_dir = None,
         out_dir = None,
         root_dir = None,
-        supports_workers = True,
+        supports_workers = -1,
         **kwargs):
     """Compiles one TypeScript project using `tsc --project`.
 
@@ -267,18 +267,17 @@ def ts_project(
 
         supports_workers: Whether the worker protocol is enabled.
             To disable worker mode for a particular target set `supports_workers` to `False`.
-            Worker mode can be controlled as well via `--strategy` and `mnemonic` and  using .bazelrc.
 
-            Put this in your .bazelrc to disable it globally: `build --strategy=TsProject=sandboxed`
+            Worker mode can be disabled workspace wide by using the `--@aspect_rules_ts//ts:supports_workers` flag. 
+            To disable worker mode globally, insert `build --@aspect_rules_ts//ts:supports_workers=false` into the .bazelrc.
+
+            Alternatively, worker mode can be controlled via `--strategy`.
+            To disable worker mode globally via `--strategy` insert `build --strategy=TsProject=sandboxed` into the .bazelrc.
 
             See https://docs.bazel.build/versions/main/user-manual.html#flag--strategy for more details.
 
         **kwargs: passed through to underlying [`ts_project_rule`](#ts_project_rule), eg. `visibility`, `tags`
     """
-
-    # Disable workers if a custom tsc was provided but not a custom tsc_worker.
-    if tsc != _tsc and tsc_worker == _tsc_worker:
-        supports_workers = False
 
     if srcs == None:
         include = ["**/*.ts", "**/*.tsx"]
@@ -427,6 +426,11 @@ def ts_project(
             data = data,
             **common_kwargs
         )
+    
+
+    # Disable workers if a custom tsc was provided but not a custom tsc_worker.
+    if tsc != _tsc and tsc_worker == _tsc_worker:
+        supports_workers = 0
 
     ts_project_rule(
         name = tsc_target_name,
@@ -462,6 +466,6 @@ def ts_project(
         tsc = tsc,
         tsc_worker = tsc_worker,
         transpile = not transpiler,
-        supports_workers = supports_workers,
+        supports_workers = int(supports_workers),
         **kwargs
     )

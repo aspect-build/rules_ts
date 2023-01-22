@@ -10,6 +10,7 @@ load("@aspect_rules_js//npm:providers.bzl", "NpmPackageStoreInfo")
 load(":ts_lib.bzl", "COMPILER_OPTION_ATTRS", "OUTPUT_ATTRS", "STD_ATTRS", "ValidOptionsInfo", _lib = "lib")
 load(":ts_config.bzl", "TsConfigInfo")
 load(":ts_validate_options.bzl", _validate_lib = "lib")
+load(":configuration.bzl", "ConfigurationInfo")
 
 # Forked from js_lib_helpers.js_lib_helpers.gather_files_from_js_providers to not
 # include any sources; only transitive declarations & npm linked packages
@@ -45,6 +46,7 @@ def _ts_project_impl(ctx):
     Returns:
         list of providers
     """
+    configuration = ctx.attr._configuration[ConfigurationInfo]
     srcs_inputs = copy_files_to_bin_actions(ctx, ctx.files.srcs)
     tsconfig = copy_file_to_bin_action(ctx, ctx.file.tsconfig)
 
@@ -66,13 +68,19 @@ def _ts_project_impl(ctx):
     executable = ctx.executable.tsc
 
     supports_workers = ctx.attr.supports_workers
+    
+    # workers can be enabled/disabled globally. if no supports_workers attribute is set explicitly
+    # for this target, which is implied by -1, then set it to global supports_workers config
+    if supports_workers == -1:
+        supports_workers = configuration.supports_workers
+
     host_is_windows = platform_utils.host_platform_is_windows()
     if host_is_windows and supports_workers:
         supports_workers = False
 
         # buildifier: disable=print
         print("""
-WARNING: disabling ts_project workers which are not currently support on Windows hosts.
+WARNING: disabling ts_project workers which are not currently supported on Windows hosts.
 See https://github.com/aspect-build/rules_ts/issues/228 for more details.
 """)
 
@@ -108,20 +116,11 @@ See https://github.com/aspect-build/rules_ts/issues/228 for more details.
         ])
 
     # When users report problems, we can ask them to re-build with
-    # --define=VERBOSE_LOGS=1
+    # --@aspect_rules_ts//ts:verbose=true
     # so anything that's useful to diagnose rule failures belongs here
-    if "VERBOSE_LOGS" in ctx.var.keys():
-        arguments.add_all([
-            # What files were in the ts.Program
-            "--listFiles",
-            # Did tsc write all outputs to the place we expect to find them?
-            "--listEmittedFiles",
-            # Why did module resolution fail?
-            "--traceResolution",
-            # Why was the build slow?
-            "--diagnostics",
-            "--extendedDiagnostics",
-        ])
+    if configuration.verbose:
+
+        arguments.add_all(configuration.verbosity_args)
 
     inputs = srcs_inputs[:]
     transitive_inputs = []

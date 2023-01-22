@@ -1,5 +1,54 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("//ts/private:configuration.bzl", "configuration")
+
+bool_flag(
+    name = "verbose",
+    build_setting_default = False,
+    visibility = ["//visibility:public"],
+)
+
+bool_flag(
+    name = "supports_workers",
+    build_setting_default = True,
+    visibility = ["//visibility:public"],
+)
+
+# TODO(2.0): remove this
+config_setting(
+    name = "legacy_verbose",
+    define_values = {"VERBOSE_LOGS": "1"},
+)
+
+config_setting(
+    name = "verbose_flag",
+    flag_values = {
+        ":verbose": "true"
+    }
+)
+
+config_setting(
+    name = "supports_workers_flag",
+    flag_values = {
+        ":supports_workers": "true"
+    }
+)
+
+configuration(
+    name = "configuration",
+    visibility = ["//visibility:public"],
+    verbose = select({
+        ":legacy_verbose": True,
+        ":verbose_flag": True,
+        "//conditions:default": False,
+    }),
+    supports_workers = select({
+        ":supports_workers_flag": True,
+        "//conditions:default": False,
+    })
+)
+
 
 exports_files(
     glob(["*.bzl"]),

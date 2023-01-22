@@ -61,7 +61,7 @@ The basic methodology for diagnosing problems is:
 
 ## Verbose mode
 
-Running your build with `--define=VERBOSE_LOGS=1` causes the `ts_project` rule to enable several
+Running your build with `--@aspect_rules_ts//ts:verbose` causes the `ts_project` rule to enable several
 flags for the TypeScript compiler. This produces a ton of output, so you'll probably want to 
 redirect the stdout to a file that you can analyze with power tools.
 
