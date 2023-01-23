@@ -16,6 +16,9 @@ class WatchProgram {
     getCurrentProgram() {
         return this;
     }
+    getProgram() {
+        return this;
+    }
     emit() {
         return { emitSkipped: true }
     }
@@ -28,7 +31,7 @@ mock("typescript", {
     createWatchProgram: () => new WatchProgram(),
     createWatchCompilerHost: () => ({}),
     getPreEmitDiagnostics: () => ([]),
-    parseCommandLine: () => ({ options: { project: "" } }),
+    parseCommandLine: () => ({ options: { project: "", outDir: "." } }),
     formatDiagnostics: () => "",
     sys: {
         getCurrentDirectory: process.cwd

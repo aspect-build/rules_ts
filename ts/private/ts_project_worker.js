@@ -849,7 +849,7 @@ async function emit(request) {
         const previousInputs = worker.previousInputs;
 
         timingStart('applyArgs');
-        worker.checkAndApplyArgs(request.arguments);
+        worker.applyArgs(request.arguments);
         timingEnd('applyArgs');
 
         const changes = new Set(), creations = new Set();

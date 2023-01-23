@@ -26,8 +26,8 @@ aspect_bazel_lib_dependencies(override_local_config_platform = True)
 load("@rules_nodejs//nodejs:repositories.bzl", "nodejs_register_toolchains")
 
 nodejs_register_toolchains(
-    name = "node16",
-    node_version = "16.9.0",
+    name = "node18",
+    node_version = "18.12.0",
 )
 
 # For running our own unit tests
