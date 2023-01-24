@@ -532,27 +532,16 @@ function createEmitAndLibCacheAndDiagnosticsProgram(
 }
 
 function createProgram(args, inputs, output) {
-    const commandline = ts.parseCommandLine(args);
-    const compilerOptions = commandline.options;
+    const cmd = ts.parseCommandLine(args);
     const bin = process.cwd(); // <execroot>/bazel-bin/<cfg>/bin
     const execroot = path.resolve(bin, '..', '..', '..'); // execroot
-    const tsconfig = path.relative(execroot, path.resolve(bin, compilerOptions.project)); // bazel-bin/<cfg>/bin/<pkg>/<options.project>
+    const tsconfig = path.relative(execroot, path.resolve(bin, cmd.options.project)); // bazel-bin/<cfg>/bin/<pkg>/<options.project>
     const cfg = path.relative(execroot, bin) // /bazel-bin/<cfg>/bin
     const executingfilepath = path.relative(execroot, require.resolve("typescript")); // /bazel-bin/<opt-cfg>/bin/node_modules/tsc/...
 
     const filesystem = createFilesystemTree(execroot, inputs);
     const outputs = new Set();
     const watchEventQueue = new Array();
-
-    debug(`tsconfig: ${tsconfig}`);
-    debug(`execroot: ${execroot}`);
-    debug(`bin: ${bin}`);
-    debug(`cfg: ${cfg}`);
-    debug(`executingfilepath: ${executingfilepath}`);
-
-    enableStatisticsAndTracing();
-    updateOutputs();
-    applySyntheticOutPaths();
 
     /** @type {ts.System} */
     const strictSys = {
@@ -577,17 +566,16 @@ function createProgram(args, inputs, output) {
     const sys = { ...ts.sys, ...strictSys };
 
     const host = ts.createWatchCompilerHost(
-        compilerOptions.project,
-        compilerOptions,
+        cmd.options.project,
+        cmd.options,
         sys,
         createEmitAndLibCacheAndDiagnosticsProgram,
         noop,
         noop
     );
-    // deleting this will make tsc to not schedule updates but wait getProgram to be called to apply updates which is exactly what is needed.
+    // deleting this will make tsc to not schedule updates but wait for getProgram to be called to apply updates which is exactly what is needed.
     delete host.setTimeout;
     delete host.clearTimeout;
-
 
     /** @type {ts.FormatDiagnosticsHost} */
     const formatDiagnosticHost = {
@@ -595,6 +583,19 @@ function createProgram(args, inputs, output) {
         getCurrentDirectory: sys.getCurrentDirectory,
         getNewLine: () => sys.newLine,
     };
+
+    debug(`tsconfig: ${tsconfig}`);
+    debug(`execroot: ${execroot}`);
+    debug(`bin: ${bin}`);
+    debug(`cfg: ${cfg}`);
+    debug(`executingfilepath: ${executingfilepath}`);
+
+    const raw = ts.readConfigFile(cmd.options.project, readFile);
+    let compilerOptions = raw.config.compilerOptions;
+
+    enableStatisticsAndTracing();
+    updateOutputs();
+    applySyntheticOutPaths();
 
     const program = ts.createWatchProgram(host);
 
@@ -626,6 +627,11 @@ function createProgram(args, inputs, output) {
 
     function invalidate(filePath, kind) {
         debug(`invalidate ${filePath} : ${ts.FileWatcherEventKind[kind]}`);
+
+        if (kind === ts.FileWatcherEventKind.Changed && filePath == tsconfig) {
+            applyChangesForTsConfig(args);
+        }
+
         if (kind === ts.FileWatcherEventKind.Deleted) {
             filesystem.remove(filePath);
         } else if (kind === ts.FileWatcherEventKind.Created) {
@@ -642,19 +648,19 @@ function createProgram(args, inputs, output) {
     }
 
     function enableStatisticsAndTracing() {
-        if (compilerOptions.diagnostics || compilerOptions.extendedDiagnostics) {
+        if (compilerOptions.diagnostics || compilerOptions.extendedDiagnostics || host.optionsToExtend.diagnostics || host.optionsToExtend.extendedDiagnostics) {
             ts.performance.enable();
         }
         // tracing is only available in 4.1 and above
         // See: https://github.com/microsoft/TypeScript/wiki/Performance-Tracing
-        if (compilerOptions.generateTrace && ts.startTracing && !ts.tracing) {
-            ts.startTracing('build', compilerOptions.generateTrace);
+        if ((compilerOptions.generateTrace || host.optionsToExtend.generateTrace) && ts.startTracing && !ts.tracing) {
+            ts.startTracing('build', compilerOptions.generateTrace || host.optionsToExtend.generateTrace);
         }
     }
 
     function disableStatisticsAndTracing() {
         ts.performance.disable();
-        if (!ts.tracing && ts.startTracing) {
+        if (ts.tracing) {
             ts.tracing.stopTracing()
         }
     }
@@ -673,30 +679,29 @@ function createProgram(args, inputs, output) {
 
     function updateOutputs() {
         outputs.clear();
-        if (compilerOptions.tsBuildInfoFile) {
-            const p = path.relative(execroot, path.join(bin, compilerOptions.tsBuildInfoFile));
+        if (host.optionsToExtend.tsBuildInfoFile) {
+            const p = path.relative(execroot, path.join(bin, host.optionsToExtend.tsBuildInfoFile));
             outputs.add(p);
         }
     }
 
     function applySyntheticOutPaths() {
-        compilerOptions.outDir = path.join("__synthetic__outdir__", compilerOptions.outDir);
+        host.optionsToExtend.outDir = path.join("__synthetic__outdir__", host.optionsToExtend.outDir);
 
-        if (compilerOptions.declarationDir) {
-            compilerOptions.declarationDir = path.join("__synthetic__outdir__", compilerOptions.declarationDir)
+        if (host.optionsToExtend.declarationDir) {
+            host.optionsToExtend.declarationDir = path.join("__synthetic__outdir__", host.optionsToExtend.declarationDir)
         }
 
         if (compilerOptions.sourceMap || compilerOptions.inlineSourceMap) {
             if (!compilerOptions.sourceRoot) {
-                compilerOptions.sourceRoot = compilerOptions.rootDir
+                host.optionsToExtend.sourceRoot = host.optionsToExtend.rootDir
             }
-            compilerOptions.mapRoot = path.join("__synthetic__outdir__", compilerOptions.outDir)
+            host.optionsToExtend.mapRoot = path.join("__synthetic__outdir__", host.optionsToExtend.outDir)
         }
     }
 
     function applyArgs(newArgs) {
-        // This function works based on the assumption that parseConfigFile of createWatchProgram
-        // will always reread compilerOptions with its reference.
+        // This function works based on the assumption that parseConfigFile of createWatchProgram will always read optionsToExtend by reference.
         // See: https://github.com/microsoft/TypeScript/blob/2ecde2718722d6643773d43390aa57c3e3199365/src/compiler/watchPublic.ts#L735
         // and: https://github.com/microsoft/TypeScript/blob/2ecde2718722d6643773d43390aa57c3e3199365/src/compiler/watchPublic.ts#L296
         if (args.join(' ') != newArgs.join(' ')) {
@@ -704,24 +709,30 @@ function createProgram(args, inputs, output) {
             debug(`  current: ${newArgs.join(" ")}`);
             debug(`  previous: ${args.join(" ")}`);
 
-            const { options } = ts.parseCommandLine(newArgs);
-            for (const key in compilerOptions) {
-                if (!(key in options)) {
-                    delete compilerOptions[key];
-                }
-            }
-            for (const key in options) {
-                compilerOptions[key] = options[key];
-            }
+            applyChangesForTsConfig(args);
 
-            disableStatisticsAndTracing();
-            enableStatisticsAndTracing();
-            updateOutputs();
-            applySyntheticOutPaths();
             // invalidating tsconfig will cause parseConfigFile to be invoked
             filesystem.update(tsconfig);
             args = newArgs;
         }
+    }
+
+    function applyChangesForTsConfig(args) {
+        const cmd = ts.parseCommandLine(args);
+        for (const key in host.optionsToExtend) {
+            delete host.optionsToExtend[key];
+        }
+        for (const key in cmd.options) {
+            host.optionsToExtend[key] = cmd.options[key];
+        }
+
+        const raw = ts.readConfigFile(cmd.options.project, readFile);
+        compilerOptions = raw.config.compilerOptions;
+
+        disableStatisticsAndTracing();
+        enableStatisticsAndTracing();
+        updateOutputs();
+        applySyntheticOutPaths();
     }
 
     function readFile(filePath, encoding) {

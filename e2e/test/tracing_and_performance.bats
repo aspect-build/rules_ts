@@ -30,7 +30,6 @@ teardown() {
     echo "export const f = 1;" > source.ts
     run bazel build :foo
     assert_success
-    cat BUILD.bazel
     run ls $trace
     assert_output -p "trace." "types." "-1.json"
 }
