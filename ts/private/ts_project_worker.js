@@ -674,8 +674,8 @@ function createProgram(args, inputs, output, exit) {
 
     function updateOutputs() {
         outputs.clear();
-        if (host.optionsToExtend.tsBuildInfoFile) {
-            const p = path.relative(execroot, path.join(bin, host.optionsToExtend.tsBuildInfoFile));
+        if (host.optionsToExtend.tsBuildInfoFile || compilerOptions.tsBuildInfoFile) {
+            const p = path.join(sys.getCurrentDirectory(), host.optionsToExtend.tsBuildInfoFile);
             outputs.add(p);
         }
     }
