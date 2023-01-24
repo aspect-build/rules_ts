@@ -1,5 +1,5 @@
-load "bats-support/load"
-load "bats-assert/load"
+bats_load_library "bats-support"
+bats_load_library "bats-assert"
 
 function workspace() {
     local rules_ts_path="$(realpath $BATS_TEST_DIRNAME/../../)"

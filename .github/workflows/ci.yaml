@@ -153,8 +153,12 @@ jobs:
               bats-version: '1.8.2'
 
           - name: Setup bats helpers
-            uses: brokenpip3/setup-bats-libs@0.1.0
-            
+            uses: brokenpip3/setup-bats-libs@0.0.3
+            with:
+              support-path: /usr/lib/bats/bats-support
+              support-version: '0.3.0'
+              assert-path: /usr/lib/bats/bats-assert
+              assert-version: '2.1.0'
           - name: bats -r .
             working-directory: e2e/test
             run: |
