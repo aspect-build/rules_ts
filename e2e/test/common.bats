@@ -33,6 +33,7 @@ nodejs_register_toolchains(
 EOF
 
   cat > .bazelrc << EOF
+try-import $BATS_TEST_DIRNAME/.bazelrc
 startup --max_idle_secs=10
 build --worker_verbose
 EOF
