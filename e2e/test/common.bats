@@ -32,6 +32,9 @@ nodejs_register_toolchains(
 )
 EOF
 
+
+  [[ -e "$BATS_TEST_DIRNAME/.bazelversion" ]] && cp "$BATS_TEST_DIRNAME/.bazelversion" .bazelversion
+
   cat > .bazelrc << EOF
 try-import $BATS_TEST_DIRNAME/.bazelrc
 startup --max_idle_secs=10

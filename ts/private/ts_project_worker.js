@@ -591,7 +591,7 @@ function createProgram(args, inputs, output) {
     debug(`executingfilepath: ${executingfilepath}`);
 
     const raw = ts.readConfigFile(cmd.options.project, readFile);
-    let compilerOptions = raw.config.compilerOptions;
+    let compilerOptions = raw.config.compilerOptions || {};
 
     enableStatisticsAndTracing();
     updateOutputs();
@@ -692,10 +692,10 @@ function createProgram(args, inputs, output) {
             host.optionsToExtend.declarationDir = path.join("__synthetic__outdir__", host.optionsToExtend.declarationDir)
         }
 
-        if (compilerOptions.sourceMap || compilerOptions.inlineSourceMap) {
-            if (!compilerOptions.sourceRoot) {
-                host.optionsToExtend.sourceRoot = host.optionsToExtend.rootDir
-            }
+        if (!compilerOptions.sourceRoot && (compilerOptions.sourceMap || compilerOptions.inlineSourceMap)) {
+            host.optionsToExtend.sourceRoot = host.optionsToExtend.rootDir
+        }
+        if (compilerOptions.sourceMap || compilerOptions.declarationMap) {
             host.optionsToExtend.mapRoot = path.join("__synthetic__outdir__", host.optionsToExtend.outDir)
         }
     }
@@ -727,7 +727,7 @@ function createProgram(args, inputs, output) {
         }
 
         const raw = ts.readConfigFile(cmd.options.project, readFile);
-        compilerOptions = raw.config.compilerOptions;
+        compilerOptions = raw.config.compilerOptions || {};
 
         disableStatisticsAndTracing();
         enableStatisticsAndTracing();

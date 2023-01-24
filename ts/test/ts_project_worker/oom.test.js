@@ -29,12 +29,13 @@ class WatchProgram {
 }
 mock("typescript", {
     createWatchProgram: () => new WatchProgram(),
-    createWatchCompilerHost: () => ({}),
+    createWatchCompilerHost: () => ({optionsToExtend: {outDir: "."}}),
     getPreEmitDiagnostics: () => ([]),
     parseCommandLine: () => ({ options: { project: "", outDir: "." } }),
     formatDiagnostics: () => "",
+    readConfigFile: () => ({config: {}}),
     sys: {
-        getCurrentDirectory: process.cwd
+        getCurrentDirectory: process.cwd,
     },
     performance: {
         isEnabled: () => false,
