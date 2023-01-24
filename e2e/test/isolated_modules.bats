@@ -49,5 +49,4 @@ teardown() {
     assert_failure
     assert_output -p "source.ts(1,46): error TS1205: Re-exporting a type when the '--isolatedModules' flag is provided requires using 'export type'."
     
-   #cat $(bazel info output_base)/bazel-workers/worker-*-TsProject.log
 }

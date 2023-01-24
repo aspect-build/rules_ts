@@ -10,6 +10,7 @@ if (Array.isArray(ts.ignoredPaths)) {
 
 /** Constants */
 const MNEMONIC = 'TsProject';
+const SYNTHETIC_OUTDIR = "__st_outdir__"
 
 /** Utils */
 function noop() { }
@@ -136,7 +137,7 @@ function createFilesystemTree(root, inputs) {
 
             if (node && node[Type] == TYPE.SYMLINK) {
                 // stop; this is possibly path to a symlink which points to a treeartifact.
-                //// version 6.0.0 has a weird behavior where it expands symlinks that point to treeartifact when --experimental_undeclared_symlink is turned off.
+                //// version 6.0.0 has a weird behavior where it expands symlinks that point to treeartifact when --experimental_allow_unresolved_symlinks is turned off.
                 debug(`WEIRD_BAZEL_6_BEHAVIOR: stopping at ${trail.join(path.sep)}`)
                 return;
             }
@@ -185,7 +186,7 @@ function createFilesystemTree(root, inputs) {
             const current = node.current[segment];
             if (!current) {
                 // It is not likely to end up here unless fstree does something undesired. 
-                // we will soft fail here due to regression in bazel 6.∂
+                // we will soft fail here due to regression in bazel 6.0
                 debug(`remove: could not find ${p}`);
                 return;
             }
@@ -243,7 +244,7 @@ function createFilesystemTree(root, inputs) {
                 // bazel 6 + --noexperimental_allow_unresolved_symlinks: has a weird behavior where bazel will won't report symlink changes but 
                 // rather reports changes in the treeartifact that symlink points to. even if symlink points to somewhere new. :(
                 // since `remove` removed this node previously,  we just need to call add to create necessary nodes.
-                // see: no_undeclared_symlink_tests.bats for test cases
+                // see: no_unresolved_symlink_tests.bats for test cases
                 return add(p);
             }
 
@@ -374,8 +375,7 @@ function createFilesystemTree(root, inputs) {
         const finalPath = final.join(path.sep);
         if (type == TYPE.FILE) {
             // notify file watchers watching at the file path, excluding recursive ones. 
-            // TODO: file watchers shouldn't have the recursive option. this is wrong.
-            notifyWatcher(final, finalPath, eventType, false);
+            notifyWatcher(final, finalPath, eventType, /* recursive */ false);
             // notify directory watchers watching at the parent of the file, including the recursive directory watchers at parent.
             notifyWatcher(trail, finalPath, eventType);
         } else {
@@ -531,7 +531,7 @@ function createEmitAndLibCacheAndDiagnosticsProgram(
     return builder;
 }
 
-function createProgram(args, inputs, output) {
+function createProgram(args, inputs, output, exit) {
     const cmd = ts.parseCommandLine(args);
     const bin = process.cwd(); // <execroot>/bazel-bin/<cfg>/bin
     const execroot = path.resolve(bin, '..', '..', '..'); // execroot
@@ -602,10 +602,6 @@ function createProgram(args, inputs, output) {
     // early return to prevent from declaring more variables accidentially. 
     return { program, applyArgs, setOutput, formatDiagnostics, flushWatchEvents, invalidate, postRun, printFSTree: filesystem.printTree };
 
-    function exit(exitCode) {
-        debug(`program has quit prematurely with code ${exitCode}`);
-    }
-
     function formatDiagnostics(diagnostics) {
         return `\n${ts.formatDiagnostics(diagnostics, formatDiagnosticHost)}\n`
     }
@@ -667,7 +663,6 @@ function createProgram(args, inputs, output) {
 
     function postRun() {
         if (ts.performance && ts.performance.isEnabled()) {
-            ts.performance.forEachMeasure((name, duration) => write(`${name} time: ${duration}\n`));
             ts.performance.disable()
             ts.performance.enable()
         }
@@ -686,17 +681,17 @@ function createProgram(args, inputs, output) {
     }
 
     function applySyntheticOutPaths() {
-        host.optionsToExtend.outDir = path.join("__synthetic__outdir__", host.optionsToExtend.outDir);
+        host.optionsToExtend.outDir = path.join(SYNTHETIC_OUTDIR, host.optionsToExtend.outDir);
 
         if (host.optionsToExtend.declarationDir) {
-            host.optionsToExtend.declarationDir = path.join("__synthetic__outdir__", host.optionsToExtend.declarationDir)
+            host.optionsToExtend.declarationDir = path.join(SYNTHETIC_OUTDIR, host.optionsToExtend.declarationDir)
         }
 
         if (!compilerOptions.sourceRoot && (compilerOptions.sourceMap || compilerOptions.inlineSourceMap)) {
             host.optionsToExtend.sourceRoot = host.optionsToExtend.rootDir
         }
         if (compilerOptions.sourceMap || compilerOptions.declarationMap) {
-            host.optionsToExtend.mapRoot = path.join("__synthetic__outdir__", host.optionsToExtend.outDir)
+            host.optionsToExtend.mapRoot = path.join(SYNTHETIC_OUTDIR, host.optionsToExtend.outDir)
         }
     }
 
@@ -741,23 +736,20 @@ function createProgram(args, inputs, output) {
         //external lib are transitive sources thus not listed in the inputs map reported by bazel.
         if (!filesystem.fileExists(filePath) && !isExternalLib(filePath) && !outputs.has(filePath)) {
             output.write(`tsc tried to read file (${filePath}) that wasn't an input to it.` + "\n");
-            //throw new Error(`tsc tried to read file (${filePath}) that wasn't an input to it.`);
+            throw new Error(`tsc tried to read file (${filePath}) that wasn't an input to it.`);
         }
 
         return ts.sys.readFile(path.join(execroot, filePath), encoding);
     }
 
     function createDirectory(p) {
-        // TODO: cleanup
-        debug("createDirectory", p);
-        ts.sys.createDirectory(p.replace("__synthetic__outdir__", "."));
+        p = p.replace(SYNTHETIC_OUTDIR, ".")
+        ts.sys.createDirectory(p);
     }
 
     function writeFile(p, data, mark) {
-        // TODO: cleanup
-        const rewrite = p.replace("__synthetic__outdir__", ".")
-        debug("writeFile", p, rewrite);
-        ts.sys.writeFile(rewrite, data, mark);
+        p = p.replace(SYNTHETIC_OUTDIR, ".")
+        ts.sys.writeFile(p, data, mark);
     }
 
     function watchDirectory(directoryPath, callback, recursive, options) {
@@ -830,7 +822,10 @@ function getOrCreateWorker(args, inputs, output) {
     let worker = workers.get(key)
     if (!worker) {
         debug(`creating a new worker with the key ${key}`);
-        worker = createProgram(args, inputs, output);
+        worker = createProgram(args, inputs, output, (exitCode) => {
+            debug(`worker ${key} has quit prematurely with code ${exitCode}`);
+            workers.delete(key);
+        });
     } else {
         // NB: removed from the map intentionally. to achieve LRU effect on the workers map.
         workers.delete(key)
@@ -864,8 +859,6 @@ async function emit(request) {
         timingEnd('applyArgs');
 
         const changes = new Set(), creations = new Set();
-
-        // worker.setOutput(request.output);
 
         timingStart(`invalidate`);
         for (const [input, digest] of Object.entries(inputs)) {
@@ -916,6 +909,10 @@ async function emit(request) {
         VERBOSE && worker.printFSTree()
     }
 
+    if (ts.performance && ts.performance.isEnabled()) {
+        ts.performance.forEachMeasure((name, duration) => request.output.write(`${name} time: ${duration}\n`));
+    }
+ 
     worker.previousInputs = inputs;
     worker.postRun();
 

@@ -30,6 +30,10 @@ nodejs_register_toolchains(
     name = "node",
     node_version = DEFAULT_NODE_VERSION,
 )
+
+load("@aspect_bazel_lib//lib:repositories.bzl", "register_copy_directory_toolchains", "register_copy_to_directory_toolchains")
+register_copy_directory_toolchains()
+register_copy_to_directory_toolchains()
 EOF
 
 
