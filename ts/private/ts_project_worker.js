@@ -389,7 +389,6 @@ function createFilesystemTree(root, inputs) {
     function notifyWatchers(trail, segment, type, eventType) {
         const final = [...trail, segment];
         const finalPath = final.join(path.sep);
-        debug(`notify ${finalPath}`)
         if (type == TYPE.FILE) {
             // notify file watchers watching at the file path, excluding recursive ones. 
             notifyWatcher(final, finalPath, eventType, /* recursive */ false);
