@@ -164,13 +164,12 @@ jobs:
             working-directory: e2e/test
             run: |
               echo "import $GITHUB_WORKSPACE/.github/workflows/ci.bazelrc" > .bazelrc
-              echo "build --config=local" >> .bazelrc
               bats -r .
 
           - name: bats -r . --noexperimental_allow_unresolved_symlinks
             working-directory: e2e/test
             run: |
               echo "import $GITHUB_WORKSPACE/.github/workflows/ci.bazelrc" > .bazelrc
-              echo "build --config=local --noexperimental_allow_unresolved_symlinks" >> .bazelrc
+              echo "build --noexperimental_allow_unresolved_symlinks" >> .bazelrc
               bats -r . 
 
