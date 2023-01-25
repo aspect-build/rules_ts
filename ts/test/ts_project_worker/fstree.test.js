@@ -71,11 +71,11 @@ test("getDirectories", () => {
 })
 
 
-test("isSymlink", () => {
+test("normalizeIfSymlink", () => {
     const tree = worker.createFilesystemTree(root, {});
     create_file(tree, "bazel-out/cfg/bin/node_modules/.store/pkg/index.js")
     create_dir_symlink(tree, "bazel-out/cfg/bin/node_modules/pkg", "bazel-out/cfg/bin/node_modules/.store/pkg");
-    assert.ok(tree.isSymlink("bazel-out/cfg/bin/node_modules/pkg"));
+    assert.ok(tree.normalizeIfSymlink("bazel-out/cfg/bin/node_modules/pkg"));
 })
 
 test("realpath", () => {
@@ -111,9 +111,9 @@ test("remove", () => {
 
 
     assert.ok(tree.directoryExists("bazel-out/cfg/bin/node_modules/pkg"))
-    assert.ok(tree.isSymlink("bazel-out/cfg/bin/node_modules/pkg"))
+    assert.ok(tree.normalizeIfSymlink("bazel-out/cfg/bin/node_modules/pkg"))
     tree.remove("bazel-out/cfg/bin/node_modules/pkg")
-    assert.ok(!tree.isSymlink("bazel-out/cfg/bin/node_modules/pkg"))
+    assert.ok(!tree.normalizeIfSymlink("bazel-out/cfg/bin/node_modules/pkg"))
     assert.ok(!tree.directoryExists("bazel-out/cfg/bin/node_modules/pkg"))
 
     assert.ok(tree.directoryExists("bazel-out/cfg/bin/node_modules/.store/pkg"))
