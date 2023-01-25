@@ -17,12 +17,10 @@ ts_project(
     srcs = glob(
         ["*.ts"],
         exclude = [
-            "lib.ts",
-            "fail.ts",
+            "lib.ts"
         ],
     ),
     deps = [
-        ":node_modules/@nestjs/common",
         ":node_modules/@nestjs/core",
         ":node_modules/@types/debug",
         ":node_modules/@types/node",
@@ -39,12 +37,6 @@ ts_project(
 ts_project(
     name = "lib",
     srcs = ["lib.ts"],
-)
-
-ts_project(
-    name = "should_fail",
-    srcs = ["fail.ts"],
-    tags = ["manual"],
 )
 
 # this is here to ensure that package.json#type=module does not affect worker.

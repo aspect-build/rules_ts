@@ -1,204 +1,278 @@
 const assert = require("node:assert");
 const path = require("node:path");
 const fs = require("node:fs");
-const mock = require("./mock");
+const module_mock = require("./mock");
+const test = require('node:test');
 
-mock("typescript", { sys: { getCurrentDirectory: () => {}, realpath: fs.realpathSync } });
-mock("@bazel/worker", { log: console.log })
+module_mock("typescript", {});
+module_mock("./worker", {})
 
-/** @type {import("../../private/ts_project_worker")} */
 const worker = require("./ts_project_worker").__do_not_use_test_only__;
+const root = path.join(process.env.GTEST_TMP_DIR, "workdir");
 
-// Tests
-const root = process.env.GTEST_TMP_DIR;
-const tree = worker.createFilesystemTree(root, {});
-
-function createFile(p) {
-    p = path.join(root, p);
-    fs.mkdirSync(path.dirname(p), {recursive: true});
-    fs.writeFileSync(p, "");
+function touch(...paths) {
+    for (let p of paths) {
+        p = path.join(root, p);
+        fs.mkdirSync(path.dirname(p), { recursive: true });
+        fs.closeSync(fs.openSync(p, 'w'));
+    }
 }
 
-createFile("tree/subtree/input.js");
-tree.add("tree/subtree/input.js");
-createFile("tree/input.js");
-tree.add("tree/input.js");
-assert.deepStrictEqual(tree.getDirectories("tree"), ["subtree"]);
-assert.deepStrictEqual(tree.readDirectory("tree"), ["subtree", "input.js"]);
-assert.ok(tree.directoryExists("tree"));
-assert.ok(tree.directoryExists("tree/subtree"));
-assert.ok(!tree.directoryExists("tree/subtree/input.js"));
-assert.ok(tree.fileExists("tree/subtree/input.js"));
-assert.ok(!tree.fileExists("tree/subtree"));
-assert.ok(!tree.fileExists("tree"));
+function create_file(tree, ...paths) {
+    touch(...paths)
+    for (let p of paths) {
+        tree.add(p)
+    }
+}
+
+function create_dir_symlink(tree, from, to) {
+    fs.mkdirSync(path.dirname(from), {recursive: true});
+    fs.mkdirSync(path.dirname(to), {recursive: true});
+    fs.symlinkSync(path.join(root, to), path.join(root, from), "dir");
+    tree.add(from);
+}
+
+test.beforeEach(() => {
+    fs.rmSync(root, {recursive: true, force: true});
+    fs.mkdirSync(root);
+    process.chdir(root);
+});
+
+test("directoryExists", () => {
+    const tree = worker.createFilesystemTree(root, {});
+    create_file(tree, "bazel-out/cfg/bin/input.js");
+    assert.ok(tree.directoryExists("bazel-out"));
+    assert.ok(tree.directoryExists("bazel-out/cfg"))
+    assert.ok(tree.directoryExists("bazel-out/cfg/bin"))
+});
+
+test("readDirectory", () => {
+    const tree = worker.createFilesystemTree(root, {});
+    create_file(tree, "bazel-out/cfg/bin/input.js");
+    create_file(tree, "bazel-out/cfg/bin/node_modules/.store/pkg/index.js")
+    create_dir_symlink(tree, "bazel-out/cfg/bin/node_modules/pkg", "bazel-out/cfg/bin/node_modules/.store/pkg");
+
+    assert.deepStrictEqual(tree.readDirectory("bazel-out"), ["bazel-out/cfg"]);
+    assert.deepStrictEqual(tree.readDirectory("bazel-out/cfg"), ["bazel-out/cfg/bin"]);
+    assert.deepStrictEqual(tree.readDirectory("bazel-out/cfg/bin"), ["bazel-out/cfg/bin/input.js", "bazel-out/cfg/bin/node_modules"]);
+    assert.deepStrictEqual(tree.readDirectory("bazel-out/cfg/bin/node_modules/pkg"), ["bazel-out/cfg/bin/node_modules/pkg/index.js"]);
+})
+
+test("getDirectories", () => {
+    const tree = worker.createFilesystemTree(root, {});
+    create_file(tree, "bazel-out/cfg/bin/input.js");
+    create_file(tree, "bazel-out/cfg/bin/node_modules/.store/pkg/index.js")
+    create_dir_symlink(tree, "bazel-out/cfg/bin/node_modules/pkg", "bazel-out/cfg/bin/node_modules/.store/pkg");
+
+    assert.deepStrictEqual(tree.getDirectories("bazel-out"), ["cfg"]);
+    assert.deepStrictEqual(tree.getDirectories("bazel-out/cfg"), ["bin"]);
+    assert.deepStrictEqual(tree.getDirectories("bazel-out/cfg/bin"), ["node_modules"]);
+    assert.deepStrictEqual(tree.getDirectories("bazel-out/cfg/bin/node_modules"), [".store", "pkg"]);
+})
 
 
-// Symlinks
-fs.mkdirSync(path.join(root, 'not_a_symlink_but_null', 'deep'), {recursive: true});
-fs.writeFileSync(path.join(root, 'not_a_symlink_but_null', 'deep', "input.js"), "");
-tree.add("not_a_symlink_but_null/deep/input.js");
-assert.deepStrictEqual(tree.readDirectory("not_a_symlink_but_null"), ["deep"])
+test("normalizeIfSymlink", () => {
+    const tree = worker.createFilesystemTree(root, {});
+    create_file(tree, "bazel-out/cfg/bin/node_modules/.store/pkg/index.js")
+    create_dir_symlink(tree, "bazel-out/cfg/bin/node_modules/pkg", "bazel-out/cfg/bin/node_modules/.store/pkg");
+    assert.ok(tree.normalizeIfSymlink("bazel-out/cfg/bin/node_modules/pkg"));
+})
+
+test("realpath", () => {
+    const tree = worker.createFilesystemTree(root, {});
+    create_file(tree, "bazel-out/cfg/bin/node_modules/.store/pkg/index.js")
+    create_dir_symlink(tree, "bazel-out/cfg/bin/node_modules/pkg", "bazel-out/cfg/bin/node_modules/.store/pkg");
+    assert.equal(tree.realpath("bazel-out/cfg/bin/node_modules/pkg"), "/bazel-out/cfg/bin/node_modules/.store/pkg");
+})
+
+test("add", () => {
+    const tree = worker.createFilesystemTree(root, {});
+    create_file(tree, "tree/subtree/input.js", "tree/input.js");
+    assert.deepStrictEqual(tree.getDirectories("tree"), ["subtree"]);
+    assert.deepStrictEqual(tree.readDirectory("tree"), ["tree/subtree", "tree/input.js"]);
+    assert.ok(tree.directoryExists("tree"));
+    assert.ok(tree.directoryExists("tree/subtree"));
+    assert.ok(!tree.directoryExists("tree/subtree/input.js"));
+    assert.ok(tree.fileExists("tree/subtree/input.js"));
+    assert.ok(!tree.fileExists("tree/subtree"));
+    assert.ok(!tree.fileExists("tree"));
+})
+
+test("remove", () => {
+    const tree = worker.createFilesystemTree(root, {});
+    create_file(tree, "bazel-out/cfg/bin/input.js");
+    create_file(tree, "bazel-out/cfg/bin/node_modules/.store/pkg/index.js")
+    create_dir_symlink(tree, "bazel-out/cfg/bin/node_modules/pkg", "bazel-out/cfg/bin/node_modules/.store/pkg");
+
+    assert.ok(tree.fileExists("bazel-out/cfg/bin/input.js"))
+    tree.remove("bazel-out/cfg/bin/input.js")
+    assert.ok(!tree.fileExists("bazel-out/cfg/bin/input.js"));
+    assert.deepEqual(tree.readDirectory("bazel-out/cfg/bin"), ["bazel-out/cfg/bin/node_modules"])
 
 
+    assert.ok(tree.directoryExists("bazel-out/cfg/bin/node_modules/pkg"))
+    assert.ok(tree.normalizeIfSymlink("bazel-out/cfg/bin/node_modules/pkg"))
+    tree.remove("bazel-out/cfg/bin/node_modules/pkg")
+    assert.ok(!tree.normalizeIfSymlink("bazel-out/cfg/bin/node_modules/pkg"))
+    assert.ok(!tree.directoryExists("bazel-out/cfg/bin/node_modules/pkg"))
 
-createFile("symlink/to/me/input.js")
-fs.symlinkSync(path.join(root, "symlink"), path.join(root, "symlinked"), "dir");
+    assert.ok(tree.directoryExists("bazel-out/cfg/bin/node_modules/.store/pkg"))
+    tree.remove("bazel-out/cfg/bin/node_modules/.store/pkg")
+    assert.ok(!tree.directoryExists("bazel-out/cfg/bin/node_modules/.store/pkg"))
+    assert.ok(!tree.directoryExists("bazel-out/cfg/bin/node_modules"))
+    assert.ok(!tree.directoryExists("bazel-out"))
+})
 
-tree.add("symlink/to/me/input.js");
-tree.add("symlinked");
-assert.ok(tree.directoryExists("symlinked/to/me"));
-assert.ok(!tree.fileExists("symlinked/to/me"));
-assert.ok(!tree.fileExists("symlinked"));
-assert.ok(tree.directoryExists("symlinked"));
-assert.deepStrictEqual(tree.getDirectories("symlinked"), ["to"])
-assert.deepStrictEqual(tree.readDirectory("symlinked"), ["to"])
-assert.deepStrictEqual(tree.readDirectory("symlinked/to/me"), ["input.js"])
+test("symlink and directory mixed", () => {
+    const tree = worker.createFilesystemTree(root, {});
+    create_file(tree, "dir/input.js");
+    create_dir_symlink(tree, "sym/s1", "dir");
+    create_dir_symlink(tree, "sym/s2", "dir");
+    create_file(tree, "sym/to/input.js");
+    assert.deepStrictEqual(tree.getDirectories("sym"), ["s1", "s2", "to"])
+})
 
-
-tree.remove("symlinked");
-assert.ok(!tree.directoryExists("symlinked"));
-assert.ok(!tree.directoryExists("symlinked/to"));
-
-
-createFile("symlinked/to/input.js")
-tree.add("symlinked/to/input.js")
-assert.ok(tree.directoryExists("symlinked"));
-assert.ok(tree.directoryExists("symlinked/to"));
-assert.ok(tree.fileExists("symlinked/to/input.js"));
-
-tree.remove("symlinked/to/input.js");
-assert.ok(!tree.directoryExists("symlinked"));
-assert.ok(!tree.directoryExists("symlinked/to"));
-
-
-fs.mkdirSync(path.join(root, "dir"));
-fs.mkdirSync(path.join(root, "sym"));
-fs.symlinkSync(path.join(root, "dir"), path.join(root, "sym", "s1"), "dir");
-fs.symlinkSync(path.join(root, "dir"), path.join(root, "sym", "s2"), "dir");
-
-createFile("dir/input.js");
-tree.add("dir/input.js");
-createFile("sym/to/input.js");
-tree.add("sym/to/input.js");
-tree.add("sym/s1");
-tree.add("sym/s2");
-assert.deepStrictEqual(tree.getDirectories("sym"), ["to", "s1", "s2"])
-
-// Dangling
-fs.mkdirSync(path.join(root, "dangle"));
-fs.symlinkSync(path.join(root, "dangle"), path.join(root, "may_dangle"), "dir");
-tree.add("may_dangle")
-assert.equal(tree.directoryExists("may_dangle"), false)
-assert.equal(tree.directoryExists("may_dangle/underneath"), false)
-assert.equal(tree.fileExists("may_dangle"), false)
-assert.equal(tree.fileExists("may_dangle/file.js"), false)
-assert.deepEqual(tree.readDirectory("may_dangle"), [])
-assert.deepEqual(tree.getDirectories("may_dangle"), [])
-assert.deepEqual(tree.readDirectory("may_dangle/underneath"), [])
-assert.deepEqual(tree.getDirectories("may_dangle/underneath"), [])
-
-// Remove
-createFile("correct_remove/to/input.js");
-tree.add("correct_remove/to/input.js");
-createFile("correct_remove/to/path/input.js");
-tree.add("correct_remove/to/path/input.js")
-tree.remove("correct_remove/to/path/input.js");
-assert.ok(tree.fileExists("correct_remove/to/input.js"));
-assert.ok(tree.directoryExists("correct_remove/to"));
-assert.ok(!tree.directoryExists("correct_remove/to/path"));
-assert.ok(!tree.fileExists("correct_remove/to/path/input.js"));
-
-// Watcher
-let calls = [];
-let clean = tree.watchDirectory("inputs", (p) => calls.push(p));
-createFile("inputs/1.js");
-tree.add("inputs/1.js");
-assert.deepEqual(calls, ["inputs", "inputs/1.js"]);
-clean();
-
-calls = [];
-createFile("inputs/to/2.js");
-tree.add("inputs/to/2.js");
-clean = tree.watchDirectory("inputs/to", (p) => calls.push(p));
-createFile("inputs/to/1.js");
-tree.add("inputs/to/1.js");
-assert.deepEqual(calls, ["inputs/to/1.js"]);
-clean();
-tree.remove("inputs");
+test("dangling symlink", () => {
+    const tree = worker.createFilesystemTree(root, {});
+    fs.mkdirSync(path.join(root, "dangle"));
+    fs.symlinkSync(path.join(root, "dangle"), path.join(root, "may_dangle"), "dir");
+    tree.add("may_dangle")
+    assert.equal(tree.directoryExists("may_dangle"), false)
+    assert.equal(tree.directoryExists("may_dangle/underneath"), false)
+    assert.equal(tree.fileExists("may_dangle"), false)
+    assert.equal(tree.fileExists("may_dangle/file.js"), false)
+    assert.deepEqual(tree.readDirectory("may_dangle"), [])
+    assert.deepEqual(tree.getDirectories("may_dangle"), [])
+    assert.deepEqual(tree.readDirectory("may_dangle/underneath"), [])
+    assert.deepEqual(tree.getDirectories("may_dangle/underneath"), [])
+});
 
 
-calls = [];
-clean = tree.watchFile("inputs/1.js", (p) => calls.push(p));
-createFile("inputs/1.js");
-tree.add("inputs/1.js");
-assert.deepEqual(calls, ["inputs/1.js"]);
-clean();
+function fn() {
+    function mock(...args) {
+        mock.calls.push({
+            arguments: args
+        });
+    }
+    mock.calls = [];
+    return mock;
+}
+
+test("basic directory watcher", () => {
+    const tree = worker.createFilesystemTree(root, {});
+    const callback = fn();
+    tree.watchDirectory("bazel-out/cfg/bin", callback);
+    create_file(tree, "bazel-out/cfg/bin/1.js");
+    assert.equal(callback.calls.length, 1);
+    assert.deepEqual(callback.calls[0].arguments[0], "bazel-out/cfg/bin/1.js");
+})
 
 
-calls = [];
-createFile("inputs/1.js");
-tree.add("inputs/1.js");
-let clean1 = tree.watchDirectory("inputs", (p) => calls.push(p));
-let clean2 = tree.watchFile("inputs/1.js", (p) => calls.push(p));
-tree.remove("inputs/1.js");
-assert.deepEqual(calls, ["inputs/1.js", "inputs/1.js", "inputs"]);
-clean1();
-clean2();
+test("basic directory watcher", () => {
+    const tree = worker.createFilesystemTree(root, {});
+    const callback = fn();
+    create_file(tree, "inputs/to/2.js");
+    tree.watchDirectory("inputs/to", callback);
+    create_file(tree, "inputs/to/1.js");
+    assert.equal(callback.calls.length, 1);
+    assert.deepEqual(callback.calls[0].arguments[0], "inputs/to/1.js");
+})
 
 
-calls = [];
-createFile("inputs/1.js");
-tree.add("inputs/1.js");
-clean = tree.watchFile("inputs/1.js", (p) => calls.push(p));
-tree.update("inputs/1.js");
-assert.deepEqual(calls, ["inputs/1.js"]);
-clean();
+test("basic file watcher", () => {
+    const tree = worker.createFilesystemTree(root, {});
+    const callback = fn();
+    tree.watchFile("inputs/1.js", callback);
+    create_file(tree, "inputs/1.js");
+    assert.equal(callback.calls.length, 1);
+    assert.deepEqual(callback.calls[0].arguments[0], "inputs/1.js");
+})
 
 
-calls = [];
-let watcher1 = tree.watchFile("inputs/1.js", (p) => calls.push("watcher1"));
-let watcher2 = tree.watchFile("inputs/1.js", (p) => calls.push("watcher2"));
-let watcher3 = tree.watchFile("inputs/1.js", (p) => calls.push("watcher3"));
-let watcher4 = tree.watchFile("inputs/1.js", (p) => calls.push("watcher4"));
-watcher1();
-watcher2();
-createFile("inputs/1.js");
-tree.add("inputs/1.js");
-assert.deepEqual(calls, ["watcher3", "watcher4"]);
-watcher3();
-watcher4();
+test("directory watcher at files parent get notified", () => {
+    const tree = worker.createFilesystemTree(root, {});
+    const callback = fn();
+    tree.watchDirectory("inputs", callback);
+    create_file(tree, "inputs/1.js");
+    assert.equal(callback.calls.length, 1);
+    assert.deepEqual(callback.calls[0].arguments[0], "inputs/1.js");
+});
 
 
-calls = [];
-clean = tree.watchDirectory("recursive", (p) => calls.push(p), true);
-createFile("recursive/1.js");
-tree.add("recursive/1.js");
-createFile("recursive/to/1.js");
-tree.add("recursive/to/1.js");
-createFile("recursive/to/deep/1.js");
-tree.add("recursive/to/deep/1.js");
-assert.deepEqual(calls, [
-    "recursive", 
-    "recursive/1.js", 
-    "recursive/to", 
-    "recursive/to/1.js",
-    "recursive/to/deep",
-    "recursive/to/deep/1.js"
-]);
-tree.remove("recursive");
-clean();
+test("file watcher gets notified on update", () => {
+    const tree = worker.createFilesystemTree(root, {});
+    const callback = fn();
+    create_file(tree, "inputs/1.js");
+    tree.watchFile("inputs/1.js", callback);
+    tree.update("inputs/1.js")
+    assert.equal(callback.calls.length, 1);
+    assert.deepEqual(callback.calls[0].arguments[0], "inputs/1.js");
+})
 
 
-calls = [];
-let clean3 = tree.watchDirectory("recursive", (p) => calls.push(p), true);
-let clean4 = tree.watchDirectory("recursive", (p) => calls.push(p));
-createFile("recursive/1.js");
-tree.add("recursive/1.js");
-assert.deepEqual(calls, [
-    "recursive", 
-    "recursive", 
-    "recursive/1.js", 
-    "recursive/1.js", 
-]);
-clean3();
-clean4();
+test("multiple file watchers get notified", () => {
+    const tree = worker.createFilesystemTree(root, {});
+    const callback1 = fn();
+    const callback2 = fn();
+    const callback3 = fn();
+    const callback4 = fn();
+
+    const close1 = tree.watchFile("inputs/1.js", callback1);
+    tree.watchFile("inputs/1.js", callback2);
+    const close3 = tree.watchFile("inputs/1.js", callback3);
+    tree.watchFile("inputs/1.js", callback4);
+
+    create_file(tree, "inputs/1.js");
+    assert.deepStrictEqual(callback1.calls, [{arguments: ["inputs/1.js", 0]}]);
+    assert.deepStrictEqual(callback2.calls, [{arguments: ["inputs/1.js", 0]}]);
+    assert.deepStrictEqual(callback3.calls, [{arguments: ["inputs/1.js", 0]}]);
+    assert.deepStrictEqual(callback4.calls, [{arguments: ["inputs/1.js", 0]}]);
+
+    close1();
+    close3();
+    tree.remove("inputs/1.js")
+
+    assert.deepStrictEqual(callback1.calls, [{arguments: ["inputs/1.js", 0]}]);
+    assert.deepStrictEqual(callback2.calls, [{arguments: ["inputs/1.js", 0]}, {arguments: ["inputs/1.js", 2]}]);
+    assert.deepStrictEqual(callback3.calls, [{arguments: ["inputs/1.js", 0]}]);
+    assert.deepStrictEqual(callback4.calls, [{arguments: ["inputs/1.js", 0]}, {arguments: ["inputs/1.js", 2]}]);
+
+})
+
+
+test("recursive dir watchers get notified", () => {
+    const tree = worker.createFilesystemTree(root, {});
+    const callback = fn();
+    tree.watchDirectory("recursive", callback, true);
+    create_file(tree, "recursive/1.js");
+    create_file(tree, "recursive/to/1.js");
+    create_file(tree, "recursive/to/deep/1.js");
+    assert.deepEqual(callback.calls.map(call => call.arguments[0]), [
+        'recursive/1.js',
+        'recursive/to',
+        'recursive/to/1.js',
+        'recursive/to/deep',
+        'recursive/to/deep/1.js'
+    ]);
+})
+
+
+test("no double calls for recursive dir watchers", () => {
+    const tree = worker.createFilesystemTree(root, {});
+    const callback = fn();
+    tree.watchDirectory("recursive_behavior", callback, true);
+    create_file(tree, "recursive_behavior/1.js");
+    assert.deepStrictEqual(callback.calls, [{arguments: ["recursive_behavior/1.js", 0]}]);
+})
+
+
+test("mix of recursive and non-recursive should work", () => {
+    const tree = worker.createFilesystemTree(root, {});
+    const recursiveCallback = fn();
+    const callback = fn();
+    tree.watchDirectory("recursive", recursiveCallback, true);
+    tree.watchDirectory("recursive", callback);
+    create_file(tree, "recursive/1.js");
+    assert.deepStrictEqual(callback.calls, [{arguments: ["recursive/1.js", 0]}]);
+    assert.deepStrictEqual(recursiveCallback.calls, [{arguments: ["recursive/1.js", 0]}]);
+});

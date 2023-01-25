@@ -16,6 +16,9 @@ class WatchProgram {
     getCurrentProgram() {
         return this;
     }
+    getProgram() {
+        return this;
+    }
     emit() {
         return { emitSkipped: true }
     }
@@ -26,12 +29,13 @@ class WatchProgram {
 }
 mock("typescript", {
     createWatchProgram: () => new WatchProgram(),
-    createWatchCompilerHost: () => ({}),
+    createWatchCompilerHost: () => ({optionsToExtend: {outDir: "."}}),
     getPreEmitDiagnostics: () => ([]),
-    parseCommandLine: () => ({ options: { project: "" } }),
+    parseCommandLine: () => ({ options: { project: "", outDir: "." } }),
     formatDiagnostics: () => "",
+    readConfigFile: () => ({config: {}}),
     sys: {
-        getCurrentDirectory: process.cwd
+        getCurrentDirectory: process.cwd,
     },
     performance: {
         isEnabled: () => false,
@@ -39,7 +43,7 @@ mock("typescript", {
         measure: () => { }
     }
 });
-mock("@bazel/worker", { log: console.log })
+mock("./worker", {})
 
 /** @type {import("../../private/ts_project_worker")} */
 const ts_project_worker = require("./ts_project_worker").__do_not_use_test_only__
@@ -51,49 +55,64 @@ function killAllWorkers() {
     ts_project_worker.workers.clear();
 }
 
-ts_project_worker.emit(["--project", "p1", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
-ts_project_worker.emit(["--project", "p2", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
-ts_project_worker.emit(["--project", "p3", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
-ts_project_worker.emit(["--project", "p4", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
-ts_project_worker.emit(["--project", "p5", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+function createWorkRequest(args, inputs) {
+    return {
+        arguments: args,
+        inputs: inputs,
+        output: { write: console.log },
+        signal: new AbortController().signal
+    }
+}
+
+async function test() {
+
+await ts_project_worker.emit(createWorkRequest(["--project", "p1", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], []))
+await ts_project_worker.emit(createWorkRequest(["--project", "p2", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], []))
+await ts_project_worker.emit(createWorkRequest(["--project", "p3", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], []))
+await ts_project_worker.emit(createWorkRequest(["--project", "p4", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], []))
+await ts_project_worker.emit(createWorkRequest(["--project", "p5", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], []))
 assert.deepStrictEqual(closed_programs, [1]);
 killAllWorkers();
 
 // Case: reuse p1 worker to prevent it from being the next victim by moving it to the end of the LRU cache. p2 should be the next victim.
-ts_project_worker.emit(["--project", "p1", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
-ts_project_worker.emit(["--project", "p2", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
-ts_project_worker.emit(["--project", "p3", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+await ts_project_worker.emit(createWorkRequest(["--project", "p1", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], []))
+await ts_project_worker.emit(createWorkRequest(["--project", "p2", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], []))
+await ts_project_worker.emit(createWorkRequest(["--project", "p3", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], []))
 
-ts_project_worker.emit(["--project", "p1", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+await ts_project_worker.emit(createWorkRequest(["--project", "p1", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], []))
 
-ts_project_worker.emit(["--project", "p4", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
-ts_project_worker.emit(["--project", "p5", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+await ts_project_worker.emit(createWorkRequest(["--project", "p4", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], []))
+await ts_project_worker.emit(createWorkRequest(["--project", "p5", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], []))
 assert.deepStrictEqual(closed_programs, [2]);
 killAllWorkers();
 
 // Case: rescale p4
-ts_project_worker.emit(["--project", "p1", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
-ts_project_worker.emit(["--project", "p2", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
-ts_project_worker.emit(["--project", "p3", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
-ts_project_worker.emit(["--project", "p4", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
-ts_project_worker.emit(["--project", "p4", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+await ts_project_worker.emit(createWorkRequest(["--project", "p1", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], []))
+await ts_project_worker.emit(createWorkRequest(["--project", "p2", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], []))
+await ts_project_worker.emit(createWorkRequest(["--project", "p3", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], []))
+await ts_project_worker.emit(createWorkRequest(["--project", "p4", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], []))
+await ts_project_worker.emit(createWorkRequest(["--project", "p4", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], []))
 assert.deepStrictEqual(closed_programs, [1]);
 
 heapStatistics.used_heap_size = 81;
-ts_project_worker.emit(["--project", "p4", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+await ts_project_worker.emit(createWorkRequest(["--project", "p4", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], []))
 assert.deepStrictEqual(closed_programs, [1,2]);
 killAllWorkers();
 
 // reuse p1, p3 to assert that they never get sweeped
-ts_project_worker.emit(["--project", "p1", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
-ts_project_worker.emit(["--project", "p2", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+await ts_project_worker.emit(createWorkRequest(["--project", "p1", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], []))
+await ts_project_worker.emit(createWorkRequest(["--project", "p2", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], []))
 
-ts_project_worker.emit(["--project", "p1", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+await ts_project_worker.emit(createWorkRequest(["--project", "p1", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], []))
 
-ts_project_worker.emit(["--project", "p3", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
-ts_project_worker.emit(["--project", "p4", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+await ts_project_worker.emit(createWorkRequest(["--project", "p3", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], []))
+await ts_project_worker.emit(createWorkRequest(["--project", "p4", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], []))
 
-ts_project_worker.emit(["--project", "p3", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+await ts_project_worker.emit(createWorkRequest(["--project", "p3", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], []))
 
-ts_project_worker.emit(["--project", "p5", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], {})
+await ts_project_worker.emit(createWorkRequest(["--project", "p5", "--outDir", ".", "--declarationDir", ".", "--rootDir", "."], []))
 assert.deepStrictEqual(closed_programs, [2]);
+
+}
+
+test();

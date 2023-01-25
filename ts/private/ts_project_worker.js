@@ -2,30 +2,38 @@ const fs = require('fs');
 const path = require('path');
 const v8 = require('v8');
 const ts = require('typescript');
-const worker = require('@bazel/worker');
-
-
+const worker_protocol = require('./worker');
 // workaround for the issue introduced in https://github.com/microsoft/TypeScript/pull/42095
 if (Array.isArray(ts.ignoredPaths)) {
     ts.ignoredPaths = ts.ignoredPaths.filter(ignoredPath => ignoredPath != "/node_modules/.")
 }
 
-
 /** Constants */
 const MNEMONIC = 'TsProject';
+const SYNTHETIC_OUTDIR = "__st_outdir__"
 
 /** Utils */
-function noop() {}
+function noop() { }
 
-function getArgsFromParamFile() {
-    let paramFilePath = process.argv[process.argv.length - 1];
-    if (paramFilePath.startsWith('@')) {
-        // paramFilePath is relative to execroot but we are in bazel-out so we have to go three times up to reach execroot.
-        // paramFilePath = bazel-out/darwin_arm64-fastbuild/bin/0.params
-        // currentDir =  bazel-out/darwin_arm64-fastbuild/bin
-        paramFilePath = path.resolve('..', '..', '..', paramFilePath.slice(1));
+let VERBOSE = false;
+function debug(...args) {
+    VERBOSE && console.error(...args);
+}
+
+function notImplemented(name, _throw, _returnArg) {
+    return (...args) => {
+        if (_throw) {
+            throw new Error(`function ${name} is not implemented.`);
+        }
+        debug(`function ${name} is not implemented.`);
+        return args[_returnArg];
     }
-    return fs.readFileSync(paramFilePath).toString().trim().split('\n');
+}
+
+function setVerbosity(level) {
+    // bazel set verbosity to 10 when --worker_verbose is set. 
+    // See: https://bazel.build/remote/persistent#options
+    VERBOSE = level > 0;
 }
 
 /** Performance */
@@ -63,19 +71,41 @@ function createFilesystemTree(root, inputs) {
         add(p, inputs[p]);
     }
 
+    function printTree() {
+        const output = ["."]
+        const walk = (node, prefix) => {
+            const subnodes = Object.keys(node).sort((a, b) => node[a][Type] - node[b][Type]);
+            for (const [index, key] of subnodes.entries()) {
+                const subnode = node[key];
+                const parts = index == subnodes.length - 1 ? ["└── ", "    "] : ["├── ", "│   "];
+                if (subnode[Type] == TYPE.SYMLINK) {
+                    output.push(`${prefix}${parts[0]}${key} -> ${subnode[Symlink]}`);
+                } else if (subnode[Type] == TYPE.FILE) {
+                    output.push(`${prefix}${parts[0]}<file> ${key}`);
+                } else {
+                    output.push(`${prefix}${parts[0]}<dir> ${key}`);
+                    walk(subnode, `${prefix}${parts[1]}`);
+                }
+            }
+        }
+        walk(tree, "");
+        debug(output.join("\n"));
+    }
+
     function getNode(p) {
-        const parts = p.split(path.sep);
+        const segments = p.split(path.sep);
         let node = tree;
-        for (const part of parts) {
-            if (!(part in node)) {
+        for (const segment of segments) {
+            if (!segment) {
+                continue;
+            }
+            if (!(segment in node)) {
                 return undefined;
             }
-            node = node[part];
+            node = node[segment];
             if (node[Type] == TYPE.SYMLINK) {
                 node = getNode(node[Symlink]);
-                // Having dangling symlinks are commong outside of bazel but less likely using bazel 
-                // unless a rule makes use of ctx.actions.declare_symlink and provide a path that may
-                // dangle.
+                // dangling symlink; symlinks point to a non-existing path.
                 if (!node) {
                     return undefined;
                 }
@@ -92,95 +122,160 @@ function createFilesystemTree(root, inputs) {
         // NOTE: making a readlink call is more expensive than making a lstat call
         if (stat.isSymbolicLink()) {
             const linkpath = fs.readlinkSync(absolutePath);
-            const absoluteLinkPath = path.isAbsolute(linkpath) ? linkpath : path.resolve(path.dirname(absolutePath, linkpath))
+            const absoluteLinkPath = path.isAbsolute(linkpath) ? linkpath : path.resolve(path.dirname(absolutePath), linkpath)
             return path.relative(root, absoluteLinkPath);
         }
         return p;
     }
 
     function add(p) {
-        const parts = path.parse(p);        
-        const dirs = parts.dir.split(path.sep).filter(p => p != "");
-
+        const segments = p.split(path.sep);
+        const parents = [];
         let node = tree;
+        for (let i = 0; i < segments.length; i++) {
+            const segment = segments[i];
 
-        for (const [i, part] of dirs.entries()) {
-            if (typeof node[part] != "object") {
-                node[part] = {
-                    [Type]: TYPE.DIR 
-                };
-                notifyWatchers(dirs.slice(0, i), part, TYPE.DIR, EVENT_TYPE.ADDED);
+            if (node && node[Type] == TYPE.SYMLINK) {
+                // stop; this is possibly path to a symlink which points to a treeartifact.
+                //// version 6.0.0 has a weird behavior where it expands symlinks that point to treeartifact when --experimental_allow_unresolved_symlinks is turned off.
+                debug(`WEIRD_BAZEL_6_BEHAVIOR: stopping at ${parents.join(path.sep)}`)
+                return;
             }
-            node = node[part];
-        }
 
-        const possiblyResolvedSymlinkPath = followSymlinkUsingRealFs(p)
+            const currentp = path.join(...parents, segment);
 
-        if (possiblyResolvedSymlinkPath != p) {
-            node[parts.base] = {
-                [Type]: TYPE.SYMLINK,
-                [Symlink]: possiblyResolvedSymlinkPath
+            if (typeof node[segment] != "object") {
+                const possiblyResolvedSymlinkPath = followSymlinkUsingRealFs(currentp)
+                if (possiblyResolvedSymlinkPath != currentp) {
+                    node[segment] = {
+                        [Type]: TYPE.SYMLINK,
+                        [Symlink]: possiblyResolvedSymlinkPath
+                    }
+                    notifyWatchers(parents, segment, TYPE.SYMLINK, EVENT_TYPE.ADDED);
+                    return;
+                }
+
+                // last of the segments; which assumed to be a file
+                if (i == segments.length - 1) {
+                    node[segment] = { [Type]: TYPE.FILE };
+                    notifyWatchers(parents, segment, TYPE.FILE, EVENT_TYPE.ADDED);
+                } else {
+                    node[segment] = { [Type]: TYPE.DIR };
+                    notifyWatchers(parents, segment, TYPE.DIR, EVENT_TYPE.ADDED);
+                }
             }
-            notifyWatchers(dirs, parts.base, TYPE.SYMLINK, EVENT_TYPE.ADDED);
-        } else if (parts.base) {
-            node[parts.base] = {
-                [Type]: TYPE.FILE,
-            };
-            notifyWatchers(dirs, parts.base, TYPE.FILE, EVENT_TYPE.ADDED);
+            node = node[segment];
+            parents.push(segment);
         }
     }
 
     function remove(p) {
-        const parts = p.split(path.sep);
-        let track = {parent: undefined, part: undefined, node: tree};
-        for (const part of parts) {
-            let node = track.node[part];
-            if (!node) {
-                // It is not likely to end up here unless fstree does something undesired. 
-                // So we'll let it hard fail 
-                throw new Error(`Could not find ${p}`);
-            }
-            track = {parent: track, segment: part, node: node }
-        }
-
-        delete track.parent.node[track.segment];
-        notifyWatchers(parts.slice(0, - 1), track.segment, track.node[Type], EVENT_TYPE.REMOVED)
-
-        let removal = track.parent;
-        let removal_parts = parts.slice(0, -1)
-        while(removal.parent) {
-            if (Object.keys(removal.node).length == 0) {
-                if (removal.node[Type] == TYPE.DIR) {
-                    delete removal.parent.node[removal.segment];
-                    notifyWatchers(removal_parts.slice(0, -1), removal.segment, TYPE.DIR, EVENT_TYPE.REMOVED)
-                }
-                removal = removal.parent;
-                removal_parts.pop();
-            } else {
+        const segments = p.split(path.sep).filter(seg => seg != "");
+        let node = {
+            parent: undefined,
+            segment: undefined,
+            current: tree
+        };
+        for (let i = 0; i < segments.length; i++) {
+            const segment = segments[i];
+            if (node.current[Type] == TYPE.SYMLINK) {
+                debug(`WEIRD_BAZEL_6_BEHAVIOR: removing ${p} starting from the symlink parent since it's a node with a parent that is a symlink.`)
+                segments.splice(i) // remove rest of the elements starting from i which comes right after symlink segment.
                 break;
             }
+            const current = node.current[segment];
+            if (!current) {
+                // It is not likely to end up here unless fstree does something undesired. 
+                // we will soft fail here due to regression in bazel 6.0
+                debug(`remove: could not find ${p}`);
+                return;
+            }
+            node = {
+                parent: node,
+                segment: segment,
+                current: current
+            }
+        }
+
+        // parent path of current path(p)
+        const parentSegments = segments.slice(0, -1);
+
+        // remove current node using parent node
+        delete node.parent.current[node.segment];
+        notifyWatchers(parentSegments, node.segment, node.current[Type], EVENT_TYPE.REMOVED)
+
+        // start traversing from parent of last segment
+        let removal = node.parent;
+        let parents = [...parentSegments]
+        while (removal.parent) {
+            const keys = Object.keys(removal.current);
+            if (keys.length > 0) {
+                // if current node has subnodes, DIR, FILE, SYMLINK etc, then stop traversing up as we reached a parent node that has subnodes. 
+                break;
+            }
+
+            // walk one segment up/parent to avoid calling slice for notifyWatchers. 
+            parents.pop();
+
+            if (removal.current[Type] == TYPE.DIR) {
+                // current node has no children. remove current node using its parent node
+                delete removal.parent.current[removal.segment];
+                notifyWatchers(parents, removal.segment, TYPE.DIR, EVENT_TYPE.REMOVED)
+            }
+
+            // traverse up
+            removal = removal.parent;
         }
     }
 
     function update(p) {
-        const dirname = path.dirname(p);
-        const basename = path.basename(p);
-        // reason the node manipulated using the parent node is that the last node might be a symlink and `getNode` follows symlinks automatically.
-        // ideally a new followSymlinks option could be introduced to `getNode` but that would prevent following the grand parents.
-        // luckily, bazel does not allow complex symlinks structures such as symlink within symlink allowing this function to be dumb.
-        const parentNode = getNode(dirname);
-        const node = parentNode[basename];
-        if (node[Type] == TYPE.SYMLINK) {
-            const newSymlinkPath = followSymlinkUsingRealFs(p);
-            if (newSymlinkPath == p /* Not a symlink anymore */) {
-                node[Type] = TYPE.FILE;
-                delete node[Symlink];
-            } else if (node[Symlink] != newSymlinkPath) {
-                node[Symlink] = newSymlinkPath;
+        const segments = p.split(path.sep);
+        const parent = [];
+        let node = tree;
+        for (const segment of segments) {
+            if (!segment) {
+                continue;
+            }
+            parent.push(segment);
+            const currentp = parent.join(path.sep);
+
+            if (!node[segment]) {
+                debug(`WEIRD_BAZEL_6_BEHAVIOR: can't walk down the path ${p} from ${currentp} inside ${segment}`);
+                // bazel 6 + --noexperimental_allow_unresolved_symlinks: has a weird behavior where bazel will won't report symlink changes but 
+                // rather reports changes in the treeartifact that symlink points to. even if symlink points to somewhere new. :(
+                // since `remove` removed this node previously,  we just need to call add to create necessary nodes.
+                // see: no_unresolved_symlink_tests.bats for test cases
+                return add(p);
+            }
+
+            node = node[segment];
+
+            if (node[Type] == TYPE.SYMLINK) {
+                const newSymlinkPath = followSymlinkUsingRealFs(currentp);
+                if (newSymlinkPath == currentp) {
+                    // not a symlink anymore.
+                    debug(`${currentp} is no longer a symlink since ${currentp} == ${newSymlinkPath}`)
+                    node[Type] = TYPE.FILE;
+                    delete node[Symlink];
+                } else if (node[Symlink] != newSymlinkPath) {
+                    debug(`updating symlink ${currentp} from ${node[Symlink]} to ${newSymlinkPath}`)
+                    node[Symlink] = newSymlinkPath;
+                }
+                notifyWatchers(parent, segment, node[Type], EVENT_TYPE.UPDATED);
+                return; // return the loop as we don't anything to be symlinks from on;
             }
         }
-        notifyWatchers(dirname.split(path.sep), basename, node[Type], EVENT_TYPE.UPDATED);
+        // did not encounter any symlinks along the way. it's a DIR or FILE at this point.
+        const basename = parent.pop();
+        notifyWatchers(parent, basename, node[Type], EVENT_TYPE.UPDATED);
     }
+
+    function notify(p) {
+        const dirname = path.dirname(p);
+        const basename = path.basename(p);
+        notifyWatchers(dirname.split(path.sep), basename, TYPE.FILE, EVENT_TYPE.ADDED);
+    }
+
 
     function fileExists(p) {
         const node = getNode(p);
@@ -192,12 +287,83 @@ function createFilesystemTree(root, inputs) {
         return typeof node == "object" && node[Type] == TYPE.DIR;
     }
 
+    function normalizeIfSymlink(p) {
+        const segments = p.split(path.sep);
+        let node = tree;
+        let parents = [];
+        for (const segment of segments) {
+            if (!segment) {
+                continue;
+            }
+            if (!(segment in node)) {
+                break;
+            }
+            node = node[segment];
+            parents.push(segment);
+            if (node[Type] == TYPE.SYMLINK) {
+               // ideally this condition would not met until the last segment of the path unless there's a symlink segment in
+               // earlier segments. this indeed happens in bazel 6.0 with --experimental_allow_unresolved_symlinks turned off.
+               break;
+            }
+        }
+
+        if (typeof node == "object" && node[Type] == TYPE.SYMLINK) {
+           return parents.join(path.sep);
+        }
+        
+        return undefined;
+    }
+
+    function realpath(p) {
+        const segments = p.split(path.sep);
+        let node = tree;
+        let currentPath = "";
+        for (const segment of segments) {
+            if (!segment) {
+                continue;
+            }
+            if (!(segment in node)) {
+                break;
+            }
+            node = node[segment];
+            currentPath = path.join(currentPath, segment);
+            if (node[Type] == TYPE.SYMLINK) {
+                currentPath = node[Symlink];
+                node = getNode(node[Symlink]);
+                // dangling symlink; symlinks point to a non-existing path. can't follow it
+                if (!node) {
+                    break;
+                }
+            }
+        }
+        return path.isAbsolute(currentPath) ? currentPath : "/" + currentPath;
+    }
+
     function readDirectory(p, extensions, exclude, include, depth) {
         const node = getNode(p);
         if (!node || node[Type] != TYPE.DIR) {
             return []
         }
-        return Object.keys(node);
+        const result = [];
+        let currentDepth = 0;
+        const walk = (p, node) => {
+            currentDepth++;
+            for (const key in node) {
+                const subp = path.join(p, key);
+                const subnode = node[key];
+                result.push(subp);
+                if (subnode[Type] == TYPE.DIR) {
+                    if (currentDepth >= depth || !depth) {
+                        continue;
+                    }
+                    walk(subp, subnode);
+                } else if (subnode[Type] == TYPE.SYMLINK) {
+                    continue;
+                }
+            }
+        }
+        walk(p, node);
+        return result;
     }
 
     function getDirectories(p) {
@@ -208,7 +374,6 @@ function createFilesystemTree(root, inputs) {
         const dirs = [];
         for (const part in node) {
             let subnode = node[part];
-
             if (subnode[Type] == TYPE.SYMLINK) {
                 // get the node where the symlink points to
                 subnode = getNode(subnode[Symlink]);
@@ -221,31 +386,43 @@ function createFilesystemTree(root, inputs) {
         return dirs
     }
 
-    function notifyWatchers(parts, part, type, eventType) {
-        const dest_parts = [...parts, part];
+    function notifyWatchers(trail, segment, type, eventType) {
+        const final = [...trail, segment];
+        const finalPath = final.join(path.sep);
         if (type == TYPE.FILE) {
-            notifyWatcher(parts, dest_parts, eventType);
+            // notify file watchers watching at the file path, excluding recursive ones. 
+            notifyWatcher(final, finalPath, eventType, /* recursive */ false);
+            // notify directory watchers watching at the parent of the file, including the recursive directory watchers at parent.
+            notifyWatcher(trail, finalPath, eventType);
         } else {
-            notifyWatcher(parts, dest_parts, eventType);
+            // notify directory watchers watching at the parent of the directory, including recursive ones.
+            notifyWatcher(trail, finalPath, eventType);
         }
-        notifyWatcher(dest_parts, dest_parts, eventType, null);
 
-        let recursive_parts = dest_parts;
-        let fore_parts = [];
-        while(recursive_parts.length) {
-            fore_parts.unshift(recursive_parts.pop());
-            notifyWatcher(recursive_parts, recursive_parts.concat(fore_parts), eventType, true);
+
+        // recursively invoke watchers starting from trail;
+        //  given path `/path/to/something/else`
+        // this loop will call watchers all at `segment` with combination of these arguments;
+        //  parent = /path/to/something     path = /path/to/something/else
+        //  parent = /path/to               path = /path/to/something/else
+        //  parent = /path                  path = /path/to/something/else
+        let parent = [...trail];
+        while (parent.length) {
+            parent.pop();
+            // invoke only recursive watchers
+            notifyWatcher(parent, finalPath, eventType, true);
         }
     }
 
-    function notifyWatcher(parent, parts, eventType, recursive = false) {
-        let node = getWatcherNode(parent, watchingTree);
+    function notifyWatcher(parent, path, eventType, recursive = undefined) {
+        let node = getWatcherNode(parent);
         if (typeof node == "object" && Watcher in node) {
             for (const watcher of node[Watcher]) {
-                if (recursive != null && watcher.recursive != recursive) {
+                // if recursive argument isn't provided, invoke both recursive and non-recursive watchers.
+                if (recursive != undefined && watcher.recursive != recursive) {
                     continue;
                 }
-                watcher.callback(parts.join(path.sep), eventType);
+                watcher.callback(path, eventType);
             }
         }
     }
@@ -265,6 +442,9 @@ function createFilesystemTree(root, inputs) {
         const parts = p.split(path.sep);
         let node = watchingTree;
         for (const part of parts) {
+            if (!part) {
+                continue;
+            }
             if (!(part in node)) {
                 node[part] = {};
             }
@@ -272,21 +452,25 @@ function createFilesystemTree(root, inputs) {
         }
         if (!(Watcher in node)) {
             node[Watcher] = new Set();
-        }  
-        const watcher = {callback, recursive};
+        }
+        const watcher = { callback, recursive };
         node[Watcher].add(watcher);
         return () => node[Watcher].delete(watcher)
     }
 
-    return { add, remove, update, fileExists, directoryExists, readDirectory, getDirectories, watchDirectory: watch, watchFile: watch }
+    function watchFile(p, callback) {
+        return watch(p, callback)
+    }
+
+    return { add, remove, update, notify, fileExists, directoryExists, normalizeIfSymlink, realpath, readDirectory, getDirectories, watchDirectory: watch, watchFile: watchFile, printTree }
 }
 
 
 /** Program and Caching */
 function isExternalLib(path) {
-    return  path.includes('external') && 
-            path.includes('typescript@') && 
-            path.includes('node_modules/typescript/lib')
+    return path.includes('external') &&
+        path.includes('typescript@') &&
+        path.includes('node_modules/typescript/lib')
 }
 
 const libCache = new Map();
@@ -324,17 +508,18 @@ function createEmitAndLibCacheAndDiagnosticsProgram(
                 const sourcePath = outputSourceMapping.get(path);
                 // if the source is not part of the program anymore, then drop the output from the output cache.
                 if (sourcePath != NOT_FROM_SOURCE && !builder.getSourceFile(sourcePath)) {
+                    debug(`createEmitAndLibCacheAndDiagnosticsProgram: deleting ${sourcePath} as it's no longer a src.`);
                     outputSourceMapping.delete(path);
                     outputCache.delete(path);
                     continue;
-                } 
+                }
                 writeFile(path, entry.text, entry.writeByteOrderMark);
             }
         }
 
         const writeF = (fileName, text, writeByteOrderMark, onError, sourceFiles) => {
             writeFile(fileName, text, writeByteOrderMark, onError, sourceFiles);
-            outputCache.set(fileName, {text, writeByteOrderMark});
+            outputCache.set(fileName, { text, writeByteOrderMark });
             if (sourceFiles?.length > 0) {
                 outputSourceMapping.set(fileName, sourceFiles[0].fileName)
             } else {
@@ -349,12 +534,11 @@ function createEmitAndLibCacheAndDiagnosticsProgram(
     const getSourceFile = host.getSourceFile;
     host.getSourceFile = (fileName) => {
         if (libCache.has(fileName)) {
-            host.debuglog?.(`cache hit for default lib ${fileName}`)
             return libCache.get(fileName);
         }
         const sf = getSourceFile(fileName);
         if (sf && isExternalLib(fileName)) {
-            host.debuglog?.(`putting default lib ${fileName} into cache.`)
+            debug(`createEmitAndLibCacheAndDiagnosticsProgram: putting default lib ${fileName} into cache.`)
             libCache.set(fileName, sf);
         }
         return sf;
@@ -363,211 +547,268 @@ function createEmitAndLibCacheAndDiagnosticsProgram(
     return builder;
 }
 
-/** @type {ts.FormatDiagnosticsHost} */
-const formatDiagnosticHost = {
-    getCanonicalFileName: (path) => path,
-    getCurrentDirectory: ts.sys.getCurrentDirectory,
-    getNewLine: () => ts.sys.newLine,
-};
+function createProgram(args, inputs, output, exit) {
+    const cmd = ts.parseCommandLine(args);
+    const bin = process.cwd(); // <execroot>/bazel-bin/<cfg>/bin
+    const execroot = path.resolve(bin, '..', '..', '..'); // execroot
+    const tsconfig = path.relative(execroot, path.resolve(bin, cmd.options.project)); // bazel-bin/<cfg>/bin/<pkg>/<options.project>
+    const cfg = path.relative(execroot, bin) // /bazel-bin/<cfg>/bin
+    const executingfilepath = path.relative(execroot, require.resolve("typescript")); // /bazel-bin/<opt-cfg>/bin/node_modules/tsc/...
 
-function printDiagnostics(diagnostics) {
-    worker.log('');
-    worker.log(ts.formatDiagnostics(diagnostics, formatDiagnosticHost));
-}
-
-function createProgram(args, initialInputs) {
-    const {options} = ts.parseCommandLine(args);
-    const compilerOptions = {...options}
-
-    const bin = process.cwd();
-    const execRoot = path.resolve(bin, '..', '..', '..');
-    const tsconfig = path.relative(execRoot, path.resolve(bin, options.project));
-
-    const filesystemTree = createFilesystemTree(execRoot, initialInputs);
+    const filesystem = createFilesystemTree(execroot, inputs);
     const outputs = new Set();
-
-    const taskQueue = new Array();
+    const watchEventQueue = new Array();
+    const watchEventsForSymlinks = new Set();
 
     /** @type {ts.System} */
     const strictSys = {
-        write: (s) => process.stderr.write(s),
+        write: write,
         writeOutputIsTTY: () => false,
-        setTimeout: setTimeout,
-        clearTimeout: clearTimeout, 
-        fileExists: fileExists,
+        getCurrentDirectory: () => "/" + cfg,
+        getExecutingFilePath: () => "/" + executingfilepath,
+        exit: exit,
+        resolvePath: notImplemented("sys.resolvePath", true, 0),
+        // handled by fstree.
+        realpath: filesystem.realpath,
+        fileExists: filesystem.fileExists,
+        directoryExists: filesystem.directoryExists,
+        getDirectories: filesystem.getDirectories,
         readFile: readFile,
-        readDirectory: readDirectory,
-        directoryExists: directoryExists,
-        getDirectories: getDirectories,
+        readDirectory: filesystem.readDirectory,
+        createDirectory: createDirectory,
+        writeFile: writeFile,
         watchFile: watchFile,
-        watchDirectory: watchDirectory,
-        exit: noop
+        watchDirectory: watchDirectory
     };
-    const sys = {
-        ...ts.sys,
-        ...strictSys,
-    };
-
-    enablePerformanceAndTracingIfNeeded();
-    updateOutputs();
+    const sys = { ...ts.sys, ...strictSys };
 
     const host = ts.createWatchCompilerHost(
-        compilerOptions.project,
-        compilerOptions,
+        cmd.options.project,
+        cmd.options,
         sys,
         createEmitAndLibCacheAndDiagnosticsProgram,
         noop,
         noop
     );
+    // deleting this will make tsc to not schedule updates but wait for getProgram to be called to apply updates which is exactly what is needed.
+    delete host.setTimeout;
+    delete host.clearTimeout;
 
-    host.invalidate = invalidate;
-    host.applyChanges = applyChanges;
-    host.debuglog = debuglog;
+    /** @type {ts.FormatDiagnosticsHost} */
+    const formatDiagnosticHost = {
+        getCanonicalFileName: (path) => path,
+        getCurrentDirectory: sys.getCurrentDirectory,
+        getNewLine: () => sys.newLine,
+    };
 
-    debuglog(`tsconfig: ${tsconfig}`);
-    debuglog(`execroot ${execRoot}`);
+    debug(`tsconfig: ${tsconfig}`);
+    debug(`execroot: ${execroot}`);
+    debug(`bin: ${bin}`);
+    debug(`cfg: ${cfg}`);
+    debug(`executingfilepath: ${executingfilepath}`);
+
+    const raw = ts.readConfigFile(cmd.options.project, readFile);
+    let compilerOptions = raw.config.compilerOptions || {};
+
+    enableStatisticsAndTracing();
+    updateOutputs();
+    applySyntheticOutPaths();
 
     const program = ts.createWatchProgram(host);
 
-    return { host, program, checkAndApplyArgs, enablePerformanceAndTracingIfNeeded };
+    // early return to prevent from declaring more variables accidentially. 
+    return { program, applyArgs, setOutput, formatDiagnostics, flushWatchEvents, invalidate, postRun, printFSTree: filesystem.printTree };
 
-    function setTimeout(cb) {
-        // NB: tsc will never clearTimeout if the index is 0 hence timeout must be truthy. :|
-        // https://github.com/microsoft/TypeScript/blob/d0bfd8caed521bfd24fc44960d9936a891744bb7/src/compiler/watchPublic.ts#L681
-        return taskQueue.push(cb);
-    }
- 
-    function clearTimeout(i) {
-        delete taskQueue[i - 1];
+    function formatDiagnostics(diagnostics) {
+        return `\n${ts.formatDiagnostics(diagnostics, formatDiagnosticHost)}\n`
     }
 
-    function applyChanges() {
-        for (let i = 0; i < taskQueue.length; i++) {
-            const task = taskQueue[i];
-            delete taskQueue[i]
-            if (task) {
-                task();
-            }  
+    function setOutput(newOutput) {
+        output = newOutput;
+    }
+
+    function write(chunk) {
+        output.write(chunk);
+    }
+
+    function enqueueAdditionalWatchEventsForSymlinks() {
+        for (const symlink of watchEventsForSymlinks) {
+            const expandedInputs = filesystem.readDirectory(symlink, undefined, undefined, undefined, Infinity);
+            for (const input of expandedInputs) {
+                filesystem.notify(input)
+            }
         }
-        taskQueue.length = 0;
+        watchEventsForSymlinks.clear();
     }
 
-    function enablePerformanceAndTracingIfNeeded() {
-        if (compilerOptions.extendedDiagnostics) {
+    function flushWatchEvents() {
+        enqueueAdditionalWatchEventsForSymlinks();
+        for (const [callback, ...args] of watchEventQueue) {
+            callback(...args);
+        }
+        watchEventQueue.length = 0;
+    }
+
+    function invalidate(filePath, kind) {
+        debug(`invalidate ${filePath} : ${ts.FileWatcherEventKind[kind]}`);
+
+        if (kind === ts.FileWatcherEventKind.Changed && filePath == tsconfig) {
+            applyChangesForTsConfig(args);
+        }
+
+        if (kind === ts.FileWatcherEventKind.Deleted) {
+            filesystem.remove(filePath);
+        } else if (kind === ts.FileWatcherEventKind.Created) {
+            filesystem.add(filePath);
+        } else {
+            filesystem.update(filePath);
+        }
+        if (filePath.indexOf("node_modules") != -1 && kind === ts.FileWatcherEventKind.Created) {
+            const normalizedFilePath = filesystem.normalizeIfSymlink(filePath)
+            if (normalizedFilePath) {
+                watchEventsForSymlinks.add(normalizedFilePath);
+            }
+        }
+    }
+
+    function enableStatisticsAndTracing() {
+        if (compilerOptions.diagnostics || compilerOptions.extendedDiagnostics || host.optionsToExtend.diagnostics || host.optionsToExtend.extendedDiagnostics) {
             ts.performance.enable();
         }
         // tracing is only available in 4.1 and above
         // See: https://github.com/microsoft/TypeScript/wiki/Performance-Tracing
-        if (compilerOptions.generateTrace && ts.startTracing && !ts.tracing) {
-            ts.startTracing('build', compilerOptions.generateTrace);
+        if ((compilerOptions.generateTrace || host.optionsToExtend.generateTrace) && ts.startTracing && !ts.tracing) {
+            ts.startTracing('build', compilerOptions.generateTrace || host.optionsToExtend.generateTrace);
+        }
+    }
+
+    function disableStatisticsAndTracing() {
+        ts.performance.disable();
+        if (ts.tracing) {
+            ts.tracing.stopTracing()
+        }
+    }
+
+    function postRun() {
+        if (ts.performance && ts.performance.isEnabled()) {
+            ts.performance.disable()
+            ts.performance.enable()
+        }
+
+        if (ts.tracing) {
+            ts.tracing.stopTracing()
         }
     }
 
     function updateOutputs() {
         outputs.clear();
-        if (compilerOptions.tsBuildInfoFile) {
-            const p = path.relative(execRoot, path.join(bin, compilerOptions.tsBuildInfoFile));
+        if (host.optionsToExtend.tsBuildInfoFile || compilerOptions.tsBuildInfoFile) {
+            const p = path.join(sys.getCurrentDirectory(), host.optionsToExtend.tsBuildInfoFile);
             outputs.add(p);
         }
     }
 
-    function checkAndApplyArgs(newArgs) {
-        // This function works based on the assumption that parseConfigFile of createWatchProgram
-        // will always reread compilerOptions with its reference.
+    function applySyntheticOutPaths() {
+        host.optionsToExtend.outDir = path.join(SYNTHETIC_OUTDIR, host.optionsToExtend.outDir);
+
+        if (host.optionsToExtend.declarationDir) {
+            host.optionsToExtend.declarationDir = path.join(SYNTHETIC_OUTDIR, host.optionsToExtend.declarationDir)
+        }
+
+        if (!compilerOptions.sourceRoot && (compilerOptions.sourceMap || compilerOptions.inlineSourceMap)) {
+            host.optionsToExtend.sourceRoot = host.optionsToExtend.rootDir
+        }
+        if (compilerOptions.sourceMap || compilerOptions.declarationMap) {
+            host.optionsToExtend.mapRoot = path.join(SYNTHETIC_OUTDIR, host.optionsToExtend.outDir)
+        }
+    }
+
+    function applyArgs(newArgs) {
+        // This function works based on the assumption that parseConfigFile of createWatchProgram will always read optionsToExtend by reference.
         // See: https://github.com/microsoft/TypeScript/blob/2ecde2718722d6643773d43390aa57c3e3199365/src/compiler/watchPublic.ts#L735
         // and: https://github.com/microsoft/TypeScript/blob/2ecde2718722d6643773d43390aa57c3e3199365/src/compiler/watchPublic.ts#L296
         if (args.join(' ') != newArgs.join(' ')) {
-            const {options} = ts.parseCommandLine(newArgs);
-            for (const key in compilerOptions) {
-                delete compilerOptions[key];
-            }
-            for (const key in options) {
-                compilerOptions[key] = options[key];
-            }
-            enablePerformanceAndTracingIfNeeded();
-            updateOutputs();
+            debug(`arguments have changed.`);
+            debug(`  current: ${newArgs.join(" ")}`);
+            debug(`  previous: ${args.join(" ")}`);
+
+            applyChangesForTsConfig(args);
+
             // invalidating tsconfig will cause parseConfigFile to be invoked
-            filesystemTree.update(tsconfig);
+            filesystem.update(tsconfig);
             args = newArgs;
         }
     }
 
-    function debuglog(message) {
-        // TODO: https://github.com/aspect-build/rules_ts/issues/189
-        compilerOptions.extendedDiagnostics && host.trace?.(message)
+    function applyChangesForTsConfig(args) {
+        const cmd = ts.parseCommandLine(args);
+        for (const key in host.optionsToExtend) {
+            delete host.optionsToExtend[key];
+        }
+        for (const key in cmd.options) {
+            host.optionsToExtend[key] = cmd.options[key];
+        }
+
+        const raw = ts.readConfigFile(cmd.options.project, readFile);
+        compilerOptions = raw.config.compilerOptions || {};
+
+        disableStatisticsAndTracing();
+        enableStatisticsAndTracing();
+        updateOutputs();
+        applySyntheticOutPaths();
     }
 
     function readFile(filePath, encoding) {
-        const relative = path.relative(execRoot, filePath);
-        // external lib are transitive sources thus not listed in the inputs map reported by bazel.
-        if (!filesystemTree.fileExists(path.relative(execRoot, filePath)) && !isExternalLib(filePath) && !outputs.has(relative)) {
+        filePath = path.resolve(sys.getCurrentDirectory(), filePath)
+
+        //external lib are transitive sources thus not listed in the inputs map reported by bazel.
+        if (!filesystem.fileExists(filePath) && !isExternalLib(filePath) && !outputs.has(filePath)) {
+            output.write(`tsc tried to read file (${filePath}) that wasn't an input to it.` + "\n");
             throw new Error(`tsc tried to read file (${filePath}) that wasn't an input to it.`);
         }
-        return ts.sys.readFile(filePath, encoding);
+
+        return ts.sys.readFile(path.join(execroot, filePath), encoding);
     }
 
-    function directoryExists(directoryPath) {
-        if (!directoryPath.startsWith(bin)) {
-            return false;
-        }
-        return filesystemTree.directoryExists(path.relative(execRoot, directoryPath));
+    function createDirectory(p) {
+        p = p.replace(SYNTHETIC_OUTDIR, ".")
+        ts.sys.createDirectory(p);
     }
 
-    function getDirectories(directoryPath) {
-        return filesystemTree.getDirectories(path.relative(execRoot, directoryPath));
-    }
-
-    function fileExists(filePath) {
-        return filesystemTree.fileExists(path.relative(execRoot, filePath));
-    }
-
-    
-    function readDirectory(directoryPath, extensions, exclude, include, depth) {
-        return filesystemTree.readDirectory(
-            path.relative(execRoot, directoryPath), 
-            extensions, exclude, include, depth
-        ).map(p => path.isAbsolute(p) ? p : path.join(execRoot, p))
-    }
-
-    function invalidate(filePath, kind) {
-        if (filePath.endsWith('.params')) return;
-        debuglog(`invalidate ${filePath} : ${ts.FileWatcherEventKind[kind]}`);
-
-        if (kind === ts.FileWatcherEventKind.Created) {
-            filesystemTree.add(filePath);
-        } else if (kind === ts.FileWatcherEventKind.Deleted) {
-            filesystemTree.remove(filePath);
-        } else {
-            filesystemTree.update(filePath);
-        }
+    function writeFile(p, data, mark) {
+        p = p.replace(SYNTHETIC_OUTDIR, ".")
+        ts.sys.writeFile(p, data, mark);
     }
 
     function watchDirectory(directoryPath, callback, recursive, options) {
-        // since rules_js runs everything under bazel-out we shouldn't care about anything outside of it.
-        if (!directoryPath.startsWith(execRoot)) {
-            return { close: noop };
-        }
-        const close = filesystemTree.watchDirectory(
-            path.relative(execRoot, directoryPath),
-            (input) => callback(path.join(execRoot, input)),
+        const close = filesystem.watchDirectory(
+            directoryPath,
+            (input) => watchEventQueue.push([callback, path.join("/", input)]),
             recursive
         );
 
-        return {close};
+        return { close };
     }
 
-    function watchFile(filePath, callback, interval) {
-        if (!path.isAbsolute(filePath)) {
-            filePath = path.resolve(filePath);
-        }
-        if (!filePath.startsWith(execRoot)) {
-            return { close: noop };
-        }
-        const close = filesystemTree.watchFile(
-            path.relative(execRoot, filePath),
-            (input, kind) => callback(path.join(execRoot, input), kind)
+    function watchFile(filePath, callback, _) {
+        // ideally, all paths should be absolute but sometimes tsc passes relative ones.
+        filePath = path.resolve(sys.getCurrentDirectory(), filePath)
+        const close = filesystem.watchFile(
+            filePath,
+            (input, kind) => watchEventQueue.push([callback, path.join("/", input), kind])
         )
-        return {close};
+        return { close };
+    }
+}
+
+function createCancellationToken(signal) {
+    return {
+        isCancellationRequested: () => signal.aborted,
+        throwIfCancellationRequested: () => {
+            if (signal.aborted) {
+                throw new Error(signal.reason);
+            }
+        }
     }
 }
 
@@ -585,16 +826,18 @@ const workers = new Map();
 
 function sweepLeastRecentlyUsedWorkers() {
     for (const [k, w] of workers) {
+        debug(`garbage collection: removing ${k} to free memory.`);
         w.program.close();
         workers.delete(k);
         // stop killing workers as soon as the worker is out the oom zone 
         if (!isNearOomZone()) {
+            debug(`garbage collection: finished`);
             break;
         }
     }
 }
 
-function getOrCreateWorker(args, inputs) {
+function getOrCreateWorker(args, inputs, output) {
     if (isNearOomZone()) {
         sweepLeastRecentlyUsedWorkers();
     }
@@ -606,8 +849,11 @@ function getOrCreateWorker(args, inputs) {
 
     let worker = workers.get(key)
     if (!worker) {
-        worker = createProgram(args, inputs);
-        worker.host.debuglog(`Created a new worker for ${key}`);
+        debug(`creating a new worker with the key ${key}`);
+        worker = createProgram(args, inputs, output, (exitCode) => {
+            debug(`worker ${key} has quit prematurely with code ${exitCode}`);
+            workers.delete(key);
+        });
     } else {
         // NB: removed from the map intentionally. to achieve LRU effect on the workers map.
         workers.delete(key)
@@ -617,24 +863,31 @@ function getOrCreateWorker(args, inputs) {
 }
 
 /** Build */
-function emit(args, inputs) {
-    const _worker = getOrCreateWorker(args, inputs);
+async function emit(request) {
+    setVerbosity(request.verbosity);
+    debug(`# Beginning new work`);
+    debug(`arguments: ${request.arguments.join(' ')}`)
 
-    const host = _worker.host;
-    const lastRequestTimestamp = Date.now();
-    const previousInputs = _worker.previousInputs;
+    const inputs = Object.fromEntries(
+        request.inputs.map(input => [
+            input.path,
+            input.digest.byteLength ? Buffer.from(input.digest).toString("hex") : null
+        ])
+    );
 
-    timingStart('checkAndApplyArgs');
-    _worker.checkAndApplyArgs(args);
-    timingEnd('checkAndApplyArgs');
+    const worker = getOrCreateWorker(request.arguments, inputs, process.stderr);
+    const cancellationToken = createCancellationToken(request.signal);
 
-    timingStart('enablePerformanceAndTracingIfNeeded');
-    _worker.enablePerformanceAndTracingIfNeeded();
-    timingEnd('enablePerformanceAndTracingIfNeeded');
+    if (worker.previousInputs) {
 
-    const changes = new Set(), creations = new Set();
+        const previousInputs = worker.previousInputs;
 
-    if (previousInputs) {
+        timingStart('applyArgs');
+        worker.applyArgs(request.arguments);
+        timingEnd('applyArgs');
+
+        const changes = new Set(), creations = new Set();
+
         timingStart(`invalidate`);
         for (const [input, digest] of Object.entries(inputs)) {
             if (!(input in previousInputs)) {
@@ -649,44 +902,25 @@ function emit(args, inputs) {
         }
         for (const input in previousInputs) {
             if (!(input in inputs)) {
-                host.invalidate(input, ts.FileWatcherEventKind.Deleted);
+                worker.invalidate(input, ts.FileWatcherEventKind.Deleted);
             }
         }
         for (const input of creations) {
-            host.invalidate(input, ts.FileWatcherEventKind.Created);
+            worker.invalidate(input, ts.FileWatcherEventKind.Created);
         }
         for (const input of changes) {
-            host.invalidate(input, ts.FileWatcherEventKind.Changed);
+            worker.invalidate(input, ts.FileWatcherEventKind.Changed);
         }
         timingEnd('invalidate');
-    }
 
-    timingStart('applyChanges');
-    host.applyChanges();
-    if (creations.size) {
-        timingStart('applyChanges for changes');
-        for (const input of creations) {
-            host.invalidate(input, ts.FileWatcherEventKind.Changed);
-        }
-        host.applyChanges();
-        timingEnd('applyChanges for changes');
+        timingStart('flushWatchEvents');
+        worker.flushWatchEvents();
+        timingEnd('flushWatchEvents');
     }
-    timingEnd('applyChanges');
 
     timingStart('getProgram');
-    const program = _worker.program.getCurrentProgram()
+    const program = worker.program.getProgram();
     timingEnd('getProgram');
-
-    const cancellationToken = {
-        isCancellationRequested: function (timestamp) {
-            return timestamp !== lastRequestTimestamp;
-        }.bind(null, lastRequestTimestamp),
-        throwIfCancellationRequested: function (timestamp) {
-            if (timestamp !== lastRequestTimestamp) {
-                throw new ts.OperationCanceledException();
-            }
-        }.bind(null, lastRequestTimestamp),
-    };
 
     timingStart('emit');
     const result = program.emit(undefined, undefined, cancellationToken);
@@ -699,73 +933,55 @@ function emit(args, inputs) {
     const succeded = !result.emitSkipped && result?.diagnostics.length === 0 && diagnostics.length === 0;
 
     if (!succeded) {
-        printDiagnostics(diagnostics);
+        request.output.write(worker.formatDiagnostics(diagnostics));
+        VERBOSE && worker.printFSTree()
     }
 
-    _worker.previousInputs = inputs;
-
-    if (ts.performance.isEnabled()) {
-        ts.performance.forEachMeasure((name, duration) => host.debuglog(`${name} time: ${duration}`));
-        // Disabling performance will reset counters for the next compilation
-        ts.performance.disable()
+    if (ts.performance && ts.performance.isEnabled()) {
+        ts.performance.forEachMeasure((name, duration) => request.output.write(`${name} time: ${duration}\n`));
     }
+ 
+    worker.previousInputs = inputs;
+    worker.postRun();
 
-    if (ts.tracing) {
-        ts.tracing.stopTracing()
-    }
-
-    return succeded;
+    debug(`# Finished the work`);
+    return succeded ? 0 : 1;
 }
 
-// Based on https://github.com/microsoft/TypeScript/blob/3fd8a6e44341f14681aa9d303dc380020ccb2147/src/executeCommandLine/executeCommandLine.ts#L465
-function emitOnce(args) {
-    const currentDirectory = ts.sys.getCurrentDirectory();
-    const reportDiagnostic = ts.createDiagnosticReporter({ ...ts.sys, write: worker.log });
-    const commandLine = ts.parseCommandLine(args);
-    const extendedConfigCache = new ts.Map();
-    const commandLineOptions = ts.convertToOptionsWithAbsolutePaths(commandLine.options, (fileName) =>
-        ts.getNormalizedAbsolutePath(fileName, currentDirectory)
-    );
-    const configParseResult = ts.parseConfigFileWithSystem(
-        commandLine.options.project,
-        commandLineOptions,
-        extendedConfigCache,
-        commandLine.watchOptions,
-        ts.sys,
-        reportDiagnostic
-    );
-    const program = ts.createProgram({
-        options: configParseResult.options,
-        rootNames: configParseResult.fileNames,
-        projectReferences: configParseResult.projectReferences,
-        configFileParsingDiagnostics: configParseResult.errors,
-    });
-    const result = program.emit();
-    const diagnostics = ts.getPreEmitDiagnostics(program).concat(result?.diagnostics);
-    const succeded = !result.emitSkipped && result?.diagnostics.length === 0 && diagnostics.length === 0;
 
-    if (!succeded) {
-        printDiagnostics(diagnostics);
-    }
-
-    return succeded;
-}
-
-if (require.main === module && worker.runAsWorker(process.argv)) {
-    worker.log(`Running ${MNEMONIC} as a Bazel worker`);
-    worker.runWorkerLoop(emit);
+if (require.main === module && worker_protocol.isPersistentWorker(process.argv)) {
+    console.error(`Running ${MNEMONIC} as a Bazel worker`);
+    console.error(`TypeScript version: ${ts.version}`);
+    worker_protocol.enterWorkerLoop(emit);
 } else if (require.main === module) {
-    worker.log(`WARNING: Running ${MNEMONIC} as a standalone process`);
-    worker.log(
-        `Started a standalone process to perform this action but this might lead to some unexpected behavior with tsc due to being run non-sandboxed.`
-    );
-    worker.log(
-        `Your build might be misconfigured, try putting "build --strategy=${MNEMONIC}=worker" into your .bazelrc or add "supports_workers = False" attribute into this ts_project target.`
-    );
-    const args = getArgsFromParamFile();
-    if (!emitOnce(args)) {
-        process.exit(1);
+    if (!process.cwd().includes("sandbox")) {
+        console.error(`WARNING: Running ${MNEMONIC} as a standalone process`);
+        console.error(
+            `Started a standalone process to perform this action but this might lead to some unexpected behavior with tsc due to being run non-sandboxed.`
+        );
+        console.error(
+            `Your build might be misconfigured, try putting "build --strategy=${MNEMONIC}=worker" into your .bazelrc or add "supports_workers = False" attribute into this ts_project target.`
+        );
     }
+
+    function executeCommandLine() {
+        // will execute tsc.
+        require("typescript/lib/tsc");
+    }
+
+    // newer versions of typescript exposes executeCommandLine function we will prefer to use. 
+    // if it's missing, due to older version of typescript, we'll use our implementation which calls tsc.js by requiring it.
+    const execute = ts.executeCommandLine || executeCommandLine;
+    let p = process.argv[process.argv.length - 1];
+    if (p.startsWith('@')) {
+        // p is relative to execroot but we are in bazel-out so we have to go three times up to reach execroot.
+        // p = bazel-out/darwin_arm64-fastbuild/bin/0.params
+        // currentDir =  bazel-out/darwin_arm64-fastbuild/bin
+        p = path.resolve('..', '..', '..', p.slice(1));
+    }
+    const args = fs.readFileSync(p).toString().trim().split('\n');
+    ts.sys.args = process.argv = [process.argv0, process.argv[1], ...args];
+    execute(ts.sys, ts.noop, args);
 }
 
-module.exports.__do_not_use_test_only__ = {createFilesystemTree: createFilesystemTree, emit: emit, workers: workers};
+module.exports.__do_not_use_test_only__ = { createFilesystemTree: createFilesystemTree, emit: emit, workers: workers };

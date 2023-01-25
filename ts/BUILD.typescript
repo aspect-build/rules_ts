@@ -49,33 +49,10 @@ js_binary(
 )
 
 # tsc worker
-npm_package_internal(
-    name = "npm_google_protobuf",
-    src = "@npm_google_protobuf//:package",
-    package = "google-protobuf",
-    version = "bazel_worker_version",
-)
-
-npm_link_package(
-    name = "node_modules/google-protobuf",
-    src = "npm_google_protobuf",
-    visibility = ["//visibility:public"],
-)
-
-npm_package_internal(
-    name = "npm_at_bazel_worker",
-    src = "@npm_at_bazel_worker//:package",
-    package = "@bazel/worker",
-    version = "bazel_worker_version",
-)
-
-npm_link_package(
-    name = "node_modules/@bazel/worker",
-    src = "npm_at_bazel_worker",
-    deps = {
-        ":.aspect_rules_js/node_modules/google-protobuf": "",
-    },
-    visibility = ["//visibility:public"],
+copy_file(
+    name = "copy_worker_js",
+    src = "@aspect_rules_js//js/private/worker:worker.js",
+    out = "worker.js",
 )
 
 copy_file(
@@ -94,8 +71,8 @@ js_binary(
     name = "tsc_worker",
     data = [
         ":package_json",
-        ":node_modules/typescript", 
-        ":node_modules/@bazel/worker"
+        ":node_modules/typescript",
+        ":copy_worker_js",
     ],
     entry_point = "copy_ts_project_worker",
     visibility = ["//visibility:public"],

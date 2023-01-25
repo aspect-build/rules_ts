@@ -20,6 +20,34 @@ You can often create a minimal repro of your problem outside of Bazel.
 This is a good way to bisect whether your issue is purely with TypeScript, or there's something
 Bazel-specific going on.
 
+# Not reproducible ts_project worker bugs
+Not reproducible ts_project, a.k.a. state, bugs has been a challenge for anyone to diagnose and possibly, fix in ts_project. 
+Not knowing what state the worker has been at when it falsely failed, or what went wrong along the way is hard to know.
+For this, we introduced support  for `--worker_verbose` flag which prints a bunch of helpful logs to worker log file.
+
+If you find yourself getting yelled at by ts_project falsely on occasion, drop `build --worker_verbose` to the `.bazelrc` file.
+In addition to `--worker_verbose`, set `extendedDiagnostics` and `traceResolution` to true in the `tsconfig.json` file to log
+additional information about how tsc reacts to events fed by worker protocol. 
+
+```
+{
+    "compilerOptions": {
+        "extendedDiagnostics": true,
+        "traceResolution": true
+    }
+}
+```
+
+Next time, the ts_project yields false negative diagnostics messages, collect the logs files output_base and file a bug with the log files.
+
+To collect log files run the command below at the workspace directory and attach the logs.tar file to issued file.
+```
+tar -cf logs.tar $(ls $(bazel info output_base)/bazel-workers/worker-*-TsProject.log)
+```
+
+This will help us understand what went wrong in your case, and hopefully implement a permanent fix for it.
+
+
 # Getting unstuck
 
 The basic methodology for diagnosing problems is:

@@ -1,6 +1,0 @@
-{
-  "name": "@example/iris",
-  "dependencies": {
-    "acorn": "8.8.0"
-  }
-}
