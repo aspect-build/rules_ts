@@ -1,7 +1,7 @@
 load "common.bats"
 
 setup() {
-    cd $(mktemp -d)
+    cd $BATS_FILE_TMPDIR
 }
 
 teardown() {

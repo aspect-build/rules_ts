@@ -130,7 +130,7 @@ function createFilesystemTree(root, inputs) {
 
     function add(p) {
         const segments = p.split(path.sep);
-        const trail = [];
+        const parents = [];
         let node = tree;
         for (let i = 0; i < segments.length; i++) {
             const segment = segments[i];
@@ -138,11 +138,11 @@ function createFilesystemTree(root, inputs) {
             if (node && node[Type] == TYPE.SYMLINK) {
                 // stop; this is possibly path to a symlink which points to a treeartifact.
                 //// version 6.0.0 has a weird behavior where it expands symlinks that point to treeartifact when --experimental_allow_unresolved_symlinks is turned off.
-                debug(`WEIRD_BAZEL_6_BEHAVIOR: stopping at ${trail.join(path.sep)}`)
+                debug(`WEIRD_BAZEL_6_BEHAVIOR: stopping at ${parents.join(path.sep)}`)
                 return;
             }
 
-            const currentp = path.join(...trail, segment);
+            const currentp = path.join(...parents, segment);
 
             if (typeof node[segment] != "object") {
                 const possiblyResolvedSymlinkPath = followSymlinkUsingRealFs(currentp)
@@ -151,21 +151,21 @@ function createFilesystemTree(root, inputs) {
                         [Type]: TYPE.SYMLINK,
                         [Symlink]: possiblyResolvedSymlinkPath
                     }
-                    notifyWatchers(trail, segment, TYPE.SYMLINK, EVENT_TYPE.ADDED);
+                    notifyWatchers(parents, segment, TYPE.SYMLINK, EVENT_TYPE.ADDED);
                     return;
                 }
 
                 // last of the segments; which assumed to be a file
                 if (i == segments.length - 1) {
                     node[segment] = { [Type]: TYPE.FILE };
-                    notifyWatchers(trail, segment, TYPE.FILE, EVENT_TYPE.ADDED);
+                    notifyWatchers(parents, segment, TYPE.FILE, EVENT_TYPE.ADDED);
                 } else {
                     node[segment] = { [Type]: TYPE.DIR };
-                    notifyWatchers(trail, segment, TYPE.DIR, EVENT_TYPE.ADDED);
+                    notifyWatchers(parents, segment, TYPE.DIR, EVENT_TYPE.ADDED);
                 }
             }
             node = node[segment];
-            trail.push(segment);
+            parents.push(segment);
         }
     }
 
@@ -287,15 +287,31 @@ function createFilesystemTree(root, inputs) {
         return typeof node == "object" && node[Type] == TYPE.DIR;
     }
 
-    function isSymlink(p) {
-        const dirname = path.dirname(p);
-        const basename = path.basename(p);
-        const parentNode = getNode(dirname);
-        if (!parentNode) {
-            return false;
+    function normalizeIfSymlink(p) {
+        const segments = p.split(path.sep);
+        let node = tree;
+        let parents = [];
+        for (const segment of segments) {
+            if (!segment) {
+                continue;
+            }
+            if (!(segment in node)) {
+                break;
+            }
+            node = node[segment];
+            parents.push(segment);
+            if (node[Type] == TYPE.SYMLINK) {
+               // ideally this condition would not met until the last segment of the path unless there's a symlink segment in
+               // earlier segments. this indeed happens in bazel 6.0 with --experimental_allow_unresolved_symlinks turned off.
+               break;
+            }
         }
-        const node = parentNode[basename]
-        return typeof node == "object" && node[Type] == TYPE.SYMLINK;
+
+        if (typeof node == "object" && node[Type] == TYPE.SYMLINK) {
+           return parents.join(path.sep);
+        }
+        
+        return undefined;
     }
 
     function realpath(p) {
@@ -373,6 +389,7 @@ function createFilesystemTree(root, inputs) {
     function notifyWatchers(trail, segment, type, eventType) {
         const final = [...trail, segment];
         const finalPath = final.join(path.sep);
+        debug(`notify ${finalPath}`)
         if (type == TYPE.FILE) {
             // notify file watchers watching at the file path, excluding recursive ones. 
             notifyWatcher(final, finalPath, eventType, /* recursive */ false);
@@ -446,7 +463,7 @@ function createFilesystemTree(root, inputs) {
         return watch(p, callback)
     }
 
-    return { add, remove, update, notify, fileExists, directoryExists, isSymlink, realpath, readDirectory, getDirectories, watchDirectory: watch, watchFile: watchFile, printTree }
+    return { add, remove, update, notify, fileExists, directoryExists, normalizeIfSymlink, realpath, readDirectory, getDirectories, watchDirectory: watch, watchFile: watchFile, printTree }
 }
 
 
@@ -542,6 +559,7 @@ function createProgram(args, inputs, output, exit) {
     const filesystem = createFilesystemTree(execroot, inputs);
     const outputs = new Set();
     const watchEventQueue = new Array();
+    const watchEventsForSymlinks = new Set();
 
     /** @type {ts.System} */
     const strictSys = {
@@ -614,7 +632,18 @@ function createProgram(args, inputs, output, exit) {
         output.write(chunk);
     }
 
+    function enqueueAdditionalWatchEventsForSymlinks() {
+        for (const symlink of watchEventsForSymlinks) {
+            const expandedInputs = filesystem.readDirectory(symlink, undefined, undefined, undefined, Infinity);
+            for (const input of expandedInputs) {
+                filesystem.notify(input)
+            }
+        }
+        watchEventsForSymlinks.clear();
+    }
+
     function flushWatchEvents() {
+        enqueueAdditionalWatchEventsForSymlinks();
         for (const [callback, ...args] of watchEventQueue) {
             callback(...args);
         }
@@ -635,10 +664,10 @@ function createProgram(args, inputs, output, exit) {
         } else {
             filesystem.update(filePath);
         }
-        if (filePath.indexOf("node_modules") != -1 && filesystem.isSymlink(filePath) && kind === ts.FileWatcherEventKind.Created) {
-            const expandedInputs = filesystem.readDirectory(filePath, undefined, undefined, undefined, Infinity);
-            for (const input of expandedInputs) {
-                filesystem.notify(input);
+        if (filePath.indexOf("node_modules") != -1 && kind === ts.FileWatcherEventKind.Created) {
+            const normalizedFilePath = filesystem.normalizeIfSymlink(filePath)
+            if (normalizedFilePath) {
+                watchEventsForSymlinks.add(normalizedFilePath);
             }
         }
     }
