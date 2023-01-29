@@ -26,10 +26,6 @@ rules_ts_ext = use_extension(
 rules_ts_ext.deps()
 
 use_repo(rules_ts_ext, "npm_typescript")
-
-use_repo(rules_ts_ext, "npm_google_protobuf")
-
-use_repo(rules_ts_ext, "npm_at_bazel_worker")
 \`\`\`
 
 [Bzlmod]: https://bazel.build/build/bzlmod
