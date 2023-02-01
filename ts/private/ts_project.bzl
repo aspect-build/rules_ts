@@ -85,12 +85,17 @@ See https://github.com/aspect-build/rules_ts/issues/228 for more details.
     # Add user specified arguments *before* rule supplied arguments
     arguments.add_all(ctx.attr.args)
 
-    outdir = _lib.join(ctx.label.package, ctx.attr.out_dir) if ctx.attr.out_dir else ctx.label.package
+    if ctx.attr.out_dir:
+        outdir = _lib.join(ctx.label.package, ctx.attr.out_dir)
+    elif ctx.label.package:
+        outdir = ctx.label.package
+    else:
+        outdir = ctx.label.workspace_root
     if outdir == "":
         outdir = "."
     arguments.add_all([
         "--project",
-        ctx.file.tsconfig.short_path,
+        ctx.file.tsconfig.path,
         "--outDir",
         outdir,
         "--rootDir",
