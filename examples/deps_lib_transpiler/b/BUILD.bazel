@@ -1,0 +1,11 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("//examples/transpiler:babel.bzl", "babel")
+
+ts_project(
+    name = "b",
+    srcs = ["index.ts"],
+    declaration = True,
+    transpiler = babel,
+    tsconfig = "//examples/deps_lib_transpiler:tsconfig",
+    visibility = ["//examples/deps_lib_transpiler:__subpackages__"],
+)

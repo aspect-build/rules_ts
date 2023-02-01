@@ -378,6 +378,7 @@ def ts_project(
             # that this js_library can be a valid dep for downstream ts_project or other rules_js derivative rules.
             srcs = [transpile_target_name, tsc_target_name],
             deps = deps,
+            data = data,
             **common_kwargs
         )
 
