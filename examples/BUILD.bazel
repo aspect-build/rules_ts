@@ -24,5 +24,12 @@ npm_link_package(
     visibility = ["//examples:__subpackages__"],
 )
 
+npm_link_package(
+    name = "node_modules/@myorg/deps_lib_transpiler",
+    src = "//examples/deps_lib_transpiler",
+    root_package = "examples",
+    visibility = ["//examples:__subpackages__"],
+)
+
 # This macro expands to a npm_link_package for each third-party package in package.json
 npm_link_all_packages(name = "node_modules")
