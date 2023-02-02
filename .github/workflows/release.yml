@@ -35,3 +35,5 @@ jobs:
                   # Use GH feature to populate the changelog automatically
                   generate_release_notes: true
                   body_path: release_notes.txt
+                  files: rules_ts-*.tar.gz
+                  fail_on_unmatched_files: true
