@@ -7,7 +7,10 @@ set -o errexit -o nounset -o pipefail
 TAG=${GITHUB_REF_NAME}
 # Strip leading 'v'
 PREFIX="rules_ts-${TAG:1}"
-SHA=$(git archive --format=tar --prefix=${PREFIX}/ ${TAG} | gzip | shasum -a 256 | awk '{print $1}')
+ARCHIVE="rules_ts-$TAG.tar.gz"
+
+git archive --format=tar --prefix=${PREFIX}/ ${TAG} | gzip > $ARCHIVE
+SHA=$(shasum -a 256 $ARCHIVE | awk '{print $1}')
 
 cat << EOF
 ## Using [Bzlmod] with Bazel 6:
@@ -40,7 +43,7 @@ http_archive(
     name = "aspect_rules_ts",
     sha256 = "${SHA}",
     strip_prefix = "${PREFIX}",
-    url = "https://github.com/aspect-build/rules_ts/archive/refs/tags/${TAG}.tar.gz",
+    url = "https://github.com/aspect-build/rules_ts/releases/download/${TAG}/${ARCHIVE}",
 )
 EOF
 
