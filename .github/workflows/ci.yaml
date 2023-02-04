@@ -130,6 +130,10 @@ jobs:
               working-directory: ${{ matrix.folder }}
               run: bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc --bazelrc=.bazelrc test --config=${{ matrix.config }} //...
 
+            - name: check determinism
+              if: ${{ matrix.folder == '.' }}
+              run: diff <(bazel dump --action_cache) action_cache.txt
+
     test-worker:
         runs-on: ubuntu-latest
         needs:
