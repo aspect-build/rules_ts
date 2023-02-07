@@ -2,7 +2,8 @@
 
 load(":ts_config.bzl", "TsConfigInfo")
 load(":ts_lib.bzl", "COMPILER_OPTION_ATTRS", "ValidOptionsInfo")
-load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_files_to_bin_actions")
+load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_file_to_bin_action", "copy_files_to_bin_actions")
+load("@aspect_bazel_lib//lib:paths.bzl", "to_output_relative_path")
 load("@aspect_rules_js//js:providers.bzl", "JsInfo")
 
 def _tsconfig_inputs(ctx):
@@ -23,6 +24,7 @@ def _validate_options_impl(ctx):
     # Bazel won't run our action unless its output is needed, so make a marker file
     # We make it a .d.ts file so we can plumb it to the deps of the ts_project compile.
     marker = ctx.actions.declare_file("%s.optionsvalid.d.ts" % ctx.label.name)
+    tsconfig = copy_file_to_bin_action(ctx, ctx.file.tsconfig)
 
     # Provider validation
     if not ctx.attr.allow_js:
@@ -51,7 +53,12 @@ To disable this check, set the validate attribute to False:
         incremental = ctx.attr.incremental,
         ts_build_info_file = ctx.attr.ts_build_info_file,
     )
-    arguments.add_all([ctx.file.tsconfig.short_path, marker.short_path, ctx.attr.target, json.encode(config)])
+    arguments.add_all([
+        to_output_relative_path(tsconfig),
+        to_output_relative_path(marker),
+        ctx.attr.target,
+        json.encode(config),
+    ])
 
     inputs = _tsconfig_inputs(ctx)
 
