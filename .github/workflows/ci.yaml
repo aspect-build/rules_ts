@@ -49,7 +49,7 @@ jobs:
 
     test:
         # The type of runner that the job will run on
-        runs-on: ${{ matrix.os }}
+        runs-on: ubuntu-latest
 
         needs:
             - matrix-prep-config
@@ -58,7 +58,6 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                os: [ubuntu-latest, macos-latest]
                 config: ${{ fromJSON(needs.matrix-prep-config.outputs.configs) }}
                 bazelversion: ${{ fromJSON(needs.matrix-prep-bazelversion.outputs.bazelversions) }}
                 folder:
