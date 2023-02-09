@@ -47,17 +47,35 @@ jobs:
             # Will look like ["<version from .bazelversion>", "5.3.2"]
             bazelversions: ${{ toJSON(steps.*.outputs.bazelversion) }}
 
+    matrix-prep-os:
+        # Prepares the 'os' axis of the test matrix
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+            - id: linux
+              run: echo "os=ubuntu-latest" >> $GITHUB_OUTPUT
+            - id: macos
+              run: echo "os=macos-latest" >> $GITHUB_OUTPUT
+              # Only run on main branch (not PRs) to minimize macOS minutes (billed at 10X)
+              # https://docs.github.com/en/billing/managing-billing-for-github-actions/about-billing-for-github-actions#included-storage-and-minutes
+              if: ${{ github.ref == 'refs/heads/main' }}
+        outputs:
+            # Will look like ["ubuntu-latest", "macos-latest"]
+            os: ${{ toJSON(steps.*.outputs.os) }}
+
     test:
         # The type of runner that the job will run on
-        runs-on: ubuntu-latest
+        runs-on: ${{ matrix.os }}
 
         needs:
             - matrix-prep-config
             - matrix-prep-bazelversion
+            - matrix-prep-os
 
         strategy:
             fail-fast: false
             matrix:
+                os: ${{ fromJSON(needs.matrix-prep-os.outputs.os) }}
                 config: ${{ fromJSON(needs.matrix-prep-config.outputs.configs) }}
                 bazelversion: ${{ fromJSON(needs.matrix-prep-bazelversion.outputs.bazelversions) }}
                 folder:
@@ -66,6 +84,10 @@ jobs:
                     - 'e2e/worker'
                     - 'e2e/workspace'
                 exclude:
+                    # Don't test macos with Bazel 5 to minimize macOS minutes (billed at 10X)
+                    # https://docs.github.com/en/billing/managing-billing-for-github-actions/about-billing-for-github-actions#included-storage-and-minutes
+                    - os: macos-latest
+                      bazelversion: 5.3.2
                     # Don't test RBE with Bazel 5 (not supported)
                     - config: rbe
                       bazelversion: 5.3.2
@@ -78,6 +100,7 @@ jobs:
                     # Don't test bzlmod with Bazel 5 (not supported)
                     - bazelversion: 5.3.2
                       folder: e2e/bzlmod
+
         # Steps represent a sequence of tasks that will be executed as part of the job
         steps:
             # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
