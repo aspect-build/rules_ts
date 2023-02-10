@@ -1,0 +1,33 @@
+load("//ts:defs.bzl", "ts_project")
+load("//examples/source_map_support:defs.bzl", "js_test")
+
+ts_project(
+    name = "ts",
+    srcs = [
+        "a.ts",
+        "b.ts",
+    ],
+    source_map = True,
+    tsconfig = {
+        "compilerOptions": {
+            "types": ["node"],
+            "sourceMap": True,
+        },
+    },
+    deps = [
+        "//examples:node_modules/@types/node",
+    ],
+)
+
+js_test(
+    name = "stack_trace_support_test",
+    data = [":ts"],
+    entry_point = ":a.js",
+)
+
+js_test(
+    name = "stack_trace_support_with_chdir_test",
+    chdir = "examples",
+    data = [":ts"],
+    entry_point = ":a.js",
+)

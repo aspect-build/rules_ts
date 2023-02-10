@@ -1,0 +1,11 @@
+load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
+
+exports_files([
+    "defs.bzl",
+])
+
+copy_to_bin(
+    name = "stack-trace-support",
+    srcs = ["stack-trace-support.js"],
+    visibility = ["//visibility:public"],
+)
