@@ -218,7 +218,7 @@ This is an error because Bazel does not run actions unless their outputs are nee
     if len(outputs) > 0:
         inputs_depset = depset(
             copy_files_to_bin_actions(ctx, inputs),
-            transitive = transitive_inputs + [_gather_declarations_from_js_providers(ctx.attr.srcs + ctx.attr.deps)],
+            transitive = transitive_inputs + [_gather_declarations_from_js_providers(ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps)],
         )
 
         ctx.actions.run(
@@ -237,12 +237,12 @@ This is an error because Bazel does not run actions unless their outputs are nee
             },
         )
 
-    transitive_sources = js_lib_helpers.gather_transitive_sources(output_sources, ctx.attr.srcs + ctx.attr.deps)
+    transitive_sources = js_lib_helpers.gather_transitive_sources(output_sources, ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps)
 
-    transitive_declarations = js_lib_helpers.gather_transitive_declarations(output_declarations, ctx.attr.srcs + ctx.attr.deps)
+    transitive_declarations = js_lib_helpers.gather_transitive_declarations(output_declarations, ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps)
 
     npm_linked_packages = js_lib_helpers.gather_npm_linked_packages(
-        srcs = ctx.attr.srcs,
+        srcs = ctx.attr.srcs + [ctx.attr.tsconfig],
         deps = ctx.attr.deps,
     )
 
@@ -257,7 +257,7 @@ This is an error because Bazel does not run actions unless their outputs are nee
         ctx = ctx,
         sources = output_sources_depset,
         data = ctx.attr.data,
-        deps = ctx.attr.srcs + ctx.attr.deps,
+        deps = ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps,
     )
 
     providers = [

@@ -53,6 +53,20 @@ importers:
     dependencies:
       '@lib/test': link:../linked
 
+  linked_tsconfig:
+    specifiers:
+      '@tsconfig/node18': 1.0.1
+    dependencies:
+      '@tsconfig/node18': 1.0.1
+
+  linked_tsconfig_consumer:
+    specifiers:
+      '@lib/tsconfig': workspace:*
+      '@types/node': 18.13.0
+    devDependencies:
+      '@lib/tsconfig': link:../linked_tsconfig
+      '@types/node': 18.13.0
+
 packages:
 
   /@ampproject/remapping/2.2.0:
@@ -493,6 +507,10 @@ packages:
 
   /@tsconfig/node16-strictest-esm/1.0.3:
     resolution: {integrity: sha512-0/QTPDkKmE2dy0dMRstPCv4VJ+gUGgvMKzaWd5P3hgdlmPqYqe1pJxDGUlNYbSgUBlncIvvX+mIeZarokysNgg==}
+    dev: false
+
+  /@tsconfig/node18/1.0.1:
+    resolution: {integrity: sha512-sNFeK6X2ATlhlvzyH4kKYQlfHXE2f2/wxtB9ClvYXevWpmwkUT7VaSrjIN9E76Qebz8qP5JOJJ9jD3QoD/Z9TA==}
     dev: false
 
   /@types/jasmine/4.3.0:

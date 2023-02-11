@@ -1,0 +1,7 @@
+{
+    "name": "@lib/tsconfig",
+    "private": true,
+    "dependencies": {
+        "@tsconfig/node18": "1.0.1"
+    }
+}
