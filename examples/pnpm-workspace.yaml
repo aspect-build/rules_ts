@@ -1,3 +1,5 @@
 packages:
     - linked
     - linked_consumer
+    - linked_tsconfig
+    - linked_tsconfig_consumer
