@@ -20,18 +20,6 @@ importers:
       reflect-metadata: 0.1.13
       rxjs: 7.5.7
 
-  transitive_closure:
-    specifiers:
-      '@transitive_closure/a': workspace:*
-    dependencies:
-      '@transitive_closure/a': link:packages/a
-
-  transitive_closure/packages/a:
-    specifiers: {}
-
-  transitive_closure/packages/b:
-    specifiers: {}
-
 packages:
 
   /@nestjs/common/9.2.0_yzt46al3aifnexifjjdb4dxxja:
