@@ -1,4 +1,2 @@
-
 packages:
-    - 'transitive_closure/packages/*'
-    - 'transitive_closure'
+    - .
