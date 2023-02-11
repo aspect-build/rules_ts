@@ -1,2 +1,5 @@
 e2e/
 bazel-output-base
+examples/node_modules
+examples/linked/node_modules
+examples/linked_consumer/node_modules
