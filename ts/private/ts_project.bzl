@@ -247,7 +247,7 @@ This is an error because Bazel does not run actions unless their outputs are nee
     )
 
     npm_package_store_deps = js_lib_helpers.gather_npm_package_store_deps(
-        targets = ctx.attr.data,
+        targets = ctx.attr.data + ctx.attr.deps,
     )
 
     output_declarations_depset = depset(output_declarations)

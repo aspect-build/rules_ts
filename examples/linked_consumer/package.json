@@ -1,0 +1,7 @@
+{
+    "name": "tests",
+    "private": true,
+    "dependencies": {
+        "@lib/test": "workspace:*"
+    }
+}

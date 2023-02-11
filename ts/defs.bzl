@@ -136,7 +136,21 @@ def ts_project(
         data: Files needed at runtime by binaries or tests that transitively depend on this target.
             See https://bazel.build/reference/be/common-definitions#typical-attributes
 
-        deps: List of labels of other rules that produce TypeScript typings (.d.ts files)
+        deps: List of targets that produce TypeScript typings (`.d.ts` files)
+
+            If this list contains linked npm packages, npm package store targets or other targets that provide
+            `JsInfo`, `NpmPackageStoreInfo` providers are gathered from `JsInfo`. This is done directly from
+            the `npm_package_store_deps` field of these. For linked npm package targets, the underlying
+            `npm_package_store` target(s) that back the links is used. Gathered `NpmPackageStoreInfo`
+            providers are propagated to the direct dependencies of downstream linked `npm_package` targets.
+
+            NB: Linked npm package targets that are "dev" dependencies do not forward their underlying
+            `npm_package_store` target(s) through `npm_package_store_deps` and will therefore not be
+            propagated to the direct dependencies of downstream linked `npm_package` targets. npm packages
+            that come in from `npm_translate_lock` are considered "dev" dependencies if they are have
+            `dev: true` set in the pnpm lock file. This should be all packages that are only listed as
+            "devDependencies" in all `package.json` files within the pnpm workspace. This behavior is
+            intentional to mimic how `devDependencies` work in published npm packages.
 
         tsconfig: Label of the tsconfig.json file to use for the compilation.
             To support "chaining" of more than one extended config, this label could be a target that
