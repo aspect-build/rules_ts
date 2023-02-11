@@ -117,7 +117,8 @@ def _filter_input_files(files, allow_js, resolve_json_module):
     return [
         f
         for f in files
-        if _lib.is_ts_src(f.basename, allow_js) or _lib.is_json_src(f.basename, resolve_json_module)
+        # include typescript, json & declaration sources
+        if _lib.is_ts_src(f.basename, allow_js) or _lib.is_json_src(f.basename, resolve_json_module) or _lib.is_typings_src(f.basename)
     ]
 
 def _write_tsconfig_rule(ctx):
