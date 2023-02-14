@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const v8 = require('v8');
 const ts = require('typescript');
+const {performance} = require('perf_hooks');
 const worker_protocol = require('./worker');
 // workaround for the issue introduced in https://github.com/microsoft/TypeScript/pull/42095
 if (Array.isArray(ts.ignoredPaths)) {
@@ -20,6 +21,12 @@ function debug(...args) {
     VERBOSE && console.error(...args);
 }
 
+function setVerbosity(level) {
+    // bazel set verbosity to 10 when --worker_verbose is set. 
+    // See: https://bazel.build/remote/persistent#options
+    VERBOSE = level > 0;
+}
+
 function notImplemented(name, _throw, _returnArg) {
     return (...args) => {
         if (_throw) {
@@ -30,19 +37,12 @@ function notImplemented(name, _throw, _returnArg) {
     }
 }
 
-function setVerbosity(level) {
-    // bazel set verbosity to 10 when --worker_verbose is set. 
-    // See: https://bazel.build/remote/persistent#options
-    VERBOSE = level > 0;
-}
-
 /** Performance */
 function timingStart(label) {
-    ts.performance.mark(`before${label}`);
+    performance.mark(label);
 }
 function timingEnd(label) {
-    ts.performance.mark(`after${label}`);
-    ts.performance.measure(`${MNEMONIC} ${label}`, `before${label}`, `after${label}`);
+    performance.measure(label, label);
 }
 
 
@@ -473,7 +473,7 @@ function isExternalLib(path) {
         path.includes('node_modules/typescript/lib')
 }
 
-const libCache = new Map();
+const astCache = new Map();
 
 // TODO: support overloading with https://github.com/microsoft/TypeScript/blob/ab2523bbe0352d4486f67b73473d2143ad64d03d/src/compiler/builder.ts#L1008
 function createEmitAndLibCacheAndDiagnosticsProgram(
@@ -484,6 +484,27 @@ function createEmitAndLibCacheAndDiagnosticsProgram(
     configFileParsingDiagnostics,
     projectReferences
 ) {
+
+    /** Lib Cache */
+    const getSourceFile = host.getSourceFile;
+    host.getSourceFile = (fileName) => {
+        debug(`getSourceFile ${fileName}`);
+        if (astCache.has(fileName)) {
+            debug(`cache hit for ${fileName}`);
+            const sf = astCache.get(fileName);
+            
+            debug(sf.flags & ts.NodeCheckFlags.TypeChecked)
+            return sf;
+        }
+        const sf = getSourceFile(fileName);
+        if (sf) {
+            debug(`createEmitAndLibCacheAndDiagnosticsProgram: ${fileName} into cache.`)
+            astCache.set(fileName, sf);
+        }
+        return sf;
+    }
+
+        
     const builder = ts.createEmitAndSemanticDiagnosticsBuilderProgram(
         rootNames,
         options,
@@ -530,19 +551,6 @@ function createEmitAndLibCacheAndDiagnosticsProgram(
         return emit(targetSourceFile, writeF, cancellationToken, emitOnlyDtsFiles, customTransformers);
     };
 
-    /** Lib Cache */
-    const getSourceFile = host.getSourceFile;
-    host.getSourceFile = (fileName) => {
-        if (libCache.has(fileName)) {
-            return libCache.get(fileName);
-        }
-        const sf = getSourceFile(fileName);
-        if (sf && isExternalLib(fileName)) {
-            debug(`createEmitAndLibCacheAndDiagnosticsProgram: putting default lib ${fileName} into cache.`)
-            libCache.set(fileName, sf);
-        }
-        return sf;
-    }
 
     return builder;
 }
@@ -567,7 +575,7 @@ function createProgram(args, inputs, output, exit) {
         getCurrentDirectory: () => "/" + cfg,
         getExecutingFilePath: () => "/" + executingfilepath,
         exit: exit,
-        resolvePath: notImplemented("sys.resolvePath", true, 0),
+        resolvePath: notImplemented("sys.resolvePath", true),
         // handled by fstree.
         realpath: filesystem.realpath,
         fileExists: filesystem.fileExists,
@@ -864,18 +872,23 @@ function getOrCreateWorker(args, inputs, output) {
 
 /** Build */
 async function emit(request) {
+    performance.mark("total");
     setVerbosity(request.verbosity);
     debug(`# Beginning new work`);
     debug(`arguments: ${request.arguments.join(' ')}`)
 
+    timingStart("inputs")
     const inputs = Object.fromEntries(
         request.inputs.map(input => [
             input.path,
             input.digest.byteLength ? Buffer.from(input.digest).toString("hex") : null
         ])
     );
+    timingEnd("inputs")
 
+    timingStart('getOrCreateWorker');
     const worker = getOrCreateWorker(request.arguments, inputs, process.stderr);
+    timingEnd('getOrCreateWorker');
     const cancellationToken = createCancellationToken(request.signal);
 
     if (worker.previousInputs) {
@@ -919,7 +932,7 @@ async function emit(request) {
     }
 
     timingStart('getProgram');
-    const program = worker.program.getProgram();
+    const program = worker.previousInputs ? worker.program.getProgram() : worker.program.getCurrentProgram();
     timingEnd('getProgram');
 
     timingStart('emit');
@@ -937,14 +950,58 @@ async function emit(request) {
         VERBOSE && worker.printFSTree()
     }
 
+    const printStatistics = (stats) => {
+        let maxNameLength = 0;
+        let maxValueLength = 0;
+        for (const stat of stats) {
+            if (stat.name.length > maxNameLength) {
+                maxNameLength = stat.name.length;
+            }
+            if (stat.value.length > maxValueLength) {
+                maxValueLength = stat.value.length;
+            }
+        }
+        for (const stat of stats) {
+            const name = `${stat.name}:`
+            request.output.write(`${name.padEnd(maxNameLength, " ")} ${stat.value.toString().padStart(maxValueLength, " ")}\n`)
+        }
+    }
+
     if (ts.performance && ts.performance.isEnabled()) {
-        ts.performance.forEachMeasure((name, duration) => request.output.write(`${name} time: ${duration}\n`));
+        const programTime = ts.performance.getDuration("Program");
+        const bindTime = ts.performance.getDuration("Bind");
+        const checkTime = ts.performance.getDuration("Check");
+        const emitTime = ts.performance.getDuration("Emit");
+
+        const stats = [
+            {name:"I/O read", value: ts.performance.getDuration("I/O Read").toFixed(2)},
+            {name:"I/O write", value: ts.performance.getDuration("I/O Write").toFixed(2)},
+            {name:"Parse time", value: programTime.toFixed(2)},
+            {name:"Bind time", value: bindTime.toFixed(2)},
+            {name:"Check time", value: checkTime.toFixed(2)},
+            {name:"Emit time", value: emitTime.toFixed(2)},
+            {name:"Total time", value: (programTime + bindTime + checkTime + emitTime).toFixed(2)}
+        ]   
+        stats.push({name: "", value: ""})
+        ts.performance.forEachMeasure((name, duration) => stats.push({name: `${name} time`, value: duration.toFixed(2)}));
+
+        printStatistics(stats)
     }
  
     worker.previousInputs = inputs;
     worker.postRun();
 
     debug(`# Finished the work`);
+    performance.measure("totall", "total");
+    if (VERBOSE) {
+       
+       const marks = performance.getEntriesByName("totall");
+       for (const mark of marks) {
+            request.output.write(`\n\n\n${mark.name} ${mark.duration.toFixed(2)}\n`)
+       }
+       performance.clearMeasures();
+       performance.clearMarks();
+    }
     return succeded ? 0 : 1;
 }
 

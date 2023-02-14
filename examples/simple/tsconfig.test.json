@@ -2,12 +2,12 @@
     "compilerOptions": {
         "declaration": true,
         "baseUrl": ".",
-        "extendedDiagnostics": true,
         // Path Mapping for the editor to resolve packages within the workspace.
         // Note that this isn't needed for Bazel, since the package will be "linked" into the
         // node_modules/@myorg folder.
         "paths": {
             "@myorg/*": ["../*"]
-        }
+        },
+        "types": ["node"]
     }
 }

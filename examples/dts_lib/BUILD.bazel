@@ -10,6 +10,7 @@ ts_project(
         "lib_types_2.d.mts",
     ],
     declaration = True,
+    supports_workers = False,
     visibility = ["//examples:__subpackages__"],
 )
 
@@ -24,6 +25,7 @@ ts_project(
     name = "importer_rel_ts",
     srcs = ["importer_rel.ts"],
     declaration = True,
+    supports_workers = False,
     deps = [
         ":lib",
     ],
@@ -33,6 +35,7 @@ ts_project(
     name = "importer_linked_ts",
     srcs = ["importer_linked.ts"],
     declaration = True,
+    supports_workers = False,
     deps = [
         "//examples:node_modules/@myorg/dts_lib",
     ],
