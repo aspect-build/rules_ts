@@ -1,5 +1,41 @@
 lockfileVersion: 5.4
 
+specifiers:
+  '@angular/compiler': 15.0.1
+  '@angular/compiler-cli': 15.0.1
+  '@angular/core': 15.0.1
+  '@babel/cli': 7.19.3
+  '@babel/core': 7.20.2
+  '@babel/parser': 7.20.3
+  '@babel/preset-typescript': 7.18.6
+  '@babel/types': 7.20.2
+  '@tsconfig/node16-strictest-esm': 1.0.3
+  '@types/jasmine': 4.3.0
+  '@types/node': 18.11.9
+  date-fns: 2.29.3
+  rxjs: 7.5.7
+  source-map-support: ^0.5.21
+  typescript: 4.8.4
+  zone.js: 0.12.0
+
+dependencies:
+  '@angular/compiler': 15.0.1_@angular+core@15.0.1
+  '@angular/compiler-cli': 15.0.1_cjgqlygpi5ntpb3clzn7pzsmpy
+  '@angular/core': 15.0.1_rxjs@7.5.7+zone.js@0.12.0
+  '@babel/cli': 7.19.3_@babel+core@7.20.2
+  '@babel/core': 7.20.2
+  '@babel/parser': 7.20.3
+  '@babel/preset-typescript': 7.18.6_@babel+core@7.20.2
+  '@babel/types': 7.20.2
+  '@tsconfig/node16-strictest-esm': 1.0.3
+  '@types/jasmine': 4.3.0
+  '@types/node': 18.11.9
+  date-fns: 2.29.3
+  rxjs: 7.5.7
+  source-map-support: 0.5.21
+  typescript: 4.8.4
+  zone.js: 0.12.0
+
 importers:
 
   .:
@@ -586,6 +622,10 @@ packages:
       update-browserslist-db: 1.0.10_browserslist@4.21.4
     dev: false
 
+  /buffer-from/1.1.2:
+    resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
+    dev: false
+
   /caniuse-lite/1.0.30001435:
     resolution: {integrity: sha512-kdCkUTjR+v4YAJelyiDTqiu82BDr4W4CP5sgTA0ZBmqn30XfS2ZghPLMowik9TPhS+psWJiUNxsqLyurDbmutA==}
     dev: false
@@ -923,6 +963,18 @@ packages:
   /slash/2.0.0:
     resolution: {integrity: sha512-ZYKh3Wh2z1PpEXWr0MpSBZ0V6mZHAQfYevttO11c51CaWjGTaadiKZ+wVt1PbMlDV5qhMFslpZCemhwOK7C89A==}
     engines: {node: '>=6'}
+    dev: false
+
+  /source-map-support/0.5.21:
+    resolution: {integrity: sha512-uBHU3L3czsIyYXKX88fdrGovxdSCoTGDRZ6SYXtSRxLZUzHg5P/66Ht6uoUlHu9EZod+inXhKo3qQgwXUT/y1w==}
+    dependencies:
+      buffer-from: 1.1.2
+      source-map: 0.6.1
+    dev: false
+
+  /source-map/0.6.1:
+    resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==}
+    engines: {node: '>=0.10.0'}
     dev: false
 
   /sourcemap-codec/1.4.8:
