@@ -2,6 +2,7 @@
 
 load("@aspect_bazel_lib//lib:testing.bzl", "assert_contains")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@aspect_rules_js//js:defs.bzl", "js_test")
 
 ts_project(
     name = "ts",
@@ -16,4 +17,11 @@ assert_contains(
     name = "test",
     actual = "index.js",
     expected = """JSON.stringify(data_json_1["default"])""",
+)
+
+js_test(
+    # Test that the json is available at runtime.
+    name = "ts-with-json",
+    data = [":ts"],
+    entry_point = "index.js",
 )

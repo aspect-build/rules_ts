@@ -152,7 +152,23 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             to_output_relative_path(ctx.outputs.buildinfo_out),
         ])
         outputs.append(ctx.outputs.buildinfo_out)
+
     output_sources = js_outs + map_outs + copy_files_to_bin_actions(ctx, ctx.files.assets)
+
+    # Add JS inputs that collide with outputs (see #250).
+    #
+    # Unfortunately this duplicates logic in ts_lib._out_paths:
+    # files collide iff the following conditions are met:
+    # - They are JS files (ext in [js, json])
+    # - out_dir == root_dir
+    #
+    # The duplication is hard to avoid, since out_paths works on path strings
+    # (so it also works in the macro), but we need Files here.
+    if ctx.attr.out_dir == ctx.attr.root_dir:
+        for s in srcs_inputs:
+            if _lib.is_js_src(s.path, ctx.attr.allow_js, ctx.attr.resolve_json_module):
+                output_sources.append(s)
+
     typings_srcs = [s for s in srcs_inputs if _lib.is_typings_src(s.path)]
 
     if len(js_outs) + len(typings_outs) < 1:
