@@ -81,6 +81,8 @@ jobs:
                 folder:
                     - '.'
                     - 'e2e/bzlmod'
+                    - 'e2e/external_dep'
+                    - 'e2e/external_dep/app'
                     - 'e2e/worker'
                     - 'e2e/workspace'
                 exclude:

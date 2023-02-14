@@ -1,0 +1,19 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+
+ts_project(
+    name = "lib",
+    srcs = [
+        "global.d.ts",
+        "index.ts",
+    ],
+    # Intentionally a generated config to catch regressions of
+    # https://github.com/aspect-build/rules_ts/issues/204
+    tsconfig = {"declaration": True},
+    visibility = ["//examples:__subpackages__"],
+)
+
+build_test(
+    name = "test",
+    targets = [":lib"],
+)

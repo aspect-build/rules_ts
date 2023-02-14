@@ -32,10 +32,11 @@ STD_ATTRS = {
     "declaration_dir": attr.string(
         doc = "https://www.typescriptlang.org/tsconfig#declarationDir",
     ),
-    # Note, this is overridden by the @bazel/typescript implementation in build_bazel_rules_nodejs
-    # to add an aspect on the deps attribute.
     "deps": attr.label_list(
-        doc = "Other targets which produce TypeScript typings",
+        doc = """List of targets that produce TypeScript typings (`.d.ts` files)
+
+        {downstream_linked_npm_deps}
+        """.format(downstream_linked_npm_deps = js_lib_helpers.DOWNSTREAM_LINKED_NPM_DEPS_DOCSTRING),
         providers = DEPS_PROVIDERS,
     ),
     "out_dir": attr.string(

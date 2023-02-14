@@ -1,6 +1,7 @@
 "ts_project rule"
 
-load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_files_to_bin_actions")
+load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_file_to_bin_action", "copy_files_to_bin_actions")
+load("@aspect_bazel_lib//lib:paths.bzl", "to_output_relative_path")
 load("@aspect_bazel_lib//lib:platform_utils.bzl", "platform_utils")
 load("@bazel_skylib//lib:dicts.bzl", "dicts")
 load("@aspect_rules_js//js:providers.bzl", "JsInfo", "js_info")
@@ -45,6 +46,7 @@ def _ts_project_impl(ctx):
         list of providers
     """
     srcs_inputs = copy_files_to_bin_actions(ctx, ctx.files.srcs)
+    tsconfig = copy_file_to_bin_action(ctx, ctx.file.tsconfig)
 
     srcs = [_lib.relative_to_package(src.path, ctx) for src in srcs_inputs]
 
@@ -85,21 +87,21 @@ See https://github.com/aspect-build/rules_ts/issues/228 for more details.
     # Add user specified arguments *before* rule supplied arguments
     arguments.add_all(ctx.attr.args)
 
-    outdir = _lib.join(ctx.label.package, ctx.attr.out_dir) if ctx.attr.out_dir else ctx.label.package
-    if outdir == "":
-        outdir = "."
+    outdir = _lib.join(
+        ctx.label.workspace_root,
+        _lib.join(ctx.label.package, ctx.attr.out_dir) if ctx.attr.out_dir else ctx.label.package,
+    )
+    tsconfig_path = to_output_relative_path(tsconfig)
     arguments.add_all([
         "--project",
-        ctx.file.tsconfig.short_path,
+        tsconfig_path,
         "--outDir",
         outdir,
         "--rootDir",
         _lib.calculate_root_dir(ctx),
     ])
     if len(typings_outs) > 0:
-        declaration_dir = _lib.join(ctx.label.package, typings_out_dir)
-        if declaration_dir == "":
-            declaration_dir = "."
+        declaration_dir = _lib.join(ctx.label.workspace_root, ctx.label.package, typings_out_dir)
         arguments.add_all([
             "--declarationDir",
             declaration_dir,
@@ -218,7 +220,7 @@ This is an error because Bazel does not run actions unless their outputs are nee
     if len(outputs) > 0:
         inputs_depset = depset(
             copy_files_to_bin_actions(ctx, inputs),
-            transitive = transitive_inputs + [_gather_declarations_from_js_providers(ctx.attr.srcs + ctx.attr.deps)],
+            transitive = transitive_inputs + [_gather_declarations_from_js_providers(ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps)],
         )
 
         ctx.actions.run(
@@ -230,24 +232,24 @@ This is an error because Bazel does not run actions unless their outputs are nee
             execution_requirements = execution_requirements,
             progress_message = "Compiling TypeScript project %s [tsc -p %s]" % (
                 ctx.label,
-                ctx.file.tsconfig.short_path,
+                tsconfig_path,
             ),
             env = {
                 "BAZEL_BINDIR": ctx.bin_dir.path,
             },
         )
 
-    transitive_sources = js_lib_helpers.gather_transitive_sources(output_sources, ctx.attr.srcs + ctx.attr.deps)
+    transitive_sources = js_lib_helpers.gather_transitive_sources(output_sources, ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps)
 
-    transitive_declarations = js_lib_helpers.gather_transitive_declarations(output_declarations, ctx.attr.srcs + ctx.attr.deps)
+    transitive_declarations = js_lib_helpers.gather_transitive_declarations(output_declarations, ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps)
 
     npm_linked_packages = js_lib_helpers.gather_npm_linked_packages(
-        srcs = ctx.attr.srcs,
+        srcs = ctx.attr.srcs + [ctx.attr.tsconfig],
         deps = ctx.attr.deps,
     )
 
     npm_package_store_deps = js_lib_helpers.gather_npm_package_store_deps(
-        targets = ctx.attr.data,
+        targets = ctx.attr.data + ctx.attr.deps,
     )
 
     output_declarations_depset = depset(output_declarations)
@@ -257,7 +259,7 @@ This is an error because Bazel does not run actions unless their outputs are nee
         ctx = ctx,
         sources = output_sources_depset,
         data = ctx.attr.data,
-        deps = ctx.attr.srcs + ctx.attr.deps,
+        deps = ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps,
     )
 
     providers = [

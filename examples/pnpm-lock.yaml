@@ -36,6 +36,73 @@ dependencies:
   typescript: 4.8.4
   zone.js: 0.12.0
 
+importers:
+
+  .:
+    specifiers:
+      '@angular/compiler': 15.0.1
+      '@angular/compiler-cli': 15.0.1
+      '@angular/core': 15.0.1
+      '@babel/cli': 7.19.3
+      '@babel/core': 7.20.2
+      '@babel/parser': 7.20.3
+      '@babel/preset-typescript': 7.18.6
+      '@babel/types': 7.20.2
+      '@tsconfig/node16-strictest-esm': 1.0.3
+      '@types/jasmine': 4.3.0
+      '@types/node': 18.11.9
+      date-fns: 2.29.3
+      rxjs: 7.5.7
+      typescript: 4.8.4
+      zone.js: 0.12.0
+    dependencies:
+      '@angular/compiler': 15.0.1_@angular+core@15.0.1
+      '@angular/compiler-cli': 15.0.1_cjgqlygpi5ntpb3clzn7pzsmpy
+      '@angular/core': 15.0.1_rxjs@7.5.7+zone.js@0.12.0
+      '@babel/cli': 7.19.3_@babel+core@7.20.2
+      '@babel/core': 7.20.2
+      '@babel/parser': 7.20.3
+      '@babel/preset-typescript': 7.18.6_@babel+core@7.20.2
+      '@babel/types': 7.20.2
+      '@tsconfig/node16-strictest-esm': 1.0.3
+      '@types/jasmine': 4.3.0
+      '@types/node': 18.11.9
+      date-fns: 2.29.3
+      rxjs: 7.5.7
+      typescript: 4.8.4
+      zone.js: 0.12.0
+
+  linked:
+    specifiers:
+      '@aspect-test/e': 1.0.0
+      '@aspect-test/f': 1.0.0
+      '@types/node': 18.13.0
+    dependencies:
+      '@aspect-test/e': 1.0.0
+    devDependencies:
+      '@aspect-test/f': 1.0.0
+      '@types/node': 18.13.0
+
+  linked_consumer:
+    specifiers:
+      '@lib/test': workspace:*
+    dependencies:
+      '@lib/test': link:../linked
+
+  linked_tsconfig:
+    specifiers:
+      '@tsconfig/node18': 1.0.1
+    dependencies:
+      '@tsconfig/node18': 1.0.1
+
+  linked_tsconfig_consumer:
+    specifiers:
+      '@lib/tsconfig': workspace:*
+      '@types/node': 18.13.0
+    devDependencies:
+      '@lib/tsconfig': link:../linked_tsconfig
+      '@types/node': 18.13.0
+
 packages:
 
   /@ampproject/remapping/2.2.0:
@@ -94,6 +161,16 @@ packages:
       tslib: 2.4.1
       zone.js: 0.12.0
     dev: false
+
+  /@aspect-test/e/1.0.0:
+    resolution: {integrity: sha512-GyAxHYKN650db+xnimHnL2LPz65ilmQsVhCasWA7drDNQn/rfmPiEVMzjRiS7m46scXIERaBmiJMzYDf0bIUbA==}
+    hasBin: true
+    dev: false
+
+  /@aspect-test/f/1.0.0:
+    resolution: {integrity: sha512-VjuHu/TXdK0dfMeArZoOFaBY0Z/wAjWuCNtEWDTVJftbDcBtcH3IrhLrOy0NdJu+/CjE0qLCEb78eDGniKNUFA==}
+    hasBin: true
+    dev: true
 
   /@babel/cli/7.19.3_@babel+core@7.20.2:
     resolution: {integrity: sha512-643/TybmaCAe101m2tSVHi9UKpETXP9c/Ff4mD2tAwkdP6esKIfaauZFc67vGEM6r9fekbEGid+sZhbEnSe3dg==}
@@ -468,6 +545,10 @@ packages:
     resolution: {integrity: sha512-0/QTPDkKmE2dy0dMRstPCv4VJ+gUGgvMKzaWd5P3hgdlmPqYqe1pJxDGUlNYbSgUBlncIvvX+mIeZarokysNgg==}
     dev: false
 
+  /@tsconfig/node18/1.0.1:
+    resolution: {integrity: sha512-sNFeK6X2ATlhlvzyH4kKYQlfHXE2f2/wxtB9ClvYXevWpmwkUT7VaSrjIN9E76Qebz8qP5JOJJ9jD3QoD/Z9TA==}
+    dev: false
+
   /@types/jasmine/4.3.0:
     resolution: {integrity: sha512-u1jWakf8CWvLfSEZyxmzkgBzOEvXH/szpT0e6G8BTkx5Eu0BhDn7sbc5dz0JBN/6Wwm9rBe+JAsk9tJRyH9ZkA==}
     dev: false
@@ -475,6 +556,10 @@ packages:
   /@types/node/18.11.9:
     resolution: {integrity: sha512-CRpX21/kGdzjOpFsZSkcrXMGIBWMGNIHXXBVFSH+ggkftxg+XYP20TESbh+zFvFj3EQOl5byk0HTRn1IL6hbqg==}
     dev: false
+
+  /@types/node/18.13.0:
+    resolution: {integrity: sha512-gC3TazRzGoOnoKAhUx+Q0t8S9Tzs74z7m0ipwGpSqQrleP14hKxP4/JUeEQcD3W1/aIpnWl8pHowI7WokuZpXg==}
+    dev: true
 
   /ansi-regex/5.0.1:
     resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}

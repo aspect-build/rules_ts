@@ -17,6 +17,7 @@
 load("@aspect_bazel_lib//lib:paths.bzl", "relative_file")
 load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_file_to_bin_action", "copy_files_to_bin_actions")
 load("@aspect_rules_js//js:libs.bzl", "js_lib_helpers")
+load("@aspect_rules_js//js:providers.bzl", "js_info")
 load(":ts_lib.bzl", _lib = "lib")
 
 TsConfigInfo = provider(
@@ -30,6 +31,7 @@ TsConfigInfo = provider(
 
 def _ts_config_impl(ctx):
     files = [copy_file_to_bin_action(ctx, ctx.file.src)]
+
     transitive_deps = [
         depset(copy_files_to_bin_actions(ctx, ctx.files.deps)),
         js_lib_helpers.gather_files_from_js_providers(
@@ -37,14 +39,55 @@ def _ts_config_impl(ctx):
             include_transitive_sources = True,
             include_declarations = True,
             include_npm_linked_packages = True,
-        )
+        ),
     ]
 
+    # TODO: now that ts_config.bzl provides a JsInfo, we should be able to remove TsConfigInfo in the future
+    # since transitive files will now be passed through transitive_declarations in JsInfo
     for dep in ctx.attr.deps:
         if TsConfigInfo in dep:
             transitive_deps.append(dep[TsConfigInfo].deps)
+
+    transitive_sources = js_lib_helpers.gather_transitive_sources([], ctx.attr.deps)
+
+    transitive_declarations = js_lib_helpers.gather_transitive_declarations(files, ctx.attr.deps)
+
+    npm_linked_packages = js_lib_helpers.gather_npm_linked_packages(
+        srcs = [],
+        deps = ctx.attr.deps,
+    )
+
+    npm_package_store_deps = js_lib_helpers.gather_npm_package_store_deps(
+        targets = ctx.attr.deps,
+    )
+
+    files_depset = depset(files)
+
+    runfiles = js_lib_helpers.gather_runfiles(
+        ctx = ctx,
+        sources = depset(),  # tsconfig.json file won't be needed at runtime
+        data = [],
+        deps = ctx.attr.deps,
+    )
+
     return [
-        DefaultInfo(files = depset(files)),
+        DefaultInfo(
+            files = files_depset,
+            runfiles = runfiles,
+        ),
+        js_info(
+            # provide tsconfig.json file via `declarations` and not `sources` since they are only needed
+            # for downstream ts_project rules and not in downstream runtime binary rules
+            declarations = files_depset,
+            npm_linked_package_files = npm_linked_packages.direct_files,
+            npm_linked_packages = npm_linked_packages.direct,
+            npm_package_store_deps = npm_package_store_deps,
+            sources = depset(),
+            transitive_declarations = transitive_declarations,
+            transitive_npm_linked_package_files = npm_linked_packages.transitive_files,
+            transitive_npm_linked_packages = npm_linked_packages.transitive,
+            transitive_sources = transitive_sources,
+        ),
         TsConfigInfo(deps = depset(files, transitive = transitive_deps)),
     ]
 
@@ -74,7 +117,8 @@ def _filter_input_files(files, allow_js, resolve_json_module):
     return [
         f
         for f in files
-        if _lib.is_ts_src(f.basename, allow_js) or _lib.is_json_src(f.basename, resolve_json_module)
+        # include typescript, json & declaration sources
+        if _lib.is_ts_src(f.basename, allow_js) or _lib.is_json_src(f.basename, resolve_json_module) or _lib.is_typings_src(f.basename)
     ]
 
 def _write_tsconfig_rule(ctx):
