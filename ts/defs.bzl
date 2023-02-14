@@ -345,7 +345,7 @@ def ts_project(
     tsc_js_outs = []
     tsc_map_outs = []
     if not transpiler:
-        tsc_js_outs = _lib.calculate_js_outs(srcs, out_dir, root_dir, allow_js, preserve_jsx, emit_declaration_only)
+        tsc_js_outs = _lib.calculate_js_outs(srcs, out_dir, root_dir, allow_js, resolve_json_module, preserve_jsx, emit_declaration_only)
         tsc_map_outs = _lib.calculate_map_outs(srcs, out_dir, root_dir, source_map, preserve_jsx, emit_declaration_only)
         tsc_target_name = name
     else:
@@ -412,6 +412,7 @@ def ts_project(
         deps = tsc_deps,
         tsconfig = tsconfig,
         allow_js = allow_js,
+        resolve_json_module = resolve_json_module,
         extends = extends,
         incremental = incremental,
         preserve_jsx = preserve_jsx,

@@ -172,17 +172,20 @@ def _relative_to_package(path, ctx):
 def _is_typings_src(src):
     return src.endswith(".d.ts") or src.endswith(".d.mts") or src.endswith(".d.cts")
 
-def _is_ts_src(src, allow_js):
-    if (src.endswith(".ts") or src.endswith(".tsx") or src.endswith(".mts") or src.endswith(".cts")):
-        return not _is_typings_src(src)
+def _is_js_src(src, allow_js, resolve_json_module):
+    if src.endswith(".js") or src.endswith(".jsx") or src.endswith(".mjs") or src.endswith(".cjs"):
+        return allow_js
 
-    if allow_js:
-        return (src.endswith(".js") or src.endswith(".jsx") or src.endswith(".mjs") or src.endswith(".cjs"))
+    if src.endswith(".json"):
+        return resolve_json_module
 
     return False
 
-def _is_json_src(src, resolve_json_module):
-    return resolve_json_module and src.endswith(".json")
+def _is_ts_src(src, allow_js, resolve_json_module):
+    if (src.endswith(".ts") or src.endswith(".tsx") or src.endswith(".mts") or src.endswith(".cts")):
+        return not _is_typings_src(src)
+
+    return _is_js_src(src, allow_js, resolve_json_module)
 
 def _replace_ext(f, ext_map):
     cur_ext = f[f.rindex("."):]
@@ -194,11 +197,11 @@ def _replace_ext(f, ext_map):
         return new_ext
     return None
 
-def _out_paths(srcs, out_dir, root_dir, allow_js, ext_map):
+def _out_paths(srcs, out_dir, root_dir, allow_js, resolve_json_module, ext_map):
     rootdir_replace_pattern = root_dir + "/" if root_dir else ""
     outs = []
     for f in srcs:
-        if _is_ts_src(f, allow_js):
+        if _is_ts_src(f, allow_js, resolve_json_module):
             out = _join(out_dir, f[:f.rindex(".")].replace(rootdir_replace_pattern, "", 1) + _replace_ext(f, ext_map))
 
             # Don't declare outputs that collide with inputs
@@ -207,7 +210,7 @@ def _out_paths(srcs, out_dir, root_dir, allow_js, ext_map):
                 outs.append(out)
     return outs
 
-def _calculate_js_outs(srcs, out_dir = ".", root_dir = ".", allow_js = False, preserve_jsx = False, emit_declaration_only = False):
+def _calculate_js_outs(srcs, out_dir = ".", root_dir = ".", allow_js = False, resolve_json_module = False, preserve_jsx = False, emit_declaration_only = False):
     if emit_declaration_only:
         return []
 
@@ -217,13 +220,14 @@ def _calculate_js_outs(srcs, out_dir = ".", root_dir = ".", allow_js = False, pr
         ".mjs": ".mjs",
         ".cjs": ".cjs",
         ".cts": ".cjs",
+        ".json": ".json",
     }
 
     if preserve_jsx:
         exts[".jsx"] = ".jsx"
         exts[".tsx"] = ".jsx"
 
-    return _out_paths(srcs, out_dir, root_dir, allow_js, exts)
+    return _out_paths(srcs, out_dir, root_dir, allow_js, resolve_json_module, exts)
 
 def _calculate_map_outs(srcs, out_dir = ".", root_dir = ".", source_map = True, preserve_jsx = False, emit_declaration_only = False):
     if not source_map or emit_declaration_only:
@@ -239,7 +243,7 @@ def _calculate_map_outs(srcs, out_dir = ".", root_dir = ".", source_map = True, 
     if preserve_jsx:
         exts[".tsx"] = ".jsx.map"
 
-    return _out_paths(srcs, out_dir, root_dir, False, exts)
+    return _out_paths(srcs, out_dir, root_dir, False, False, exts)
 
 def _calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, composite, allow_js, include_srcs = True):
     if not (declaration or composite):
@@ -253,7 +257,7 @@ def _calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, compos
         ".cjs": ".d.cts",
     }
 
-    return _out_paths(srcs, typings_out_dir, root_dir, allow_js, exts)
+    return _out_paths(srcs, typings_out_dir, root_dir, allow_js, False, exts)
 
 def _calculate_typing_maps_outs(srcs, typings_out_dir, root_dir, declaration_map, allow_js):
     if not declaration_map:
@@ -267,7 +271,7 @@ def _calculate_typing_maps_outs(srcs, typings_out_dir, root_dir, declaration_map
         ".cjs": ".d.cts.map",
     }
 
-    return _out_paths(srcs, typings_out_dir, root_dir, allow_js, exts)
+    return _out_paths(srcs, typings_out_dir, root_dir, allow_js, False, exts)
 
 def _calculate_root_dir(ctx):
     return _join(
@@ -288,7 +292,7 @@ lib = struct(
     relative_to_package = _relative_to_package,
     is_typings_src = _is_typings_src,
     is_ts_src = _is_ts_src,
-    is_json_src = _is_json_src,
+    is_js_src = _is_js_src,
     out_paths = _out_paths,
     calculate_js_outs = _calculate_js_outs,
     calculate_map_outs = _calculate_map_outs,
