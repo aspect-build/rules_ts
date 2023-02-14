@@ -58,7 +58,7 @@ def _ts_project_impl(ctx):
     # However, it is not possible to evaluate files in outputs of other rules such as filegroup, therefore the outs are
     # recalculated here.
     typings_out_dir = ctx.attr.declaration_dir or ctx.attr.out_dir
-    js_outs = _lib.declare_outputs(ctx, [] if not ctx.attr.transpile else _lib.calculate_js_outs(srcs, ctx.attr.out_dir, ctx.attr.root_dir, ctx.attr.allow_js, ctx.attr.preserve_jsx, ctx.attr.emit_declaration_only))
+    js_outs = _lib.declare_outputs(ctx, [] if not ctx.attr.transpile else _lib.calculate_js_outs(srcs, ctx.attr.out_dir, ctx.attr.root_dir, ctx.attr.allow_js, ctx.attr.resolve_json_module, ctx.attr.preserve_jsx, ctx.attr.emit_declaration_only))
     map_outs = _lib.declare_outputs(ctx, [] if not ctx.attr.transpile else _lib.calculate_map_outs(srcs, ctx.attr.out_dir, ctx.attr.root_dir, ctx.attr.source_map, ctx.attr.preserve_jsx, ctx.attr.emit_declaration_only))
     typings_outs = _lib.declare_outputs(ctx, _lib.calculate_typings_outs(srcs, typings_out_dir, ctx.attr.root_dir, ctx.attr.declaration, ctx.attr.composite, ctx.attr.allow_js))
     typing_maps_outs = _lib.declare_outputs(ctx, _lib.calculate_typing_maps_outs(srcs, typings_out_dir, ctx.attr.root_dir, ctx.attr.declaration_map, ctx.attr.allow_js))
@@ -145,30 +145,14 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
     tsconfig_inputs = copy_files_to_bin_actions(ctx, _validate_lib.tsconfig_inputs(ctx).to_list())
     inputs.extend(tsconfig_inputs)
 
-    # We do not try to predeclare json_outs, because their output locations generally conflict with their path in the source tree.
-    # (The exception is when out_dir is used, then the .json output is a different path than the input.)
-    # However tsc will copy .json srcs to the output tree so we want to declare these outputs to include along with .js Default outs
-    # NB: We don't have emit_declaration_only setting here, so use presence of any JS outputs as an equivalent.
-    # tsc will only produce .json if it also produces .js
-    if len(js_outs):
-        pkg_len = len(ctx.label.package) + 1 if len(ctx.label.package) else 0
-        rootdir_replace_pattern = ctx.attr.root_dir + "/" if ctx.attr.root_dir else ""
-        json_outs = _lib.declare_outputs(ctx, [
-            _lib.join(ctx.attr.out_dir, src.short_path[pkg_len:].replace(rootdir_replace_pattern, ""))
-            for src in srcs_inputs
-            if src.basename.endswith(".json") and src.is_source
-        ])
-    else:
-        json_outs = []
-
-    outputs = json_outs + js_outs + map_outs + typings_outs + typing_maps_outs
+    outputs = js_outs + map_outs + typings_outs + typing_maps_outs
     if ctx.outputs.buildinfo_out:
         arguments.add_all([
             "--tsBuildInfoFile",
             to_output_relative_path(ctx.outputs.buildinfo_out),
         ])
         outputs.append(ctx.outputs.buildinfo_out)
-    output_sources = json_outs + js_outs + map_outs + copy_files_to_bin_actions(ctx, ctx.files.assets)
+    output_sources = js_outs + map_outs + copy_files_to_bin_actions(ctx, ctx.files.assets)
     typings_srcs = [s for s in srcs_inputs if _lib.is_typings_src(s.path)]
 
     if len(js_outs) + len(typings_outs) < 1:
