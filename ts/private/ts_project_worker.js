@@ -709,18 +709,11 @@ function createProgram(args, inputs, output, exit) {
     }
 
     function applySyntheticOutPaths() {
-        host.optionsToExtend.outDir = path.join(SYNTHETIC_OUTDIR, host.optionsToExtend.outDir);
-
+        host.optionsToExtend.outDir = `${host.optionsToExtend.outDir}${SYNTHETIC_OUTDIR}`;
         if (host.optionsToExtend.declarationDir) {
-            host.optionsToExtend.declarationDir = path.join(SYNTHETIC_OUTDIR, host.optionsToExtend.declarationDir)
+            host.optionsToExtend.declarationDir = `${host.optionsToExtend.declarationDir}${SYNTHETIC_OUTDIR}`
         }
-
-        if (!compilerOptions.sourceRoot && (compilerOptions.sourceMap || compilerOptions.inlineSourceMap)) {
-            host.optionsToExtend.sourceRoot = host.optionsToExtend.rootDir
-        }
-        if (compilerOptions.sourceMap || compilerOptions.declarationMap) {
-            host.optionsToExtend.mapRoot = path.join(SYNTHETIC_OUTDIR, host.optionsToExtend.outDir)
-        }
+        debug(host.optionsToExtend);
     }
 
     function applyArgs(newArgs) {
@@ -771,12 +764,12 @@ function createProgram(args, inputs, output, exit) {
     }
 
     function createDirectory(p) {
-        p = p.replace(SYNTHETIC_OUTDIR, ".")
+        p = p.replace(SYNTHETIC_OUTDIR, "")
         ts.sys.createDirectory(p);
     }
 
     function writeFile(p, data, mark) {
-        p = p.replace(SYNTHETIC_OUTDIR, ".")
+        p = p.replace(SYNTHETIC_OUTDIR, "")
         ts.sys.writeFile(p, data, mark);
     }
 
