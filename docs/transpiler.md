@@ -47,7 +47,7 @@ When a custom transpiler is used, then the `ts_project` macro expands to these t
     This ensures that typechecking will be run under `bazel test` with [`--build_tests_only`].
 - `[name]_typings` - internal target which runs the binary from the `tsc` attribute
 -  Any additional target(s) the custom transpiler rule/macro produces.
-    (For example, ome rules produce one target per TypeScript input file.)
+    (For example, some rules produce one target per TypeScript input file.)
 
 
 [`build_test`]: https://github.com/bazelbuild/bazel-skylib/blob/main/rules/build_test.bzl
