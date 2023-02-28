@@ -607,8 +607,7 @@ function createProgram(args, inputs, output, exit) {
     debug(`cfg: ${cfg}`);
     debug(`executingfilepath: ${executingfilepath}`);
 
-    const raw = ts.readConfigFile(cmd.options.project, readFile);
-    let compilerOptions = raw.config.compilerOptions || {};
+    let compilerOptions = readCompilerOptions();
 
     enableStatisticsAndTracing();
     updateOutputs();
@@ -709,11 +708,10 @@ function createProgram(args, inputs, output, exit) {
     }
 
     function applySyntheticOutPaths() {
-        host.optionsToExtend.outDir = `${host.optionsToExtend.outDir}${SYNTHETIC_OUTDIR}`;
+        host.optionsToExtend.outDir = `${host.optionsToExtend.outDir}/${SYNTHETIC_OUTDIR}`;
         if (host.optionsToExtend.declarationDir) {
-            host.optionsToExtend.declarationDir = `${host.optionsToExtend.declarationDir}${SYNTHETIC_OUTDIR}`
+            host.optionsToExtend.declarationDir = `${host.optionsToExtend.declarationDir}/${SYNTHETIC_OUTDIR}`
         }
-        debug(host.optionsToExtend);
     }
 
     function applyArgs(newArgs) {
@@ -733,6 +731,12 @@ function createProgram(args, inputs, output, exit) {
         }
     }
 
+    function readCompilerOptions() {
+        const raw = ts.readConfigFile(cmd.options.project, readFile);
+        const parsedCommandLine = ts.parseJsonConfigFileContent(raw.config, sys, path.dirname(cmd.options.project));
+        return parsedCommandLine.options || {};
+    }
+
     function applyChangesForTsConfig(args) {
         const cmd = ts.parseCommandLine(args);
         for (const key in host.optionsToExtend) {
@@ -742,8 +746,7 @@ function createProgram(args, inputs, output, exit) {
             host.optionsToExtend[key] = cmd.options[key];
         }
 
-        const raw = ts.readConfigFile(cmd.options.project, readFile);
-        compilerOptions = raw.config.compilerOptions || {};
+        compilerOptions = readCompilerOptions();
 
         disableStatisticsAndTracing();
         enableStatisticsAndTracing();
@@ -770,6 +773,12 @@ function createProgram(args, inputs, output, exit) {
 
     function writeFile(p, data, mark) {
         p = p.replace(SYNTHETIC_OUTDIR, "")
+        if (p.endsWith(".map")) {
+            // We need to postprocess map files to fix paths for the sources. This is required because we have a SYNTHETIC_OUTDIR suffix and 
+            // tsc tries to relativitize sources back to rootDir. in order to fix it the leading `../` needed to be stripped out.
+            // TODO: figure out how to make tsc do this for us.
+            data = data.replace(`"../`, `"`)
+        }
         ts.sys.writeFile(p, data, mark);
     }
 
