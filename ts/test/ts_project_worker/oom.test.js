@@ -32,6 +32,7 @@ mock("typescript", {
     createWatchCompilerHost: () => ({optionsToExtend: {outDir: "."}}),
     getPreEmitDiagnostics: () => ([]),
     parseCommandLine: () => ({ options: { project: "", outDir: "." } }),
+    parseJsonConfigFileContent: () => ({ options: { project: "", outDir: "." } }),
     formatDiagnostics: () => "",
     readConfigFile: () => ({config: {}}),
     sys: {
