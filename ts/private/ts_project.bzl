@@ -160,7 +160,7 @@ See https://github.com/aspect-build/rules_ts/issues/228 for more details.
     if ctx.outputs.buildinfo_out:
         arguments.add_all([
             "--tsBuildInfoFile",
-            ctx.outputs.buildinfo_out.short_path,
+            to_output_relative_path(ctx.outputs.buildinfo_out),
         ])
         outputs.append(ctx.outputs.buildinfo_out)
     output_sources = json_outs + js_outs + map_outs + copy_files_to_bin_actions(ctx, ctx.files.assets)
