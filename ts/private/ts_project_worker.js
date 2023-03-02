@@ -776,8 +776,18 @@ function createProgram(args, inputs, output, exit) {
         if (p.endsWith(".map")) {
             // We need to postprocess map files to fix paths for the sources. This is required because we have a SYNTHETIC_OUTDIR suffix and 
             // tsc tries to relativitize sources back to rootDir. in order to fix it the leading `../` needed to be stripped out.
-            // TODO: figure out how to make tsc do this for us.
-            data = data.replace(`"../`, `"`)
+            // We tried a few options to make tsc do this for us.
+            // 
+            // 1- Using mapRoot to reroot map files. This didn't work because either path in `sourceMappingUrl` or path in `sources` was incorrect.
+            // 
+            // 2- Using a converging parent path for `outDir` and `rootDir` so tsc reroots sourcemaps to that directory. This didn't work either because
+            // eventhough the converging parent path looked correct in a subpackage, it was incorrect at the root directory because `../` pointed to out 
+            // of output tree.
+            // 
+            // This left us with post-processing the `.map` files so that paths looks correct.
+            const sourceGroup = data.match(/"sources":\[.*?]/).at(0);
+            const fixedSourceGroup = sourceGroup.replace(/"..\//g, `"`);
+            data = data.replace(sourceGroup, fixedSourceGroup);
         }
         ts.sys.writeFile(p, data, mark);
     }
