@@ -112,6 +112,7 @@ EOF
 
 function ts_project() {
     local path="."
+    local out_dir="."
     local name="foo"
     local -a deps=()
     local -a srcs=()
@@ -124,6 +125,7 @@ function ts_project() {
     while (( $# > 0 )); do
         case "$1" in
         --path) shift; path="$1"; shift ;;
+        --out_dir) shift; out_dir="$1"; shift ;;
         --tsconfig) shift; tsconfig="$1"; shift ;;
         -n|--name) shift; name="$1"; shift ;;
         -l|--npm-link-all-packages) npm_link_all_packages=""; shift ;;
@@ -150,6 +152,7 @@ ts_project(
     visibility = ["//visibility:public"],
     srcs = [${srcs_joined}],
     tsconfig = "${tsconfig}",
+    out_dir = "${out_dir}",
     deps = [${deps_joined}],
     args = [${args_joined}],
     $source_map

@@ -607,8 +607,7 @@ function createProgram(args, inputs, output, exit) {
     debug(`cfg: ${cfg}`);
     debug(`executingfilepath: ${executingfilepath}`);
 
-    const raw = ts.readConfigFile(cmd.options.project, readFile);
-    let compilerOptions = raw.config.compilerOptions || {};
+    let compilerOptions = readCompilerOptions();
 
     enableStatisticsAndTracing();
     updateOutputs();
@@ -709,17 +708,9 @@ function createProgram(args, inputs, output, exit) {
     }
 
     function applySyntheticOutPaths() {
-        host.optionsToExtend.outDir = path.join(SYNTHETIC_OUTDIR, host.optionsToExtend.outDir);
-
+        host.optionsToExtend.outDir = `${host.optionsToExtend.outDir}/${SYNTHETIC_OUTDIR}`;
         if (host.optionsToExtend.declarationDir) {
-            host.optionsToExtend.declarationDir = path.join(SYNTHETIC_OUTDIR, host.optionsToExtend.declarationDir)
-        }
-
-        if (!compilerOptions.sourceRoot && (compilerOptions.sourceMap || compilerOptions.inlineSourceMap)) {
-            host.optionsToExtend.sourceRoot = host.optionsToExtend.rootDir
-        }
-        if (compilerOptions.sourceMap || compilerOptions.declarationMap) {
-            host.optionsToExtend.mapRoot = path.join(SYNTHETIC_OUTDIR, host.optionsToExtend.outDir)
+            host.optionsToExtend.declarationDir = `${host.optionsToExtend.declarationDir}/${SYNTHETIC_OUTDIR}`
         }
     }
 
@@ -740,6 +731,12 @@ function createProgram(args, inputs, output, exit) {
         }
     }
 
+    function readCompilerOptions() {
+        const raw = ts.readConfigFile(cmd.options.project, readFile);
+        const parsedCommandLine = ts.parseJsonConfigFileContent(raw.config, sys, path.dirname(cmd.options.project));
+        return parsedCommandLine.options || {};
+    }
+
     function applyChangesForTsConfig(args) {
         const cmd = ts.parseCommandLine(args);
         for (const key in host.optionsToExtend) {
@@ -749,8 +746,7 @@ function createProgram(args, inputs, output, exit) {
             host.optionsToExtend[key] = cmd.options[key];
         }
 
-        const raw = ts.readConfigFile(cmd.options.project, readFile);
-        compilerOptions = raw.config.compilerOptions || {};
+        compilerOptions = readCompilerOptions();
 
         disableStatisticsAndTracing();
         enableStatisticsAndTracing();
@@ -771,12 +767,28 @@ function createProgram(args, inputs, output, exit) {
     }
 
     function createDirectory(p) {
-        p = p.replace(SYNTHETIC_OUTDIR, ".")
+        p = p.replace(SYNTHETIC_OUTDIR, "")
         ts.sys.createDirectory(p);
     }
 
     function writeFile(p, data, mark) {
-        p = p.replace(SYNTHETIC_OUTDIR, ".")
+        p = p.replace(SYNTHETIC_OUTDIR, "")
+        if (p.endsWith(".map")) {
+            // We need to postprocess map files to fix paths for the sources. This is required because we have a SYNTHETIC_OUTDIR suffix and 
+            // tsc tries to relativitize sources back to rootDir. in order to fix it the leading `../` needed to be stripped out.
+            // We tried a few options to make tsc do this for us.
+            // 
+            // 1- Using mapRoot to reroot map files. This didn't work because either path in `sourceMappingUrl` or path in `sources` was incorrect.
+            // 
+            // 2- Using a converging parent path for `outDir` and `rootDir` so tsc reroots sourcemaps to that directory. This didn't work either because
+            // eventhough the converging parent path looked correct in a subpackage, it was incorrect at the root directory because `../` pointed to out 
+            // of output tree.
+            // 
+            // This left us with post-processing the `.map` files so that paths looks correct.
+            const sourceGroup = data.match(/"sources":\[.*?]/).at(0);
+            const fixedSourceGroup = sourceGroup.replace(/"..\//g, `"`);
+            data = data.replace(sourceGroup, fixedSourceGroup);
+        }
         ts.sys.writeFile(p, data, mark);
     }
 
