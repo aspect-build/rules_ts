@@ -942,7 +942,7 @@ async function emit(request) {
     const diagnostics = ts.getPreEmitDiagnostics(program, undefined, cancellationToken).concat(result?.diagnostics);
     timingEnd('diagnostics');
 
-    const succeded = !result.emitSkipped && result?.diagnostics.length === 0 && diagnostics.length === 0;
+    const succeded = diagnostics.length === 0;
 
     if (!succeded) {
         request.output.write(worker.formatDiagnostics(diagnostics));
