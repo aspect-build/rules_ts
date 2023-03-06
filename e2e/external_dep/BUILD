@@ -6,7 +6,9 @@ load("@bazel_skylib//rules:build_test.bzl", "build_test")
 ts_project(
     name = "lib",
     srcs = ["lib.ts"],
-    declaration = True,
+    # Composite to also check the location of .tsbuildinfo
+    # https://github.com/aspect-build/rules_ts/issues/329
+    composite = True,
     visibility = ["//visibility:public"],
 )
 
