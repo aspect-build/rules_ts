@@ -20,7 +20,7 @@ class WatchProgram {
         return this;
     }
     emit() {
-        return { emitSkipped: true }
+        return { emitSkipped: true, diagnostics: [] }
     }
     close() {
         closed_programs.push(this.index)
