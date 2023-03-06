@@ -2,8 +2,7 @@
 .d.ts typings files to a different folder than the JavaScript outputs."""
 
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
-load("@aspect_bazel_lib//lib:write_source_files.bzl", "write_source_files")
-load("@aspect_bazel_lib//lib:params_file.bzl", "params_file")
+load("@aspect_bazel_lib//lib:testing.bzl", "assert_outputs")
 
 ts_project(
     name = "transpile",
@@ -16,6 +15,16 @@ ts_project(
     source_map = True,
 )
 
+# Assert that the output locations we wrote to match expectations
+assert_outputs(
+    name = "check_transpile",
+    actual = ":transpile",
+    expected = [
+        "examples/declaration_dir/out/code/lib.js",
+        "examples/declaration_dir/out/code/lib.js.map",
+    ],
+)
+
 # Convert the types output group to the default output
 filegroup(
     name = "types",
@@ -23,24 +32,11 @@ filegroup(
     output_group = "types",
 )
 
-# Write a manifest file showing all the output locations we wrote to
-params_file(
-    name = "params",
-    out = "outputs.txt",
-    args = [
-        "$(rootpaths :types)",
-        "$(rootpaths :transpile)",
+assert_outputs(
+    name = "check_types",
+    actual = ":types",
+    expected = [
+        "examples/declaration_dir/out/types/lib.d.ts",
+        "examples/declaration_dir/out/types/lib.d.ts.map",
     ],
-    data = [
-        ":transpile",
-        ":types",
-    ],
-)
-
-# Assert that it matches our expectations
-write_source_files(
-    name = "test",
-    files = {
-        "expected_outputs.txt": "outputs.txt",
-    },
 )

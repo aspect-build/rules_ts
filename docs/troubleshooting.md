@@ -6,9 +6,10 @@
     Therefore you shouldn't use it with TypeScript's `noEmit` option.
     If you only want to test that the code typechecks, use `tsc` directly.
     See [examples/typecheck_only](https://github.com/aspect-build/rules_ts/blob/main/examples/typecheck_only/BUILD.bazel)
+- `ts_project` needs to know which `.ts` sources exist. If you have a tool which produces an "opaque" folder of
+    `.ts` files and you cannot predict what they will be, then you can use `tsc` directly.
 - Your tsconfig settings for `outDir` and `declarationDir` are ignored.
-    Bazel requires that the `outDir` (and `declarationDir`) be set beneath
-    `bazel-out/[target architecture]/bin/path/to/package`.
+    Bazel requires that outputs are written beneath `bazel-out/[target architecture]/bin/path/to/package`.
 - Bazel expects that each output is produced by a single rule.
     Thus if you have two `ts_project` rules with overlapping sources (the same `.ts` file
     appears in more than one) then you get an error about conflicting `.js` output
