@@ -159,7 +159,7 @@ write_tsconfig_rule = rule(
 )
 
 # Syntax sugar around skylib's write_file
-def write_tsconfig(name, config, files, out, extends = None, allow_js = None, resolve_json_module = None):
+def write_tsconfig(name, config, files, out, extends = None, allow_js = None, resolve_json_module = None, **kwargs):
     """Wrapper around bazel_skylib's write_file which understands tsconfig paths
 
     Args:
@@ -170,6 +170,7 @@ def write_tsconfig(name, config, files, out, extends = None, allow_js = None, re
         extends: a label for a tsconfig.json file to extend from, if any
         allow_js: value of the allowJs tsconfig property
         resolve_json_module: value of the resolveJsonModule tsconfig property
+        **kwargs: Other common named parameters such as `tags` or `visibility`
     """
     if out.find("/") >= 0:
         fail("tsconfig should be generated in the package directory, to make relative pathing simple")
@@ -189,4 +190,5 @@ def write_tsconfig(name, config, files, out, extends = None, allow_js = None, re
         out = out,
         allow_js = allow_js,
         resolve_json_module = resolve_json_module,
+        **kwargs
     )
