@@ -305,6 +305,7 @@ def ts_project(
             out = "tsconfig_%s.json" % name,
             allow_js = allow_js,
             resolve_json_module = resolve_json_module,
+            **common_kwargs
         )
 
         # From here, tsconfig becomes a file, the same as if the
