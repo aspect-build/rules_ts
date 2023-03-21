@@ -1,0 +1,7 @@
+packages:
+    - examples
+    - examples/linked
+    - examples/linked_consumer
+    - examples/linked_tsconfig
+    - examples/linked_tsconfig_consumer
+    - ts/private/worker

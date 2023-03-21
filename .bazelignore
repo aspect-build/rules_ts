@@ -5,3 +5,5 @@ examples/linked/node_modules
 examples/linked_consumer/node_modules
 examples/linked_tsconfig/node_modules
 examples/linked_tsconfig_consumer/node_modules
+ts/private/worker/node_modules
+node_modules

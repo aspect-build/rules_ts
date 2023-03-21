@@ -1,4 +1,4 @@
 {
     "//": "the hacky path below is required because while @lib/tsconfig/tsconfig.json _will_ resolve, tsc won't follow the symlink into the virtual store so the transitive npm dep of @lib/tsconfig on @tsconfig/node18/tsconfig.json won't be resolvable",
-    "extends": "../node_modules/.aspect_rules_js/@lib+tsconfig@0.0.0/node_modules/@lib/tsconfig/tsconfig.json"
+    "extends": "../../node_modules/.aspect_rules_js/@lib+tsconfig@0.0.0/node_modules/@lib/tsconfig/tsconfig.json"
 }

@@ -43,3 +43,10 @@ def rules_ts_internal_deps():
         strip_prefix = "rules_jasmine-0.3.0",
         url = "https://github.com/aspect-build/rules_jasmine/archive/refs/tags/v0.3.0.tar.gz",
     )
+
+    http_archive(
+        name = "aspect_rules_rollup",
+        sha256 = "4c43d20ce377b93cd43a3553e6159a17b85ce80c36a564b55051c2320d32b777",
+        strip_prefix = "rules_rollup-0.13.1",
+        url = "https://github.com/aspect-build/rules_rollup/releases/download/v0.13.1/rules_rollup-v0.13.1.tar.gz",
+    )

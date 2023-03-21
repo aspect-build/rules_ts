@@ -52,7 +52,7 @@ load("@aspect_rules_js//npm:npm_import.bzl", "npm_translate_lock")
 
 npm_translate_lock(
     name = "npm",
-    pnpm_lock = "//examples:pnpm-lock.yaml",
+    pnpm_lock = "//:pnpm-lock.yaml",
     verify_node_modules_ignored = "//:.bazelignore",
 )
 
@@ -67,3 +67,16 @@ jasmine_repositories(name = "jasmine")
 load("@jasmine//:npm_repositories.bzl", jasmine_npm_repositories = "npm_repositories")
 
 jasmine_npm_repositories()
+
+
+load("@aspect_rules_rollup//rollup:dependencies.bzl", "rules_rollup_dependencies")
+
+rules_rollup_dependencies()
+
+load("@aspect_rules_rollup//rollup:repositories.bzl", "rollup_repositories")
+
+rollup_repositories(name = "rollup")
+
+load("@rollup//:npm_repositories.bzl", rollup_npm_repositories = "npm_repositories")
+
+rollup_npm_repositories()

@@ -1,6 +1,15 @@
+load("@aspect_bazel_lib//lib:write_source_files.bzl", "write_source_files")
+
 exports_files(
     glob(["*.bzl"]) + [
         "ts_project_options_validator.js",
         "ts_project_worker.js",
     ],
+)
+
+write_source_files(
+    name = "check_in_worker",
+    files = {
+        "ts_project_worker.js": "//ts/private/worker:bundle",
+    },
 )

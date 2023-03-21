@@ -1,0 +1,35 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@aspect_rules_rollup//rollup:defs.bzl", "rollup_bundle")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+
+npm_link_all_packages(name = "node_modules")
+
+
+ts_project(
+    name = "worker",
+    srcs = glob(["*.ts"]), 
+    declaration = True,
+    source_map = True,
+    # chicked-egg-problem: should not use workers to build worker code.
+    supports_workers = False,
+    deps = [
+        ":node_modules/@types/node",
+        ":node_modules/typescript",
+    ],
+)
+
+
+rollup_bundle(
+    name = "bundle",
+    config_file = ":rollup.config.cjs",
+    entry_point = "entrypoint.js",
+    format = "cjs",
+    visibility = [
+        "//ts/private:__pkg__",
+    ],
+    deps = [
+        ":node_modules/@rollup/plugin-node-resolve",
+        ":worker",
+    ],
+)
+
