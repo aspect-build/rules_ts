@@ -49,9 +49,11 @@ importers:
       '@babel/preset-typescript': 7.18.6
       '@babel/types': 7.20.2
       '@tsconfig/node16-strictest-esm': 1.0.3
-      '@types/jasmine': 4.3.0
+      '@types/jasmine': 4.3.1
       '@types/node': 18.11.9
       date-fns: 2.29.3
+      jasmine: 4.6.0
+      jasmine-reporters: 2.5.2
       rxjs: 7.5.7
       source-map-support: ^0.5.21
       typescript: 4.8.4
@@ -66,9 +68,11 @@ importers:
       '@babel/preset-typescript': 7.18.6_@babel+core@7.20.2
       '@babel/types': 7.20.2
       '@tsconfig/node16-strictest-esm': 1.0.3
-      '@types/jasmine': 4.3.0
+      '@types/jasmine': 4.3.1
       '@types/node': 18.11.9
       date-fns: 2.29.3
+      jasmine: 4.6.0
+      jasmine-reporters: 2.5.2
       rxjs: 7.5.7
       source-map-support: 0.5.21
       typescript: 4.8.4
@@ -551,8 +555,8 @@ packages:
     resolution: {integrity: sha512-sNFeK6X2ATlhlvzyH4kKYQlfHXE2f2/wxtB9ClvYXevWpmwkUT7VaSrjIN9E76Qebz8qP5JOJJ9jD3QoD/Z9TA==}
     dev: false
 
-  /@types/jasmine/4.3.0:
-    resolution: {integrity: sha512-u1jWakf8CWvLfSEZyxmzkgBzOEvXH/szpT0e6G8BTkx5Eu0BhDn7sbc5dz0JBN/6Wwm9rBe+JAsk9tJRyH9ZkA==}
+  /@types/jasmine/4.3.1:
+    resolution: {integrity: sha512-Vu8l+UGcshYmV1VWwULgnV/2RDbBaO6i2Ptx7nd//oJPIZGhoI1YLST4VKagD2Pq/Bc2/7zvtvhM7F3p4SN7kQ==}
     dev: false
 
   /@types/node/18.11.9:
@@ -562,6 +566,11 @@ packages:
   /@types/node/18.13.0:
     resolution: {integrity: sha512-gC3TazRzGoOnoKAhUx+Q0t8S9Tzs74z7m0ipwGpSqQrleP14hKxP4/JUeEQcD3W1/aIpnWl8pHowI7WokuZpXg==}
     dev: true
+
+  /@xmldom/xmldom/0.8.6:
+    resolution: {integrity: sha512-uRjjusqpoqfmRkTaNuLJ2VohVr67Q5YwDATW3VU7PfzTj6IRaihGrYI7zckGZjxQPBIp63nfvJbM+Yu5ICh0Bg==}
+    engines: {node: '>=10.0.0'}
+    dev: false
 
   /ansi-regex/5.0.1:
     resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}
@@ -840,6 +849,25 @@ packages:
     engines: {node: '>=0.12.0'}
     dev: false
 
+  /jasmine-core/4.6.0:
+    resolution: {integrity: sha512-O236+gd0ZXS8YAjFx8xKaJ94/erqUliEkJTDedyE7iHvv4ZVqi+q+8acJxu05/WJDKm512EUNn809In37nWlAQ==}
+    dev: false
+
+  /jasmine-reporters/2.5.2:
+    resolution: {integrity: sha512-qdewRUuFOSiWhiyWZX8Yx3YNQ9JG51ntBEO4ekLQRpktxFTwUHy24a86zD/Oi2BRTKksEdfWQZcQFqzjqIkPig==}
+    dependencies:
+      '@xmldom/xmldom': 0.8.6
+      mkdirp: 1.0.4
+    dev: false
+
+  /jasmine/4.6.0:
+    resolution: {integrity: sha512-iq7HQ5M8ydNUspjd9vbFW9Lu+6lQ1QLDIqjl0WysEllF5EJZy8XaUyNlhCJVwOx2YFzqTtARWbS56F/f0PzRFw==}
+    hasBin: true
+    dependencies:
+      glob: 7.2.3
+      jasmine-core: 4.6.0
+    dev: false
+
   /js-tokens/4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
     dev: false
@@ -882,6 +910,12 @@ packages:
     resolution: {integrity: sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==}
     dependencies:
       brace-expansion: 1.1.11
+    dev: false
+
+  /mkdirp/1.0.4:
+    resolution: {integrity: sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==}
+    engines: {node: '>=10'}
+    hasBin: true
     dev: false
 
   /ms/2.1.2:
