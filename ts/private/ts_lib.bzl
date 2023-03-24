@@ -21,8 +21,9 @@ DEPS_PROVIDERS = [
 STD_ATTRS = {
     "assets": attr.label_list(
         doc = """Files which are needed by a downstream build step such as a bundler.
-        See more details on the `assets` parameter of the `ts_project` macro.
-        """,
+
+See more details on the `assets` parameter of the `ts_project` macro.
+""",
         allow_files = True,
     ),
     "args": attr.string_list(
@@ -35,8 +36,8 @@ STD_ATTRS = {
     "deps": attr.label_list(
         doc = """List of targets that produce TypeScript typings (`.d.ts` files)
 
-        {downstream_linked_npm_deps}
-        """.format(downstream_linked_npm_deps = js_lib_helpers.DOWNSTREAM_LINKED_NPM_DEPS_DOCSTRING),
+{downstream_linked_npm_deps}
+""".format(downstream_linked_npm_deps = js_lib_helpers.DOWNSTREAM_LINKED_NPM_DEPS_DOCSTRING),
         providers = DEPS_PROVIDERS,
     ),
     "out_dir": attr.string(
