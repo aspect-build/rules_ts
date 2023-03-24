@@ -35,4 +35,5 @@ jasmine_test(
         "index.spec.js",
         ":lib_b",
     ],
+    node_modules = "//examples:node_modules",
 )

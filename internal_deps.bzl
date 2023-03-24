@@ -21,14 +21,10 @@ def rules_ts_internal_deps():
         urls = ["https://github.com/bazelbuild/bazel-gazelle/releases/download/v0.28.0/bazel-gazelle-v0.28.0.tar.gz"],
     )
 
-    # Override bazel_skylib distribution to fetch sources instead
-    # so that the gazelle extension is included
-    # see https://github.com/bazelbuild/bazel-skylib/issues/250
     http_archive(
-        name = "bazel_skylib",
-        sha256 = "3b620033ca48fcd6f5ef2ac85e0f6ec5639605fa2f627968490e52fc91a9932f",
-        strip_prefix = "bazel-skylib-1.3.0",
-        urls = ["https://github.com/bazelbuild/bazel-skylib/archive/refs/tags/1.3.0.tar.gz"],
+        name = "bazel_skylib_gazelle_plugin",
+        sha256 = "0a466b61f331585f06ecdbbf2480b9edf70e067a53f261e0596acd573a7d2dc3",
+        urls = ["https://github.com/bazelbuild/bazel-skylib/releases/download/1.4.1/bazel-skylib-gazelle-plugin-1.4.1.tar.gz"],
     )
 
     http_archive(
@@ -39,7 +35,7 @@ def rules_ts_internal_deps():
 
     http_archive(
         name = "aspect_rules_jasmine",
-        sha256 = "089250b6afda54099d7a3bc4e0f0765451356f329d105a32d1a78703edf70320",
-        strip_prefix = "rules_jasmine-0.3.0",
-        url = "https://github.com/aspect-build/rules_jasmine/archive/refs/tags/v0.3.0.tar.gz",
+        sha256 = "5b8a9659221f2050012fb93c230ab5a5029b0b9d8aaa63ec9f1469e82a6c977e",
+        strip_prefix = "rules_jasmine-0.4.0",
+        url = "https://github.com/aspect-build/rules_jasmine/releases/download/v0.4.0/rules_jasmine-v0.4.0.tar.gz",
     )

@@ -59,11 +59,3 @@ npm_translate_lock(
 load("@npm//:repositories.bzl", "npm_repositories")
 
 npm_repositories()
-
-load("@aspect_rules_jasmine//jasmine:repositories.bzl", "jasmine_repositories")
-
-jasmine_repositories(name = "jasmine")
-
-load("@jasmine//:npm_repositories.bzl", jasmine_npm_repositories = "npm_repositories")
-
-jasmine_npm_repositories()
