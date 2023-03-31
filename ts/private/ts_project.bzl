@@ -106,6 +106,12 @@ See https://github.com/aspect-build/rules_ts/issues/228 for more details.
             "--declarationDir",
             declaration_dir,
         ])
+    
+    if ctx.attr.skip_lib_check != -1:
+        arguments.add_all([
+            "--skipLibCheck",
+            bool(ctx.attr.skip_lib_check),
+        ])
 
     # When users report problems, we can ask them to re-build with
     # --define=VERBOSE_LOGS=1

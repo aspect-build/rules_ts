@@ -116,6 +116,10 @@ COMPILER_OPTION_ATTRS = {
     "source_map": attr.bool(
         doc = "https://www.typescriptlang.org/tsconfig#sourceMap",
     ),
+    "skip_lib_check": attr.int(
+        doc = "https://www.typescriptlang.org/tsconfig#skipLibCheck", 
+        values = [-1, 0, 1]
+    )
 }
 
 # tsc knows how to produce the following kinds of output files.
