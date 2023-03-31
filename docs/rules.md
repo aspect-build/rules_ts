@@ -39,9 +39,9 @@ extended configuration file as well, to pass them both to the TypeScript compile
 <pre>
 ts_project_rule(<a href="#ts_project_rule-name">name</a>, <a href="#ts_project_rule-allow_js">allow_js</a>, <a href="#ts_project_rule-args">args</a>, <a href="#ts_project_rule-assets">assets</a>, <a href="#ts_project_rule-buildinfo_out">buildinfo_out</a>, <a href="#ts_project_rule-composite">composite</a>, <a href="#ts_project_rule-data">data</a>, <a href="#ts_project_rule-declaration">declaration</a>,
                 <a href="#ts_project_rule-declaration_dir">declaration_dir</a>, <a href="#ts_project_rule-declaration_map">declaration_map</a>, <a href="#ts_project_rule-deps">deps</a>, <a href="#ts_project_rule-emit_declaration_only">emit_declaration_only</a>, <a href="#ts_project_rule-extends">extends</a>, <a href="#ts_project_rule-incremental">incremental</a>,
-                <a href="#ts_project_rule-js_outs">js_outs</a>, <a href="#ts_project_rule-map_outs">map_outs</a>, <a href="#ts_project_rule-out_dir">out_dir</a>, <a href="#ts_project_rule-preserve_jsx">preserve_jsx</a>, <a href="#ts_project_rule-resolve_json_module">resolve_json_module</a>, <a href="#ts_project_rule-root_dir">root_dir</a>, <a href="#ts_project_rule-source_map">source_map</a>,
-                <a href="#ts_project_rule-srcs">srcs</a>, <a href="#ts_project_rule-supports_workers">supports_workers</a>, <a href="#ts_project_rule-transpile">transpile</a>, <a href="#ts_project_rule-tsc">tsc</a>, <a href="#ts_project_rule-tsc_worker">tsc_worker</a>, <a href="#ts_project_rule-tsconfig">tsconfig</a>, <a href="#ts_project_rule-typing_maps_outs">typing_maps_outs</a>,
-                <a href="#ts_project_rule-typings_outs">typings_outs</a>)
+                <a href="#ts_project_rule-js_outs">js_outs</a>, <a href="#ts_project_rule-map_outs">map_outs</a>, <a href="#ts_project_rule-out_dir">out_dir</a>, <a href="#ts_project_rule-preserve_jsx">preserve_jsx</a>, <a href="#ts_project_rule-resolve_json_module">resolve_json_module</a>, <a href="#ts_project_rule-root_dir">root_dir</a>,
+                <a href="#ts_project_rule-skip_lib_check">skip_lib_check</a>, <a href="#ts_project_rule-source_map">source_map</a>, <a href="#ts_project_rule-srcs">srcs</a>, <a href="#ts_project_rule-supports_workers">supports_workers</a>, <a href="#ts_project_rule-transpile">transpile</a>, <a href="#ts_project_rule-tsc">tsc</a>, <a href="#ts_project_rule-tsc_worker">tsc_worker</a>,
+                <a href="#ts_project_rule-tsconfig">tsconfig</a>, <a href="#ts_project_rule-typing_maps_outs">typing_maps_outs</a>, <a href="#ts_project_rule-typings_outs">typings_outs</a>)
 </pre>
 
 Implementation rule behind the ts_project macro.
@@ -76,6 +76,7 @@ Implementation rule behind the ts_project macro.
 | <a id="ts_project_rule-preserve_jsx"></a>preserve_jsx |  https://www.typescriptlang.org/tsconfig#jsx   | Boolean | optional | <code>False</code> |
 | <a id="ts_project_rule-resolve_json_module"></a>resolve_json_module |  https://www.typescriptlang.org/tsconfig#resolveJsonModule   | Boolean | optional | <code>False</code> |
 | <a id="ts_project_rule-root_dir"></a>root_dir |  https://www.typescriptlang.org/tsconfig#rootDir   | String | optional | <code>""</code> |
+| <a id="ts_project_rule-skip_lib_check"></a>skip_lib_check |  https://www.typescriptlang.org/tsconfig#skipLibCheck   | Integer | optional | <code>0</code> |
 | <a id="ts_project_rule-source_map"></a>source_map |  https://www.typescriptlang.org/tsconfig#sourceMap   | Boolean | optional | <code>False</code> |
 | <a id="ts_project_rule-srcs"></a>srcs |  TypeScript source files   | <a href="https://bazel.build/concepts/labels">List of labels</a> | required |  |
 | <a id="ts_project_rule-supports_workers"></a>supports_workers |  Whether the tsc compiler understands Bazel's persistent worker protocol   | Boolean | optional | <code>False</code> |
@@ -94,7 +95,7 @@ Implementation rule behind the ts_project macro.
 <pre>
 validate_options(<a href="#validate_options-name">name</a>, <a href="#validate_options-allow_js">allow_js</a>, <a href="#validate_options-composite">composite</a>, <a href="#validate_options-declaration">declaration</a>, <a href="#validate_options-declaration_map">declaration_map</a>, <a href="#validate_options-deps">deps</a>,
                  <a href="#validate_options-emit_declaration_only">emit_declaration_only</a>, <a href="#validate_options-extends">extends</a>, <a href="#validate_options-incremental">incremental</a>, <a href="#validate_options-preserve_jsx">preserve_jsx</a>, <a href="#validate_options-resolve_json_module">resolve_json_module</a>,
-                 <a href="#validate_options-source_map">source_map</a>, <a href="#validate_options-target">target</a>, <a href="#validate_options-ts_build_info_file">ts_build_info_file</a>, <a href="#validate_options-tsconfig">tsconfig</a>, <a href="#validate_options-validator">validator</a>)
+                 <a href="#validate_options-skip_lib_check">skip_lib_check</a>, <a href="#validate_options-source_map">source_map</a>, <a href="#validate_options-target">target</a>, <a href="#validate_options-ts_build_info_file">ts_build_info_file</a>, <a href="#validate_options-tsconfig">tsconfig</a>, <a href="#validate_options-validator">validator</a>)
 </pre>
 
 Validates that some tsconfig.json properties match attributes on ts_project.
@@ -116,6 +117,7 @@ Validates that some tsconfig.json properties match attributes on ts_project.
 | <a id="validate_options-incremental"></a>incremental |  https://www.typescriptlang.org/tsconfig#incremental   | Boolean | optional | <code>False</code> |
 | <a id="validate_options-preserve_jsx"></a>preserve_jsx |  https://www.typescriptlang.org/tsconfig#jsx   | Boolean | optional | <code>False</code> |
 | <a id="validate_options-resolve_json_module"></a>resolve_json_module |  https://www.typescriptlang.org/tsconfig#resolveJsonModule   | Boolean | optional | <code>False</code> |
+| <a id="validate_options-skip_lib_check"></a>skip_lib_check |  https://www.typescriptlang.org/tsconfig#skipLibCheck   | Integer | optional | <code>0</code> |
 | <a id="validate_options-source_map"></a>source_map |  https://www.typescriptlang.org/tsconfig#sourceMap   | Boolean | optional | <code>False</code> |
 | <a id="validate_options-target"></a>target |  -   | String | optional | <code>""</code> |
 | <a id="validate_options-ts_build_info_file"></a>ts_build_info_file |  -   | String | optional | <code>""</code> |
@@ -150,8 +152,8 @@ Provides TypeScript configuration, in the form of a tsconfig.json file
 <pre>
 ts_project(<a href="#ts_project-name">name</a>, <a href="#ts_project-tsconfig">tsconfig</a>, <a href="#ts_project-srcs">srcs</a>, <a href="#ts_project-args">args</a>, <a href="#ts_project-data">data</a>, <a href="#ts_project-deps">deps</a>, <a href="#ts_project-assets">assets</a>, <a href="#ts_project-extends">extends</a>, <a href="#ts_project-allow_js">allow_js</a>, <a href="#ts_project-declaration">declaration</a>,
            <a href="#ts_project-source_map">source_map</a>, <a href="#ts_project-declaration_map">declaration_map</a>, <a href="#ts_project-resolve_json_module">resolve_json_module</a>, <a href="#ts_project-preserve_jsx">preserve_jsx</a>, <a href="#ts_project-composite">composite</a>, <a href="#ts_project-incremental">incremental</a>,
-           <a href="#ts_project-emit_declaration_only">emit_declaration_only</a>, <a href="#ts_project-transpiler">transpiler</a>, <a href="#ts_project-ts_build_info_file">ts_build_info_file</a>, <a href="#ts_project-tsc">tsc</a>, <a href="#ts_project-tsc_worker">tsc_worker</a>, <a href="#ts_project-validate">validate</a>,
-           <a href="#ts_project-validator">validator</a>, <a href="#ts_project-declaration_dir">declaration_dir</a>, <a href="#ts_project-out_dir">out_dir</a>, <a href="#ts_project-root_dir">root_dir</a>, <a href="#ts_project-supports_workers">supports_workers</a>, <a href="#ts_project-kwargs">kwargs</a>)
+           <a href="#ts_project-emit_declaration_only">emit_declaration_only</a>, <a href="#ts_project-skip_lib_check">skip_lib_check</a>, <a href="#ts_project-transpiler">transpiler</a>, <a href="#ts_project-ts_build_info_file">ts_build_info_file</a>, <a href="#ts_project-tsc">tsc</a>, <a href="#ts_project-tsc_worker">tsc_worker</a>,
+           <a href="#ts_project-validate">validate</a>, <a href="#ts_project-validator">validator</a>, <a href="#ts_project-declaration_dir">declaration_dir</a>, <a href="#ts_project-out_dir">out_dir</a>, <a href="#ts_project-root_dir">root_dir</a>, <a href="#ts_project-supports_workers">supports_workers</a>, <a href="#ts_project-kwargs">kwargs</a>)
 </pre>
 
 Compiles one TypeScript project using `tsc --project`.
@@ -198,6 +200,7 @@ If you have problems getting your `ts_project` to work correctly, read the dedic
 | <a id="ts_project-composite"></a>composite |  Whether the <code>composite</code> bit is set in the tsconfig. Instructs Bazel to expect a <code>.tsbuildinfo</code> output and a <code>.d.ts</code> output for each <code>.ts</code> source.   |  <code>False</code> |
 | <a id="ts_project-incremental"></a>incremental |  Whether the <code>incremental</code> bit is set in the tsconfig. Instructs Bazel to expect a <code>.tsbuildinfo</code> output.   |  <code>False</code> |
 | <a id="ts_project-emit_declaration_only"></a>emit_declaration_only |  Whether the <code>emitDeclarationOnly</code> bit is set in the tsconfig. Instructs Bazel *not* to expect <code>.js</code> or <code>.js.map</code> outputs for <code>.ts</code> sources.   |  <code>False</code> |
+| <a id="ts_project-skip_lib_check"></a>skip_lib_check |  Whether skip type checking of declaration files.  This can save time during compilation at the expense of type-system accuracy.  For example, two libraries could define two copies of the same type in an inconsistent way.  Rather than doing a full check of all d.ts files, TypeScript will type check the code you specifically refer to in your appâs source code.   |  <code>True</code> |
 | <a id="ts_project-transpiler"></a>transpiler |  A custom transpiler tool to run that produces the JavaScript outputs instead of <code>tsc</code>.<br><br>By default, <code>ts_project</code> expects <code>.js</code> outputs to be written in the same action that does the type-checking to produce <code>.d.ts</code> outputs. This is the simplest configuration, however <code>tsc</code> is slower than alternatives. It also means developers must wait for the type-checking in the developer loop.<br><br>See [docs/transpiler.md](/docs/transpiler.md) for more details.   |  <code>None</code> |
 | <a id="ts_project-ts_build_info_file"></a>ts_build_info_file |  The user-specified value of <code>tsBuildInfoFile</code> from the tsconfig. Helps Bazel to predict the path where the .tsbuildinfo output is written.   |  <code>None</code> |
 | <a id="ts_project-tsc"></a>tsc |  Label of the TypeScript compiler binary to run. This allows you to use a custom API-compatible compiler in place of the regular <code>tsc</code> such as a custom <code>js_binary</code> or Angular's <code>ngc</code>. compatible with it such as Angular's <code>ngc</code>.<br><br>See examples of use in [examples/custom_compiler](https://github.com/aspect-build/rules_ts/blob/main/examples/custom_compiler/BUILD.bazel)   |  <code>"@npm_typescript//:tsc"</code> |
