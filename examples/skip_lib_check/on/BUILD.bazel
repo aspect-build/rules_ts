@@ -1,0 +1,12 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "on",
+    srcs = ["source.ts"],
+    # this is the default value
+    skip_lib_check = True,
+    declaration = True,
+    deps = [
+        "//examples:node_modules/@types/node",
+    ],
+)

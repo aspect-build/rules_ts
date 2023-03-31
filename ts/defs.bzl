@@ -66,6 +66,7 @@ def ts_project(
         composite = False,
         incremental = False,
         emit_declaration_only = False,
+        skip_lib_check = True,
         transpiler = None,
         ts_build_info_file = None,
         tsc = _tsc,
@@ -231,6 +232,10 @@ def ts_project(
             Instructs Bazel to expect a `.tsbuildinfo` output.
         emit_declaration_only: Whether the `emitDeclarationOnly` bit is set in the tsconfig.
             Instructs Bazel *not* to expect `.js` or `.js.map` outputs for `.ts` sources.
+        skip_lib_check: Whether skip type checking of declaration files. 
+            This can save time during compilation at the expense of type-system accuracy. 
+            For example, two libraries could define two copies of the same type in an inconsistent way. 
+            Rather than doing a full check of all d.ts files, TypeScript will type check the code you specifically refer to in your app’s source code.
         ts_build_info_file: The user-specified value of `tsBuildInfoFile` from the tsconfig.
             Helps Bazel to predict the path where the .tsbuildinfo output is written.
 
@@ -414,6 +419,7 @@ def ts_project(
         declaration_dir = declaration_dir,
         source_map = source_map,
         declaration_map = declaration_map,
+        skip_lib_check = int(skip_lib_check) if skip_lib_check != None else -1,
         out_dir = out_dir,
         root_dir = root_dir,
         js_outs = tsc_js_outs,
