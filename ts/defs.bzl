@@ -16,6 +16,24 @@ load("//ts/private:ts_lib.bzl", _lib = "lib")
 ts_config = _ts_config
 TsConfigInfo = _TsConfigInfo
 
+# TODO(2.0): fill in more docs
+_skip_lib_check_selection_required = """
+
+######## Required Typecheck Performance Selection ########
+TODO: describe
+
+This can save time during compilation at the expense of type-system accuracy. 
+For example, two libraries could define two copies of the same type in an inconsistent way. 
+Rather than doing a full check of all d.ts files, TypeScript will type check the code you specifically refer to in your app's source code.
+
+To select skipLibCheck, put this in /.bazelrc:
+xxx
+
+To choose slower but more correct typechecks, put this in /.bazelrc:
+yyy
+##########################################################
+"""
+
 validate_options = rule(
     doc = """Validates that some tsconfig.json properties match attributes on ts_project.
     See the documentation of [`ts_project`](#ts_project) for more information.""",
@@ -400,7 +418,13 @@ def ts_project(
     ts_project_rule(
         name = tsc_target_name,
         srcs = srcs,
-        args = args,
+        args = args + select(
+            {
+                "//ts:skip_lib_check_always": ["--skipLibCheck"],
+                "//ts:skip_lib_check_honor_tsconfig": [],
+            },
+            no_match_error = _skip_lib_check_selection_required,
+        ),
         assets = assets,
         data = data,
         deps = tsc_deps,
