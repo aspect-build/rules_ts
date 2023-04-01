@@ -155,7 +155,6 @@ ts_project(
     out_dir = "${out_dir}",
     deps = [${deps_joined}],
     args = [${args_joined}],
-    skip_lib_check = False,
     $source_map
     $declaration
     $composite
