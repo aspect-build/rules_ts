@@ -433,8 +433,8 @@ def ts_project(
         srcs = srcs,
         args = args + select(
             {
-                "@rules_ts//ts:skip_lib_check.always": ["--skipLibCheck"],
-                "//ts:skip_lib_check.honor_tsconfig": [],
+                "@aspect_rules_ts//ts:skip_lib_check.always": ["--skipLibCheck"],
+                "@aspect_rules_ts//ts:skip_lib_check.honor_tsconfig": [],
             },
             no_match_error = _skip_lib_check_selection_required,
         ),
