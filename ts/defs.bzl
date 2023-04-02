@@ -37,12 +37,12 @@ You must choose exactly one of the following flags:
 1. To choose the faster performance, put this in /.bazelrc:
 
     # passes an argument `--skipLibCheck` to *every* spawn of tsc
-    build --@aspect_rules_ts//ts:skipLibCheck
+    build --@aspect_rules_ts//ts:skipLibCheck=always
 
 2. To choose more correct typechecks, put this in /.bazelrc:
 
     # honor the setting of `skipLibCheck` in the tsconfig.json file
-    build --@aspect_rules_ts//ts:use_skipLibCheck_from_tsconfig
+    build --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
 
 ##########################################################
 """
@@ -435,9 +435,6 @@ def ts_project(
             {
                 "//ts:skip_lib_check.always": ["--skipLibCheck"],
                 "//ts:skip_lib_check.honor_tsconfig": [],
-                # TODO(2.0): remove the default so users are forced to
-                # make a conscious choice between speed and correctness.
-                "//conditions:default": [],
             },
             no_match_error = _skip_lib_check_selection_required,
         ),
