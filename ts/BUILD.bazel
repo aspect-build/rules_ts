@@ -1,30 +1,41 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
-load("@bazel_skylib//rules:common_settings.bzl", "int_flag")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 
 exports_files(
     glob(["*.bzl"]),
     visibility = ["//docs:__pkg__"],
 )
 
-# Enable with --@aspect_rules_ts//ts:skip_lib_check=1
-int_flag(
-    name = "skip_lib_check",
-    # Default is 0 to be a non-breaking change in rules_ts 1.x
-    # TODO(2.0): change default to -1 so we require users to consider which value of the flag is best.
-    build_setting_default = 0,
+# Users can enable with --@aspect_rules_ts//ts:skipLibCheck
+bool_flag(
+    # Note: this name is chosen to be searchable when users look for "skipLibCheck" in their repo,
+    # as that's the way it appears in tsconfig.json or tsc command line.
+    name = "skipLibCheck",
+    build_setting_default = False,
 )
 
+# Users can enable with --@aspect_rules_ts//ts:use_skipLibCheck_from_tsconfig
+bool_flag(
+    name = "use_skipLibCheck_from_tsconfig",
+    build_setting_default = False,
+)
+
+# Note, users could use a Transition to make a subgraph of their depgraph opt-in to skipLibCheck.
 config_setting(
-    name = "skip_lib_check_honor_tsconfig",
+    name = "skip_lib_check.always",
+    # Note: check both values to ensure they are mutually exclusive, not both set.
     flag_values = {
-        ":skip_lib_check": "0",
+        ":skipLibCheck": "1",
+        ":use_skipLibCheck_from_tsconfig": "0",
     },
 )
 
 config_setting(
-    name = "skip_lib_check_always",
+    name = "skip_lib_check.honor_tsconfig",
+    # Again, check that they are mutually exclusive.
     flag_values = {
-        ":skip_lib_check": "1",
+        ":skipLibCheck": "0",
+        ":use_skipLibCheck_from_tsconfig": "1",
     },
 )
 
