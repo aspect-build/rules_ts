@@ -1,0 +1,24 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+
+ts_config(
+    name = "config",
+    src = "tsconfig.json",
+    deps = [
+        "types/typings.d.ts",
+        "//examples:node_modules/@types/node",
+    ],
+)
+
+ts_project(
+    name = "ts",
+    srcs = [
+        "index.ts",
+    ],
+    tsconfig = ":config",
+)
+
+build_test(
+    name = "test",
+    targets = [":ts"],
+)
