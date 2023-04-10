@@ -55,10 +55,14 @@ See more details on the `assets` parameter of the `ts_project` macro.
         allow_files = True,
         mandatory = True,
     ),
-    # TODO: make it None-able bool once https://github.com/bazelbuild/bazel/issues/14434 is fixed.
-    "supports_workers": attr.int(
+    "supports_workers": attr.bool(
         doc = "Whether the tsc compiler understands Bazel's persistent worker protocol",
-        values = [-1, 0, 1] # A tri-state. 
+        default = False,
+    ),
+    # TODO(2.0): remove this and make supports_workers a tri-state int. 
+    "internal_do_not_depend_supports_workers_is_none": attr.bool(
+        doc = "Internal. DO NOT DEPEND!",
+        default = False,
     ),
     "transpile": attr.bool(
         doc = "whether tsc should be used to produce .js outputs",
@@ -81,8 +85,8 @@ See more details on the `assets` parameter of the `ts_project` macro.
         mandatory = True,
         allow_single_file = [".json"],
     ),
-    "_configuration": attr.label(
-        default = "//ts:configuration"
+    "_options": attr.label(
+        default = "@aspect_rules_ts//ts:options"
     )
 }
 

@@ -10,7 +10,7 @@ load("@aspect_rules_js//npm:providers.bzl", "NpmPackageStoreInfo")
 load(":ts_lib.bzl", "COMPILER_OPTION_ATTRS", "OUTPUT_ATTRS", "STD_ATTRS", "ValidOptionsInfo", _lib = "lib")
 load(":ts_config.bzl", "TsConfigInfo")
 load(":ts_validate_options.bzl", _validate_lib = "lib")
-load(":configuration.bzl", "ConfigurationInfo")
+load(":options.bzl", "OptionsInfo")
 
 # Forked from js_lib_helpers.js_lib_helpers.gather_files_from_js_providers to not
 # include any sources; only transitive declarations & npm linked packages
@@ -46,7 +46,7 @@ def _ts_project_impl(ctx):
     Returns:
         list of providers
     """
-    configuration = ctx.attr._configuration[ConfigurationInfo]
+    options = ctx.attr._options[OptionsInfo]
     srcs_inputs = copy_files_to_bin_actions(ctx, ctx.files.srcs)
     tsconfig = copy_file_to_bin_action(ctx, ctx.file.tsconfig)
 
@@ -69,10 +69,12 @@ def _ts_project_impl(ctx):
 
     supports_workers = ctx.attr.supports_workers
     
-    # workers can be enabled/disabled globally. if no supports_workers attribute is set explicitly
-    # for this target, which is implied by -1, then set it to global supports_workers config
-    if supports_workers == -1:
-        supports_workers = configuration.supports_workers
+    # workers can be enabled/disabled globally. if no supports_workers attribute is set explicitly for this target, 
+    # which is indicated by internal_do_not_depend_supports_workers_is_none attribute, then set it to global supports_workers config
+    # TODO(2.0): remove this
+    if ctx.attr.internal_do_not_depend_supports_workers_is_none:
+        supports_workers = options.supports_workers
+        print(ctx.attr.internal_do_not_depend_supports_workers_is_none)
 
     host_is_windows = platform_utils.host_platform_is_windows()
     if host_is_windows and supports_workers:
@@ -118,9 +120,9 @@ See https://github.com/aspect-build/rules_ts/issues/228 for more details.
     # When users report problems, we can ask them to re-build with
     # --@aspect_rules_ts//ts:verbose=true
     # so anything that's useful to diagnose rule failures belongs here
-    if configuration.verbose:
+    if options.verbose:
 
-        arguments.add_all(configuration.verbosity_args)
+        arguments.add_all(options.verbosity_args)
 
     inputs = srcs_inputs[:]
     transitive_inputs = []

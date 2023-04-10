@@ -1,11 +1,11 @@
 """A terminal rule collecting verbosity and worker support information"""
 
-ConfigurationInfo = provider(
+OptionsInfo = provider(
     doc = "Internal: Provider that carries verbosity and global worker support information.",
     fields = ["verbosity_args", "verbose", "supports_workers"]
 )
 
-def _configuration_impl(ctx):
+def _options_impl(ctx):
     verbose = ctx.attr.verbose
     
     # TODO(2.0): remove this
@@ -28,14 +28,14 @@ def _configuration_impl(ctx):
             "--extendedDiagnostics",
         ]
 
-    return ConfigurationInfo(
+    return OptionsInfo(
         verbose = verbose,
         verbosity_args = verbosity_args,
         supports_workers = ctx.attr.supports_workers,
     )
 
-configuration = rule(
-    implementation = _configuration_impl,
+options = rule(
+    implementation = _options_impl,
     attrs = {
         "verbose": attr.bool(),
         "supports_workers": attr.bool(),

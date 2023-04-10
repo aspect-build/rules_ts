@@ -1,7 +1,7 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
-load("//ts/private:configuration.bzl", "configuration")
+load("//ts/private:options.bzl", "options")
 
 bool_flag(
     name = "verbose",
@@ -35,8 +35,8 @@ config_setting(
     }
 )
 
-configuration(
-    name = "configuration",
+options(
+    name = "options",
     visibility = ["//visibility:public"],
     verbose = select({
         ":legacy_verbose": True,

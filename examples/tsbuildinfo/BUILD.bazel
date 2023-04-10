@@ -5,4 +5,5 @@ ts_project(
     composite = True,
     srcs = ["lib.ts"],
     ts_build_info_file = "my.tsbuildinfo",
+    supports_workers = True
 )

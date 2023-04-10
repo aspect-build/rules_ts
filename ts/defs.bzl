@@ -106,7 +106,7 @@ def ts_project(
         declaration_dir = None,
         out_dir = None,
         root_dir = None,
-        supports_workers = -1,
+        supports_workers = None,
         **kwargs):
     """Compiles one TypeScript project using `tsc --project`.
 
@@ -430,8 +430,8 @@ def ts_project(
 
     # Disable workers if a custom tsc was provided but not a custom tsc_worker.
     if tsc != _tsc and tsc_worker == _tsc_worker:
-        supports_workers = 0
-
+        supports_workers = False
+    print(supports_workers)
     ts_project_rule(
         name = tsc_target_name,
         srcs = srcs,
@@ -466,6 +466,7 @@ def ts_project(
         tsc = tsc,
         tsc_worker = tsc_worker,
         transpile = not transpiler,
-        supports_workers = int(supports_workers),
+        supports_workers = supports_workers,
+        internal_do_not_depend_supports_workers_is_none = supports_workers == None,
         **kwargs
     )
