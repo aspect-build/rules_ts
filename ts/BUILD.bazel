@@ -95,7 +95,6 @@ config_setting(
     }
 )
 
-
 options(
     name = "options",
     visibility = ["//visibility:public"],
@@ -106,6 +105,7 @@ options(
     }),
     supports_workers = select({
         ":supports_workers_flag": True,
+        # TODO(2.0): default should be False if we set swc as default
         "//conditions:default": False,
     }),
     skip_lib_check = select(

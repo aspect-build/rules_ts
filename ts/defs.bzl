@@ -236,6 +236,9 @@ def ts_project(
 
         supports_workers: Whether the worker protocol is enabled.
             To disable worker mode for a particular target set `supports_workers` to `False`.
+            
+            Note that value of this attribute always preferred over `--@aspect_rules_ts//ts:supports_workers` flag
+            unless the `supports_workers` attribute is not set explicitly.
 
             Worker mode can be disabled workspace wide by using the `--@aspect_rules_ts//ts:supports_workers` flag. 
             To disable worker mode globally, insert `build --@aspect_rules_ts//ts:supports_workers=false` into the .bazelrc.
