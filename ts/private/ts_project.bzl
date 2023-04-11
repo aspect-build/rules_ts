@@ -95,7 +95,6 @@ See https://github.com/aspect-build/rules_ts/issues/228 for more details.
 
     # Add all arguments from options first to allow users override them via args.
     arguments.add_all(options.args)
-    print(arguments)
 
     # Add user specified arguments *before* rule supplied arguments
     arguments.add_all(ctx.attr.args)

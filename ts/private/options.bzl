@@ -35,8 +35,7 @@ def _options_impl(ctx):
         args.append(
             "--skipLibCheck"
         )
-
-    print(ctx.attr.skip_lib_check)
+    
     return OptionsInfo(
         verbose = verbose,
         args = args,
