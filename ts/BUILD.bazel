@@ -1,7 +1,56 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
-load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
-load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//rules:common_settings.bzl", "string_flag", "bool_flag")
 load("//ts/private:options.bzl", "options")
+
+exports_files(
+    glob(["*.bzl"]),
+    visibility = ["//docs:__pkg__"],
+)
+
+_skip_lib_check_selection_required = """
+
+######## Required Typecheck Performance Selection ########
+
+TypeScript's type-checking exposes a flag `--skipLibCheck`:
+https://www.typescriptlang.org/tsconfig#skipLibCheck
+
+Using this flag saves substantial time during type-checking.
+Rather than doing a full check of all d.ts files, TypeScript will only type-check the code you
+specifically refer to in your app's source code.
+We recommend this for most rules_ts users.
+
+HOWEVER this performance improvement comes at the expense of type-system accuracy. 
+For example, two packages could define two copies of the same type in an inconsistent way.
+If you publish a library from your repository, your incorrect types may result in errors for your users.
+
+You must choose exactly one of the following flags:
+
+1. To choose the faster performance, put this in /.bazelrc:
+
+    # passes an argument `--skipLibCheck` to *every* spawn of tsc
+    build --@aspect_rules_ts//ts:skipLibCheck=always
+
+2. To choose more correct typechecks, put this in /.bazelrc:
+
+    # honor the setting of `skipLibCheck` in the tsconfig.json file
+    build --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
+
+##########################################################
+"""
+
+# Users can enable with --@aspect_rules_ts//ts:skipLibCheck=always
+string_flag(
+    # Note: this name is chosen to be searchable when users look for "skipLibCheck" in their repo,
+    # as that's the way it appears in tsconfig.json or tsc command line.
+    name = "skipLibCheck",
+    # TODO(2.0): change default to "unspecified"
+    build_setting_default = "honor_tsconfig",
+    values = [
+        "always",
+        "honor_tsconfig",
+        "unspecified",
+    ],
+)
 
 bool_flag(
     name = "verbose",
@@ -13,6 +62,17 @@ bool_flag(
     name = "supports_workers",
     build_setting_default = True,
     visibility = ["//visibility:public"],
+)
+
+# Note, users could use a Transition to make a subgraph of their depgraph opt-in to skipLibCheck.
+config_setting(
+    name = "skip_lib_check.always",
+    flag_values = {":skipLibCheck": "always"},
+)
+
+config_setting(
+    name = "skip_lib_check.honor_tsconfig",
+    flag_values = {":skipLibCheck": "honor_tsconfig"},
 )
 
 # TODO(2.0): remove this
@@ -35,6 +95,7 @@ config_setting(
     }
 )
 
+
 options(
     name = "options",
     visibility = ["//visibility:public"],
@@ -46,39 +107,17 @@ options(
     supports_workers = select({
         ":supports_workers_flag": True,
         "//conditions:default": False,
-    })
+    }),
+    skip_lib_check = select(
+        {
+            "@aspect_rules_ts//ts:skip_lib_check.always": True,
+            "@aspect_rules_ts//ts:skip_lib_check.honor_tsconfig": False,
+        },
+        no_match_error = _skip_lib_check_selection_required,
+    )
 )
 
 
-exports_files(
-    glob(["*.bzl"]),
-    visibility = ["//docs:__pkg__"],
-)
-
-# Users can enable with --@aspect_rules_ts//ts:skipLibCheck=always
-string_flag(
-    # Note: this name is chosen to be searchable when users look for "skipLibCheck" in their repo,
-    # as that's the way it appears in tsconfig.json or tsc command line.
-    name = "skipLibCheck",
-    # TODO(2.0): change default to "unspecified"
-    build_setting_default = "honor_tsconfig",
-    values = [
-        "always",
-        "honor_tsconfig",
-        "unspecified",
-    ],
-)
-
-# Note, users could use a Transition to make a subgraph of their depgraph opt-in to skipLibCheck.
-config_setting(
-    name = "skip_lib_check.always",
-    flag_values = {":skipLibCheck": "always"},
-)
-
-config_setting(
-    name = "skip_lib_check.honor_tsconfig",
-    flag_values = {":skipLibCheck": "honor_tsconfig"},
-)
 
 bzl_library(
     name = "defs",

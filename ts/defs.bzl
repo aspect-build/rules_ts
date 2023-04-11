@@ -16,37 +16,6 @@ load("//ts/private:ts_lib.bzl", _lib = "lib")
 ts_config = _ts_config
 TsConfigInfo = _TsConfigInfo
 
-_skip_lib_check_selection_required = """
-
-######## Required Typecheck Performance Selection ########
-
-TypeScript's type-checking exposes a flag `--skipLibCheck`:
-https://www.typescriptlang.org/tsconfig#skipLibCheck
-
-Using this flag saves substantial time during type-checking.
-Rather than doing a full check of all d.ts files, TypeScript will only type-check the code you
-specifically refer to in your app's source code.
-We recommend this for most rules_ts users.
-
-HOWEVER this performance improvement comes at the expense of type-system accuracy. 
-For example, two packages could define two copies of the same type in an inconsistent way.
-If you publish a library from your repository, your incorrect types may result in errors for your users.
-
-You must choose exactly one of the following flags:
-
-1. To choose the faster performance, put this in /.bazelrc:
-
-    # passes an argument `--skipLibCheck` to *every* spawn of tsc
-    build --@aspect_rules_ts//ts:skipLibCheck=always
-
-2. To choose more correct typechecks, put this in /.bazelrc:
-
-    # honor the setting of `skipLibCheck` in the tsconfig.json file
-    build --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
-
-##########################################################
-"""
-
 validate_options = rule(
     doc = """Validates that some tsconfig.json properties match attributes on ts_project.
     See the documentation of [`ts_project`](#ts_project) for more information.""",
@@ -431,17 +400,11 @@ def ts_project(
     # Disable workers if a custom tsc was provided but not a custom tsc_worker.
     if tsc != _tsc and tsc_worker == _tsc_worker:
         supports_workers = False
-    print(supports_workers)
+
     ts_project_rule(
         name = tsc_target_name,
         srcs = srcs,
-        args = args + select(
-            {
-                "@aspect_rules_ts//ts:skip_lib_check.always": ["--skipLibCheck"],
-                "@aspect_rules_ts//ts:skip_lib_check.honor_tsconfig": [],
-            },
-            no_match_error = _skip_lib_check_selection_required,
-        ),
+        args = args,
         assets = assets,
         data = data,
         deps = tsc_deps,

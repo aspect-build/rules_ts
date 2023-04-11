@@ -2,7 +2,7 @@
 
 OptionsInfo = provider(
     doc = "Internal: Provider that carries verbosity and global worker support information.",
-    fields = ["verbosity_args", "verbose", "supports_workers"]
+    fields = ["args", "verbose", "supports_workers"]
 )
 
 def _options_impl(ctx):
@@ -13,10 +13,13 @@ def _options_impl(ctx):
         # buildifier: disable=print
         print("Usage of --define=VERBOSE_LOGS=1 is deprecated. use --@aspect_rules_ts//ts:verbose=true flag instead.")
 
-    verbosity_args = []
+    args = []
 
+    # When users report problems, we can ask them to re-build with
+    # --@aspect_rules_ts//ts:verbose=true
+    # so anything that's useful to diagnose rule failures belongs here
     if verbose:
-        verbosity_args = [
+        args = [
             # What files were in the ts.Program
             "--listFiles",
             # Did tsc write all outputs to the place we expect to find them?
@@ -28,9 +31,15 @@ def _options_impl(ctx):
             "--extendedDiagnostics",
         ]
 
+    if ctx.attr.skip_lib_check:
+        args.append(
+            "--skipLibCheck"
+        )
+
+    print(ctx.attr.skip_lib_check)
     return OptionsInfo(
         verbose = verbose,
-        verbosity_args = verbosity_args,
+        args = args,
         supports_workers = ctx.attr.supports_workers,
     )
 
@@ -39,5 +48,6 @@ options = rule(
     attrs = {
         "verbose": attr.bool(),
         "supports_workers": attr.bool(),
+        "skip_lib_check": attr.bool(),
     }
 )

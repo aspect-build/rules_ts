@@ -74,7 +74,6 @@ def _ts_project_impl(ctx):
     # TODO(2.0): remove this
     if ctx.attr.internal_do_not_depend_supports_workers_is_none:
         supports_workers = options.supports_workers
-        print(ctx.attr.internal_do_not_depend_supports_workers_is_none)
 
     host_is_windows = platform_utils.host_platform_is_windows()
     if host_is_windows and supports_workers:
@@ -93,6 +92,10 @@ See https://github.com/aspect-build/rules_ts/issues/228 for more details.
         execution_requirements["supports-workers"] = "1"
         execution_requirements["worker-key-mnemonic"] = "TsProject"
         executable = ctx.executable.tsc_worker
+
+    # Add all arguments from options first to allow users override them via args.
+    arguments.add_all(options.args)
+    print(arguments)
 
     # Add user specified arguments *before* rule supplied arguments
     arguments.add_all(ctx.attr.args)
@@ -116,13 +119,6 @@ See https://github.com/aspect-build/rules_ts/issues/228 for more details.
             "--declarationDir",
             declaration_dir,
         ])
-
-    # When users report problems, we can ask them to re-build with
-    # --@aspect_rules_ts//ts:verbose=true
-    # so anything that's useful to diagnose rule failures belongs here
-    if options.verbose:
-
-        arguments.add_all(options.verbosity_args)
 
     inputs = srcs_inputs[:]
     transitive_inputs = []
