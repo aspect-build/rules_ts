@@ -93,7 +93,6 @@ def _use_dir_test_impl(ctx):
 
 _use_dir_test = analysistest.make(_use_dir_test_impl)
 
-
 def ts_project_test_suite(name):
     """Test suite including all tests and data
 
@@ -146,6 +145,6 @@ def ts_project_test_suite(name):
         name = name,
         tests = [
             ":dir_test",
-            ":use_dir_test"
+            ":use_dir_test",
         ],
     )
