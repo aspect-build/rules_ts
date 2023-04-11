@@ -126,6 +126,7 @@ bzl_library(
     deps = [
         "//ts/private/docs:ts_config",
         "//ts/private/docs:ts_project",
+        "//ts/private/docs:options",
         "@aspect_rules_js//js:defs",
         "@bazel_skylib//lib:partial",
         "@bazel_skylib//rules:build_test",

@@ -56,3 +56,8 @@ bzl_library(
     name = "maybe",
     srcs = ["//ts/private:maybe.bzl"],
 )
+
+bzl_library(
+    name = "options",
+    srcs = ["//ts/private:options.bzl"],
+)
