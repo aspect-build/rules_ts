@@ -10,6 +10,7 @@ load("@aspect_rules_js//npm:providers.bzl", "NpmPackageStoreInfo")
 load(":ts_lib.bzl", "COMPILER_OPTION_ATTRS", "OUTPUT_ATTRS", "STD_ATTRS", "ValidOptionsInfo", _lib = "lib")
 load(":ts_config.bzl", "TsConfigInfo")
 load(":ts_validate_options.bzl", _validate_lib = "lib")
+load(":options.bzl", "OptionsInfo")
 
 # Forked from js_lib_helpers.js_lib_helpers.gather_files_from_js_providers to not
 # include any sources; only transitive declarations & npm linked packages
@@ -45,6 +46,7 @@ def _ts_project_impl(ctx):
     Returns:
         list of providers
     """
+    options = ctx.attr._options[OptionsInfo]
     srcs_inputs = copy_files_to_bin_actions(ctx, ctx.files.srcs)
     tsconfig = copy_file_to_bin_action(ctx, ctx.file.tsconfig)
 
@@ -66,13 +68,20 @@ def _ts_project_impl(ctx):
     executable = ctx.executable.tsc
 
     supports_workers = ctx.attr.supports_workers
+    
+    # workers can be enabled/disabled globally. if no supports_workers attribute is set explicitly for this target, 
+    # which is indicated by internal_do_not_depend_supports_workers_is_none attribute, then set it to global supports_workers config
+    # TODO(2.0): remove this
+    if ctx.attr.internal_do_not_depend_supports_workers_is_none:
+        supports_workers = options.supports_workers
+
     host_is_windows = platform_utils.host_platform_is_windows()
     if host_is_windows and supports_workers:
         supports_workers = False
 
         # buildifier: disable=print
         print("""
-WARNING: disabling ts_project workers which are not currently support on Windows hosts.
+WARNING: disabling ts_project workers which are not currently supported on Windows hosts.
 See https://github.com/aspect-build/rules_ts/issues/228 for more details.
 """)
 
@@ -83,6 +92,9 @@ See https://github.com/aspect-build/rules_ts/issues/228 for more details.
         execution_requirements["supports-workers"] = "1"
         execution_requirements["worker-key-mnemonic"] = "TsProject"
         executable = ctx.executable.tsc_worker
+
+    # Add all arguments from options first to allow users override them via args.
+    arguments.add_all(options.args)
 
     # Add user specified arguments *before* rule supplied arguments
     arguments.add_all(ctx.attr.args)
@@ -105,22 +117,6 @@ See https://github.com/aspect-build/rules_ts/issues/228 for more details.
         arguments.add_all([
             "--declarationDir",
             declaration_dir,
-        ])
-
-    # When users report problems, we can ask them to re-build with
-    # --define=VERBOSE_LOGS=1
-    # so anything that's useful to diagnose rule failures belongs here
-    if "VERBOSE_LOGS" in ctx.var.keys():
-        arguments.add_all([
-            # What files were in the ts.Program
-            "--listFiles",
-            # Did tsc write all outputs to the place we expect to find them?
-            "--listEmittedFiles",
-            # Why did module resolution fail?
-            "--traceResolution",
-            # Why was the build slow?
-            "--diagnostics",
-            "--extendedDiagnostics",
         ])
 
     inputs = srcs_inputs[:]

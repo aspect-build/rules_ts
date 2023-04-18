@@ -1,11 +1,14 @@
 load(":mock_transpiler.bzl", "mock")
 load(":transpiler_tests.bzl", "transpiler_test_suite")
 load(":ts_project_test.bzl", "ts_project_test_suite")
+load(":flags_test.bzl", "ts_project_flags_test_suite")
 load("//ts:defs.bzl", "ts_project")
 
 transpiler_test_suite()
 
 ts_project_test_suite(name = "ts_project_test")
+
+ts_project_flags_test_suite(name = "ts_project_flags_test")
 
 # Ensure that when determining output location, the `root_dir` attribute is only removed once.
 ts_project(

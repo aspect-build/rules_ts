@@ -16,37 +16,6 @@ load("//ts/private:ts_lib.bzl", _lib = "lib")
 ts_config = _ts_config
 TsConfigInfo = _TsConfigInfo
 
-_skip_lib_check_selection_required = """
-
-######## Required Typecheck Performance Selection ########
-
-TypeScript's type-checking exposes a flag `--skipLibCheck`:
-https://www.typescriptlang.org/tsconfig#skipLibCheck
-
-Using this flag saves substantial time during type-checking.
-Rather than doing a full check of all d.ts files, TypeScript will only type-check the code you
-specifically refer to in your app's source code.
-We recommend this for most rules_ts users.
-
-HOWEVER this performance improvement comes at the expense of type-system accuracy. 
-For example, two packages could define two copies of the same type in an inconsistent way.
-If you publish a library from your repository, your incorrect types may result in errors for your users.
-
-You must choose exactly one of the following flags:
-
-1. To choose the faster performance, put this in /.bazelrc:
-
-    # passes an argument `--skipLibCheck` to *every* spawn of tsc
-    build --@aspect_rules_ts//ts:skipLibCheck=always
-
-2. To choose more correct typechecks, put this in /.bazelrc:
-
-    # honor the setting of `skipLibCheck` in the tsconfig.json file
-    build --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
-
-##########################################################
-"""
-
 validate_options = rule(
     doc = """Validates that some tsconfig.json properties match attributes on ts_project.
     See the documentation of [`ts_project`](#ts_project) for more information.""",
@@ -106,7 +75,7 @@ def ts_project(
         declaration_dir = None,
         out_dir = None,
         root_dir = None,
-        supports_workers = True,
+        supports_workers = None,
         **kwargs):
     """Compiles one TypeScript project using `tsc --project`.
 
@@ -267,18 +236,20 @@ def ts_project(
 
         supports_workers: Whether the worker protocol is enabled.
             To disable worker mode for a particular target set `supports_workers` to `False`.
-            Worker mode can be controlled as well via `--strategy` and `mnemonic` and  using .bazelrc.
+            
+            Note that value of this attribute always preferred over `--@aspect_rules_ts//ts:supports_workers` flag
+            unless the `supports_workers` attribute is not set explicitly.
 
-            Put this in your .bazelrc to disable it globally: `build --strategy=TsProject=sandboxed`
+            Worker mode can be disabled workspace wide by using the `--@aspect_rules_ts//ts:supports_workers` flag. 
+            To disable worker mode globally, insert `build --@aspect_rules_ts//ts:supports_workers=false` into the .bazelrc.
+
+            Alternatively, worker mode can be controlled via `--strategy`.
+            To disable worker mode globally via `--strategy` insert `build --strategy=TsProject=sandboxed` into the .bazelrc.
 
             See https://docs.bazel.build/versions/main/user-manual.html#flag--strategy for more details.
 
         **kwargs: passed through to underlying [`ts_project_rule`](#ts_project_rule), eg. `visibility`, `tags`
     """
-
-    # Disable workers if a custom tsc was provided but not a custom tsc_worker.
-    if tsc != _tsc and tsc_worker == _tsc_worker:
-        supports_workers = False
 
     if srcs == None:
         include = ["**/*.ts", "**/*.tsx"]
@@ -427,17 +398,16 @@ def ts_project(
             data = data,
             **common_kwargs
         )
+    
+
+    # Disable workers if a custom tsc was provided but not a custom tsc_worker.
+    if tsc != _tsc and tsc_worker == _tsc_worker:
+        supports_workers = False
 
     ts_project_rule(
         name = tsc_target_name,
         srcs = srcs,
-        args = args + select(
-            {
-                "@aspect_rules_ts//ts:skip_lib_check.always": ["--skipLibCheck"],
-                "@aspect_rules_ts//ts:skip_lib_check.honor_tsconfig": [],
-            },
-            no_match_error = _skip_lib_check_selection_required,
-        ),
+        args = args,
         assets = assets,
         data = data,
         deps = tsc_deps,
@@ -463,5 +433,6 @@ def ts_project(
         tsc_worker = tsc_worker,
         transpile = not transpiler,
         supports_workers = supports_workers,
+        internal_do_not_depend_supports_workers_is_none = supports_workers == None,
         **kwargs
     )
