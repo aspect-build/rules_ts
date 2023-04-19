@@ -5,8 +5,9 @@ local_repository(
     path = "../..",
 )
 
-load("@aspect_rules_ts//ts:repositories.bzl", "LATEST_VERSION", "rules_ts_dependencies")
-rules_ts_dependencies(ts_version = LATEST_VERSION)
+load("@aspect_rules_ts//ts:repositories.bzl", "LATEST_TYPESCRIPT_VERSION", "rules_ts_dependencies")
+
+rules_ts_dependencies(ts_version = LATEST_TYPESCRIPT_VERSION)
 
 # Fetch and register node, if you haven't already
 load("@rules_nodejs//nodejs:repositories.bzl", "DEFAULT_NODE_VERSION", "nodejs_register_toolchains")
