@@ -219,6 +219,12 @@ This is an error because Bazel does not run actions unless their outputs are nee
             transitive = transitive_inputs + [_gather_declarations_from_js_providers(ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps)],
         )
 
+        verb = "Transpiling & type-checking"
+        if not ctx.attr.transpile:
+            verb = "Type-checking"
+        elif not ctx.attr.declaration:
+            verb = "Transpiling"
+
         ctx.actions.run(
             executable = executable,
             inputs = inputs_depset,
@@ -226,7 +232,8 @@ This is an error because Bazel does not run actions unless their outputs are nee
             outputs = outputs,
             mnemonic = "TsProject",
             execution_requirements = execution_requirements,
-            progress_message = "Compiling TypeScript project %s [tsc -p %s]" % (
+            progress_message = "%s TypeScript project %s [tsc -p %s]" % (
+                verb,
                 ctx.label,
                 tsconfig_path,
             ),
