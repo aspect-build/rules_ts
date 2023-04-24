@@ -105,6 +105,40 @@ Use the `--traceResolution` flag to `tsc` to understand where TypeScript looked 
 
 Verify that there is actually a `.d.ts` file for TypeScript to resolve. Check that the dependency library has the `declarations = True` flag set, and that the `.d.ts` files appear where you expect them under `bazel-out`.
 
+## NPM package type-checking failures
+
+Strict dependencies and non-hoisted packages can cause type-checking failures when a package does not correctly declare TypeScript related npm dependencies. If a package exposes a dependency via TypeScript (such as publicly exporting a type from a dependency) then that dependency must be declared in the `package.json` `dependencies` in order for dependents to compile. Outside rules_ts with hoisted packages this *may* not be exposed if the missing dependency is declared in a parent or root package.json, however with strict dependencies in rules_js and bazel this will more likely be an issue.
+
+Common solutions:
+
+1. TypeScript `skipLibCheck` will avoid type-checking within dependencies where this errors may be occurring.
+2. PNPM [packageExtensions](https://pnpm.io/package_json#pnpmpackageextensions) can be used to correct the dependencies of packages (normally by adding `@types/*` to the `dependencies` of the package).
+
+Example type-checking errors due to use of `devDependencies`:
+
+A React component from a library which does not declare `@types/react` as a dependency (JSX error):
+```console
+src/index.tsx(40,10): error TS2786: 'X' cannot be used as a JSX component.
+  Its instance type 'X' is not a valid JSX element.
+    Type 'X' is missing the following properties from type 'ElementClass': setState, forceUpdate, props, state, refs
+```
+
+A React component extending a component from a library which does not declare `@types/react` as a dependency (JSX error):
+```console
+src/index.tsx(55,12): error TS2786: 'Y' cannot be used as a JSX component.
+  Its instance type 'Y' is not a valid JSX element.
+    Type 'Y' is missing the following properties from type 'ElementClass': setState, forceUpdate, props, state, refs
+```
+
+Use of a library which does not declare `@types/express` as a dependency (type error):
+```console
+src/index.ts(2,25): error TS7016: Could not find a declaration file for module 'express'. '/bazel-out/.../node_modules/express/index.js' implicitly has an 'any' type.
+  If the 'express' package actually exposes this module, consider sending a pull request to amend 'https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/express'
+```
+
+- Undeclared type-only dependencies (often `@types/*`).
+    Type-checking is done at compile-time so type-only packages are normally npm `devDependencies`. However many packages contain type-definitions which expose those type-only package as part of their TypeScript API, this makes the types required for any downstream TypeScript compilation but the use of `devDependencies` means those packages are not available downstream.
+
 ## TS5033: EPERM 
 
 ```
