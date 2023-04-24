@@ -303,7 +303,7 @@ def ts_project(
             name = "_gen_tsconfig_%s" % name,
             config = tsconfig,
             files = srcs,
-            extends = Label("%s//%s:%s" % (native.repository_name(), native.package_name(), name)).relative(extends) if extends else None,
+            extends = extends,
             out = "tsconfig_%s.json" % name,
             allow_js = allow_js,
             resolve_json_module = resolve_json_module,

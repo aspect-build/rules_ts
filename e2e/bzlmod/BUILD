@@ -4,6 +4,10 @@ load("@bazel_skylib//rules:build_test.bzl", "build_test")
 ts_project(
     name = "ts",
     srcs = ["foo.ts"],
+    extends = "tsconfig.json",
+    tsconfig = {
+        "extends": "tsconfig.json",
+    },
 )
 
 build_test(
