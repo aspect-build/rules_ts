@@ -40,7 +40,13 @@ def _http_archive_version_impl(rctx):
         url = [u.format(version) for u in rctx.attr.urls],
         integrity = integrity,
     )
-    build_file_substitutions = {"ts_version": version}
+    build_file_substitutions = {
+        "ts_version": version,
+        # Note: we can't depend on bazel_skylib because this code is called from
+        # rules_ts_dependencies so it's not "in scope" yet.
+        # So we can't use versions.bzl to parse the version
+        "is_ts_5": str(int(version.split(".")[0]) >= 5),
+    }
     build_file_substitutions.update(**rctx.attr.build_file_substitutions)
     rctx.template(
         "BUILD.bazel",

@@ -68,8 +68,8 @@ def _ts_project_impl(ctx):
     executable = ctx.executable.tsc
 
     supports_workers = ctx.attr.supports_workers
-    
-    # workers can be enabled/disabled globally. if no supports_workers attribute is set explicitly for this target, 
+
+    # workers can be enabled/disabled globally. if no supports_workers attribute is set explicitly for this target,
     # which is indicated by internal_do_not_depend_supports_workers_is_none attribute, then set it to global supports_workers config
     # TODO(2.0): remove this
     if ctx.attr.internal_do_not_depend_supports_workers_is_none:
@@ -80,9 +80,18 @@ def _ts_project_impl(ctx):
         supports_workers = False
 
         # buildifier: disable=print
-        print("""
+        print("""\
 WARNING: disabling ts_project workers which are not currently supported on Windows hosts.
 See https://github.com/aspect-build/rules_ts/issues/228 for more details.
+""")
+
+    if ctx.attr.is_typescript_5_or_greater and supports_workers:
+        supports_workers = False
+
+        # buildifier: disable=print
+        print("""\
+WARNING: disabling ts_project workers which are not currently supported with TS >= 5.0.0.
+See https://github.com/aspect-build/rules_ts/issues/361 for more details.
 """)
 
     if supports_workers:

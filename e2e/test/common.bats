@@ -19,9 +19,10 @@ local_repository(
     path = "$rules_ts_path",
 )
 
-load("@aspect_rules_ts//ts:repositories.bzl", "LATEST_VERSION", "rules_ts_dependencies")
+load("@aspect_rules_ts//ts:repositories.bzl", "rules_ts_dependencies")
 
-rules_ts_dependencies(ts_version = LATEST_VERSION)
+# TODO(#361): upgrade to 5.x
+rules_ts_dependencies(ts_version = "4.9.5")
 
 # Fetch and register node, if you haven't already
 load("@rules_nodejs//nodejs:repositories.bzl", "DEFAULT_NODE_VERSION", "nodejs_register_toolchains")
