@@ -59,7 +59,11 @@ See more details on the `assets` parameter of the `ts_project` macro.
         doc = "Whether the tsc compiler understands Bazel's persistent worker protocol",
         default = False,
     ),
-    # TODO(2.0): remove this and make supports_workers a tri-state int. 
+    "is_typescript_5_or_greater": attr.bool(
+        doc = "Whether TypeScript version is >= 5.0.0",
+        default = False,
+    ),
+    # TODO(2.0): remove this and make supports_workers a tri-state int.
     "internal_do_not_depend_supports_workers_is_none": attr.bool(
         doc = "Internal. DO NOT DEPEND!",
         default = False,
@@ -86,8 +90,8 @@ See more details on the `assets` parameter of the `ts_project` macro.
         allow_single_file = [".json"],
     ),
     "_options": attr.label(
-        default = "@aspect_rules_ts//ts:options"
-    )
+        default = "@aspect_rules_ts//ts:options",
+    ),
 }
 
 # These attrs are shared between the validate and the ts_project rules
