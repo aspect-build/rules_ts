@@ -29,7 +29,10 @@ copy the WORKSPACE snippet into your `WORKSPACE` file.
 
 ## Examples
 
-There are a number of examples in [the examples/ folder](https://github.com/aspect-build/rules_ts/tree/main/examples).
+There are a number of examples in [the examples/ folder](https://github.com/aspect-build/rules_ts/tree/main/examples) and
+larger examples in the [bazel-examples repository](https://github.com/aspect-build/bazel-examples) using rules_ts such as
+[jest](https://github.com/aspect-build/bazel-examples/tree/main/jest), [react](https://github.com/aspect-build/bazel-examples/tree/main/react-cra),
+[angular](https://github.com/aspect-build/bazel-examples/tree/main/angular).
 
 If you'd like an example added, you can file a [Feature Request](https://github.com/aspect-build/rules_ts/issues/new/choose).
 
