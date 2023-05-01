@@ -21,8 +21,8 @@ rules_ts_dependencies(
     ts_version_from = "//:package.json",
 
     # Alternatively, you could pick a specific version, or use
-    # load("@aspect_rules_ts//ts:repositories.bzl", "LATEST_VERSION")
-    # ts_version = LATEST_VERSION
+    # load("@aspect_rules_ts//ts:repositories.bzl", "LATEST_TYPESCRIPT_VERSION")
+    # ts_version = LATEST_TYPESCRIPT_VERSION
 )
 
 # Fetch and register node, if you haven't already
