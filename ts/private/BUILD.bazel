@@ -1,6 +1,6 @@
 exports_files(
     glob(["*.bzl"]) + [
-        "ts_project_options_validator.js",
-        "ts_project_worker.js",
+        "ts_project_options_validator.cjs",
+        "ts_project_worker.cjs",
     ],
 )

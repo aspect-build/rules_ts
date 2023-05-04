@@ -5,16 +5,16 @@ load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
 
 copy_file(
     name = "copy_ts_project_worker",
-    src = "//ts/private:ts_project_worker.js",
-    out = "ts_project_worker.js",
+    src = "//ts/private:ts_project_worker.cjs",
+    out = "ts_project_worker.cjs",
 )
 
 js_test(
     name = "fstree_test",
-    entry_point = ":fstree.test.js",
+    entry_point = ":fstree.test.cjs",
     data = [
-        ":ts_project_worker.js",
-        "mock.js"
+        ":ts_project_worker.cjs",
+        "mock.cjs"
     ]
 )
 
@@ -27,9 +27,9 @@ npm_link_package(
 
 js_test(
     name = "oom_test",
-    entry_point = ":oom.test.js",
+    entry_point = ":oom.test.cjs",
     data = [
-        ":ts_project_worker.js",
-        "mock.js"
+        ":ts_project_worker.cjs",
+        "mock.cjs"
     ]
 )

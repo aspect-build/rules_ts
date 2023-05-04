@@ -252,10 +252,10 @@ def ts_project(
     """
 
     if srcs == None:
-        include = ["**/*.ts", "**/*.tsx"]
+        include = ["**/*.ts", "**/*.mts", "**/*.cts", "**/*.tsx"]
         exclude = []
         if allow_js == True:
-            include.extend(["**/*.js", "**/*.jsx"])
+            include.extend(["**/*.js", "**/*.mjs", "**/*.cjs", "**/*.jsx"])
         if resolve_json_module == True:
             include.append("**/*.json")
             exclude.extend(["**/package.json", "**/package-lock.json", "**/tsconfig*.json"])
