@@ -2,6 +2,7 @@ packages:
     - connect_node
     - linked
     - linked_consumer
+    - linked_empty_node_modules
     - linked_tsconfig
     - linked_tsconfig_consumer
     - proto_grpc

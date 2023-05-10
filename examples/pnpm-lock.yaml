@@ -110,6 +110,9 @@ importers:
         specifier: workspace:*
         version: link:../linked
 
+  linked_empty_node_modules:
+    specifiers: {}
+
   linked_tsconfig:
     dependencies:
       '@tsconfig/node18':
