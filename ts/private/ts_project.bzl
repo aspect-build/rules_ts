@@ -211,7 +211,7 @@ This is an error because Bazel does not run actions unless their outputs are nee
         )
 
         verb = "Transpiling & type-checking"
-        if not ctx.attr.transpile:
+        if not ctx.attr.transpile or ctx.attr.emit_declaration_only:
             verb = "Type-checking"
         elif not ctx.attr.declaration:
             verb = "Transpiling"
