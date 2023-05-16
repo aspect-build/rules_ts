@@ -40,11 +40,13 @@ jobs:
         steps:
             - uses: actions/checkout@v3
             - id: bazel_6
+              run: echo "bazelversion=6.2.0" >> $GITHUB_OUTPUT
+            - id: bazel_7
               run: echo "bazelversion=$(head -n 1 .bazelversion)" >> $GITHUB_OUTPUT
             - id: bazel_7
               run: echo "bazelversion=7.0.0-pre.20230530.3" >> $GITHUB_OUTPUT
         outputs:
-            # Will look like ["<version from .bazelversion>", "7.0.0-pre.*", "6.3.1"]
+            # Will look like ["6.2.0", "<version from .bazelversion>"]
             bazelversions: ${{ toJSON(steps.*.outputs.bazelversion) }}
 
     matrix-prep-os:
