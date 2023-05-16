@@ -41,10 +41,8 @@ jobs:
             - uses: actions/checkout@v3
             - id: bazel_6
               run: echo "bazelversion=$(head -n 1 .bazelversion)" >> $GITHUB_OUTPUT
-            - id: bazel_5
-              run: echo "bazelversion=5.3.2" >> $GITHUB_OUTPUT
         outputs:
-            # Will look like ["<version from .bazelversion>", "5.3.2"]
+            # Will look like ["<version from .bazelversion>"]
             bazelversions: ${{ toJSON(steps.*.outputs.bazelversion) }}
 
     matrix-prep-os:
@@ -86,22 +84,9 @@ jobs:
                     - 'e2e/worker'
                     - 'e2e/workspace'
                 exclude:
-                    # Don't test macos with Bazel 5 to minimize macOS minutes (billed at 10X)
-                    # https://docs.github.com/en/billing/managing-billing-for-github-actions/about-billing-for-github-actions#included-storage-and-minutes
-                    - os: macos-latest
-                      bazelversion: 5.3.2
-                    # Don't test RBE with Bazel 5 (not supported)
-                    - config: rbe
-                      bazelversion: 5.3.2
                     # Don't test RBE with on MacOS (not configured)
                     - os: macos-latest
                       config: rbe
-                    # Don't test MacOS with Bazel 5.3.2 (toolchain issues)
-                    - os: macos-latest
-                      bazelversion: 5.3.2
-                    # Don't test bzlmod with Bazel 5 (not supported)
-                    - bazelversion: 5.3.2
-                      folder: e2e/bzlmod
 
         # Steps represent a sequence of tasks that will be executed as part of the job
         steps:
