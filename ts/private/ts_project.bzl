@@ -294,7 +294,18 @@ This is an error because Bazel does not run actions unless their outputs are nee
 
     return providers
 
-ts_project = struct(
+lib = struct(
     implementation = _ts_project_impl,
     attrs = dicts.add(COMPILER_OPTION_ATTRS, STD_ATTRS, OUTPUT_ATTRS),
+)
+
+ts_project = rule(
+    doc = """Implementation rule behind the ts_project macro.
+    Most users should use [ts_project](#ts_project) instead.
+
+    This skips conveniences like validation of the tsconfig attributes, default settings
+    for srcs and tsconfig, and pre-declaring output files.
+    """,
+    implementation = lib.implementation,
+    attrs = lib.attrs,
 )
