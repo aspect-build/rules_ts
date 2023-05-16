@@ -9,7 +9,7 @@ load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@bazel_skylib//lib:partial.bzl", "partial")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("//ts/private:ts_config.bzl", "write_tsconfig", _TsConfigInfo = "TsConfigInfo", _ts_config = "ts_config")
-load("//ts/private:ts_project.bzl", _ts_project_lib = "ts_project")
+load("//ts/private:ts_project.bzl", _ts_project = "ts_project")
 load("//ts/private:ts_validate_options.bzl", validate_lib = "lib")
 load("//ts/private:ts_lib.bzl", _lib = "lib")
 
@@ -23,16 +23,7 @@ validate_options = rule(
     attrs = validate_lib.attrs,
 )
 
-ts_project_rule = rule(
-    doc = """Implementation rule behind the ts_project macro.
-    Most users should use [ts_project](#ts_project) instead.
-
-    This skips conveniences like validation of the tsconfig attributes, default settings
-    for srcs and tsconfig, and pre-declaring output files.
-    """,
-    implementation = _ts_project_lib.implementation,
-    attrs = dict(_ts_project_lib.attrs),
-)
+ts_project_rule = _ts_project
 
 def _is_file_missing(label):
     """Check if a file is missing by passing its relative path through a glob().
