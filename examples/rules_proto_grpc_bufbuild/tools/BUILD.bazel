@@ -1,0 +1,62 @@
+"""
+In this build file, @rules_proto_grpc proto_plugins are defined for both the
+standard proto compilation (protoc_gen_es) as well as the grpc extension
+(protoc_gen_connect_es).
+
+In the silbing defs.bzl file these plugins are then used to implement a custom
+proto compilation rule.
+
+Some of the options used for the proto_plugins are based on the discussion here:
+https://github.com/aspect-build/rules_js/issues/397
+"""
+
+load("@npm//:@bufbuild/protoc-gen-es/package_json.bzl", protoc_gen_es = "bin")
+load("@npm//:@bufbuild/protoc-gen-connect-es/package_json.bzl", protoc_gen_connect_es = "bin")
+load("@rules_proto_grpc//:defs.bzl", "proto_plugin")
+
+protoc_gen_es.protoc_gen_es_binary(
+    name = "protoc_gen_es",
+)
+
+proto_plugin(
+    name = "bufbuild_proto",
+    env = {
+        "BAZEL_BINDIR": "{bindir}",
+    },
+    # The @bufbuild generators can output multiple formats at once; by outputting
+    # both js and d.ts at once, we can use a single plugin definition for both,
+    # instead of having to specify two separate ones.
+    options = [
+        "target=js+dts",
+    ],
+    outputs = [
+        "{protopath}_pb.js",
+        "{protopath}_pb.d.ts",
+    ],
+    protoc_plugin_name = "ts_proto",
+    tool = ":protoc_gen_es",
+    use_built_in_shell_environment = False,
+    visibility = ["//visibility:public"],
+)
+
+protoc_gen_connect_es.protoc_gen_connect_es_binary(
+    name = "protoc_gen_connect_es",
+)
+
+proto_plugin(
+    name = "bufbuild_grpc",
+    env = {
+        "BAZEL_BINDIR": "{bindir}",
+    },
+    options = [
+        "target=js+dts",
+    ],
+    outputs = [
+        "{protopath}_connect.js",
+        "{protopath}_connect.d.ts",
+    ],
+    protoc_plugin_name = "ts_proto",
+    tool = ":protoc_gen_connect_es",
+    use_built_in_shell_environment = False,
+    visibility = ["//visibility:public"],
+)

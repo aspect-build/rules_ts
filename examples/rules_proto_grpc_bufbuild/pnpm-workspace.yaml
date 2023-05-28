@@ -1,0 +1,6 @@
+# This file prevents pnpm from discovering the parent directory as a workspace
+# root, keeping the dependencies of this directory independent from those of 
+# the other examples.
+
+packages:
+  - .

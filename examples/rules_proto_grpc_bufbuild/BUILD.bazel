@@ -1,0 +1,98 @@
+load("@aspect_rules_jest//jest:defs.bzl", "jest_test")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("//tools:defs.bzl", "ts_grpc_library")
+
+npm_link_all_packages(name = "node_modules")
+
+proto_library(
+    name = "proto",
+    srcs = ["example.proto"],
+    visibility = ["//visibility:public"],
+)
+
+# ts_grpc_library is a custom helper which wraps the protoc output into a js
+# library. See the tools/defs.bzl for details.
+ts_grpc_library(
+    name = "ts_grpc_proto",
+    protos = [":proto"],
+)
+
+tsconfig = {
+    "compilerOptions": {
+        "strict": True,
+        "declaration": True,
+        "lib": [
+            "ES2018",
+            # @bufbuild/connect does not build without DOM lib because it
+            # includes bindings for both Node AND the browsers.
+            "DOM",
+        ],
+    },
+}
+
+# The first, Node based client. Both of the clients are practically the same
+# code wise, with the only difference being the @bufbuild/connect-* library.
+ts_project(
+    name = "client_node",
+    srcs = ["client_node.ts"],
+    tsconfig = tsconfig,
+    deps = [
+        "//:node_modules/@bufbuild/connect",
+        "//:node_modules/@bufbuild/connect-node",
+        "//:node_modules/@types/node",
+        "//:ts_grpc_proto",
+    ],
+)
+
+# The second, web based client. This does not have an associated test because the
+# grpc-web communication would require an Envoy proxy setup between the client
+# and the server.
+ts_project(
+    name = "client_web",
+    srcs = ["client_web.ts"],
+    tsconfig = tsconfig,
+    deps = [
+        "//:node_modules/@bufbuild/connect",
+        "//:node_modules/@bufbuild/connect-web",
+        "//:ts_grpc_proto",
+    ],
+)
+
+ts_project(
+    name = "server",
+    srcs = ["server.ts"],
+    tsconfig = tsconfig,
+    deps = [
+        "//:node_modules/@bufbuild/connect",
+        "//:node_modules/@bufbuild/connect-node",
+        "//:node_modules/@types/node",
+        "//:ts_grpc_proto",
+    ],
+)
+
+ts_project(
+    name = "test_suite",
+    srcs = ["integration.test.ts"],
+    tsconfig = tsconfig,
+    deps = [
+        "//:client_node",
+        "//:node_modules/@types/jest",
+        "//:server",
+        "//:ts_grpc_proto",
+    ],
+)
+
+# Babel is used to transpile the test code because @bufbuild generators output
+# ES6 import statements, which Jest does not yet support.
+jest_test(
+    name = "test",
+    config = "jest.config.json",
+    data = [
+        "babel.config.json",
+        ":test_suite",
+        "//:node_modules/@babel/preset-env",
+    ],
+    node_modules = "//:node_modules",
+)

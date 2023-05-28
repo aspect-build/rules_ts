@@ -1,0 +1,60 @@
+module(name = "aspect_rules_js_rules_proto_grpc_example", version = "1.0")
+
+#------------------------------------------------------------------------------
+# rules_nodejs
+#
+# Node version is pinned to a 18.x because @types/node for Node 16 is not
+# compatible with the Typescript version shipped with aspect_rules_ts
+#------------------------------------------------------------------------------
+
+bazel_dep(name = "rules_nodejs", version = "5.8.2")
+
+node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node")
+node.toolchain(node_version = "18.13.0")
+
+#------------------------------------------------------------------------------
+# aspect_rules_js
+#
+# Both the @bufbuild proto compiler plugin and its runtime dependencies are
+# accessed through npm packages.
+#------------------------------------------------------------------------------
+
+bazel_dep(name = "aspect_rules_js", version = "1.27.0")
+
+npm = use_extension(
+    "@aspect_rules_js//npm:extensions.bzl",
+    "npm",
+    dev_dependency = True,
+)
+npm.npm_translate_lock(
+    name = "npm",
+    pnpm_lock = ":pnpm-lock.yaml",
+)
+use_repo(npm, "npm")
+
+pnpm = use_extension(
+    "@aspect_rules_js//npm:extensions.bzl",
+    "pnpm",
+    dev_dependency = True,
+)
+use_repo(pnpm, "pnpm")
+
+#------------------------------------------------------------------------------
+# aspect_rules_ts
+#------------------------------------------------------------------------------
+
+bazel_dep(name = "aspect_rules_ts", version = "1.4.0")
+
+rules_ts_ext = use_extension(
+    "@aspect_rules_ts//ts:extensions.bzl",
+    "ext",
+    dev_dependency = True,
+)
+rules_ts_ext.deps()
+use_repo(rules_ts_ext, "npm_typescript")
+
+#------------------------------------------------------------------------------
+# aspect_rules_jest
+#------------------------------------------------------------------------------
+
+bazel_dep(name = "aspect_rules_jest", version = "0.19.2")
