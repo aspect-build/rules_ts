@@ -1,5 +1,5 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
-load("@bazel_skylib//rules:common_settings.bzl", "string_flag", "bool_flag")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 load("//ts/private:options.bzl", "options")
 
 exports_files(
@@ -43,8 +43,7 @@ string_flag(
     # Note: this name is chosen to be searchable when users look for "skipLibCheck" in their repo,
     # as that's the way it appears in tsconfig.json or tsc command line.
     name = "skipLibCheck",
-    # TODO(2.0): change default to "unspecified"
-    build_setting_default = "honor_tsconfig",
+    build_setting_default = "unspecified",
     values = [
         "always",
         "honor_tsconfig",
@@ -84,49 +83,47 @@ config_setting(
 config_setting(
     name = "verbose_flag",
     flag_values = {
-        ":verbose": "true"
-    }
+        ":verbose": "true",
+    },
 )
 
 config_setting(
     name = "supports_workers_flag",
     flag_values = {
-        ":supports_workers": "true"
-    }
+        ":supports_workers": "true",
+    },
 )
 
 options(
     name = "options",
-    visibility = ["//visibility:public"],
-    verbose = select({
-        ":legacy_verbose": True,
-        ":verbose_flag": True,
-        "//conditions:default": False,
-    }),
-    supports_workers = select({
-        ":supports_workers_flag": True,
-        # TODO(2.0): default should be False if we set swc as default
-        "//conditions:default": False,
-    }),
     skip_lib_check = select(
         {
             "@aspect_rules_ts//ts:skip_lib_check.always": True,
             "@aspect_rules_ts//ts:skip_lib_check.honor_tsconfig": False,
         },
         no_match_error = _skip_lib_check_selection_required,
-    )
+    ),
+    supports_workers = select({
+        ":supports_workers_flag": True,
+        # TODO(2.0): default should be False if we set swc as default
+        "//conditions:default": False,
+    }),
+    verbose = select({
+        ":legacy_verbose": True,
+        ":verbose_flag": True,
+        "//conditions:default": False,
+    }),
+    visibility = ["//visibility:public"],
 )
-
-
 
 bzl_library(
     name = "defs",
     srcs = ["defs.bzl"],
     visibility = ["//visibility:public"],
     deps = [
+        "//ts/private/docs:options",
         "//ts/private/docs:ts_config",
         "//ts/private/docs:ts_project",
-        "//ts/private/docs:options",
         "@aspect_rules_js//js:defs",
         "@bazel_skylib//lib:partial",
         "@bazel_skylib//rules:build_test",
