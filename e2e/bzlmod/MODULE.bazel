@@ -20,6 +20,9 @@ rules_ts_ext = use_extension(
     dev_dependency = True,
 )
 
-rules_ts_ext.deps()
+rules_ts_ext.deps(
+    # This keeps the TypeScript version in-sync with the editor, which is typically best.
+    ts_version_from = "//:package.json",
+)
 
 use_repo(rules_ts_ext, "npm_typescript")
