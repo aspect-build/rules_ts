@@ -8,11 +8,18 @@ load("//ts:repositories.bzl", "LATEST_TYPESCRIPT_VERSION")
 def _extension_impl(module_ctx):
     for mod in module_ctx.modules:
         for attr in mod.tags.deps:
-            npm_dependencies(ts_version = attr.ts_version, ts_integrity = attr.ts_integrity)
+            ts_version = attr.ts_version
+            if not ts_version and not attr.ts_version_from:
+                ts_version = LATEST_TYPESCRIPT_VERSION
+            npm_dependencies(ts_version = ts_version, ts_version_from = attr.ts_version_from, ts_integrity = attr.ts_integrity)
 
 ext = module_extension(
     implementation = _extension_impl,
     tag_classes = {
-        "deps": tag_class(attrs = {"ts_version": attr.string(default = LATEST_TYPESCRIPT_VERSION), "ts_integrity": attr.string()}),
+        "deps": tag_class(attrs = {
+            "ts_version": attr.string(),
+            "ts_version_from": attr.label(),
+            "ts_integrity": attr.string(),
+        }),
     },
 )
