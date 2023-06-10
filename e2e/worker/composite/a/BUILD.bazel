@@ -4,5 +4,5 @@ ts_project(
     name = "a",
     composite = True,
     tsconfig = "//composite:config",
-    visibility = ["//composite:__pkg__"]
+    visibility = ["//composite:__pkg__"],
 )
