@@ -39,3 +39,12 @@ def rules_ts_internal_deps():
         strip_prefix = "rules_jasmine-0.4.0",
         url = "https://github.com/aspect-build/rules_jasmine/releases/download/v0.4.0/rules_jasmine-v0.4.0.tar.gz",
     )
+
+    http_archive(
+        name = "buildifier_prebuilt",
+        sha256 = "e46c16180bc49487bfd0f1ffa7345364718c57334fa0b5b67cb5f27eba10f309",
+        strip_prefix = "buildifier-prebuilt-6.1.0",
+        urls = [
+            "https://github.com/keith/buildifier-prebuilt/archive/6.1.0.tar.gz",
+        ],
+    )
