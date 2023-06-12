@@ -19,7 +19,7 @@ LATEST_VERSION = LATEST_TYPESCRIPT_VERSION
 # ours took precedence. Such breakages are challenging for users, so any
 # changes in this function should be marked as BREAKING in the commit message
 # and released only in semver majors.
-def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrity = None):
+def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrity = None, urls = ["https://registry.npmjs.org/typescript/-/typescript-{}.tgz"]):
     """Dependencies needed by users of rules_ts.
 
     To skip fetching the typescript package, define repository called `npm_typescript` before calling this.
@@ -62,4 +62,4 @@ def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrit
         urls = ["https://github.com/bazelbuild/rules_nodejs/releases/download/5.8.2/rules_nodejs-core-5.8.2.tar.gz"],
     )
 
-    npm_dependencies(ts_version_from = ts_version_from, ts_version = ts_version, ts_integrity = ts_integrity)
+    npm_dependencies(ts_version_from = ts_version_from, ts_version = ts_version, ts_integrity = ts_integrity, urls = urls)
