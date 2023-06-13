@@ -1,4 +1,3 @@
-
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@aspect_rules_js//js:defs.bzl", "js_test")
 load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
@@ -11,25 +10,24 @@ copy_file(
 
 js_test(
     name = "fstree_test",
-    entry_point = ":fstree.test.js",
     data = [
+        "mock.js",
         ":ts_project_worker.js",
-        "mock.js"
-    ]
+    ],
+    entry_point = ":fstree.test.js",
 )
-
 
 npm_link_package(
     name = "node_modules/typescript",
-    src = "@npm_typescript//:npm_typescript",
+    src = "@npm_typescript",
     root_package = package_name(),
 )
 
 js_test(
     name = "oom_test",
-    entry_point = ":oom.test.js",
     data = [
+        "mock.js",
         ":ts_project_worker.js",
-        "mock.js"
-    ]
+    ],
+    entry_point = ":oom.test.js",
 )

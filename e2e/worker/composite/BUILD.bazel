@@ -23,5 +23,5 @@ ts_project(
     deps = [
         "//composite/a",
         "//composite/b",
-    ]
+    ],
 )

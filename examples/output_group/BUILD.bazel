@@ -7,17 +7,15 @@ ts_project(
     declaration = True,
 )
 
-
 filegroup(
     name = "types",
     srcs = [":output_group"],
     output_group = "types",
 )
 
-
 write_source_files(
     name = "write_dts",
     files = {
         "index.d.ts_": ":types",
     },
-) 
+)

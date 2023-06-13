@@ -2,12 +2,12 @@
 
 OptionsInfo = provider(
     doc = "Internal: Provider that carries verbosity and global worker support information.",
-    fields = ["args", "verbose", "supports_workers"]
+    fields = ["args", "verbose", "supports_workers"],
 )
 
 def _options_impl(ctx):
     verbose = ctx.attr.verbose
-    
+
     # TODO(2.0): remove this
     if "VERBOSE_LOGS" in ctx.var.keys():
         # buildifier: disable=print
@@ -33,9 +33,9 @@ def _options_impl(ctx):
 
     if ctx.attr.skip_lib_check:
         args.append(
-            "--skipLibCheck"
+            "--skipLibCheck",
         )
-    
+
     return OptionsInfo(
         verbose = verbose,
         args = args,
@@ -48,5 +48,5 @@ options = rule(
         "verbose": attr.bool(),
         "supports_workers": attr.bool(),
         "skip_lib_check": attr.bool(),
-    }
+    },
 )

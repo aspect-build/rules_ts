@@ -231,7 +231,7 @@ def _calculate_map_outs(srcs, out_dir = ".", root_dir = ".", source_map = True, 
 
     return _out_paths(srcs, out_dir, root_dir, False, False, exts)
 
-def _calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, composite, allow_js, include_srcs = True):
+def _calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, composite, allow_js):
     if not (declaration or composite):
         return []
 

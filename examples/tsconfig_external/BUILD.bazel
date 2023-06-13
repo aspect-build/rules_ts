@@ -4,7 +4,7 @@ ts_config(
     name = "config",
     src = "tsconfig.json",
     deps = [
-        "//examples:node_modules/@tsconfig/node16-strictest-esm"
+        "//examples:node_modules/@tsconfig/node16-strictest-esm",
     ],
 )
 
@@ -13,5 +13,5 @@ ts_project(
     srcs = [
         "index.ts",
     ],
-    tsconfig = ":config"
+    tsconfig = ":config",
 )

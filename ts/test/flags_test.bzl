@@ -1,14 +1,16 @@
+"Test for ts_project() flags"
+
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("//ts:defs.bzl", "ts_project")
 
-_ActionInfo = provider(fields = ["actions", "bin_path"],)
+_ActionInfo = provider("test provider", fields = ["actions", "bin_path"])
 
-def _transition_impl(settings, attr):
+def _transition_impl(_settings, attr):
     return {
         "@aspect_rules_ts//ts:supports_workers": attr.supports_workers,
         "@aspect_rules_ts//ts:verbose": attr.verbose,
-        "@aspect_rules_ts//ts:skipLibCheck": attr.skip_lib_check
+        "@aspect_rules_ts//ts:skipLibCheck": attr.skip_lib_check,
     }
 
 configuration_transition = transition(
@@ -17,7 +19,7 @@ configuration_transition = transition(
     outputs = [
         "@aspect_rules_ts//ts:supports_workers",
         "@aspect_rules_ts//ts:verbose",
-        "@aspect_rules_ts//ts:skipLibCheck"
+        "@aspect_rules_ts//ts:skipLibCheck",
     ],
 )
 
@@ -25,7 +27,7 @@ def _transition_rule_impl(ctx):
     target = ctx.attr.target[0]
     return [
         target[DefaultInfo],
-        _ActionInfo(actions = target.actions)
+        _ActionInfo(actions = target.actions),
     ]
 
 _transition_rule = rule(
@@ -36,16 +38,16 @@ _transition_rule = rule(
         "verbose": attr.bool(default = False),
         "skip_lib_check": attr.string(default = "honor_tsconfig"),
         "_allowlist_function_transition": attr.label(
-            default = "@bazel_tools//tools/allowlists/function_transition_allowlist"
-        )
-    }
+            default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
+        ),
+    },
 )
 
-def _find_tsc_action(env, target_under_test):    
+def _find_tsc_action(env, target_under_test):
     found_action = None
     actions = target_under_test.actions
     if _ActionInfo in target_under_test:
-        actions =  target_under_test[_ActionInfo].actions
+        actions = target_under_test[_ActionInfo].actions
     for action in actions:
         if action.mnemonic == "TsProject":
             found_action = action
@@ -73,7 +75,6 @@ def _supports_workers_explicitly_false_test_impl(ctx):
 
 _supports_workers_explicitly_false_test = analysistest.make(_supports_workers_explicitly_false_test_impl)
 
-
 # implicit supports_workers = true
 def _supports_workers_implicitly_true_test_impl(ctx):
     env = analysistest.begin(ctx)
@@ -93,7 +94,6 @@ def _supports_workers_implicitly_false_test_impl(ctx):
     return analysistest.end(env)
 
 _supports_workers_implicitly_false_test = analysistest.make(_supports_workers_implicitly_false_test_impl)
-
 
 # verbose flag = true test
 def _verbose_true_test_impl(ctx):
@@ -123,8 +123,6 @@ def _verbose_false_test_impl(ctx):
 
 _verbose_false_test = analysistest.make(_verbose_false_test_impl)
 
-
-
 # skipLibCheck flag = always test
 def _skip_lib_check_always_test_impl(ctx):
     env = analysistest.begin(ctx)
@@ -135,7 +133,6 @@ def _skip_lib_check_always_test_impl(ctx):
 
 _skip_lib_check_always_test = analysistest.make(_skip_lib_check_always_test_impl)
 
-
 # skipLibCheck flag = honor_tsconfig test
 def _skip_lib_check_honor_tsconfig_test_impl(ctx):
     env = analysistest.begin(ctx)
@@ -145,9 +142,6 @@ def _skip_lib_check_honor_tsconfig_test_impl(ctx):
     return analysistest.end(env)
 
 _skip_lib_check_honor_tsconfig_test = analysistest.make(_skip_lib_check_honor_tsconfig_test_impl)
-
-
-
 
 def _ts_project_with_flags(name, supports_workers = None, supports_workers_flag = None, verbose_flag = None, skip_lib_check_flag = None, **kwargs):
     write_file(
@@ -164,13 +158,13 @@ def _ts_project_with_flags(name, supports_workers = None, supports_workers_flag 
         **kwargs
     )
     _transition_rule(
-        name = name, 
+        name = name,
         target = "{}_ts".format(name),
         supports_workers = supports_workers_flag,
         verbose = verbose_flag,
-        skip_lib_check = skip_lib_check_flag, 
-    )   
-    
+        skip_lib_check = skip_lib_check_flag,
+    )
+
 def ts_project_flags_test_suite(name):
     """Test suite including all tests and data
 
@@ -190,7 +184,7 @@ def ts_project_flags_test_suite(name):
         tsconfig = _TSCONFIG,
         supports_workers = True,
         # supports_workers should override the flag
-        supports_workers_flag = False
+        supports_workers_flag = False,
     )
     _supports_workers_explicitly_true_test(
         name = "supports_workers_explicitly_true_test",
@@ -202,42 +196,39 @@ def ts_project_flags_test_suite(name):
         tsconfig = _TSCONFIG,
         supports_workers = False,
         # supports_workers should override the flag
-        supports_workers_flag = True
+        supports_workers_flag = True,
     )
     _supports_workers_explicitly_false_test(
         name = "supports_workers_explicitly_false_test",
         target_under_test = ":supports_workers_explicitly_false",
     )
 
-
     _ts_project_with_flags(
         name = "supports_workers_implicitly_true",
         tsconfig = _TSCONFIG,
         # supports_workers attribute is not set explicitly so the flag should be respected
-        supports_workers_flag = True
+        supports_workers_flag = True,
     )
     _supports_workers_implicitly_true_test(
         name = "supports_workers_implicitly_true_test",
         target_under_test = ":supports_workers_implicitly_true",
     )
 
-
     _ts_project_with_flags(
         name = "supports_workers_implicitly_false",
         tsconfig = _TSCONFIG,
         # supports_workers attribute is not set explicitly so the flag should be respected
-        supports_workers_flag = False
+        supports_workers_flag = False,
     )
     _supports_workers_implicitly_false_test(
         name = "supports_workers_implicitly_false_test",
         target_under_test = ":supports_workers_implicitly_false",
     )
 
-
     _ts_project_with_flags(
         name = "verbose_true",
         tsconfig = _TSCONFIG,
-        verbose_flag = True
+        verbose_flag = True,
     )
     _verbose_true_test(
         name = "verbose_true_test",
@@ -247,29 +238,27 @@ def ts_project_flags_test_suite(name):
     _ts_project_with_flags(
         name = "verbose_false",
         tsconfig = _TSCONFIG,
-        verbose_flag = False
+        verbose_flag = False,
     )
     _verbose_false_test(
         name = "verbose_false_test",
         target_under_test = ":verbose_false",
     )
 
-
     _ts_project_with_flags(
         name = "skip_lib_check_always",
         tsconfig = _TSCONFIG,
-        skip_lib_check_flag = "always"
+        skip_lib_check_flag = "always",
     )
     _skip_lib_check_always_test(
         name = "skip_lib_check_always_test",
         target_under_test = ":skip_lib_check_always",
     )
 
-
     _ts_project_with_flags(
         name = "skip_lib_check_honor_tsconfig",
         tsconfig = _TSCONFIG,
-        skip_lib_check_flag = "honor_tsconfig"
+        skip_lib_check_flag = "honor_tsconfig",
     )
     _skip_lib_check_honor_tsconfig_test(
         name = "skip_lib_check_honor_tsconfig_test",
@@ -286,6 +275,6 @@ def ts_project_flags_test_suite(name):
             ":verbose_true_test",
             ":verbose_false_test",
             ":skip_lib_check_always_test",
-            ":skip_lib_check_honor_tsconfig_test"
+            ":skip_lib_check_honor_tsconfig_test",
         ],
     )
