@@ -24,15 +24,15 @@ filegroup(
 
 params_file(
     name = "params",
-    data = [
-        ":jsx",
-        ":types",
-    ],
+    out = "outputs.txt",
     args = [
         "$(rootpaths :types)",
         "$(rootpaths :jsx)",
     ],
-    out = "outputs.txt"
+    data = [
+        ":jsx",
+        ":types",
+    ],
 )
 
 write_source_files(

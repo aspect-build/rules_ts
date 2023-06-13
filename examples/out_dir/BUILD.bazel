@@ -7,26 +7,26 @@ ts_project(
         "compilerOptions": {
             "outDir": "tsconfig",
             "declaration": True,
-            "declarationMap": True
-        }
-    }
+            "declarationMap": True,
+        },
+    },
 )
 
 ts_project(
     name = "out_dir-params",
     srcs = ["main.ts"],
-    out_dir = "param",
     declaration = True,
     declaration_map = True,
-    tsconfig = {}
+    out_dir = "param",
+    tsconfig = {},
 )
 
 ts_project(
     name = "out_dir-declaration_dir",
     srcs = ["main.ts"],
-    out_dir = "declaration_dir",
-    declaration_dir = "decl_map",
     declaration = True,
+    declaration_dir = "decl_map",
     declaration_map = True,
-    tsconfig = {}
+    out_dir = "declaration_dir",
+    tsconfig = {},
 )

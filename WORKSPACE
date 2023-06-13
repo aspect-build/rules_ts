@@ -46,6 +46,15 @@ go_register_toolchains(version = "1.19.3")
 
 gazelle_dependencies()
 
+# Buildifier
+load("@buildifier_prebuilt//:deps.bzl", "buildifier_prebuilt_deps")
+
+buildifier_prebuilt_deps()
+
+load("@buildifier_prebuilt//:defs.bzl", "buildifier_prebuilt_register_toolchains")
+
+buildifier_prebuilt_register_toolchains()
+
 ###########################################
 # A pnpm workspace so we can test 3p deps
 load("@aspect_rules_js//npm:npm_import.bzl", "npm_translate_lock")

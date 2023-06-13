@@ -1,4 +1,5 @@
 "BUILD file inserted into @npm_typescript repository"
+
 load("@aspect_rules_js//js:defs.bzl", "js_binary")
 load("@aspect_rules_js//npm/private:npm_package_internal.bzl", "npm_package_internal")
 load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
@@ -77,16 +78,16 @@ copy_file(
 
 write_file(
     name = "package_json",
+    out = "package.json",
     content = ["{\"type\": \"commonjs\"}"],
-    out = "package.json"
 )
 
 js_binary(
     name = "tsc_worker",
     data = [
-        ":package_json",
-        ":node_modules/typescript",
         ":copy_worker_js",
+        ":node_modules/typescript",
+        ":package_json",
     ],
     entry_point = "copy_ts_project_worker",
     visibility = ["//visibility:public"],

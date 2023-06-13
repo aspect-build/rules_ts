@@ -17,7 +17,7 @@ ts_project(
     srcs = glob(
         ["*.ts"],
         exclude = [
-            "lib.ts"
+            "lib.ts",
         ],
     ),
     deps = [

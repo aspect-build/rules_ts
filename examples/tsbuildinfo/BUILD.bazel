@@ -2,7 +2,7 @@ load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 
 ts_project(
     name = "tsbuildinfo",
-    composite = True,
     srcs = ["lib.ts"],
+    composite = True,
     ts_build_info_file = "my.tsbuildinfo",
 )
