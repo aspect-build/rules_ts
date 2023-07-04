@@ -5,7 +5,7 @@ module(
 )
 
 # repeated here only because we use the platforms definitions for rbe
-bazel_dep(name = "aspect_rules_js", version = "1.23.1", dev_dependency = True)
+bazel_dep(name = "aspect_rules_js", version = "1.29.2", dev_dependency = True)
 bazel_dep(name = "aspect_rules_ts", version = "0.0.0", dev_dependency = True)
 bazel_dep(name = "bazel_skylib", version = "1.4.1", dev_dependency = True)
 
