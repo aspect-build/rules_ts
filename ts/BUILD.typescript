@@ -19,7 +19,6 @@ config_setting(
     flag_values = {
         ":is_typescript_5_or_greater_flag": "true",
     },
-    visibility = ["//visibility:public"],
 )
 
 npm_package_internal(
