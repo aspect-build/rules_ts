@@ -1,7 +1,7 @@
 "Helper rule to check that ts_project attributes match tsconfig.json properties"
 
 load(":ts_config.bzl", "TsConfigInfo")
-load(":ts_lib.bzl", "COMPILER_OPTION_ATTRS", "ValidOptionsInfo")
+load(":ts_lib.bzl", "COMPILER_OPTION_ATTRS")
 load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_file_to_bin_action", "copy_files_to_bin_actions")
 load("@aspect_bazel_lib//lib:paths.bzl", "to_output_relative_path")
 load("@aspect_rules_js//js:providers.bzl", "JsInfo")
@@ -74,7 +74,7 @@ To disable this check, set the validate attribute to False:
     )
 
     return [
-        ValidOptionsInfo(marker = marker),
+        OutputGroupInfo(_validation = depset([marker])),
     ]
 
 _ATTRS = dict(COMPILER_OPTION_ATTRS, **{

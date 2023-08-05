@@ -7,7 +7,7 @@ load("@bazel_skylib//lib:dicts.bzl", "dicts")
 load("@aspect_rules_js//js:providers.bzl", "JsInfo", "js_info")
 load("@aspect_rules_js//js:libs.bzl", "js_lib_helpers")
 load("@aspect_rules_js//npm:providers.bzl", "NpmPackageStoreInfo")
-load(":ts_lib.bzl", "COMPILER_OPTION_ATTRS", "OUTPUT_ATTRS", "STD_ATTRS", "ValidOptionsInfo", _lib = "lib")
+load(":ts_lib.bzl", "COMPILER_OPTION_ATTRS", "OUTPUT_ATTRS", "STD_ATTRS", _lib = "lib")
 load(":ts_config.bzl", "TsConfigInfo")
 load(":ts_validate_options.bzl", _validate_lib = "lib")
 load(":options.bzl", "OptionsInfo")
@@ -138,8 +138,6 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         # File 'execroot/aspect_rules_ts/bazel-out/k8-fastbuild/bin/examples/project_references/lib_a/tsconfig.json' not found.
         if ctx.attr.composite and TsConfigInfo in dep:
             transitive_inputs.append(dep[TsConfigInfo].deps)
-        if ValidOptionsInfo in dep:
-            inputs.append(dep[ValidOptionsInfo].marker)
 
     # Gather TsConfig info from both the direct (tsconfig) and indirect (extends) attribute
     tsconfig_inputs = copy_files_to_bin_actions(ctx, _validate_lib.tsconfig_inputs(ctx).to_list())
