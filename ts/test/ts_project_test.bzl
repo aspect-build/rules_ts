@@ -12,10 +12,9 @@ def _dir_test_impl(ctx):
 
     # assert the inputs to the tsc action are what we expect
     action_inputs = target_under_test[OutputGroupInfo]._action_inputs.to_list()
-    asserts.equals(env, 3, len(action_inputs))
+    asserts.equals(env, 2, len(action_inputs))
     asserts.true(env, action_inputs[0].path.find("/dir.ts") != -1)
-    asserts.true(env, action_inputs[1].path.find("/_validate_dir_options.optionsvalid.d.ts") != -1)
-    asserts.true(env, action_inputs[2].path.find("/tsconfig_dir.json") != -1)
+    asserts.true(env, action_inputs[1].path.find("/tsconfig_dir.json") != -1)
 
     # sources should contain the .js output
     sources = target_under_test[JsInfo].sources.to_list()
@@ -55,11 +54,10 @@ def _use_dir_test_impl(ctx):
     # the inputs should *NOT* includes the sources from any deps or transitive deps;
     # only declarations from deps should be included as action inputs.
     action_inputs = target_under_test[OutputGroupInfo]._action_inputs.to_list()
-    asserts.equals(env, 4, len(action_inputs))
+    asserts.equals(env, 3, len(action_inputs))
     asserts.true(env, action_inputs[0].path.find("/dir.d.ts") != -1)
     asserts.true(env, action_inputs[1].path.find("/use_dir.ts") != -1)
-    asserts.true(env, action_inputs[2].path.find("/_validate_use_dir_options.optionsvalid.d.ts") != -1)
-    asserts.true(env, action_inputs[3].path.find("/tsconfig_use_dir.json") != -1)
+    asserts.true(env, action_inputs[2].path.find("/tsconfig_use_dir.json") != -1)
 
     # sources should contain the .js output
     sources = target_under_test[JsInfo].sources.to_list()

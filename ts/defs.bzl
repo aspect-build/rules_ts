@@ -325,7 +325,6 @@ def ts_project(
             validator = validator,
             **common_kwargs
         )
-        tsc_deps = tsc_deps + ["_validate_%s_options" % name]
 
     typings_out_dir = declaration_dir if declaration_dir else out_dir
     tsbuildinfo_path = ts_build_info_file if ts_build_info_file else name + ".tsbuildinfo"

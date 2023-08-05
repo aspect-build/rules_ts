@@ -3,20 +3,6 @@
 load("@aspect_rules_js//js:providers.bzl", "JsInfo")
 load("@aspect_rules_js//js:libs.bzl", "js_lib_helpers")
 
-ValidOptionsInfo = provider(
-    doc = "Internal: whether the validator ran successfully",
-    fields = {
-        "marker": """useless file that must be depended on to cause the validation action to run.
-        TODO: replace with https://docs.bazel.build/versions/main/skylark/rules.html#validation-actions""",
-    },
-)
-
-# Targets in deps must provide one or the other of these
-DEPS_PROVIDERS = [
-    [JsInfo],
-    [ValidOptionsInfo],
-]
-
 # Attributes common to all TypeScript rules
 STD_ATTRS = {
     "assets": attr.label_list(
@@ -38,7 +24,7 @@ See more details on the `assets` parameter of the `ts_project` macro.
 
 {downstream_linked_npm_deps}
 """.format(downstream_linked_npm_deps = js_lib_helpers.DOWNSTREAM_LINKED_NPM_DEPS_DOCSTRING),
-        providers = DEPS_PROVIDERS,
+        providers = [JsInfo],
     ),
     "out_dir": attr.string(
         doc = "https://www.typescriptlang.org/tsconfig#outDir",
