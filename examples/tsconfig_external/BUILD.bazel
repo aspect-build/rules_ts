@@ -2,7 +2,7 @@ load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
 
 ts_config(
     name = "config",
-    src = "tsconfig.json",
+    src = "tsconfig.json5",
     deps = [
         "//examples:node_modules/@tsconfig/node16-strictest-esm",
     ],

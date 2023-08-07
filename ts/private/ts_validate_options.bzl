@@ -81,7 +81,7 @@ _ATTRS = dict(COMPILER_OPTION_ATTRS, **{
     "deps": attr.label_list(mandatory = True, providers = [JsInfo]),
     "target": attr.string(),
     "ts_build_info_file": attr.string(),
-    "tsconfig": attr.label(mandatory = True, allow_single_file = [".json"]),
+    "tsconfig": attr.label(mandatory = True, allow_single_file = [".json", ".json5"]),
     "validator": attr.label(mandatory = True, executable = True, cfg = "exec"),
 })
 

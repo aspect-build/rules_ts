@@ -1,0 +1,4 @@
+{
+    // This file has comments
+    extends: '@tsconfig/node16-strictest-esm/tsconfig.json',
+}

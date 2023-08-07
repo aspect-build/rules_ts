@@ -87,7 +87,7 @@ See more details on the `assets` parameter of the `ts_project` macro.
     "tsconfig": attr.label(
         doc = "tsconfig.json file, see https://www.typescriptlang.org/tsconfig",
         mandatory = True,
-        allow_single_file = [".json"],
+        allow_single_file = [".json", ".json5"],
     ),
     "_options": attr.label(
         default = "@aspect_rules_ts//ts:options",
@@ -114,7 +114,7 @@ COMPILER_OPTION_ATTRS = {
         doc = "https://www.typescriptlang.org/tsconfig#emitDeclarationOnly",
     ),
     "extends": attr.label(
-        allow_files = [".json"],
+        allow_files = [".json", ".json5"],
         doc = "https://www.typescriptlang.org/tsconfig#extends",
     ),
     "incremental": attr.bool(
