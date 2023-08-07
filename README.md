@@ -1,31 +1,21 @@
 # Bazel rules for TypeScript
 
-This is the canonical ruleset for using Bazel for TypeScript, based on
-<https://github.com/aspect-build/rules_js>, and recommended for all new projects.
-
-This is a high-performance alternative to the `@bazel/typescript` npm package from rules_nodejs.
-The `ts_project` rule here is identical to the one in rules_nodejs, making it easy to migrate.
-Since rules_js always runs tools from the bazel-out tree, rules_ts naturally fixes most usability bugs with rules_nodejs:
-
--   Freely mix generated `*.ts` and `tsconfig.json` files in the bazel-out tree with source files
--   Fixes the need for any `rootDirs` settings in `tsconfig.json` as reported in https://github.com/microsoft/TypeScript/issues/37378
--   "worker mode" for `ts_project` now shares workers across all targets, rather than requiring one worker pool per target
+This is the canonical ruleset for using Bazel with TypeScript, based on
+<https://github.com/aspect-build/rules_js>.
 
 rules_ts is just a part of what Aspect provides:
 
--   _Need help?_ This ruleset has support provided by https://aspect.dev.
+-   _Need help?_ This ruleset has support provided by https://www.aspect.dev/bazel-open-source-support.
 -   See our other Bazel rules, especially those built for rules_js, linked from <https://github.com/aspect-build>
 
 Known issues:
 
--   Does not work with `--worker_sandboxing`. See https://github.com/aspect-build/rules_ts/issues/127#issuecomment-1312041592
--   Workers are disabled and not currently supported on Windows hosts. See https://github.com/aspect-build/rules_ts/issues/228.
+-   Type-checking can not be performed in parallel, see [--isolatedDeclarations](https://github.com/aspect-build/rules_ts/issues/374)
 
 ## Installation
 
-From the release you wish to use:
+Follow instructions from the release you wish to use:
 <https://github.com/aspect-build/rules_ts/releases>
-copy the WORKSPACE snippet into your `WORKSPACE` file.
 
 ## Examples
 
@@ -34,7 +24,7 @@ larger examples in the [bazel-examples repository](https://github.com/aspect-bui
 [jest](https://github.com/aspect-build/bazel-examples/tree/main/jest), [react](https://github.com/aspect-build/bazel-examples/tree/main/react-cra),
 [angular](https://github.com/aspect-build/bazel-examples/tree/main/angular).
 
-If you'd like an example added, you can file a [Feature Request](https://github.com/aspect-build/rules_ts/issues/new/choose).
+If you'd like an example added, you can fund a [Feature Request](https://github.com/aspect-build/rules_ts/issues/new/choose).
 
 ## Usage
 
@@ -42,13 +32,10 @@ See the API documentation in [the docs/ folder](https://github.com/aspect-build/
 
 ### From a BUILD file
 
-The most common use is with the [`ts_project` macro](./docs/rules.md#ts_project) which invokes the
-[`tsc` CLI](https://www.typescriptlang.org/docs/handbook/compiler-options.html) to transform
-source files like `.ts` files into outputs such as `.js` and `.d.ts` files.
-
-We encourage you to read about the `transpiler` property which lets you use a faster tool like
-Babel or SWC to produce the `.js` files, so you don't have to wait for type-checking in your fast
-development loop.
+The most common use is with the [`ts_project` macro](./docs/rules.md#ts_project) which invokes a
+transpiler you configure to transform source files like `.ts` files into outputs such as `.js` and `.js.map`,
+and the [`tsc` CLI](https://www.typescriptlang.org/docs/handbook/compiler-options.html) to type-check
+the program and produce `.d.ts` files.
 
 ### In a macro
 
@@ -59,9 +46,9 @@ ensure that your developers load your macro rather than loading from `@aspect_ru
 
 ### BUILD file generation
 
-Aspect provides an alpha preview of our TypeScript BUILD file generator as part of the
-[Aspect CLI](https://aspect.build/cli). Run `aspect configure` to create or update BUILD.bazel files
-as you edit TypeScript sources.
+Aspect provides a TypeScript BUILD file generator as part of the [Aspect CLI](https://aspect.build/cli).
+Run `aspect configure` to create or update `BUILD.bazel` files as you edit TypeScript sources.
+See <https://docs.aspect.build/v/cli/commands/aspect_configure>.
 
 ### Advanced: custom rules
 
