@@ -10,7 +10,7 @@ load("@aspect_rules_js//npm:providers.bzl", "NpmPackageStoreInfo")
 load(":ts_lib.bzl", "COMPILER_OPTION_ATTRS", "OUTPUT_ATTRS", "STD_ATTRS", _lib = "lib")
 load(":ts_config.bzl", "TsConfigInfo")
 load(":ts_validate_options.bzl", _validate_lib = "lib")
-load(":options.bzl", "OptionsInfo")
+load(":options.bzl", "OptionsInfo", "transpiler_selection_required")
 
 # Forked from js_lib_helpers.js_lib_helpers.gather_files_from_js_providers to not
 # include any sources; only transitive declarations & npm linked packages
@@ -207,6 +207,9 @@ This is an error because Bazel does not run actions unless their outputs are nee
     # library, and determines what files are used by a simple non-provider-aware downstream
     # library. Only the JavaScript outputs are intended for use in non-TS-aware dependents.
     if ctx.attr.transpile:
+        if not options.default_to_tsc_transpiler:
+            fail(transpiler_selection_required)
+
         # Special case case where there are no source outputs and we don't have a custom
         # transpiler so we add output_declarations to the default outputs
         default_outputs = output_sources[:] if len(output_sources) else output_declarations[:]
