@@ -45,6 +45,7 @@ try-import $BATS_TEST_DIRNAME/.bazelrc
 startup --max_idle_secs=10
 build --worker_verbose
 build --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
+build --@aspect_rules_ts//ts:default_to_tsc_transpiler
 EOF
 
 

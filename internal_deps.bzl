@@ -48,3 +48,10 @@ def rules_ts_internal_deps():
             "https://github.com/keith/buildifier-prebuilt/archive/6.1.0.tar.gz",
         ],
     )
+
+    http_archive(
+        name = "aspect_rules_swc",
+        sha256 = "b647c7c31feeb7f9330fff08b45f8afe7de674d3a9c89c712b8f9d1723d0c8f9",
+        strip_prefix = "rules_swc-1.0.1",
+        url = "https://github.com/aspect-build/rules_swc/releases/download/v1.0.1/rules_swc-v1.0.1.tar.gz",
+    )
