@@ -67,16 +67,17 @@ redirect the stdout to a file that you can analyze with power tools.
 
 ## Non-deterministic behavior
 
-By default, we run `tsc` in a "watch mode" using the [Bazel Persistent Worker](https://bazel.build/remote/persistent) feature.
+When Worker Support is enabled, we run `tsc` in a "watch mode" using the [Bazel Persistent Worker](https://bazel.build/remote/persistent) feature.
+See the [`supports_workers`](https://docs.aspect.build/rules/aspect_rules_ts/docs/rules#supports_workers-1) attribute for docs on enabling this feature.
+
 However, this risks leaking state from one compilation to another, and you may still encounter such bugs, for example:
 - removing a required types package from `deps` but the compilation still succeeds
 - outputs created by a previous compilation are still produced even though the source file is deleted
 
 You can confirm that it's a worker bug by running `bazel shutdown` and trying again. If that resolves the issue, it means that some state was leaking.
 
-Please check for issues or file one if you find a bug with persistent workers.
-
-To disable persistent workers for a single target, use the `supports_workers` attribute of `ts_project`. To disable globally, add the line `build --strategy=TsProject=sandboxed` to your `.bazelrc`.
+Please check for issues with persistent workers:
+[persistent workers label](https://github.com/aspect-build/rules_ts/issues?q=label%3A%22persistent+workers%22)
 
 ## Which files should be emitted
 

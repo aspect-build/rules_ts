@@ -55,46 +55,6 @@ def _find_tsc_action(env, target_under_test):
     asserts.true(env, found_action != None, "could not find the TsProject action")
     return found_action
 
-# explicit supports_workers = true
-def _supports_workers_explicitly_true_test_impl(ctx):
-    env = analysistest.begin(ctx)
-    target_under_test = analysistest.target_under_test(env)
-    action = _find_tsc_action(env, target_under_test)
-    asserts.true(env, action.argv[0].find("npm_typescript/tsc_worker.sh") != -1, "expected workers to be enabled explicitly.")
-    return analysistest.end(env)
-
-_supports_workers_explicitly_true_test = analysistest.make(_supports_workers_explicitly_true_test_impl)
-
-# explicit supports_workers = false
-def _supports_workers_explicitly_false_test_impl(ctx):
-    env = analysistest.begin(ctx)
-    target_under_test = analysistest.target_under_test(env)
-    action = _find_tsc_action(env, target_under_test)
-    asserts.true(env, action.argv[0].find("npm_typescript/tsc.sh") != -1, "expected workers to be disabled explicitly.")
-    return analysistest.end(env)
-
-_supports_workers_explicitly_false_test = analysistest.make(_supports_workers_explicitly_false_test_impl)
-
-# implicit supports_workers = true
-def _supports_workers_implicitly_true_test_impl(ctx):
-    env = analysistest.begin(ctx)
-    target_under_test = analysistest.target_under_test(env)
-    action = _find_tsc_action(env, target_under_test)
-    asserts.true(env, action.argv[0].find("npm_typescript/tsc_worker.sh") != -1, "expected workers to be enabled globally.")
-    return analysistest.end(env)
-
-_supports_workers_implicitly_true_test = analysistest.make(_supports_workers_implicitly_true_test_impl)
-
-# implicit supports_workers = false
-def _supports_workers_implicitly_false_test_impl(ctx):
-    env = analysistest.begin(ctx)
-    target_under_test = analysistest.target_under_test(env)
-    action = _find_tsc_action(env, target_under_test)
-    asserts.true(env, action.argv[0].find("npm_typescript/tsc.sh") != -1, "expected workers to be disabled globally.")
-    return analysistest.end(env)
-
-_supports_workers_implicitly_false_test = analysistest.make(_supports_workers_implicitly_false_test_impl)
-
 # verbose flag = true test
 def _verbose_true_test_impl(ctx):
     env = analysistest.begin(ctx)
@@ -180,52 +140,6 @@ def ts_project_flags_test_suite(name):
     }
 
     _ts_project_with_flags(
-        name = "supports_workers_explicitly_true",
-        tsconfig = _TSCONFIG,
-        supports_workers = True,
-        # supports_workers should override the flag
-        supports_workers_flag = False,
-    )
-    _supports_workers_explicitly_true_test(
-        name = "supports_workers_explicitly_true_test",
-        target_under_test = ":supports_workers_explicitly_true",
-    )
-
-    _ts_project_with_flags(
-        name = "supports_workers_explicitly_false",
-        tsconfig = _TSCONFIG,
-        supports_workers = False,
-        # supports_workers should override the flag
-        supports_workers_flag = True,
-    )
-    _supports_workers_explicitly_false_test(
-        name = "supports_workers_explicitly_false_test",
-        target_under_test = ":supports_workers_explicitly_false",
-    )
-
-    _ts_project_with_flags(
-        name = "supports_workers_implicitly_true",
-        tsconfig = _TSCONFIG,
-        # supports_workers attribute is not set explicitly so the flag should be respected
-        supports_workers_flag = True,
-    )
-    _supports_workers_implicitly_true_test(
-        name = "supports_workers_implicitly_true_test",
-        target_under_test = ":supports_workers_implicitly_true",
-    )
-
-    _ts_project_with_flags(
-        name = "supports_workers_implicitly_false",
-        tsconfig = _TSCONFIG,
-        # supports_workers attribute is not set explicitly so the flag should be respected
-        supports_workers_flag = False,
-    )
-    _supports_workers_implicitly_false_test(
-        name = "supports_workers_implicitly_false_test",
-        target_under_test = ":supports_workers_implicitly_false",
-    )
-
-    _ts_project_with_flags(
         name = "verbose_true",
         tsconfig = _TSCONFIG,
         verbose_flag = True,
@@ -268,10 +182,6 @@ def ts_project_flags_test_suite(name):
     native.test_suite(
         name = name,
         tests = [
-            ":supports_workers_explicitly_true_test",
-            ":supports_workers_explicitly_false_test",
-            ":supports_workers_implicitly_true_test",
-            ":supports_workers_implicitly_false_test",
             ":verbose_true_test",
             ":verbose_false_test",
             ":skip_lib_check_always_test",

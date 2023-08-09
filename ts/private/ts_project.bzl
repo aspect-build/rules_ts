@@ -67,13 +67,11 @@ def _ts_project_impl(ctx):
     execution_requirements = {}
     executable = ctx.executable.tsc
 
-    supports_workers = ctx.attr.supports_workers
-
-    # workers can be enabled/disabled globally. if no supports_workers attribute is set explicitly for this target,
-    # which is indicated by internal_do_not_depend_supports_workers_is_none attribute, then set it to global supports_workers config
-    # TODO(2.0): remove this
-    if ctx.attr.internal_do_not_depend_supports_workers_is_none:
-        supports_workers = options.supports_workers
+    supports_workers = options.supports_workers
+    if ctx.attr.supports_workers == 1:
+        supports_workers = True
+    elif ctx.attr.supports_workers == 0:
+        supports_workers = False
 
     host_is_windows = platform_utils.host_platform_is_windows()
     if host_is_windows and supports_workers:

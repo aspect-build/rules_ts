@@ -3,3 +3,4 @@ import %workspace%/../../.bazelrc.common
 
 build:local --worker_verbose
 build:no-disk-cache --disk_cache=/tmp/no-disk-cache
+build --@aspect_rules_ts//ts:supports_workers

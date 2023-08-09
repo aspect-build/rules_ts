@@ -66,7 +66,7 @@ def ts_project(
         declaration_dir = None,
         out_dir = None,
         root_dir = None,
-        supports_workers = None,
+        supports_workers = -1,
         **kwargs):
     """Compiles one TypeScript project using `tsc --project`.
 
@@ -225,19 +225,22 @@ def ts_project(
         ts_build_info_file: The user-specified value of `tsBuildInfoFile` from the tsconfig.
             Helps Bazel to predict the path where the .tsbuildinfo output is written.
 
-        supports_workers: Whether the worker protocol is enabled.
-            To disable worker mode for a particular target set `supports_workers` to `False`.
+        supports_workers: Whether the "Persistent Worker" protocol is enabled.
+            This uses a custom `tsc` compiler to make rebuilds faster.
+            Note that this causes some known correctness bugs, see
+            https://docs.aspect.build/rules/aspect_rules_ts/docs/troubleshooting.
+            We do not intend to fix these bugs.
 
-            Note that value of this attribute always preferred over `--@aspect_rules_ts//ts:supports_workers` flag
-            unless the `supports_workers` attribute is not set explicitly.
+            Worker mode can be enabled for all `ts_project`s in a build with the global
+            `--@aspect_rules_ts//ts:supports_workers` flag.
+            To enable worker mode for all builds in the workspace, add
+            `build --@aspect_rules_ts//ts:supports_workers` to the .bazelrc.
 
-            Worker mode can be disabled workspace wide by using the `--@aspect_rules_ts//ts:supports_workers` flag.
-            To disable worker mode globally, insert `build --@aspect_rules_ts//ts:supports_workers=false` into the .bazelrc.
+            This is a "tri-state" attribute, accepting values `[-1, 0, 1]`. The behavior is:
 
-            Alternatively, worker mode can be controlled via `--strategy`.
-            To disable worker mode globally via `--strategy` insert `build --strategy=TsProject=sandboxed` into the .bazelrc.
-
-            See https://docs.bazel.build/versions/main/user-manual.html#flag--strategy for more details.
+            - `-1`: use the value of the global `--@aspect_rules_ts//ts:supports_workers` flag.
+            - `0`: Override the global flag, disabling workers for this target.
+            - `1`: Override the global flag, enabling workers for this target.
 
         **kwargs: passed through to underlying [`ts_project_rule`](#ts_project_rule), eg. `visibility`, `tags`
     """
@@ -391,7 +394,7 @@ def ts_project(
 
     # Disable workers if a custom tsc was provided but not a custom tsc_worker.
     if tsc != _tsc and tsc_worker == _tsc_worker:
-        supports_workers = False
+        supports_workers = 0
 
     ts_project_rule(
         name = tsc_target_name,
@@ -427,6 +430,5 @@ def ts_project(
             "@npm_typescript//:is_typescript_5_or_greater": True,
             "//conditions:default": False,
         }),
-        internal_do_not_depend_supports_workers_is_none = supports_workers == None,
         **kwargs
     )
