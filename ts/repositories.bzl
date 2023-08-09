@@ -10,9 +10,6 @@ load("//ts/private:versions.bzl", "TOOL_VERSIONS")
 
 LATEST_TYPESCRIPT_VERSION = TOOL_VERSIONS.keys()[-1]
 
-# TODO(2.0): remove this alias
-LATEST_VERSION = LATEST_TYPESCRIPT_VERSION
-
 # WARNING: any additions to this function may be BREAKING CHANGES for users
 # because we'll fetch a dependency which may be different from one that
 # they were previously fetching later in their WORKSPACE setup, and now
