@@ -41,17 +41,17 @@ See more details on the `assets` parameter of the `ts_project` macro.
         allow_files = True,
         mandatory = True,
     ),
-    "supports_workers": attr.bool(
-        doc = "Whether the tsc compiler understands Bazel's persistent worker protocol",
-        default = False,
+    "supports_workers": attr.int(
+        doc = """\
+        Whether to use a custom `tsc` compiler which understands Bazel's persistent worker protocol.
+
+        See the docs for `supports_workers` on the [`ts_project`](#ts_project-supports_workers) macro.
+        """,
+        default = 0,
+        values = [-1, 0, 1],
     ),
     "is_typescript_5_or_greater": attr.bool(
         doc = "Whether TypeScript version is >= 5.0.0",
-        default = False,
-    ),
-    # TODO(2.0): remove this and make supports_workers a tri-state int.
-    "internal_do_not_depend_supports_workers_is_none": attr.bool(
-        doc = "Internal. DO NOT DEPEND!",
         default = False,
     ),
     "transpile": attr.bool(

@@ -65,7 +65,7 @@ bool_flag(
 
 bool_flag(
     name = "supports_workers",
-    build_setting_default = True,
+    build_setting_default = False,
     visibility = ["//visibility:public"],
 )
 
@@ -116,7 +116,6 @@ options(
     ),
     supports_workers = select({
         ":supports_workers_flag": True,
-        # TODO(2.0): default should be False if we set swc as default
         "//conditions:default": False,
     }),
     verbose = select({
