@@ -57,11 +57,6 @@ OptionsInfo = provider(
 def _options_impl(ctx):
     verbose = ctx.attr.verbose
 
-    # TODO(2.0): remove this
-    if "VERBOSE_LOGS" in ctx.var.keys():
-        # buildifier: disable=print
-        print("Usage of --define=VERBOSE_LOGS=1 is deprecated. use --@aspect_rules_ts//ts:verbose=true flag instead.")
-
     args = []
 
     # When users report problems, we can ask them to re-build with
