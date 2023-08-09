@@ -16,44 +16,51 @@ Read more: https://blog.aspect.dev/typescript-speedup
 ## ts_project#transpiler
 
 The `transpiler` attribute of `ts_project` lets you select which tool produces the JavaScript outputs.
+Starting in rules_ts 2.0, we require you to select one of these, as there is no good default for all users.
 
 ### [SWC](http://swc.rs) (recommended)
 
 SWC is a fast transpiler, and the authors of rules_ts recommend using it.
 This option results in the fastest development round-trip time, however it may have subtle
-compatibility issues: https://github.com/aspect-build/rules_ts/discussions/398
+compatibility issues due to producing different JavaScript output than `tsc`.
+See https://github.com/aspect-build/rules_ts/discussions/398 for known issues.
 
 To switch to SWC, follow these steps:
 
 1. Install a [recent release of rules_swc](https://github.com/aspect-build/rules_swc/releases)
 2. Load `swc`. You can automate this by running:
 
+    ```
     npx @bazel/buildozer 'fix movePackageToTop' //...:__pkg__
     npx @bazel/buildozer 'new_load @aspect_rules_swc//swc:defs.bzl swc' //...:__pkg__
+    ```
 
 3. In the simplest case you can skip passing attributes to swc (such as an `.swcrc` file).
    You can update your `ts_project` rules with this command:
 
+    ```
     npx @bazel/buildozer 'set transpiler swc' //...:%ts_project
+    ```
 
-4. However, most codebases do rely on configuration options for swc.
+4. However, most codebases do rely on configuration options for SWC.
+   First, [Synchronize settings with tsconfig.json](https://github.com/aspect-build/rules_swc/blob/main/docs/tsconfig.md) to get an `.swcrc` file,
+   then use a pattern like the following to pass this option to `swc`:
 
-  a. [Synchronize settings with tsconfig.json](https://github.com/aspect-build/rules_swc/blob/main/docs/tsconfig.md)
-  b. To pass arguments, use a pattern like the following:
+        load("@aspect_rules_swc//swc:defs.bzl", "swc")
+        load("@bazel_skylib//lib:partial.bzl", "partial")
+    
+        ts_project(
+            ...
+            transpiler = partial.make(swc, swcrc = "//:.swcrc"),
+        )
 
-    load("@aspect_rules_swc//swc:defs.bzl", "swc")
-    load("@bazel_skylib//lib:partial.bzl", "partial")
+6. Cleanup unused load statements:
 
-    ts_project(
-        ...
-        transpiler = partial.make(swc, swcrc = "//:.swcrc"),
-    )
-
-5. Cleanup unused load statements:
-
+    ```
     npx @bazel/buildozer 'fix unusedLoads' //...:__pkg__
+    ```
 
-### [tsc](https://www.typescriptlang.org/docs/handbook/compiler-options.html):
+### TypeScript [tsc](https://www.typescriptlang.org/docs/handbook/compiler-options.html)
 
 The default `transpiler` value of `None` means that `tsc` should do transpiling along with type-checking.
 This is the simplest configuration without additional dependencies. However, it's also the slowest.
