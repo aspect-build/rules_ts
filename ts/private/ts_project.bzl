@@ -205,9 +205,6 @@ This is an error because Bazel does not run actions unless their outputs are nee
     # library, and determines what files are used by a simple non-provider-aware downstream
     # library. Only the JavaScript outputs are intended for use in non-TS-aware dependents.
     if ctx.attr.transpile:
-        if not options.default_to_tsc_transpiler:
-            fail(transpiler_selection_required)
-
         # Special case case where there are no source outputs and we don't have a custom
         # transpiler so we add output_declarations to the default outputs
         default_outputs = output_sources[:] if len(output_sources) else output_declarations[:]
@@ -227,11 +224,16 @@ This is an error because Bazel does not run actions unless their outputs are nee
             transitive = transitive_inputs + [_gather_declarations_from_js_providers(ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps)],
         )
 
-        verb = "Transpiling & type-checking"
-        if not ctx.attr.transpile or ctx.attr.emit_declaration_only:
+        if ctx.attr.transpile and not ctx.attr.emit_declaration_only:
+            # Make sure the user has acknowledged that transpiling is slow
+            if not options.default_to_tsc_transpiler:
+                fail(transpiler_selection_required)
+            if ctx.attr.declaration:
+                verb = "Transpiling & type-checking"
+            else:
+                verb = "Transpiling"
+        else:
             verb = "Type-checking"
-        elif not ctx.attr.declaration:
-            verb = "Transpiling"
 
         ctx.actions.run(
             executable = executable,
