@@ -3,6 +3,8 @@
 This is the canonical ruleset for using Bazel for TypeScript, based on
 <https://github.com/aspect-build/rules_js>, and recommended for all new projects.
 
+Many companies are successfully building with rules_ts. If you're getting value from the project, please let us know! Just comment on our [Adoption Discussion](https://github.com/aspect-build/rules_js/discussions/1000).
+
 This is a high-performance alternative to the `@bazel/typescript` npm package from rules_nodejs.
 The `ts_project` rule here is identical to the one in rules_nodejs, making it easy to migrate.
 Since rules_js always runs tools from the bazel-out tree, rules_ts naturally fixes most usability bugs with rules_nodejs:
