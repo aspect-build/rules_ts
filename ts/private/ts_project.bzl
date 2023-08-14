@@ -58,8 +58,8 @@ def _ts_project_impl(ctx):
     # However, it is not possible to evaluate files in outputs of other rules such as filegroup, therefore the outs are
     # recalculated here.
     typings_out_dir = ctx.attr.declaration_dir or ctx.attr.out_dir
-    js_outs = _lib.declare_outputs(ctx, [] if not ctx.attr.transpile else _lib.calculate_js_outs(srcs, ctx.attr.out_dir, ctx.attr.root_dir, ctx.attr.allow_js, ctx.attr.resolve_json_module, ctx.attr.preserve_jsx, ctx.attr.emit_declaration_only))
-    map_outs = _lib.declare_outputs(ctx, [] if not ctx.attr.transpile else _lib.calculate_map_outs(srcs, ctx.attr.out_dir, ctx.attr.root_dir, ctx.attr.source_map, ctx.attr.preserve_jsx, ctx.attr.emit_declaration_only))
+    js_outs = _lib.declare_outputs(ctx, [] if ctx.attr.transpile == 0 else _lib.calculate_js_outs(srcs, ctx.attr.out_dir, ctx.attr.root_dir, ctx.attr.allow_js, ctx.attr.resolve_json_module, ctx.attr.preserve_jsx, ctx.attr.emit_declaration_only))
+    map_outs = _lib.declare_outputs(ctx, [] if ctx.attr.transpile == 0 else _lib.calculate_map_outs(srcs, ctx.attr.out_dir, ctx.attr.root_dir, ctx.attr.source_map, ctx.attr.preserve_jsx, ctx.attr.emit_declaration_only))
     typings_outs = _lib.declare_outputs(ctx, _lib.calculate_typings_outs(srcs, typings_out_dir, ctx.attr.root_dir, ctx.attr.declaration, ctx.attr.composite, ctx.attr.allow_js))
     typing_maps_outs = _lib.declare_outputs(ctx, _lib.calculate_typing_maps_outs(srcs, typings_out_dir, ctx.attr.root_dir, ctx.attr.declaration_map, ctx.attr.allow_js))
 
@@ -185,7 +185,7 @@ This should be changed to js_library, which can be done by running:
                 target = label,
                 pkg = ctx.label.package,
             )
-        elif ctx.attr.transpile:
+        elif ctx.attr.transpile != 0:
             no_outs_msg = """ts_project target %s is configured to produce no outputs.
 
 This might be because
@@ -204,7 +204,7 @@ This is an error because Bazel does not run actions unless their outputs are nee
     # Default outputs (DefaultInfo files) is what you see on the command-line for a built
     # library, and determines what files are used by a simple non-provider-aware downstream
     # library. Only the JavaScript outputs are intended for use in non-TS-aware dependents.
-    if ctx.attr.transpile:
+    if ctx.attr.transpile != 0:
         # Special case case where there are no source outputs and we don't have a custom
         # transpiler so we add output_declarations to the default outputs
         default_outputs = output_sources[:] if len(output_sources) else output_declarations[:]
@@ -224,9 +224,9 @@ This is an error because Bazel does not run actions unless their outputs are nee
             transitive = transitive_inputs + [_gather_declarations_from_js_providers(ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps)],
         )
 
-        if ctx.attr.transpile and not ctx.attr.emit_declaration_only:
+        if ctx.attr.transpile != 0 and not ctx.attr.emit_declaration_only:
             # Make sure the user has acknowledged that transpiling is slow
-            if not options.default_to_tsc_transpiler:
+            if ctx.attr.transpile == -1 and not options.default_to_tsc_transpiler:
                 fail(transpiler_selection_required)
             if ctx.attr.declaration:
                 verb = "Transpiling & type-checking"

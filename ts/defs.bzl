@@ -163,10 +163,15 @@ def ts_project(
 
         transpiler: A custom transpiler tool to run that produces the JavaScript outputs instead of `tsc`.
 
-            By default, `ts_project` expects `.js` outputs to be written in the same action
-            that does the type-checking to produce `.d.ts` outputs.
+            Under `--@aspect_rules_ts//ts:default_to_tsc_transpiler`, the default is to use `tsc` to produce
+            `.js` outputs in the same action that does the type-checking to produce `.d.ts` outputs.
             This is the simplest configuration, however `tsc` is slower than alternatives.
             It also means developers must wait for the type-checking in the developer loop.
+
+            Without `--@aspect_rules_ts//ts:default_to_tsc_transpiler`, an explicit value must be set.
+            This may be the string `"tsc"` to explicitly choose `tsc`, just like the default above.
+
+            It may also be any rule or macro with this signature: `(name, srcs, **kwargs)`
 
             See [docs/transpiler.md](/docs/transpiler.md) for more details.
 
@@ -337,7 +342,7 @@ def ts_project(
 
     tsc_js_outs = []
     tsc_map_outs = []
-    if not transpiler:
+    if not transpiler or transpiler == "tsc":
         tsc_js_outs = _lib.calculate_js_outs(srcs, out_dir, root_dir, allow_js, resolve_json_module, preserve_jsx, emit_declaration_only)
         tsc_map_outs = _lib.calculate_map_outs(srcs, out_dir, root_dir, source_map, preserve_jsx, emit_declaration_only)
         tsc_target_name = name
@@ -424,7 +429,7 @@ def ts_project(
         emit_declaration_only = emit_declaration_only,
         tsc = tsc,
         tsc_worker = tsc_worker,
-        transpile = not transpiler,
+        transpile = -1 if not transpiler else int(transpiler == "tsc"),
         supports_workers = supports_workers,
         is_typescript_5_or_greater = select({
             "@npm_typescript//:is_typescript_5_or_greater": True,

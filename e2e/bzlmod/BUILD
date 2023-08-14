@@ -5,6 +5,7 @@ ts_project(
     name = "ts",
     srcs = ["foo.ts"],
     extends = "tsconfig.json",
+    transpiler = "tsc",
     tsconfig = {
         "extends": "tsconfig.json",
     },
