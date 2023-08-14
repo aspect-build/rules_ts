@@ -54,9 +54,17 @@ See more details on the `assets` parameter of the `ts_project` macro.
         doc = "Whether TypeScript version is >= 5.0.0",
         default = False,
     ),
-    "transpile": attr.bool(
-        doc = "whether tsc should be used to produce .js outputs",
-        default = True,
+    "transpile": attr.int(
+        doc = """\
+        Whether tsc should be used to produce .js outputs
+
+        Values are:
+        - -1: Error if --@aspect_rules_ts//ts:default_to_tsc_transpiler not set, otherwise transpile
+        - 0: Do not transpile
+        - 1: Transpile
+        """,
+        default = -1,
+        values = [-1, 0, 1],
     ),
     "tsc": attr.label(
         doc = "TypeScript compiler binary",

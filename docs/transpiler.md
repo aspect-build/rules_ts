@@ -62,17 +62,29 @@ To switch to SWC, follow these steps:
 
 ### TypeScript [tsc](https://www.typescriptlang.org/docs/handbook/compiler-options.html)
 
-The default `transpiler` value of `None` means that `tsc` should do transpiling along with type-checking.
+`tsc` can do transpiling along with type-checking.
 This is the simplest configuration without additional dependencies. However, it's also the slowest.
 
 > Note that rules_ts used to recommend a "Persistent Worker" mode to keep the `tsc` process running
 > as a background daemon, however this introduces correctness issues in the build and is no longer
 > recommended. As of rules_ts 2.0, the "Persistent Worker" mode is no longer enabled by default.
 
-To choose this option, simply add this to /.bazelrc:
+To choose this option for a single `ts_project`, set `transpiler = "tsc"`.
+You can run `npx @bazel/buildozer 'set transpiler "tsc"' //...:%ts_project` to set the attribute
+on all `ts_project` rules.
+
+If you use the default value `transpiler = None`, rules_ts will print an error.
+You can simply disable this error for all targets in the build, behaving the same as rules_ts 1.x.
+Just add this to `/.bazelrc``:
 
     # Use "tsc" as the transpiler when ts_project has no `transpiler` set.
+    # Bazel 6.3 or greater: 'common' means 'any command that supports this flag'
+    common --@aspect_rules_ts//ts:default_to_tsc_transpiler
+
+    # Prior to Bazel 6.3, you need all of this, to avoid discarding the analysis cache:
     build --@aspect_rules_ts//ts:default_to_tsc_transpiler
+    fetch --@aspect_rules_ts//ts:default_to_tsc_transpiler
+    query --@aspect_rules_ts//ts:default_to_tsc_transpiler
 
 ### Other Transpilers
 
