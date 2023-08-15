@@ -151,3 +151,17 @@ This likely means two different Bazel targets tried to write the same output fil
 You may find that the program contained a `.ts` file rather than the corresponding `.d.ts` file.
 
 Also see https://github.com/microsoft/TypeScript/issues/22208 - it's possible that TypeScript is resolving a `.ts` input where it should have used a `.d.ts` from another compilation.
+
+## tsconfig paths
+
+The tsconfig.json `compilerOptions.paths` is often used for module names or simplifying import statements. A tool such as as webpack `ts-loader` enables webpack to understand such paths, when typescript compilation is moved to rules_ts this understanding within webpack may be lost.
+
+Possible solutions:
+* `tsconfig-paths-webpack-plugin` webpack plugin for tsconfig paths (module names or just simplified import statements)
+```
+  resolve: {
+    plugins: [new TsconfigPathsPlugin({ configFile: 'tsconfig.json' })]
+  },
+```
+
+* Pnpm workspaces and `npm_package`
