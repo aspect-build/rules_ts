@@ -150,9 +150,11 @@ You may find that the program contained a `.ts` file rather than the correspondi
 
 Also see https://github.com/microsoft/TypeScript/issues/22208 - it's possible that TypeScript is resolving a `.ts` input where it should have used a `.d.ts` from another compilation.
 
-## tsconfig paths
+## Webpack resolution failures when dropping ts-loader
 
-The tsconfig.json `compilerOptions.paths` is often used for module names or simplifying import statements. A tool such as as webpack `ts-loader` enables webpack to understand such paths, when typescript compilation is moved to rules_ts this understanding within webpack may be lost.
+The `compilerOptions.paths` property in `tsconfig.json` is often used for module names or simplifying import statements. A tool such as [`ts-loader`](https://github.com/TypeStrong/ts-loader) enables Webpack to understand such paths.
+
+When typescript compilation is moved to a separate step under `rules_ts` this understanding within webpack may be lost since it only sees JavaScript inputs.
 
 Possible solutions:
 * `tsconfig-paths-webpack-plugin` webpack plugin for tsconfig paths (module names or just simplified import statements)
@@ -162,4 +164,4 @@ Possible solutions:
   },
 ```
 
-* Pnpm workspaces and `npm_package`
+* Use pnpm workspaces and `npm_package`/`npm_link_package` in between the `ts_project` rule and the `webpack` rule, so that the loader finds files under the `node_modules` tree like it would with third-party npm packages.
