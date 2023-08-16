@@ -6,6 +6,7 @@ statement from these, that's a bug in our distribution.
 
 # buildifier: disable=bzl-visibility
 load("//ts/private:maybe.bzl", http_archive = "maybe_http_archive")
+load("//.github/workflows:deps.bzl", "aspect_workflows_github_actions_deps")
 
 def rules_ts_internal_deps():
     "Fetch deps needed for local development"
@@ -44,7 +45,7 @@ def rules_ts_internal_deps():
         name = "buildifier_prebuilt",
         sha256 = "e46c16180bc49487bfd0f1ffa7345364718c57334fa0b5b67cb5f27eba10f309",
         strip_prefix = "buildifier-prebuilt-6.1.0",
-        urls = [
-            "https://github.com/keith/buildifier-prebuilt/archive/6.1.0.tar.gz",
-        ],
+        urls = ["https://github.com/keith/buildifier-prebuilt/archive/6.1.0.tar.gz"],
     )
+
+    aspect_workflows_github_actions_deps()
