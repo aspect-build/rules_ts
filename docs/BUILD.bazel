@@ -8,6 +8,11 @@ stardoc_with_diff_test(
 )
 
 stardoc_with_diff_test(
+    name = "proto",
+    bzl_library_target = "//ts:proto",
+)
+
+stardoc_with_diff_test(
     name = "repositories",
     bzl_library_target = "//ts:repositories",
     symbol_names = ["rules_ts_dependencies"],
