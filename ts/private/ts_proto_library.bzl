@@ -47,14 +47,18 @@ def _declare_outs(ctx, proto_srcs, ext):
 
     i.e. for [//path/to:subdir/my.proto] we should produce [subdir/my_pb.js]
     """
-    result = [
-        ctx.actions.declare_file(paths.relativize(s.short_path, ctx.label.package).replace(".proto", "_pb" + ext))
+    relative_srcs = [
+        paths.relativize(s.short_path, ctx.label.package)
         for s in proto_srcs
+    ]
+    result = [
+        ctx.actions.declare_file(s.replace(".proto", "_pb" + ext))
+        for s in relative_srcs
     ]
     if ctx.attr.has_services:
         result.extend([
-            ctx.actions.declare_file(paths.relativize(s.short_path, ctx.label.package).replace(".proto", "_connect" + ext))
-            for s in proto_srcs
+            ctx.actions.declare_file(s.replace(".proto", "_connect" + ext))
+            for s in relative_srcs
         ])
     return result
 
