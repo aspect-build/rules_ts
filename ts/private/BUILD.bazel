@@ -73,6 +73,16 @@ bzl_library(
 )
 
 bzl_library(
+    name = "ts_proto_library",
+    srcs = ["ts_proto_library.bzl"],
+    visibility = ["//ts:__subpackages__"],
+    deps = [
+        "@bazel_skylib//lib:paths",
+        "@rules_proto//proto:defs",
+    ],
+)
+
+bzl_library(
     name = "options",
     srcs = ["options.bzl"],
     visibility = ["//ts:__subpackages__"],

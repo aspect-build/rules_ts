@@ -1,0 +1,5 @@
+{
+    "compilerOptions": {
+        "module": "ES2022"
+    }
+}

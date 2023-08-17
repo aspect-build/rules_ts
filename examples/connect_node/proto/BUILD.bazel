@@ -1,0 +1,22 @@
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@aspect_rules_ts//ts:proto.bzl", "ts_proto_library")
+
+package(default_visibility = ["//visibility:public"])
+
+proto_library(
+    name = "eliza_proto",
+    srcs = ["eliza.proto"],
+)
+
+ts_proto_library(
+    name = "eliza_ts_proto",
+    node_modules = "//examples/connect_node:node_modules",
+    proto = ":eliza_proto",
+)
+
+js_library(
+    name = "proto",
+    srcs = [":package.json"],
+    deps = ["eliza_ts_proto"],
+)

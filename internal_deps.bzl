@@ -44,6 +44,15 @@ def rules_ts_internal_deps():
     )
 
     http_archive(
+        name = "rules_proto",
+        sha256 = "dc3fb206a2cb3441b485eb1e423165b231235a1ea9b031b4433cf7bc1fa460dd",
+        strip_prefix = "rules_proto-5.3.0-21.7",
+        urls = [
+            "https://github.com/bazelbuild/rules_proto/archive/refs/tags/5.3.0-21.7.tar.gz",
+        ],
+    )
+
+    http_archive(
         name = "buildifier_prebuilt",
         sha256 = "e46c16180bc49487bfd0f1ffa7345364718c57334fa0b5b67cb5f27eba10f309",
         strip_prefix = "buildifier-prebuilt-6.1.0",

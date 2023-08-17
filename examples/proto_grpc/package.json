@@ -4,6 +4,7 @@
     },
     "devDependencies": {
         "@bufbuild/protoc-gen-es": "1.3.0",
-        "typescript": "4.8.4"
-    }
+        "@bufbuild/protoc-gen-connect-es": "0.12.0"
+    },
+    "type": "module"
 }
