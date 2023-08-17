@@ -143,9 +143,9 @@ bzl_library(
     srcs = ["defs.bzl"],
     visibility = ["//visibility:public"],
     deps = [
-        "//ts/private/docs:options",
-        "//ts/private/docs:ts_config",
-        "//ts/private/docs:ts_project",
+        "//ts/private:options",
+        "//ts/private:ts_config",
+        "//ts/private:ts_project",
         "@aspect_rules_js//js:defs",
         "@bazel_skylib//lib:partial",
         "@bazel_skylib//rules:build_test",
@@ -157,10 +157,20 @@ bzl_library(
     srcs = ["repositories.bzl"],
     visibility = ["//visibility:public"],
     deps = [
-        "//ts/private/docs:maybe",
-        "//ts/private/docs:npm_repositories",
-        "//ts/private/docs:versions",
+        "//ts/private:maybe",
+        "//ts/private:npm_repositories",
+        "//ts/private:versions",
         "@bazel_tools//tools/build_defs/repo:http.bzl",
         "@bazel_tools//tools/build_defs/repo:utils.bzl",
+    ],
+)
+
+bzl_library(
+    name = "extensions",
+    srcs = ["extensions.bzl"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":repositories",
+        "//ts/private:npm_repositories",
     ],
 )

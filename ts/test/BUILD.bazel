@@ -1,3 +1,4 @@
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load(":mock_transpiler.bzl", "mock")
 load(":transpiler_tests.bzl", "transpiler_test_suite")
 load(":ts_project_test.bzl", "ts_project_test_suite")
@@ -22,4 +23,11 @@ ts_project(
             "sourceMap": True,
         },
     },
+)
+
+bzl_library(
+    name = "mock_transpiler",
+    srcs = ["mock_transpiler.bzl"],
+    visibility = ["//visibility:public"],
+    deps = ["@aspect_rules_ts//ts/private:ts_lib"],
 )
