@@ -87,3 +87,9 @@ npm_repositories()
 # You can verify the typescript version used by Bazel:
 # bazel run -- @npm_typescript//:tsc --version
 rules_ts_dependencies(ts_version_from = "@npm//examples:typescript/resolved.json")
+
+###########################################
+# Protobuf rules to test ts_proto_library
+load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies")
+
+rules_proto_dependencies()
