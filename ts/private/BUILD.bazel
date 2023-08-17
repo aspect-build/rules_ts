@@ -8,16 +8,6 @@ exports_files(
 )
 
 bzl_library(
-    name = "maybe",
-    srcs = ["maybe.bzl"],
-    visibility = ["//ts:__subpackages__"],
-    deps = [
-        "@bazel_tools//tools/build_defs/repo:http.bzl",
-        "@bazel_tools//tools/build_defs/repo:utils.bzl",
-    ],
-)
-
-bzl_library(
     name = "npm_repositories",
     srcs = ["npm_repositories.bzl"],
     visibility = ["//ts:__subpackages__"],

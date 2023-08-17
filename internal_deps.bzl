@@ -4,8 +4,11 @@ Users should *not* need to install these. If users see a load()
 statement from these, that's a bug in our distribution.
 """
 
-# buildifier: disable=bzl-visibility
-load("//ts/private:maybe.bzl", http_archive = "maybe_http_archive")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", _http_archive = "http_archive")
+load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
+
+def http_archive(**kwargs):
+    maybe(_http_archive, **kwargs)
 
 def rules_ts_internal_deps():
     "Fetch deps needed for local development"
