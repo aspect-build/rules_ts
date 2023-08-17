@@ -1,5 +1,6 @@
 "Private implementation details for ts_proto_library"
 
+load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@rules_proto//proto:defs.bzl", "ProtoInfo")
 
 # buildifier: disable=function-docstring-header
@@ -27,23 +28,34 @@ def _protoc_action(ctx, inputs, outputs, options = {
         outputs = outputs,
         inputs = inputs,
         arguments = [args],
-        tools = [
-            ctx.executable.protoc_gen_es,
-        ],
-        env = {
-            #"RUNFILES": "thing",
-            "BAZEL_BINDIR": ctx.bin_dir.path,
-        },
+        tools = [ctx.executable.protoc_gen_es],
+        env = {"BAZEL_BINDIR": ctx.bin_dir.path},
     )
+
+def _declare_outs(ctx, proto_srcs, ext):
+    """
+    Predict the outputs the plugins will write.
+
+    i.e. for [//path/to:subdir/my.proto] we should produce [subdir/my_pb.js]
+    """
+    return [
+        ctx.actions.declare_file(paths.relativize(s.short_path, ctx.label.package).replace(".proto", "_pb" + ext))
+        for s in proto_srcs
+    ]
 
 def _ts_proto_library_impl(ctx):
     proto_in = ctx.attr.proto[ProtoInfo].direct_sources
-    js_out = ctx.actions.declare_file("logger_pb.js")
-    dts_out = ctx.actions.declare_file("logger_pb.d.ts")
-    _protoc_action(ctx, proto_in, [js_out, dts_out])
+    js_outs = _declare_outs(ctx, proto_in, ".js")
+    dts_outs = _declare_outs(ctx, proto_in, ".d.ts")
+
+    _protoc_action(ctx, proto_in, js_outs + dts_outs)
+
     return [
         DefaultInfo(
-            files = depset([js_out, dts_out]),
+            files = depset(js_outs),
+        ),
+        OutputGroupInfo(
+            types = depset(dts_outs),
         ),
     ]
 
