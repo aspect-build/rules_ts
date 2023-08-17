@@ -21,6 +21,13 @@ def _protoc_action(ctx, inputs, outputs, options = {
     for (key, value) in options.items():
         args.add_joined(["--es_opt", key, value], join_with = "=")
     args.add_joined(["--es_out", ctx.bin_dir.path], join_with = "=")
+
+    if ctx.attr.has_services:
+        args.add_joined(["--plugin", "protoc-gen-connect-es", ctx.executable.protoc_gen_connect_es.path], join_with = "=")
+        for (key, value) in options.items():
+            args.add_joined(["--connect-es_opt", key, value], join_with = "=")
+        args.add_joined(["--connect-es_out", ctx.bin_dir.path], join_with = "=")
+
     args.add_all(inputs)
     ctx.actions.run(
         executable = ctx.executable.protoc,
@@ -28,7 +35,9 @@ def _protoc_action(ctx, inputs, outputs, options = {
         outputs = outputs,
         inputs = inputs,
         arguments = [args],
-        tools = [ctx.executable.protoc_gen_es],
+        tools = [ctx.executable.protoc_gen_es] + (
+            [ctx.executable.protoc_gen_connect_es] if ctx.attr.has_services else []
+        ),
         env = {"BAZEL_BINDIR": ctx.bin_dir.path},
     )
 
@@ -38,10 +47,16 @@ def _declare_outs(ctx, proto_srcs, ext):
 
     i.e. for [//path/to:subdir/my.proto] we should produce [subdir/my_pb.js]
     """
-    return [
+    result = [
         ctx.actions.declare_file(paths.relativize(s.short_path, ctx.label.package).replace(".proto", "_pb" + ext))
         for s in proto_srcs
     ]
+    if ctx.attr.has_services:
+        result.extend([
+            ctx.actions.declare_file(paths.relativize(s.short_path, ctx.label.package).replace(".proto", "_connect" + ext))
+            for s in proto_srcs
+        ])
+    return result
 
 def _ts_proto_library_impl(ctx):
     proto_in = ctx.attr.proto[ProtoInfo].direct_sources
@@ -62,6 +77,10 @@ def _ts_proto_library_impl(ctx):
 ts_proto_library = rule(
     implementation = _ts_proto_library_impl,
     attrs = {
+        "has_services": attr.bool(
+            doc = "whether to generate service stubs with gen-connect-es",
+            default = True,
+        ),
         "proto": attr.label(
             doc = "proto_library to generate JS/DTS for",
             providers = [ProtoInfo],
