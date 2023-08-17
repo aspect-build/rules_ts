@@ -173,3 +173,10 @@ bzl_library(
         "//ts/private:npm_repositories",
     ],
 )
+
+bzl_library(
+    name = "proto",
+    srcs = ["proto.bzl"],
+    visibility = ["//visibility:public"],
+    deps = ["//ts/private:ts_proto_library"],
+)
