@@ -3,8 +3,11 @@
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@rules_proto//proto:defs.bzl", "ProtoInfo")
 
+def _short_path(f):
+    return f.short_path
+
 # buildifier: disable=function-docstring-header
-def _protoc_action(ctx, inputs, outputs, options = {
+def _protoc_action(ctx, inputs, descriptors, outputs, options = {
     "keep_empty_files": True,
     "target": "js+dts",
 }):
@@ -28,12 +31,15 @@ def _protoc_action(ctx, inputs, outputs, options = {
             args.add_joined(["--connect-es_opt", key, value], join_with = "=")
         args.add_joined(["--connect-es_out", ctx.bin_dir.path], join_with = "=")
 
+    args.add("--descriptor_set_in")
+    args.add_joined(descriptors, join_with = ":")
+
     args.add_all(inputs)
     ctx.actions.run(
         executable = ctx.executable.protoc,
         progress_message = "Generating .js/.d.ts from %{label}",
         outputs = outputs,
-        inputs = inputs,
+        inputs = depset(inputs, transitive = [descriptors]),
         arguments = [args],
         tools = [ctx.executable.protoc_gen_es] + (
             [ctx.executable.protoc_gen_connect_es] if ctx.attr.has_services else []
@@ -64,10 +70,11 @@ def _declare_outs(ctx, proto_srcs, ext):
 
 def _ts_proto_library_impl(ctx):
     proto_in = ctx.attr.proto[ProtoInfo].direct_sources
+    descriptors_in = ctx.attr.proto[ProtoInfo].transitive_descriptor_sets
     js_outs = _declare_outs(ctx, proto_in, ".js")
     dts_outs = _declare_outs(ctx, proto_in, ".d.ts")
 
-    _protoc_action(ctx, proto_in, js_outs + dts_outs)
+    _protoc_action(ctx, proto_in, descriptors_in, js_outs + dts_outs)
 
     return [
         DefaultInfo(
