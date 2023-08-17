@@ -4,9 +4,13 @@ These are needed for local dev, and users must install them as well.
 See https://docs.bazel.build/versions/main/skylark/deploying.html#dependencies
 """
 
-load("//ts/private:maybe.bzl", http_archive = "maybe_http_archive")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", _http_archive = "http_archive")
+load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 load("//ts/private:npm_repositories.bzl", "npm_dependencies")
 load("//ts/private:versions.bzl", "TOOL_VERSIONS")
+
+def http_archive(**kwargs):
+    maybe(_http_archive, **kwargs)
 
 LATEST_TYPESCRIPT_VERSION = TOOL_VERSIONS.keys()[-1]
 
