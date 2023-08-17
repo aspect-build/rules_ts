@@ -7,6 +7,7 @@ proto_library(
     name = "logger_proto",
     srcs = ["logger.proto"],
     visibility = ["//visibility:public"],
+    deps = ["@com_google_protobuf//:any_proto"],
 )
 
 ts_proto_library(

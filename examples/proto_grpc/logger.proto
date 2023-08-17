@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package logger;
 
+import "google/protobuf/any.proto";
+
 service Logger {
   rpc SendLogMessage(LogMessage) returns (Empty) {}
 }
@@ -9,6 +11,7 @@ service Logger {
 message LogMessage {
   string message = 1;
   int64 time = 2;
+  google.protobuf.Any details = 3;
 }
 
 message Empty {}
