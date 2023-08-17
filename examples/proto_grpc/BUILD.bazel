@@ -1,0 +1,18 @@
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@aspect_rules_ts//ts:proto.bzl", "ts_proto_library")
+load("@npm//examples/proto_grpc:@bufbuild/protoc-gen-es/package_json.bzl", gen_bin = "bin")
+load("@npm//examples/proto_grpc:@bufbuild/protoc-gen-connect-es/package_json.bzl", gen_connect_bin = "bin")
+
+proto_library(
+    name = "logger_proto",
+    srcs = ["logger.proto"],
+    visibility = ["//visibility:public"],
+)
+
+ts_proto_library(
+    name = "logger_ts_proto",
+    gen_connect_es_bin = gen_connect_bin,
+    gen_es_bin = gen_bin,
+    proto = ":logger_proto",
+    visibility = ["//visibility:public"],
+)

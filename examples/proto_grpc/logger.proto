@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package logger;
+
+service Logger {
+  rpc SendLogMessage(LogMessage) returns (Empty) {}
+}
+
+message LogMessage {
+  string message = 1;
+  int64 time = 2;
+}
+
+message Empty {}
