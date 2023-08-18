@@ -1,0 +1,7 @@
+load("@aspect_bazel_lib//lib:write_source_files.bzl", "write_source_file")
+
+write_source_file(
+    name = "aspect_workflows_reusable",
+    in_file = "@aspect_workflows_action//:.github/workflows/.aspect-workflows-reusable.yaml",
+    out_file = ".aspect-workflows-reusable.yaml",
+)
