@@ -10,5 +10,8 @@
         "@types/node": "18.11.9",
         "@bufbuild/protoc-gen-connect-es": "^0.13.0",
         "@bufbuild/protoc-gen-es": "^1.3.0"
+    },
+    "scripts": {
+        "start": "bazel run server"
     }
 }
