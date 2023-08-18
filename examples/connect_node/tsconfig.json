@@ -1,0 +1,7 @@
+{
+    "compilerOptions": {
+        "lib": ["ES2015"],
+        "moduleResolution": "node",
+        "module": "ES2020"
+    }
+}

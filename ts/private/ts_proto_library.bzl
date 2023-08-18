@@ -1,7 +1,9 @@
 "Private implementation details for ts_proto_library"
 
+load("@aspect_rules_js//js:providers.bzl", "js_info")
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@rules_proto//proto:defs.bzl", "ProtoInfo")
+load(":ts_lib.bzl", ts_lib = "lib")
 
 def _short_path(f):
     return f.short_path
@@ -57,16 +59,10 @@ def _declare_outs(ctx, proto_srcs, ext):
         paths.relativize(s.short_path, ctx.label.package)
         for s in proto_srcs
     ]
-    result = [
-        ctx.actions.declare_file(s.replace(".proto", "_pb" + ext))
-        for s in relative_srcs
-    ]
+    files = [s.replace(".proto", "_pb" + ext) for s in relative_srcs]
     if ctx.attr.has_services:
-        result.extend([
-            ctx.actions.declare_file(s.replace(".proto", "_connect" + ext))
-            for s in relative_srcs
-        ])
-    return result
+        files.extend([s.replace(".proto", "_connect" + ext) for s in relative_srcs])
+    return ts_lib.declare_outputs(ctx, files)
 
 def _ts_proto_library_impl(ctx):
     proto_in = ctx.attr.proto[ProtoInfo].direct_sources
@@ -82,6 +78,12 @@ def _ts_proto_library_impl(ctx):
         ),
         OutputGroupInfo(
             types = depset(dts_outs),
+        ),
+        js_info(
+            declarations = depset(dts_outs),
+            transitive_declarations = depset(dts_outs),
+            sources = depset(js_outs),
+            transitive_sources = depset(js_outs),
         ),
     ]
 
