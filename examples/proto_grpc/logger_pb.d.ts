@@ -13,6 +13,7 @@ import type {
     PlainMessage,
 } from '@bufbuild/protobuf'
 import { Message, proto3 } from '@bufbuild/protobuf'
+import type { SayRequest } from '../connect_node/proto/eliza_pb.js'
 
 /**
  * @generated from message logger.LogMessage
@@ -32,6 +33,11 @@ export declare class LogMessage extends Message<LogMessage> {
      * @generated from field: google.protobuf.Any details = 3;
      */
     details?: Any
+
+    /**
+     * @generated from field: connectrpc.eliza.v1.SayRequest say_request = 4;
+     */
+    sayRequest?: SayRequest
 
     constructor(data?: PartialMessage<LogMessage>)
 
