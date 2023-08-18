@@ -1,0 +1,12 @@
+# See https://docs.aspect.build/v/workflows/config
+---
+bazel:
+    flags:
+        - --enable_bzlmod
+tasks:
+    buildifier:
+    test:
+        bazel:
+            flags:
+                # Allows tests to run bazelisk-in-bazel, since this is the cache folder used
+                - --test_env=XDG_CACHE_HOME

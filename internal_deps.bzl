@@ -6,6 +6,7 @@ statement from these, that's a bug in our distribution.
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", _http_archive = "http_archive")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
+load("//.github/workflows:deps.bzl", "aspect_workflows_github_actions_deps")
 
 def http_archive(**kwargs):
     maybe(_http_archive, **kwargs)
@@ -56,9 +57,7 @@ def rules_ts_internal_deps():
         name = "buildifier_prebuilt",
         sha256 = "e46c16180bc49487bfd0f1ffa7345364718c57334fa0b5b67cb5f27eba10f309",
         strip_prefix = "buildifier-prebuilt-6.1.0",
-        urls = [
-            "https://github.com/keith/buildifier-prebuilt/archive/6.1.0.tar.gz",
-        ],
+        urls = ["https://github.com/keith/buildifier-prebuilt/archive/6.1.0.tar.gz"],
     )
 
     http_archive(
@@ -67,3 +66,5 @@ def rules_ts_internal_deps():
         strip_prefix = "rules_swc-1.0.1",
         url = "https://github.com/aspect-build/rules_swc/releases/download/v1.0.1/rules_swc-v1.0.1.tar.gz",
     )
+
+    aspect_workflows_github_actions_deps()
