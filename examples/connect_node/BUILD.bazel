@@ -1,0 +1,35 @@
+load("@aspect_rules_js//js:defs.bzl", "js_binary")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+
+npm_link_all_packages()
+
+ts_project(
+    name = "connect_node",
+    srcs = [
+        "connect.ts",
+        "server.ts",
+    ],
+    deps = [
+        ":node_modules/@bufbuild/connect",
+        ":node_modules/@bufbuild/connect-fastify",
+        ":node_modules/@types/node",
+        ":node_modules/fastify",
+        "//examples/connect_node/proto:eliza_ts_proto",
+    ],
+)
+
+# Try it out:
+# $ bazel run server
+# $ curl \
+#   --header 'Content-Type: application/json' \
+#   --data '{"sentence": "I feel happy."}' \
+#    http://localhost:8080/connectrpc.eliza.v1.ElizaService/Say
+js_binary(
+    name = "server",
+    data = [
+        ":connect_node",
+        ":node_modules/@bufbuild/protobuf",
+    ],
+    entry_point = "server.js",
+)

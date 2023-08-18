@@ -1,4 +1,5 @@
 packages:
+    - connect_node
     - linked
     - linked_consumer
     - linked_tsconfig

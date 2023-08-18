@@ -1,6 +1,20 @@
 """# Protocol Buffers and gRPC
 
-Note this is not included in `defs.bzl` to avoid eager loads of rules_proto for all rules_ts users.
+`ts_proto_library` uses the Connect library from bufbuild, and supports both Web and Node.js:
+
+- https://connectrpc.com/docs/web/getting-started
+- https://connectrpc.com/docs/node/getting-started
+
+This Bazel integration follows the "Local Generation" mechanism described at
+https://connectrpc.com/docs/web/generating-code#local-generation,
+using the `@bufbuild/protoc-gen-connect-es` and `@bufbuild/protoc-gen-es` packages as plugins to protoc.
+
+> Note this Public API surface is not included in `defs.bzl` to avoid eager loads of rules_proto for all rules_ts users.
+
+Future work:
+- Add support for generating the `ts_proto_library` targets in [aspect configure](https://docs.aspect.build/v/cli/commands/aspect_configure)
+- Allow users to choose other plugins. We intend to wait until http://github.com/bazelbuild/rules_proto supports protoc plugins.
+- Allow users to control the output format. Currently it is hard-coded to `js+dts`.
 """
 
 load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
@@ -26,6 +40,9 @@ def ts_proto_library(name, gen_es_bin, gen_connect_es_bin = None, has_services =
             and replaces with the typical output filenames.
         **kwargs: additional named arguments to the ts_proto_library rule
     """
+    if has_services and not gen_connect_es_bin:
+        fail("When has_services is True, gen_connect_es_bin must be provided")
+
     protoc_gen_es_target = "_{}.gen_es".format(name)
     protoc_gen_connect_es_target = "_{}.gen_connect_es".format(name)
 
