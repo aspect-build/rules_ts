@@ -2,12 +2,10 @@
 
 load("@aspect_rules_js//js:providers.bzl", "JsInfo", "js_info")
 load("@aspect_rules_js//js:libs.bzl", "js_lib_helpers")
-load("@bazel_skylib//lib:paths.bzl", "paths")
-load("@rules_proto//proto:defs.bzl", "ProtoInfo")
-load(":ts_lib.bzl", ts_lib = "lib")
+load("@rules_proto//proto:defs.bzl", "ProtoInfo", "proto_common")
 
 # buildifier: disable=function-docstring-header
-def _protoc_action(ctx, inputs, descriptors, outputs, options = {
+def _protoc_action(ctx, proto_info, outputs, options = {
     "keep_empty_files": True,
     "target": "js+dts",
 }):
@@ -19,6 +17,8 @@ def _protoc_action(ctx, inputs, descriptors, outputs, options = {
       '--descriptor_set_in=bazel-out/k8-fastbuild/bin/external/com_google_protobuf/timestamp_proto-descriptor-set.proto.bin:bazel-out/k8-fastbuild/bin/example/thing/thing_proto-descriptor-set.proto.bin:bazel-out/k8-fastbuild/bin/example/place/place_proto-descriptor-set.proto.bin:bazel-out/k8-fastbuild/bin/example/person/person_proto-descriptor-set.proto.bin' \
       example/person/person.proto
     """
+    inputs = depset(proto_info.direct_sources, transitive = [proto_info.transitive_descriptor_sets])
+
     args = ctx.actions.args()
     args.add_joined(["--plugin", "protoc-gen-es", ctx.executable.protoc_gen_es.path], join_with = "=")
     for (key, value) in options.items():
@@ -32,14 +32,15 @@ def _protoc_action(ctx, inputs, descriptors, outputs, options = {
         args.add_joined(["--connect-es_out", ctx.bin_dir.path], join_with = "=")
 
     args.add("--descriptor_set_in")
-    args.add_joined(descriptors, join_with = ":")
+    args.add_joined(proto_info.transitive_descriptor_sets, join_with = ":")
 
-    args.add_all(inputs)
+    args.add_all(proto_info.direct_sources)
+
     ctx.actions.run(
         executable = ctx.executable.protoc,
         progress_message = "Generating .js/.d.ts from %{label}",
         outputs = outputs,
-        inputs = depset(inputs, transitive = [descriptors]),
+        inputs = inputs,
         arguments = [args],
         tools = [ctx.executable.protoc_gen_es] + (
             [ctx.executable.protoc_gen_connect_es] if ctx.attr.has_services else []
@@ -47,29 +48,21 @@ def _protoc_action(ctx, inputs, descriptors, outputs, options = {
         env = {"BAZEL_BINDIR": ctx.bin_dir.path},
     )
 
-def _declare_outs(ctx, proto_srcs, ext):
-    """
-    Predict the outputs the plugins will write.
-
-    i.e. for [//path/to:subdir/my.proto] we should produce [subdir/my_pb.js]
-    """
-    relative_srcs = [
-        paths.relativize(s.short_path, ctx.label.package)
-        for s in proto_srcs
-    ]
-    files = [s.replace(".proto", "_pb" + ext) for s in relative_srcs]
+def _declare_outs(ctx, info, ext):
+    outs = proto_common.declare_generated_files(ctx.actions, info, "_pb" + ext)
     if ctx.attr.has_services:
-        files.extend([s.replace(".proto", "_connect" + ext) for s in relative_srcs])
-    return ts_lib.declare_outputs(ctx, files)
+        outs.extend(proto_common.declare_generated_files(ctx.actions, info, "_connect" + ext))
+    return outs
 
 def _ts_proto_library_impl(ctx):
-    proto_in = ctx.attr.proto[ProtoInfo].direct_sources
-    descriptors_in = ctx.attr.proto[ProtoInfo].transitive_descriptor_sets
-    js_outs = _declare_outs(ctx, proto_in, ".js")
-    dts_outs = _declare_outs(ctx, proto_in, ".d.ts")
+    info = ctx.attr.proto[ProtoInfo]
+    js_outs = _declare_outs(ctx, info, ".js")
+    dts_outs = _declare_outs(ctx, info, ".d.ts")
 
-    _protoc_action(ctx, proto_in, descriptors_in, js_outs + dts_outs)
+    _protoc_action(ctx, info, js_outs + dts_outs)
 
+    direct_srcs = depset(js_outs)
+    direct_decls = depset(dts_outs)
     transitive_srcs = js_lib_helpers.gather_transitive_sources(
         sources = js_outs,
         targets = ctx.attr.deps,
@@ -79,15 +72,11 @@ def _ts_proto_library_impl(ctx):
         targets = ctx.attr.deps,
     )
     return [
-        DefaultInfo(
-            files = depset(js_outs),
-        ),
-        OutputGroupInfo(
-            types = depset(dts_outs),
-        ),
+        DefaultInfo(files = direct_srcs),
+        OutputGroupInfo(types = direct_decls),
         js_info(
-            declarations = depset(dts_outs),
-            sources = depset(js_outs),
+            declarations = direct_decls,
+            sources = direct_srcs,
             transitive_declarations = transitive_decls,
             transitive_sources = transitive_srcs,
         ),
