@@ -1,12 +1,10 @@
 "Private implementation details for ts_proto_library"
 
-load("@aspect_rules_js//js:providers.bzl", "js_info")
+load("@aspect_rules_js//js:providers.bzl", "JsInfo", "js_info")
+load("@aspect_rules_js//js:libs.bzl", "js_lib_helpers")
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@rules_proto//proto:defs.bzl", "ProtoInfo")
 load(":ts_lib.bzl", ts_lib = "lib")
-
-def _short_path(f):
-    return f.short_path
 
 # buildifier: disable=function-docstring-header
 def _protoc_action(ctx, inputs, descriptors, outputs, options = {
@@ -72,6 +70,14 @@ def _ts_proto_library_impl(ctx):
 
     _protoc_action(ctx, proto_in, descriptors_in, js_outs + dts_outs)
 
+    transitive_srcs = js_lib_helpers.gather_transitive_sources(
+        sources = js_outs,
+        targets = ctx.attr.deps,
+    )
+    transitive_decls = js_lib_helpers.gather_transitive_declarations(
+        declarations = dts_outs,
+        targets = ctx.attr.deps,
+    )
     return [
         DefaultInfo(
             files = depset(js_outs),
@@ -81,15 +87,19 @@ def _ts_proto_library_impl(ctx):
         ),
         js_info(
             declarations = depset(dts_outs),
-            transitive_declarations = depset(dts_outs),
             sources = depset(js_outs),
-            transitive_sources = depset(js_outs),
+            transitive_declarations = transitive_decls,
+            transitive_sources = transitive_srcs,
         ),
     ]
 
 ts_proto_library = rule(
     implementation = _ts_proto_library_impl,
     attrs = {
+        "deps": attr.label_list(
+            providers = [JsInfo],
+            doc = "Other ts_proto_library rules. TODO: could we collect them with an aspect",
+        ),
         "has_services": attr.bool(
             doc = "whether to generate service stubs with gen-connect-es",
             default = True,
