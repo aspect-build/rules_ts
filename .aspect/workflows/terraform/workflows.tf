@@ -83,14 +83,14 @@ module "aspect_workflows" {
   gha_runner_groups = {
     # The default runner group is use for the main build & test workflows.
     default = {
-      agent_idle_timeout_min    = 5
-      gh_repo                   = "aspect-build/rules_ts"
-      gha_workflow_ids          = []
-      max_runners               = 5
-      min_runners               = 0
-      queue                     = "aspect-default"
-      resource_type             = "default"
-      warming                   = true
+      agent_idle_timeout_min = 5
+      gh_repo                = "aspect-build/rules_ts"
+      gha_workflow_ids       = []
+      max_runners            = 5
+      min_runners            = 0
+      queue                  = "aspect-default"
+      resource_type          = "default"
+      warming                = true
     }
     # The warming runner group is used for the periodic warming job that creates
     # warming archives for use by other runner groups.
