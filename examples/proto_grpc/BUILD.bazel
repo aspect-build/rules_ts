@@ -1,7 +1,12 @@
 load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@aspect_rules_js//js:defs.bzl", "js_test")
 load("@aspect_rules_ts//ts:proto.bzl", "ts_proto_library")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@npm//examples/proto_grpc:@bufbuild/protoc-gen-es/package_json.bzl", gen_bin = "bin")
 load("@npm//examples/proto_grpc:@bufbuild/protoc-gen-connect-es/package_json.bzl", gen_connect_bin = "bin")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+
+npm_link_all_packages(name = "node_modules")
 
 proto_library(
     name = "logger_proto",
@@ -10,6 +15,7 @@ proto_library(
     deps = [
         "//examples/connect_node/proto:eliza_proto",
         "@com_google_protobuf//:any_proto",
+        "@com_google_protobuf//:timestamp_proto",
     ],
 )
 
@@ -19,4 +25,22 @@ ts_proto_library(
     gen_es_bin = gen_bin,
     proto = ":logger_proto",
     visibility = ["//visibility:public"],
+    deps = ["//examples/connect_node/proto"],
+)
+
+ts_project(
+    name = "proto_grpc",
+    srcs = ["main.ts"],
+    deps = [":logger_ts_proto"],
+)
+
+js_test(
+    name = "main",
+    data = [
+        "package.json",  # for type=module
+        "proto_grpc",
+        # TODO: but I didn't import this!
+        ":node_modules/@bufbuild/protobuf",
+    ],
+    entry_point = "main.js",
 )

@@ -11,6 +11,7 @@ import type {
     JsonValue,
     PartialMessage,
     PlainMessage,
+    Timestamp,
 } from '@bufbuild/protobuf'
 import { Message, proto3 } from '@bufbuild/protobuf'
 import type { SayRequest } from '../connect_node/proto/eliza_pb.js'
@@ -25,9 +26,9 @@ export declare class LogMessage extends Message<LogMessage> {
     message: string
 
     /**
-     * @generated from field: int64 time = 2;
+     * @generated from field: google.protobuf.Timestamp time = 2;
      */
-    time: bigint
+    time?: Timestamp
 
     /**
      * @generated from field: google.protobuf.Any details = 3;
