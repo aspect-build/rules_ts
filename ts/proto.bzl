@@ -64,9 +64,10 @@ def ts_proto_library(name, gen_es_bin, gen_connect_es_bin = None, has_services =
     if not copy_files:
         return
     if not files_to_copy:
-        files_to_copy = [s.replace(".proto", "_pb.d.ts") for s in native.glob(["*.proto"])]
+        proto_srcs = native.glob(["**/*.proto"])
+        files_to_copy = [s.replace(".proto", "_pb.d.ts") for s in proto_srcs]
         if has_services:
-            files_to_copy.extend([s.replace(".proto", "_connect.d.ts") for s in native.glob(["*.proto"])])
+            files_to_copy.extend([s.replace(".proto", "_connect.d.ts") for s in proto_srcs])
 
     files_target = "_{}.filegroup".format(name)
     dir_target = "_{}.directory".format(name)
