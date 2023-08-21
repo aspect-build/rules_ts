@@ -3,97 +3,65 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type {
-    Any,
-    BinaryReadOptions,
-    FieldList,
-    JsonReadOptions,
-    JsonValue,
-    PartialMessage,
-    PlainMessage,
-    Timestamp,
-} from '@bufbuild/protobuf'
-import { Message, proto3 } from '@bufbuild/protobuf'
-import type { SayRequest } from '../connect_node/proto/eliza_pb.js'
+import type { Any, BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage, Timestamp } from "@bufbuild/protobuf";
+import { Message, proto3 } from "@bufbuild/protobuf";
+import type { SayRequest } from "../connect_node/proto/eliza_pb.js";
 
 /**
  * @generated from message logger.LogMessage
  */
 export declare class LogMessage extends Message<LogMessage> {
-    /**
-     * @generated from field: string message = 1;
-     */
-    message: string
+  /**
+   * @generated from field: string message = 1;
+   */
+  message: string;
 
-    /**
-     * @generated from field: google.protobuf.Timestamp time = 2;
-     */
-    time?: Timestamp
+  /**
+   * @generated from field: google.protobuf.Timestamp time = 2;
+   */
+  time?: Timestamp;
 
-    /**
-     * @generated from field: google.protobuf.Any details = 3;
-     */
-    details?: Any
+  /**
+   * @generated from field: google.protobuf.Any details = 3;
+   */
+  details?: Any;
 
-    /**
-     * @generated from field: connectrpc.eliza.v1.SayRequest say_request = 4;
-     */
-    sayRequest?: SayRequest
+  /**
+   * @generated from field: connectrpc.eliza.v1.SayRequest say_request = 4;
+   */
+  sayRequest?: SayRequest;
 
-    constructor(data?: PartialMessage<LogMessage>)
+  constructor(data?: PartialMessage<LogMessage>);
 
-    static readonly runtime: typeof proto3
-    static readonly typeName = 'logger.LogMessage'
-    static readonly fields: FieldList
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "logger.LogMessage";
+  static readonly fields: FieldList;
 
-    static fromBinary(
-        bytes: Uint8Array,
-        options?: Partial<BinaryReadOptions>
-    ): LogMessage
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): LogMessage;
 
-    static fromJson(
-        jsonValue: JsonValue,
-        options?: Partial<JsonReadOptions>
-    ): LogMessage
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): LogMessage;
 
-    static fromJsonString(
-        jsonString: string,
-        options?: Partial<JsonReadOptions>
-    ): LogMessage
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): LogMessage;
 
-    static equals(
-        a: LogMessage | PlainMessage<LogMessage> | undefined,
-        b: LogMessage | PlainMessage<LogMessage> | undefined
-    ): boolean
+  static equals(a: LogMessage | PlainMessage<LogMessage> | undefined, b: LogMessage | PlainMessage<LogMessage> | undefined): boolean;
 }
 
 /**
  * @generated from message logger.Empty
  */
 export declare class Empty extends Message<Empty> {
-    constructor(data?: PartialMessage<Empty>)
+  constructor(data?: PartialMessage<Empty>);
 
-    static readonly runtime: typeof proto3
-    static readonly typeName = 'logger.Empty'
-    static readonly fields: FieldList
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "logger.Empty";
+  static readonly fields: FieldList;
 
-    static fromBinary(
-        bytes: Uint8Array,
-        options?: Partial<BinaryReadOptions>
-    ): Empty
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Empty;
 
-    static fromJson(
-        jsonValue: JsonValue,
-        options?: Partial<JsonReadOptions>
-    ): Empty
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): Empty;
 
-    static fromJsonString(
-        jsonString: string,
-        options?: Partial<JsonReadOptions>
-    ): Empty
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Empty;
 
-    static equals(
-        a: Empty | PlainMessage<Empty> | undefined,
-        b: Empty | PlainMessage<Empty> | undefined
-    ): boolean
+  static equals(a: Empty | PlainMessage<Empty> | undefined, b: Empty | PlainMessage<Empty> | undefined): boolean;
 }
+

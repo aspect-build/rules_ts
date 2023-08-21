@@ -3,23 +3,24 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { Empty, LogMessage } from './logger_pb.js'
-import { MethodKind } from '@bufbuild/protobuf'
+import { Empty, LogMessage } from "./logger_pb.js";
+import { MethodKind } from "@bufbuild/protobuf";
 
 /**
  * @generated from service logger.Logger
  */
 export declare const Logger: {
-    readonly typeName: 'logger.Logger'
-    readonly methods: {
-        /**
-         * @generated from rpc logger.Logger.SendLogMessage
-         */
-        readonly sendLogMessage: {
-            readonly name: 'SendLogMessage'
-            readonly I: typeof LogMessage
-            readonly O: typeof Empty
-            readonly kind: MethodKind.Unary
-        }
-    }
-}
+  readonly typeName: "logger.Logger",
+  readonly methods: {
+    /**
+     * @generated from rpc logger.Logger.SendLogMessage
+     */
+    readonly sendLogMessage: {
+      readonly name: "SendLogMessage",
+      readonly I: typeof LogMessage,
+      readonly O: typeof Empty,
+      readonly kind: MethodKind.Unary,
+    },
+  }
+};
+

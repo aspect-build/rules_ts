@@ -1,9 +1,7 @@
 load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@aspect_rules_js//js:defs.bzl", "js_test")
-load("@aspect_rules_ts//ts:proto.bzl", "ts_proto_library")
+load("//examples/proto_grpc:defs.bzl", "ts_proto_library")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
-load("@npm//examples/proto_grpc:@bufbuild/protoc-gen-es/package_json.bzl", gen_bin = "bin")
-load("@npm//examples/proto_grpc:@bufbuild/protoc-gen-connect-es/package_json.bzl", gen_connect_bin = "bin")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 
 npm_link_all_packages(name = "node_modules")
@@ -21,8 +19,6 @@ proto_library(
 
 ts_proto_library(
     name = "logger_ts_proto",
-    gen_connect_es_bin = gen_connect_bin,
-    gen_es_bin = gen_bin,
     proto = ":logger_proto",
     visibility = ["//visibility:public"],
     deps = ["//examples/connect_node/proto"],
