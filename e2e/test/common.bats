@@ -24,6 +24,14 @@ load("@aspect_rules_ts//ts:repositories.bzl", "rules_ts_dependencies")
 # TODO(#361): upgrade to 5.x
 rules_ts_dependencies(ts_version = "4.9.5")
 
+load("@aspect_rules_js//js:repositories.bzl", "rules_js_dependencies")
+
+rules_js_dependencies()
+
+load("@bazel_features//:deps.bzl", "bazel_features_deps")
+
+bazel_features_deps()
+
 # Fetch and register node, if you haven't already
 load("@rules_nodejs//nodejs:repositories.bzl", "DEFAULT_NODE_VERSION", "nodejs_register_toolchains")
 
