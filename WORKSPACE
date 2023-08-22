@@ -12,12 +12,16 @@ load(":internal_deps.bzl", "rules_ts_internal_deps")
 # Fetch deps needed only locally for development
 rules_ts_internal_deps()
 
-load("//ts:repositories.bzl", "rules_ts_dependencies")
+load("//ts:repositories.bzl", "rules_ts_bazel_dependencies", "rules_ts_dependencies")
 
 # Fetch dependencies which users need as well
-# You can verify the typescript version used by Bazel:
-# bazel run -- @npm_typescript//:tsc --version
-rules_ts_dependencies(ts_version_from = "//examples:package.json")
+# Note, we have to be different and first load just the bazel dependencies, since we
+# need to bootstrap rules_nodejs before we can load from @npm to get our typescript version.
+rules_ts_bazel_dependencies()
+
+load("@aspect_rules_js//js:repositories.bzl", "rules_js_dependencies")
+
+rules_js_dependencies()
 
 load("@aspect_rules_js//js:repositories.bzl", "rules_js_dependencies")
 
@@ -79,3 +83,7 @@ npm_translate_lock(
 load("@npm//:repositories.bzl", "npm_repositories")
 
 npm_repositories()
+
+# You can verify the typescript version used by Bazel:
+# bazel run -- @npm_typescript//:tsc --version
+rules_ts_dependencies(ts_version_from = "@npm//examples:typescript/resolved.json")

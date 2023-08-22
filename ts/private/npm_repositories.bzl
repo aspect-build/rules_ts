@@ -11,12 +11,18 @@ worker_versions = struct(
 )
 
 def _http_archive_version_impl(rctx):
+    integrity = None
     if rctx.attr.version:
         version = rctx.attr.version
     else:
         json_path = rctx.path(rctx.attr.version_from)
         p = json.decode(rctx.read(json_path))
-        if "devDependencies" in p.keys() and "typescript" in p["devDependencies"]:
+
+        # Allow use of "resolved.json", see https://github.com/aspect-build/rules_js/pull/1221
+        if "$schema" in p.keys() and p["$schema"] == "https://docs.aspect.build/rules/aspect_rules_js/docs/npm_translate_lock":
+            ts = p["version"]
+            integrity = p["integrity"]
+        elif "devDependencies" in p.keys() and "typescript" in p["devDependencies"]:
             ts = p["devDependencies"]["typescript"]
         elif "dependencies" in p.keys() and "typescript" in p["dependencies"]:
             ts = p["dependencies"]["typescript"]
@@ -27,7 +33,9 @@ def _http_archive_version_impl(rctx):
             You can supply an exact 'ts_version' attribute to 'rules_ts_dependencies' to bypass this check.""" % ts)
         version = ts
 
-    if rctx.attr.integrity:
+    if integrity:
+        pass
+    elif rctx.attr.integrity:
         integrity = rctx.attr.integrity
     elif version in TOOL_VERSIONS.keys():
         integrity = TOOL_VERSIONS[version]
