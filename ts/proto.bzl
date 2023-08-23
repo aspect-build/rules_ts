@@ -29,28 +29,6 @@ rules_proto_dependencies()
 
 If you use bzlmod/`MODULE.bazel` then no extra install is required.
 
-Developer Ergonomics
---------------------
-
-The `gen*_es_bin` attributes are needed to reference user-installed npm packages, however they make each call to `ts_proto_library` longer.
-
-You may want to create a macro in your workspace, for example `//ts:defs.bzl` containing
-
-```
-load("@aspect_rules_ts//ts:proto.bzl", _ts_proto_library = "ts_proto_library")
-load("@npm//path/to/linked:@bufbuild/protoc-gen-es/package_json.bzl", gen_bin = "bin")
-load("@npm//path/to/linked:@bufbuild/protoc-gen-connect-es/package_json.bzl", gen_connect_bin = "bin")
-
-def ts_proto_library(**kwargs):
-    _ts_proto_library(
-        gen_connect_es_bin = gen_connect_bin,
-        gen_es_bin = gen_bin,
-        **kwargs
-    )
-```
-
-and then load this `ts_proto_library` macro so that developer-facing use sites can omit the npm package attributes.
-
 Future work
 -----------
 
@@ -60,46 +38,65 @@ Future work
 """
 
 load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
-load("@aspect_bazel_lib//lib:directory_path.bzl", "make_directory_path")
+load("@aspect_bazel_lib//lib:directory_path.bzl", "directory_path", "make_directory_path")
 load("@aspect_bazel_lib//lib:write_source_files.bzl", "write_source_files")
+load("@aspect_rules_js//js:defs.bzl", "js_binary")
 load("//ts/private:ts_proto_library.bzl", ts_proto_library_rule = "ts_proto_library")
 
-def ts_proto_library(name, gen_es_bin, gen_connect_es_bin = None, has_services = True, copy_files = True, files_to_copy = None, **kwargs):
+def ts_proto_library(name, node_modules, has_services = True, copy_files = True, files_to_copy = None, **kwargs):
     """
     A macro to generate JavaScript code and TypeScript typings from .proto files.
 
     Args:
         name: name of resulting ts_proto_library target
-        gen_es_bin: the package.json "bin" entry for https://www.npmjs.com/package/@bufbuild/protoc-gen-es
-            typically loaded with
-            `load("@npm//path/to/pkg:@bufbuild/protoc-gen-es/package_json.bzl", gen_bin = "bin")`
-        gen_connect_es_bin: the package.json "bin" entry for https://www.npmjs.com/package/@bufbuild/protoc-gen-connect-es
-            typically loaded with
-            `load("@npm//path/to/pkg:@bufbuild/protoc-gen-connect-es/package_json.bzl", gen_connect_bin = "bin")`
+        node_modules: FIXME
         has_services: whether the proto file contains a service, and therefore *_connect.{js,d.ts} should be written.
         copy_files: whether to copy the resulting .d.ts files back to the source tree, for the editor to locate them.
         files_to_copy: which files from the protoc output to copy. By default, scans for *.proto in the current package
             and replaces with the typical output filenames.
         **kwargs: additional named arguments to the ts_proto_library rule
     """
-    if has_services and not gen_connect_es_bin:
-        fail("When has_services is True, gen_connect_es_bin must be provided")
-
+    if type(node_modules) != "string":
+        fail("node_modules should be a label, not a " + type(node_modules))
     protoc_gen_es_target = "_{}.gen_es".format(name)
-    protoc_gen_connect_es_target = "_{}.gen_connect_es".format(name)
+    protoc_gen_es_entry = protoc_gen_es_target + "__entry_point"
 
-    gen_es_bin.protoc_gen_es_binary(
+    # Reach into the node_modules to find the entry points
+    directory_path(
+        name = protoc_gen_es_entry,
+        tags = ["manual"],
+        directory = node_modules + "/@bufbuild/protoc-gen-es/dir",
+        path = "bin/protoc-gen-es",
+    )
+    js_binary(
         name = protoc_gen_es_target,
+        data = [node_modules + "/@bufbuild/protoc-gen-es"],
+        entry_point = protoc_gen_es_entry,
     )
 
-    gen_connect_es_bin.protoc_gen_connect_es_binary(
-        name = protoc_gen_connect_es_target,
-    )
+    protoc_gen_connect_es_target = None
+    if has_services:
+        protoc_gen_connect_es_target = "_{}.gen_connect_es".format(name)
+        protoc_gen_connect_es_entry = protoc_gen_connect_es_target + "__entry_point"
+        directory_path(
+            name = protoc_gen_connect_es_entry,
+            tags = ["manual"],
+            directory = node_modules + "/@bufbuild/protoc-gen-connect-es/dir",
+            path = "bin/protoc-gen-connect-es",
+        )
+        js_binary(
+            name = protoc_gen_connect_es_target,
+            data = [node_modules + "/@bufbuild/protoc-gen-connect-es"],
+            entry_point = protoc_gen_connect_es_entry,
+        )
 
     ts_proto_library_rule(
         name = name,
         protoc_gen_es = protoc_gen_es_target,
         protoc_gen_connect_es = protoc_gen_connect_es_target,
+        # The codegen always has a runtime dependency on the protobuf runtime
+        deps = kwargs.pop("deps", []) + [node_modules + "/@bufbuild/protobuf"],
+        has_services = has_services,
         **kwargs
     )
 

@@ -1,4 +1,4 @@
 # NB: we don't import common bazelrc shared with e2e workspaces
 
-common --experimental_enable_bzlmod
+common --enable_bzlmod
 common --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig

@@ -107,7 +107,6 @@ ts_proto_library = rule(
         ),
         "protoc_gen_connect_es": attr.label(
             doc = "protoc plugin to generate services",
-            mandatory = True,
             executable = True,
             cfg = "exec",
         ),
