@@ -36,9 +36,9 @@ def rules_ts_internal_deps():
 
     http_archive(
         name = "aspect_rules_jasmine",
-        sha256 = "5b8a9659221f2050012fb93c230ab5a5029b0b9d8aaa63ec9f1469e82a6c977e",
-        strip_prefix = "rules_jasmine-0.4.0",
-        url = "https://github.com/aspect-build/rules_jasmine/releases/download/v0.4.0/rules_jasmine-v0.4.0.tar.gz",
+        sha256 = "4c16ef202d1e53fd880e8ecc9e0796802201ea9c89fa32f52d5d633fff858cac",
+        strip_prefix = "rules_jasmine-1.1.1",
+        url = "https://github.com/aspect-build/rules_jasmine/releases/download/v1.1.1/rules_jasmine-v1.1.1.tar.gz",
     )
 
     http_archive(

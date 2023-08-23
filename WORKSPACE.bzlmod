@@ -1,0 +1,2 @@
+# Marker file that this is the root of a Bazel workspace.
+# This file replaces WORKSPACE.bazel under --enable_bzlmod.

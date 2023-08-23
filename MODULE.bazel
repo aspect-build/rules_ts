@@ -7,10 +7,14 @@ module(
 )
 
 bazel_dep(name = "bazel_skylib", version = "1.4.1")
-bazel_dep(name = "buildifier_prebuilt", version = "6.0.0.1", dev_dependency = True)
-bazel_dep(name = "rules_nodejs", version = "5.8.2", dev_dependency = True)
 bazel_dep(name = "aspect_rules_js", version = "1.29.2")
 bazel_dep(name = "aspect_bazel_lib", version = "1.29.2")
+
+bazel_dep(name = "bazel_skylib_gazelle_plugin", version = "1.4.2", dev_dependency = True)
+bazel_dep(name = "buildifier_prebuilt", version = "6.0.0.1", dev_dependency = True)
+bazel_dep(name = "gazelle", version = "0.32.0", dev_dependency = True, repo_name = "bazel_gazelle")
+bazel_dep(name = "rules_nodejs", version = "5.8.2", dev_dependency = True)
+bazel_dep(name = "aspect_rules_jasmine", version = "1.1.1")
 
 rules_ts_ext = use_extension(
     "@aspect_rules_ts//ts:extensions.bzl",
@@ -18,3 +22,16 @@ rules_ts_ext = use_extension(
     dev_dependency = True,
 )
 rules_ts_ext.deps(ts_version_from = "//examples:package.json")
+use_repo(rules_ts_ext, "npm_typescript")
+
+npm = use_extension(
+    "@aspect_rules_js//npm:extensions.bzl",
+    "npm",
+    dev_dependency = True,
+)
+npm.npm_translate_lock(
+    name = "npm",
+    pnpm_lock = "//examples:pnpm-lock.yaml",
+    verify_node_modules_ignored = "//:.bazelignore",
+)
+use_repo(npm, "npm")
