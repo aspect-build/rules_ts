@@ -2,7 +2,6 @@
 
 # Protocol Buffers and gRPC (UNSTABLE)
 
-::WARNING::
 **UNSTABLE API**: contents of this page are not subject to our usual semver guarantees.
 We may make breaking changes in any release.
 Please try this API and provide feedback.
@@ -18,6 +17,19 @@ https://connectrpc.com/docs/web/generating-code#local-generation,
 using the `@bufbuild/protoc-gen-connect-es` and `@bufbuild/protoc-gen-es` packages as plugins to protoc.
 
 Note: this API surface is not included in `defs.bzl` to avoid eager loads of rules_proto for all rules_ts users.
+
+Installation
+------------
+
+If you install rules_ts in `WORKSPACE`, you'll need to install the deps of rules_proto, like this:
+
+```
+load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies")
+
+rules_proto_dependencies()
+```
+
+If you use bzlmod/`MODULE.bazel` then no extra install is required.
 
 Developer Ergonomics
 --------------------
