@@ -1,7 +1,7 @@
 load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@aspect_rules_js//js:defs.bzl", "js_test")
-load("//examples/proto_grpc:defs.bzl", "ts_proto_library")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@aspect_rules_ts//ts:proto.bzl", "ts_proto_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 
 npm_link_all_packages(name = "node_modules")
@@ -19,6 +19,7 @@ proto_library(
 
 ts_proto_library(
     name = "logger_ts_proto",
+    node_modules = ":node_modules",
     proto = ":logger_proto",
     visibility = ["//visibility:public"],
     deps = ["//examples/connect_node/proto"],

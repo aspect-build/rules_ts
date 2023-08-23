@@ -1,5 +1,5 @@
 load("@rules_proto//proto:defs.bzl", "proto_library")
-load("//examples/proto_grpc:defs.bzl", "ts_proto_library")
+load("@aspect_rules_ts//ts:proto.bzl", "ts_proto_library")
 
 proto_library(
     name = "s_proto",
@@ -20,6 +20,7 @@ proto_library(
 ts_proto_library(
     name = "s_ts_proto",
     copy_files = False,
+    node_modules = "//examples/proto_grpc:node_modules",
     proto = ":s_proto",
     visibility = ["//visibility:public"],
 )
