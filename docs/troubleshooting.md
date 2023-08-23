@@ -21,7 +21,39 @@ You can often create a minimal repro of your problem outside of Bazel.
 This is a good way to bisect whether your issue is purely with TypeScript, or there's something
 Bazel-specific going on.
 
-# Not reproducible ts_project worker bugs
+# Getting unstuck
+
+The basic methodology for diagnosing problems is:
+
+1. Gather information from Bazel about how `tsc` is spawned, like with `bazel aquery //path/to:my_ts_project`.
+1. Reason about whether Bazel is providing all the inputs to `tsc` that you expect it to need. If not, the problem is with the dependencies.
+1. Reason about whether Bazel has predicted the right outputs.
+1. Gather information from TypeScript, typically by adding flags to the `args` attribute of the failing `ts_project`, as described below. Be prepared to deal with a large volume of data, like by writing the output to a file and using tools like an editor or unix utilities to analyze it.
+1. Reason about whether TypeScript is looking for a file in the wrong place, or writing a file to the wrong place.
+
+## Verbose mode
+
+Running your build with `--@aspect_rules_ts//ts:verbose` causes the `ts_project` rule to enable several
+flags for the TypeScript compiler. This produces a ton of output, so you'll probably want to 
+redirect the stdout to a file that you can analyze with power tools.
+
+## Problems with Persistent Workers
+
+When Worker Support is enabled, we run `tsc` in a "watch mode" using the [Bazel Persistent Worker](https://bazel.build/remote/persistent) feature.
+See the [`supports_workers`](https://docs.aspect.build/rules/aspect_rules_ts/docs/rules#supports_workers-1) attribute for docs on enabling this feature.
+
+### Non-deterministic behavior
+
+Persistent workers risk leaking state from one compilation to another, and you may still encounter such bugs, for example:
+- removing a required types package from `deps` but the compilation still succeeds
+- outputs created by a previous compilation are still produced even though the source file is deleted
+
+You can confirm that it's a worker bug by running `bazel shutdown` and trying again. If that resolves the issue, it means that some state was leaking.
+
+Please check for issues with persistent workers:
+[persistent workers label](https://github.com/aspect-build/rules_ts/issues?q=label%3A%22persistent+workers%22)
+
+### Not reproducible ts_project worker bugs
 Not reproducible ts_project, a.k.a. state, bugs has been a challenge for anyone to diagnose and possibly, fix in ts_project. 
 Not knowing what state the worker has been at when it falsely failed, or what went wrong along the way is hard to know.
 For this, we introduced support  for `--worker_verbose` flag which prints a bunch of helpful logs to worker log file.
@@ -47,37 +79,6 @@ tar -cf logs.tar $(ls $(bazel info output_base)/bazel-workers/worker-*-TsProject
 ```
 
 This will help us understand what went wrong in your case, and hopefully implement a permanent fix for it.
-
-
-# Getting unstuck
-
-The basic methodology for diagnosing problems is:
-
-1. Gather information from Bazel about how `tsc` is spawned, like with `bazel aquery //path/to:my_ts_project`.
-1. Reason about whether Bazel is providing all the inputs to `tsc` that you expect it to need. If not, the problem is with the dependencies.
-1. Reason about whether Bazel has predicted the right outputs.
-1. Gather information from TypeScript, typically by adding flags to the `args` attribute of the failing `ts_project`, as described below. Be prepared to deal with a large volume of data, like by writing the output to a file and using tools like an editor or unix utilities to analyze it.
-1. Reason about whether TypeScript is looking for a file in the wrong place, or writing a file to the wrong place.
-
-## Verbose mode
-
-Running your build with `--@aspect_rules_ts//ts:verbose` causes the `ts_project` rule to enable several
-flags for the TypeScript compiler. This produces a ton of output, so you'll probably want to 
-redirect the stdout to a file that you can analyze with power tools.
-
-## Non-deterministic behavior
-
-When Worker Support is enabled, we run `tsc` in a "watch mode" using the [Bazel Persistent Worker](https://bazel.build/remote/persistent) feature.
-See the [`supports_workers`](https://docs.aspect.build/rules/aspect_rules_ts/docs/rules#supports_workers-1) attribute for docs on enabling this feature.
-
-However, this risks leaking state from one compilation to another, and you may still encounter such bugs, for example:
-- removing a required types package from `deps` but the compilation still succeeds
-- outputs created by a previous compilation are still produced even though the source file is deleted
-
-You can confirm that it's a worker bug by running `bazel shutdown` and trying again. If that resolves the issue, it means that some state was leaking.
-
-Please check for issues with persistent workers:
-[persistent workers label](https://github.com/aspect-build/rules_ts/issues?q=label%3A%22persistent+workers%22)
 
 ## Which files should be emitted
 
