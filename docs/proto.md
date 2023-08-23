@@ -55,7 +55,7 @@ ts_proto_library(<a href="#ts_proto_library-name">name</a>, <a href="#ts_proto_l
 | Name  | Description | Default Value |
 | :------------- | :------------- | :------------- |
 | <a id="ts_proto_library-name"></a>name |  name of resulting ts_proto_library target   |  none |
-| <a id="ts_proto_library-node_modules"></a>node_modules |  FIXME   |  none |
+| <a id="ts_proto_library-node_modules"></a>node_modules |  Label pointing to the linked node_modules target where @bufbuild/protoc-gen-es is linked, e.g. //:node_modules. Since the generated code depends on @bufbuild/protobuf, this package must also be linked. If <code>has_services = True</code> then @bufbuild/proto-gen-connect-es should be linked as well.   |  none |
 | <a id="ts_proto_library-has_services"></a>has_services |  whether the proto file contains a service, and therefore *_connect.{js,d.ts} should be written.   |  <code>True</code> |
 | <a id="ts_proto_library-copy_files"></a>copy_files |  whether to copy the resulting .d.ts files back to the source tree, for the editor to locate them.   |  <code>True</code> |
 | <a id="ts_proto_library-files_to_copy"></a>files_to_copy |  which files from the protoc output to copy. By default, scans for *.proto in the current package and replaces with the typical output filenames.   |  <code>None</code> |

@@ -49,7 +49,9 @@ def ts_proto_library(name, node_modules, has_services = True, copy_files = True,
 
     Args:
         name: name of resulting ts_proto_library target
-        node_modules: FIXME
+        node_modules: Label pointing to the linked node_modules target where @bufbuild/protoc-gen-es is linked, e.g. //:node_modules.
+            Since the generated code depends on @bufbuild/protobuf, this package must also be linked.
+            If `has_services = True` then @bufbuild/proto-gen-connect-es should be linked as well.
         has_services: whether the proto file contains a service, and therefore *_connect.{js,d.ts} should be written.
         copy_files: whether to copy the resulting .d.ts files back to the source tree, for the editor to locate them.
         files_to_copy: which files from the protoc output to copy. By default, scans for *.proto in the current package
