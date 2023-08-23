@@ -1,8 +1,52 @@
 <!-- Generated with Stardoc: http://skydoc.bazel.build -->
 
-# Protocol Buffers and gRPC
+# Protocol Buffers and gRPC (UNSTABLE)
 
-Note this is not included in `defs.bzl` to avoid eager loads of rules_proto for all rules_ts users.
+::WARNING::
+**UNSTABLE API**: contents of this page are not subject to our usual semver guarantees.
+We may make breaking changes in any release.
+Please try this API and provide feedback.
+We intend to promote it to a stable API in a minor release, possibly as soon as v2.1.0.
+
+`ts_proto_library` uses the Connect library from bufbuild, and supports both Web and Node.js:
+
+- https://connectrpc.com/docs/web/getting-started
+- https://connectrpc.com/docs/node/getting-started
+
+This Bazel integration follows the "Local Generation" mechanism described at
+https://connectrpc.com/docs/web/generating-code#local-generation,
+using the `@bufbuild/protoc-gen-connect-es` and `@bufbuild/protoc-gen-es` packages as plugins to protoc.
+
+Note: this API surface is not included in `defs.bzl` to avoid eager loads of rules_proto for all rules_ts users.
+
+Developer Ergonomics
+--------------------
+
+The `gen*_es_bin` attributes are needed to reference user-installed npm packages, however they make each call to `ts_proto_library` longer.
+
+You may want to create a macro in your workspace, for example `//ts:defs.bzl` containing
+
+```
+load("@aspect_rules_ts//ts:proto.bzl", _ts_proto_library = "ts_proto_library")
+load("@npm//path/to/linked:@bufbuild/protoc-gen-es/package_json.bzl", gen_bin = "bin")
+load("@npm//path/to/linked:@bufbuild/protoc-gen-connect-es/package_json.bzl", gen_connect_bin = "bin")
+
+def ts_proto_library(**kwargs):
+    _ts_proto_library(
+        gen_connect_es_bin = gen_connect_bin,
+        gen_es_bin = gen_bin,
+        **kwargs
+    )
+```
+
+and then load this `ts_proto_library` macro so that developer-facing use sites can omit the npm package attributes.
+
+Future work
+-----------
+
+- Add support for generating the `ts_proto_library` targets in [aspect configure](https://docs.aspect.build/v/cli/commands/aspect_configure)
+- Allow users to choose other plugins. We intend to wait until http://github.com/bazelbuild/rules_proto supports protoc plugins.
+- Allow users to control the output format. Currently it is hard-coded to `js+dts`, and the JS output uses ES Modules.
 
 
 <a id="ts_proto_library"></a>
