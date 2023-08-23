@@ -1,8 +1,5 @@
 # See https://docs.aspect.build/v/workflows/config
 ---
-bazel:
-    flags:
-        - --enable_bzlmod
 tasks:
     buildifier:
     test:
