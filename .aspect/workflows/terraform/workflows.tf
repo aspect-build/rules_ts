@@ -30,7 +30,7 @@ module "aspect_workflows" {
   }
 
   # Aspect Workflows terraform module
-  source = "https://s3.us-east-2.amazonaws.com/static.aspect.build/aspect/5.7.0-rc9/workflows/terraform-aws-aspect-workflows.zip"
+  source = "https://s3.us-east-2.amazonaws.com/static.aspect.build/aspect/5.7.0-rc10/workflows/terraform-aws-aspect-workflows.zip"
 
   # Non-terraform Aspect Workflows release artifacts are pulled from the region specific
   # aspect-artifacts bucket during apply. Aspect will grant your AWS account access to this bucket
@@ -83,21 +83,28 @@ module "aspect_workflows" {
   gha_runner_groups = {
     # The default runner group is use for the main build & test workflows.
     default = {
-      agent_idle_timeout_min = 5
-      gh_repo                = "aspect-build/rules_ts"
-      gha_workflow_ids       = []
-      max_runners            = 5
-      min_runners            = 0
-      queue                  = "aspect-default"
-      resource_type          = "default"
-      warming                = true
+      agent_idle_timeout_min    = 5
+      gh_repo                   = "aspect-build/rules_ts"
+      # Determine the workflow ID with:
+      # gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/aspect-build/rules_ts/actions/workflows
+      # https://docs.github.com/en/rest/actions/workflows?apiVersion=2022-11-28#list-repository-workflows
+      gha_workflow_ids          = ["66360195"]  # Aspect Workflows
+      max_runners               = 5
+      min_runners               = 0
+      queue                     = "aspect-default"
+      resource_type             = "default"
+      scaling_polling_frequency = 3  # check for queued jobs every 20s
+      warming                   = true
     }
     # The warming runner group is used for the periodic warming job that creates
     # warming archives for use by other runner groups.
     warming = {
       agent_idle_timeout_min = 1
       gh_repo                = "aspect-build/rules_ts"
-      gha_workflow_ids       = []
+      # Determine the workflow ID with:
+      # gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/aspect-build/rules_ts/actions/workflows
+      # https://docs.github.com/en/rest/actions/workflows?apiVersion=2022-11-28#list-repository-workflows
+      gha_workflow_ids       = ["66594869"]  # Aspect Workflows Warming
       max_runners            = 1
       min_runners            = 0
       policies               = { warming_manage : module.aspect_workflows.warming_management_policies["default"].arn }
