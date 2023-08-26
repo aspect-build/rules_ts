@@ -21,14 +21,16 @@ IF THESE TERMS ARE CONSIDERED AN OFFER, ACCEPTANCE IS EXPRESSLY LIMITED TO THESE
     (i)   an individual (and only for personal use),
     (ii)  a Small Business (as defined below),
     (iii) a non-profit entity or an academic or university institution, or
-    (iv)  a current or former Aspect Customer (as defined below).
+    (iv)  a current or former Aspect Customer or Sponsor (as defined below).
     
     A “Small Business” is any entity with fewer than 50 total employees (including, for purposes
     of such calculation, all employees of any entities affiliated with such entity).
 
-    An “Aspect Customer” is any entity that has remitted payment to Aspect at any time.
+    An “Aspect Customer or Sponsor” is any entity that has remitted payment to Aspect at any time.
     Such payment may be for professional services such as Bazel OSS support, for software licensing
     and maintenence such as Aspect Workflows, or for other products or services sold by Aspect.
+    Such payment may also be made as a donation to Aspect, for example any payment via the "Sponsor"
+    link on the GitHub page for this repository at https://opencollective.com/aspect-build.
 
 2.	Restrictions.
 
