@@ -36,8 +36,6 @@ js_test(
     data = [
         "package.json",  # for type=module
         "proto_grpc",
-        # TODO: but I didn't import this!
-        ":node_modules/@bufbuild/protobuf",
     ],
     entry_point = "main.js",
 )
