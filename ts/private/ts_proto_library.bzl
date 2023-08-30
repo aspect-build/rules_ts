@@ -71,8 +71,17 @@ def _ts_proto_library_impl(ctx):
         declarations = dts_outs,
         targets = ctx.attr.deps,
     )
+    runfiles = js_lib_helpers.gather_runfiles(
+        ctx = ctx,
+        sources = direct_srcs,
+        data = [],
+        deps = ctx.attr.deps,
+    )
     return [
-        DefaultInfo(files = direct_srcs),
+        DefaultInfo(
+            files = direct_srcs,
+            runfiles = runfiles,
+        ),
         OutputGroupInfo(types = direct_decls),
         js_info(
             declarations = direct_decls,
