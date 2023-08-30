@@ -92,6 +92,9 @@ jobs:
                     # Don't test RBE with on MacOS (not configured)
                     - os: macos-latest
                       config: rbe
+                    # TODO(https://github.com/aspect-build/rules_ts/issues/432): re-enable
+                    - folder: e2e/bzlmod
+                      config: rbe
 
         # Steps represent a sequence of tasks that will be executed as part of the job
         steps:

@@ -63,31 +63,29 @@ def _ts_proto_library_impl(ctx):
 
     direct_srcs = depset(js_outs)
     direct_decls = depset(dts_outs)
-    transitive_srcs = js_lib_helpers.gather_transitive_sources(
-        sources = js_outs,
-        targets = ctx.attr.deps,
-    )
-    transitive_decls = js_lib_helpers.gather_transitive_declarations(
-        declarations = dts_outs,
-        targets = ctx.attr.deps,
-    )
-    runfiles = js_lib_helpers.gather_runfiles(
-        ctx = ctx,
-        sources = direct_srcs,
-        data = [],
-        deps = ctx.attr.deps,
-    )
+
     return [
         DefaultInfo(
             files = direct_srcs,
-            runfiles = runfiles,
+            runfiles = js_lib_helpers.gather_runfiles(
+                ctx = ctx,
+                sources = direct_srcs,
+                data = [],
+                deps = ctx.attr.deps,
+            ),
         ),
         OutputGroupInfo(types = direct_decls),
         js_info(
             declarations = direct_decls,
             sources = direct_srcs,
-            transitive_declarations = transitive_decls,
-            transitive_sources = transitive_srcs,
+            transitive_declarations = js_lib_helpers.gather_transitive_declarations(
+                declarations = dts_outs,
+                targets = ctx.attr.deps,
+            ),
+            transitive_sources = js_lib_helpers.gather_transitive_sources(
+                sources = js_outs,
+                targets = ctx.attr.deps,
+            ),
         ),
     ]
 
