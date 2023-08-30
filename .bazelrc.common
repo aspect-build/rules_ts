@@ -70,7 +70,7 @@ build:macos --nolegacy_external_runfiles
 build:freebsd --nolegacy_external_runfiles
 build:openbsd --nolegacy_external_runfiles
 
-# FIXME: should be able to use "common" but Aspect CLI needs a fix
+# TODO: switch to 'common' once https://github.com/bazelbuild/bazel/pull/19363 is landed and available in Bazel
 build --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
 fetch --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
 query --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
