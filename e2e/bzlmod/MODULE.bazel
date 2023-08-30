@@ -1,25 +1,31 @@
 module(
     name = "e2e_bzlmod",
-    version = "0.0.0",
     compatibility_level = 1,
+    version = "0.0.0",
 )
 
 # repeated here only because we use the platforms definitions for rbe
-bazel_dep(name = "aspect_rules_js", version = "1.29.2", dev_dependency = True)
-bazel_dep(name = "aspect_rules_ts", version = "0.0.0", dev_dependency = True)
-bazel_dep(name = "bazel_skylib", version = "1.4.1", dev_dependency = True)
-bazel_dep(name = "rules_proto", version = "5.3.0-21.7", dev_dependency =  True)
+bazel_dep(name = "aspect_rules_js", dev_dependency = True, version = "1.29.2")
+bazel_dep(name = "aspect_rules_ts", dev_dependency = True, version = "0.0.0")
+bazel_dep(name = "bazel_skylib", dev_dependency = True, version = "1.4.1")
+bazel_dep(name = "rules_proto", dev_dependency = True, version = "5.3.0-21.7")
 
 local_path_override(
     module_name = "aspect_rules_ts",
     path = "../..",
 )
 
-npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm", dev_dependency = True)
+npm = use_extension(
+    "@aspect_rules_js//npm:extensions.bzl",
+    "npm",
+    dev_dependency = True,
+)
+
 npm.npm_translate_lock(
     name = "npm",
     pnpm_lock = "//:pnpm-lock.yaml",
 )
+
 use_repo(npm, "npm")
 
 rules_ts_ext = use_extension(
@@ -27,8 +33,10 @@ rules_ts_ext = use_extension(
     "ext",
     dev_dependency = True,
 )
+
 rules_ts_ext.deps(
     # This keeps the TypeScript version in-sync with the editor, which is typically best.
     ts_version_from = "//:package.json",
 )
+
 use_repo(rules_ts_ext, "npm_typescript")
