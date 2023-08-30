@@ -2,6 +2,8 @@
 
 build --enable_runfiles
 common --enable_bzlmod
+
+# TODO: switch to 'common' once https://github.com/bazelbuild/bazel/pull/19363 is landed and available in Bazel
 build --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
 query --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
 fetch --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
