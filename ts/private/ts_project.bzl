@@ -3,14 +3,14 @@
 load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_file_to_bin_action", "copy_files_to_bin_actions")
 load("@aspect_bazel_lib//lib:paths.bzl", "to_output_relative_path")
 load("@aspect_bazel_lib//lib:platform_utils.bzl", "platform_utils")
-load("@bazel_skylib//lib:dicts.bzl", "dicts")
-load("@aspect_rules_js//js:providers.bzl", "JsInfo", "js_info")
 load("@aspect_rules_js//js:libs.bzl", "js_lib_helpers")
+load("@aspect_rules_js//js:providers.bzl", "JsInfo", "js_info")
 load("@aspect_rules_js//npm:providers.bzl", "NpmPackageStoreInfo")
-load(":ts_lib.bzl", "COMPILER_OPTION_ATTRS", "OUTPUT_ATTRS", "STD_ATTRS", _lib = "lib")
-load(":ts_config.bzl", "TsConfigInfo")
-load(":ts_validate_options.bzl", _validate_lib = "lib")
+load("@bazel_skylib//lib:dicts.bzl", "dicts")
 load(":options.bzl", "OptionsInfo", "transpiler_selection_required")
+load(":ts_config.bzl", "TsConfigInfo")
+load(":ts_lib.bzl", "COMPILER_OPTION_ATTRS", "OUTPUT_ATTRS", "STD_ATTRS", _lib = "lib")
+load(":ts_validate_options.bzl", _validate_lib = "lib")
 
 # Forked from js_lib_helpers.js_lib_helpers.gather_files_from_js_providers to not
 # include any sources; only transitive declarations & npm linked packages

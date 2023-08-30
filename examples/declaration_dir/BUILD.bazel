@@ -1,8 +1,8 @@
 """Shows how https://www.typescriptlang.org/tsconfig/#declarationDir can be used to write
 .d.ts typings files to a different folder than the JavaScript outputs."""
 
-load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@aspect_bazel_lib//lib:testing.bzl", "assert_outputs")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 
 ts_project(
     name = "transpile",

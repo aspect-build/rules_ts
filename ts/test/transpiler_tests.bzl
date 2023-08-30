@@ -1,9 +1,9 @@
 "Unit tests for starlark API of ts_project with custom transpiler"
 
+load("@aspect_rules_js//js:providers.bzl", "JsInfo")
 load("@bazel_skylib//lib:unittest.bzl", "asserts", "unittest")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("@aspect_rules_js//js:providers.bzl", "JsInfo")
 load("//ts:defs.bzl", "ts_project")
 load(":mock_transpiler.bzl", "mock")
 

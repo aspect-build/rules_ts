@@ -1,5 +1,5 @@
-load("//ts:defs.bzl", "ts_project")
 load("//examples/source_map_support:defs.bzl", "js_test")
+load("//ts:defs.bzl", "ts_project")
 
 ts_project(
     name = "ts",

@@ -1,7 +1,7 @@
 "Private implementation details for ts_proto_library"
 
-load("@aspect_rules_js//js:providers.bzl", "JsInfo", "js_info")
 load("@aspect_rules_js//js:libs.bzl", "js_lib_helpers")
+load("@aspect_rules_js//js:providers.bzl", "JsInfo", "js_info")
 load("@rules_proto//proto:defs.bzl", "ProtoInfo", "proto_common")
 
 # buildifier: disable=function-docstring-header

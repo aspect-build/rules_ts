@@ -1,7 +1,7 @@
 "Utilities functions for selecting and filtering ts and other files"
 
-load("@aspect_rules_js//js:providers.bzl", "JsInfo")
 load("@aspect_rules_js//js:libs.bzl", "js_lib_helpers")
+load("@aspect_rules_js//js:providers.bzl", "JsInfo")
 
 # Attributes common to all TypeScript rules
 STD_ATTRS = {
