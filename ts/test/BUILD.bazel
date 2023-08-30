@@ -1,9 +1,9 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("//ts:defs.bzl", "ts_project")
+load(":flags_test.bzl", "ts_project_flags_test_suite")
 load(":mock_transpiler.bzl", "mock")
 load(":transpiler_tests.bzl", "transpiler_test_suite")
 load(":ts_project_test.bzl", "ts_project_test_suite")
-load(":flags_test.bzl", "ts_project_flags_test_suite")
-load("//ts:defs.bzl", "ts_project")
 
 transpiler_test_suite()
 

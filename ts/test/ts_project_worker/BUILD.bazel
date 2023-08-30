@@ -1,6 +1,6 @@
-load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@aspect_rules_js//js:defs.bzl", "js_test")
 load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 
 copy_file(
     name = "copy_ts_project_worker",

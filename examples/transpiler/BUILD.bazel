@@ -1,6 +1,7 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
 # Note, Bazel 6 starlark has lambda so maybe we can stop using partial
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load(":babel.bzl", "babel")
 
 ###

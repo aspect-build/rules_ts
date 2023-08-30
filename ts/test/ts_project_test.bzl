@@ -1,8 +1,8 @@
 "UnitTests for ts_project"
 
+load("@aspect_rules_js//js:providers.bzl", "JsInfo")
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("@aspect_rules_js//js:providers.bzl", "JsInfo")
 load("//ts:defs.bzl", "ts_project")
 
 # dir_test

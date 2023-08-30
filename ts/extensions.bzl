@@ -2,8 +2,8 @@
 See https://bazel.build/docs/bzlmod#extension-definition
 """
 
-load("//ts/private:npm_repositories.bzl", "npm_dependencies")
 load("//ts:repositories.bzl", "LATEST_TYPESCRIPT_VERSION")
+load("//ts/private:npm_repositories.bzl", "npm_dependencies")
 
 def _extension_impl(module_ctx):
     for mod in module_ctx.modules:
