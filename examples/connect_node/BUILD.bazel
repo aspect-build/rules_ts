@@ -30,6 +30,7 @@ js_binary(
     data = [
         ":connect_node",
         ":node_modules/@bufbuild/protobuf",
+        ":package.json",
     ],
     entry_point = "server.js",
 )
