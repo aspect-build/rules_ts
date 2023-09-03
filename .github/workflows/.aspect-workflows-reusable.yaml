@@ -1,7 +1,7 @@
 # ==================================================================================================
-# Aspect Workflows Reusable Workflow for GitHub Actions (v5.7.1)
+# Aspect Workflows Reusable Workflow for GitHub Actions (v5.7.2)
 #
-# https://github.com/marketplace/actions/aspect-workflows?version=5.7.1
+# https://github.com/marketplace/actions/aspect-workflows?version=5.7.2
 #
 # At this time, GitHub Actions does not allow referencing reusable workflows from public
 # repositories in other organizations. See
@@ -37,10 +37,10 @@
 #    jobs:
 #      aspect-workflows:
 #        name: Aspect Workflows
-#        uses: my-github-org/workflows-action/.github/workflows/.aspect-workflows-reusable.yaml@5.7.1
+#        uses: my-github-org/workflows-action/.github/workflows/.aspect-workflows-reusable.yaml@5.7.2
 #    ```
 # ==================================================================================================
-name: Aspect Workflows Reusable Workflow (v5.7.1)
+name: Aspect Workflows Reusable Workflow (v5.7.2)
 
 on:
   # Makes this workflow reusable, see
@@ -111,7 +111,7 @@ jobs:
           echo "filtered_secrets=${FILTERED_SECRETS}" | tee ${GITHUB_OUTPUT}
 
       - name: Branch Freshness
-        uses: aspect-build/workflows-action@5.7.1
+        uses: aspect-build/workflows-action@5.7.2
         timeout-minutes: ${{ fromJson(needs.setup.outputs.cfg).task_config[fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].workspace].tasks['branch_freshness'].timeout_in_minutes }}
         with:
           workspace: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].workspace }}
@@ -121,7 +121,7 @@ jobs:
         run: rm -rf ${{ join(fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].artifact_paths, ' ') }}
 
       - name: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].task }}
-        uses: aspect-build/workflows-action@5.7.1
+        uses: aspect-build/workflows-action@5.7.2
         env: ${{ inputs.inherited_secrets != '' && fromJson(steps.process_secrets.outputs.filtered_secrets) || fromJson('{}') }}
         timeout-minutes: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].timeout_in_minutes }}
         with:
@@ -143,7 +143,7 @@ jobs:
 
       - name: Delivery Manifest
         if: fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].generate_manifest
-        uses: aspect-build/workflows-action@5.7.1
+        uses: aspect-build/workflows-action@5.7.2
         timeout-minutes: ${{ fromJson(needs.setup.outputs.cfg).task_config[fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].workspace].tasks['delivery'].timeout_in_minutes }}
         with:
             workspace: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].workspace }}
