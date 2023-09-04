@@ -74,9 +74,10 @@ def _http_archive_version_impl(rctx):
         executable = False,
     )
 
-    if not rctx.attr.check_for_updates:
-        return
+    if rctx.attr.check_for_updates:
+        _check_for_updates(rctx)
 
+def _check_for_updates(rctx):
     if RULES_TS_VERSION.startswith("$Format"):
         # The placeholder string wasn't replaced.
         # That means we aren't running from a release artifact, so we don't know the version
@@ -97,8 +98,9 @@ def _http_archive_version_impl(rctx):
         # Ignore failures when trying to check for new version
         return
     status_code = int(result.stdout.strip())
+    # 302 Found redirect status response code indicates that the resource requested has been temporarily moved to the URL given by the Location header.
+    # Don't bother the user with any other status code
     if status_code != 302:
-        # 304: Not Modified means we have the latest version already
         return
 
     # buildifier: disable=print
