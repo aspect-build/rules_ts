@@ -18,7 +18,7 @@ load("@aspect_rules_ts//ts:repositories.bzl", "rules_ts_dependencies")
 
 rules_ts_dependencies(
     # This keeps the TypeScript version in-sync with the editor, which is typically best.
-    ts_version_from = "@npm//[path/to/linked]:typescript/resolved.json",
+    ts_version_from = "//:package.json",
 
     # Alternatively, you could pick a specific version, or use
     # load("@aspect_rules_ts//ts:repositories.bzl", "LATEST_TYPESCRIPT_VERSION")
