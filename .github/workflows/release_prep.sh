@@ -9,6 +9,14 @@ TAG=${GITHUB_REF_NAME}
 PREFIX="rules_ts-${TAG:1}"
 ARCHIVE="rules_ts-$TAG.tar.gz"
 
+# Don't include examples in the distribution artifact, to reduce size
+# Note, we do need to include e2e/bzlmod since BCR runs our test based on distribution artifact.
+# Also stamp the release version into the repo
+cat >.git/info/attributes <<EOF
+examples                 export-ignore
+ts/private/versions.bzl  export-subst
+EOF
+
 git archive --format=tar --prefix=${PREFIX}/ ${TAG} | gzip > $ARCHIVE
 SHA=$(shasum -a 256 $ARCHIVE | awk '{print $1}')
 
