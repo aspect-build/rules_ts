@@ -74,28 +74,39 @@ def _http_archive_version_impl(rctx):
         executable = False,
     )
 
-    if rctx.attr.check_for_updates:
-        vars = ["{}={}".format(v, rctx.os.environ[v]) for v in _TELEMETRY_VARS if v in rctx.os.environ]
-        if rctx.attr.bzlmod:
-            vars.append("bzlmod=true")
-        url = "https://update.aspect.build/aspect_rules_ts/{}?{}".format(
-            RULES_TS_VERSION,
-            "&".join(vars),
-        )
-        output_path = str(rctx.path(".output/update_check_result"))
-        command = ["curl", url, "--write-out", "%{http_code}", "--output", output_path]
-        result = rctx.execute(command)
-        if result.return_code != 0:
-            # Ignore failures when trying to check for new version
-            return
-        status_code = int(result.stdout.strip())
-        if status_code != 302:
-            # 304: Not Modified means we have the latest version already
-            return
+    if not rctx.attr.check_for_updates:
+        return
 
-        # buildifier: disable=print
-        print("NOTICE: a newer version of rules_ts is available")
-        # TODO: print content of output_path which now has the link to the newer version
+    if RULES_TS_VERSION.startswith("$Format"):
+        # The placeholder string wasn't replaced.
+        # That means we aren't running from a release artifact, so we don't know the version
+        # and can't tell if an update is available.
+        return
+
+    vars = ["{}={}".format(v, rctx.os.environ[v]) for v in _TELEMETRY_VARS if v in rctx.os.environ]
+    if rctx.attr.bzlmod:
+        vars.append("bzlmod=true")
+    url = "https://update.aspect.build/aspect_rules_ts/{}?{}".format(
+        RULES_TS_VERSION,
+        "&".join(vars),
+    )
+    output_path = str(rctx.path(".output/update_check_result"))
+    command = ["curl", url, "--write-out", "%{http_code}", "--output", output_path]
+    result = rctx.execute(command)
+    if result.return_code != 0:
+        # Ignore failures when trying to check for new version
+        return
+    status_code = int(result.stdout.strip())
+    if status_code != 302:
+        # 304: Not Modified means we have the latest version already
+        return
+
+    # buildifier: disable=print
+    # TODO: print content of output_path which now has the link to the newer version
+    print("""\
+NOTICE: a newer version of rules_ts is available.
+See https://github.com/aspect-build/rules_ts/releases
+""")
 
 http_archive_version = repository_rule(
     doc = "Re-implementation of http_archive that can read the version from package.json",
