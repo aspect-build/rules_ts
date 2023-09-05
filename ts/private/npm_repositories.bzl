@@ -1,7 +1,7 @@
 """Runtime dependencies fetched from npm"""
 
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
-load("//ts/private:versions.bzl", "TOOL_VERSIONS")
+load("//ts/private:versions.bzl", "RULES_TS_VERSION", "TOOL_VERSIONS")
 
 worker_versions = struct(
     bazel_worker_version = "5.4.2",
@@ -9,6 +9,17 @@ worker_versions = struct(
     google_protobuf_version = "3.20.1",
     google_protobuf_integrity = "sha512-XMf1+O32FjYIV3CYu6Tuh5PNbfNEU5Xu22X+Xkdb/DUexFlCzhvv7d5Iirm4AOwn8lv4al1YvIhzGrg2j9Zfzw==",
 )
+
+# Keep this list in sync with user documentation.
+# We must inform users what we gather from their builds.
+_TELEMETRY_VARS = [
+    "BUILDKITE_BUILD_NUMBER",
+    "BUILDKITE_ORGANIZATION_SLUG",
+    "CIRCLE_BUILD_NUM",
+    "CIRCLE_PROJECT_USERNAME",
+    "GITHUB_REPOSITORY_OWNER",
+    "GITHUB_RUN_NUMBER",
+]
 
 def _http_archive_version_impl(rctx):
     integrity = None
@@ -63,10 +74,54 @@ def _http_archive_version_impl(rctx):
         executable = False,
     )
 
+    if rctx.attr.check_for_updates:
+        _check_for_updates(rctx)
+
+def _check_for_updates(rctx):
+    version = RULES_TS_VERSION
+
+    # If the placeholder string wasn't replaced, that means we aren't running from a release artifact.
+    # It might be a SHA from GitHub, or a fork of the repo, etc.
+    # We won't be able to say if an update is available, but we count these uses.
+    if version.startswith("$Format"):
+        version = "v0.0.0"
+
+    vars = ["{}={}".format(v, rctx.os.environ[v]) for v in _TELEMETRY_VARS if v in rctx.os.environ]
+    if rctx.attr.bzlmod:
+        vars.append("bzlmod=true")
+    url = "https://update.aspect.build/aspect_rules_ts/{}?{}".format(
+        version,
+        "&".join(vars),
+    )
+    output_path = str(rctx.path(".output/update_check_result"))
+    command = ["curl", url, "--write-out", "%{http_code}", "--output", output_path]
+
+    # Avoid stalling the users Bazel session
+    command.extend(["--connect-timeout", "1", "--max-time", "1"])
+    result = rctx.execute(command)
+    if result.return_code != 0:
+        # Ignore failures when trying to check for new version
+        return
+    status_code = int(result.stdout.strip())
+
+    # 302 Found redirect status response code indicates that the resource requested has been temporarily moved to the URL given by the Location header.
+    # Don't bother the user with any other status code
+    if status_code != 302:
+        return
+
+    # buildifier: disable=print
+    # TODO: print content of output_path which now has the link to the newer version
+    print("""\
+NOTICE: a newer version of rules_ts is available.
+See https://github.com/aspect-build/rules_ts/releases
+""")
+
 http_archive_version = repository_rule(
     doc = "Re-implementation of http_archive that can read the version from package.json",
     implementation = _http_archive_version_impl,
     attrs = {
+        "bzlmod": attr.bool(doc = "Whether we were called from a bzlmod module extension"),
+        "check_for_updates": attr.bool(doc = "Whether to check for a newer version of rules_ts"),
         "integrity": attr.string(doc = "Needed only if the ts version isn't mirrored in `versions.bzl`."),
         "version": attr.string(doc = "Explicit version for `urls` placeholder. If provided, the package.json is not read."),
         "urls": attr.string_list(doc = "URLs to fetch from. Each must have one `{}`-style placeholder."),
@@ -77,13 +132,15 @@ http_archive_version = repository_rule(
 )
 
 # buildifier: disable=function-docstring
-def npm_dependencies(ts_version_from = None, ts_version = None, ts_integrity = None):
+def npm_dependencies(ts_version_from = None, ts_version = None, ts_integrity = None, bzlmod = False, check_for_updates = True):
     if (ts_version and ts_version_from) or (not ts_version_from and not ts_version):
         fail("""Exactly one of 'ts_version' or 'ts_version_from' must be set.""")
 
     maybe(
         http_archive_version,
         name = "npm_typescript",
+        bzlmod = bzlmod,
+        check_for_updates = check_for_updates,
         version = ts_version,
         version_from = ts_version_from,
         integrity = ts_integrity,
