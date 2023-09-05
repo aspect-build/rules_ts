@@ -13,11 +13,11 @@ worker_versions = struct(
 # Keep this list in sync with user documentation.
 # We must inform users what we gather from their builds.
 _TELEMETRY_VARS = [
+    "BUILDKITE_BUILD_NUMBER",
     "BUILDKITE_ORGANIZATION_SLUG",
+    "CIRCLE_BUILD_NUM",
     "CIRCLE_PROJECT_USERNAME",
     "GITHUB_REPOSITORY_OWNER",
-    "BUILDKITE_BUILD_NUMBER",
-    "CIRCLE_BUILD_NUM",
     "GITHUB_RUN_NUMBER",
 ]
 
@@ -78,26 +78,32 @@ def _http_archive_version_impl(rctx):
         _check_for_updates(rctx)
 
 def _check_for_updates(rctx):
-    if RULES_TS_VERSION.startswith("$Format"):
-        # The placeholder string wasn't replaced.
-        # That means we aren't running from a release artifact, so we don't know the version
-        # and can't tell if an update is available.
-        return
+    version = RULES_TS_VERSION
+
+    # If the placeholder string wasn't replaced, that means we aren't running from a release artifact.
+    # It might be a SHA from GitHub, or a fork of the repo, etc.
+    # We won't be able to say if an update is available, but we count these uses.
+    if version.startswith("$Format"):
+        version = "v0.0.0"
 
     vars = ["{}={}".format(v, rctx.os.environ[v]) for v in _TELEMETRY_VARS if v in rctx.os.environ]
     if rctx.attr.bzlmod:
         vars.append("bzlmod=true")
     url = "https://update.aspect.build/aspect_rules_ts/{}?{}".format(
-        RULES_TS_VERSION,
+        version,
         "&".join(vars),
     )
     output_path = str(rctx.path(".output/update_check_result"))
     command = ["curl", url, "--write-out", "%{http_code}", "--output", output_path]
+
+    # Avoid stalling the users Bazel session
+    command.extend(["--connect-timeout", "1", "--max-time", "1"])
     result = rctx.execute(command)
     if result.return_code != 0:
         # Ignore failures when trying to check for new version
         return
     status_code = int(result.stdout.strip())
+
     # 302 Found redirect status response code indicates that the resource requested has been temporarily moved to the URL given by the Location header.
     # Don't bother the user with any other status code
     if status_code != 302:
