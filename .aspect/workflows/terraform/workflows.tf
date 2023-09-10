@@ -93,7 +93,7 @@ module "aspect_workflows" {
       min_runners               = 0
       queue                     = "aspect-default"
       resource_type             = "default"
-      scaling_polling_frequency = 2  # check for queued jobs every 30s
+      scaling_polling_frequency = 1 # check for queued jobs every 60s
       warming                   = true
     }
     # The warming runner group is used for the periodic warming job that creates
