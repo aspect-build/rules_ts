@@ -2,8 +2,13 @@
 ---
 tasks:
     buildifier:
+    build:
     test:
+        upload_test_logs: executed
+        coverage:
+            codecov_upload: true
         bazel:
             flags:
                 # Allows tests to run bazelisk-in-bazel, since this is the cache folder used
                 - --test_env=XDG_CACHE_HOME
+                - --nocache_test_results
