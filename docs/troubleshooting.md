@@ -107,6 +107,16 @@ Use the `--traceResolution` flag to `tsc` to understand where TypeScript looked 
 
 Verify that there is actually a `.d.ts` file for TypeScript to resolve. Check that the dependency library has the `declarations = True` flag set, and that the `.d.ts` files appear where you expect them under `bazel-out`.
 
+## Source maps missing
+
+TypeScript source maps can be configured in various ways which may effect compatibility with Bazel or other tools.
+
+First, the tsconfig `compilerOptions.sourceMap` and associated `ts_project(source_map)` must be set to `True` to enable source maps. If these are misaligned the the `ts_project(validate)` will report an error.
+
+Second, if `compilerOptions.inlineSources` is set *not* set to `true` then the .ts source files must be manually included alongside the compiled .js.map files to ensure they are present at runtime.
+
+The recommended approach is using `compilerOptions.inlineSources` set to `true` to place the original TypeScript source code inline within the .js.map files, or `compilerOptions.inlineSourceMap` set to `true` to place the full sourcemap and original TypeScript source code within .js files. This way no extra bazel configuration is required to ensure the TypeScript source code is available when debugging.
+
 ## NPM package type-checking failures
 
 Strict dependencies and non-hoisted packages can cause type-checking failures when a package does not correctly declare TypeScript related npm dependencies. If a package exposes a dependency via TypeScript (such as publicly exporting a type from a dependency) then that dependency must be declared in the `package.json` `dependencies` in order for dependents to compile. Outside rules_ts with hoisted packages this *may* not be exposed if the missing dependency is declared in a parent or root package.json, however with strict dependencies in rules_js and bazel this will more likely be an issue.
