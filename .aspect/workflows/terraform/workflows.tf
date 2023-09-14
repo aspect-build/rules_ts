@@ -30,7 +30,7 @@ module "aspect_workflows" {
   }
 
   # Aspect Workflows terraform module
-  source = "https://s3.us-east-2.amazonaws.com/static.aspect.build/aspect/5.7.5/workflows/terraform-aws-aspect-workflows.zip"
+  source = "https://s3.us-east-2.amazonaws.com/static.aspect.build/aspect/5.8.0-rc4/workflows/terraform-aws-aspect-workflows.zip"
 
   # Non-terraform Aspect Workflows release artifacts are pulled from the region specific
   # aspect-artifacts bucket during apply. Aspect will grant your AWS account access to this bucket
@@ -40,6 +40,9 @@ module "aspect_workflows" {
 
   # Name of the deployment
   customer_id = "aspect-build/rules_ts"
+
+  # PagerDuty key for this deployment
+  pagerduty_integration_key = "39eddf9c91be4100d0a709f2d04bc4bd"
 
   # VPC properties
   vpc_id             = module.vpc.vpc_id
@@ -53,6 +56,23 @@ module "aspect_workflows" {
   # This will be default in future releases of Aspect Workflows.
   experiments = {
     k8s_remote = true
+  }
+
+  # Kubernetes remote cache properties
+  experimental_remote = {
+    cache_size_gb          = 50
+    cache_shards           = 1
+    replicate_cache        = false
+    load_balancer_replicas = 2
+  }
+
+  # Kubernetes cluster properties
+  k8s_cluster = {
+    cluster_version = "1.27"
+    min_size        = 1
+    max_size        = 10
+    desired_size    = 3
+    instance_types  = ["t3.medium"],
   }
 
   # Monitoring properties
