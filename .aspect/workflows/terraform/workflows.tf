@@ -52,17 +52,17 @@ module "aspect_workflows" {
   # Whether or not to allow SSM access to runners
   enable_ssm_access  = true
 
-  # Opt-in to k8s HA remote cache.
-  # This will be default in future releases of Aspect Workflows.
+  # Opt-in to k8s high availabilty (HA) remote cache; this will be default in future releases
   experiments = {
-    k8s_remote = true
+    k8s_remote        = true
+    k8s_observability = true
   }
 
   # Kubernetes remote cache properties
   experimental_remote = {
-    cache_size_gb          = 50
-    cache_shards           = 1
-    replicate_cache        = false
+    cache_size_gb          = 256
+    cache_shards           = 3
+    replicate_cache        = true
     load_balancer_replicas = 2
   }
 
@@ -72,7 +72,7 @@ module "aspect_workflows" {
     min_size        = 1
     max_size        = 10
     desired_size    = 3
-    instance_types  = ["t3.medium"],
+    instance_types  = ["t3.large"],
   }
 
   # Monitoring properties
