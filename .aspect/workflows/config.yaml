@@ -1,9 +1,11 @@
 # See https://docs.aspect.build/v/workflows/config
 ---
+bazel:
+    flags:
+        - --remote_download_minimal
+        - --nobuild_runfile_links
+        # Allows tests to run bazelisk-in-bazel, since this is the cache folder used
+        - --test_env=XDG_CACHE_HOME
 tasks:
     buildifier:
     test:
-        bazel:
-            flags:
-                # Allows tests to run bazelisk-in-bazel, since this is the cache folder used
-                - --test_env=XDG_CACHE_HOME
