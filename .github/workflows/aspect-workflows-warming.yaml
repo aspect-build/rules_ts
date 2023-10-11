@@ -3,8 +3,7 @@ name: Aspect Workflows Warming
 on:
     # Run the workflows on a cron schedule to periodically create an up-to-date warming archive
     schedule:
-        # M-F 15:05, 19:05, 23:05 UTC
-        - cron: '5 15,19,23 * * 1-5'
+        - cron: '0 1 * * * America/Vancouver'
 
     # Allow this to be triggered manually via the GitHub UI Actions tab
     workflow_dispatch:
