@@ -383,7 +383,8 @@ def ts_project(
         build_test(
             name = test_target_name,
             targets = [typecheck_target_name],
-            **common_kwargs
+            tags = common_kwargs.get("tags"),
+            visibility = common_kwargs.get("visibility"),
         )
 
         # Default target produced by the macro gives the js and map outs, with the transitive dependencies.
