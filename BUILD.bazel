@@ -13,10 +13,15 @@ gazelle(
 )
 
 buildifier(
+    name = "buildifier",
+    exclude_patterns = ["./.git/*"],
+    lint_mode = "fix",
+    mode = "fix",
+)
+
+buildifier(
     name = "buildifier.check",
-    exclude_patterns = [
-        "./.git/*",
-    ],
+    exclude_patterns = ["./.git/*"],
     lint_mode = "warn",
     mode = "diff",
 )
