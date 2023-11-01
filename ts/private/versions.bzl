@@ -4,7 +4,7 @@ Update with:
 curl --silent https://registry.npmjs.org/typescript | jq '[.versions[] | select(.version | test("^[0-9.]+$")) | {key: .version, value: .dist.integrity}] | from_entries'
 """
 
-# Replaced during publishing, see .github/workflows/release_prep.sh
+# Replaced during publishing, see .gitattributes
 # Note: this requires a newer git version, 2.25.1 is too old, but GHA runs with 2.41.0 as of Sep 2023
 RULES_TS_VERSION = "$Format:%(describe:tags=true)$"
 
