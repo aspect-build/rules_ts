@@ -278,8 +278,11 @@ def ts_project(
 
     if type(tsconfig) == type(dict()):
         # Copy attributes <-> tsconfig properties
+        tsconfig = dict(tsconfig)
+        tsconfig["compilerOptions"] = dict(tsconfig.get("compilerOptions", {}))
+
         # TODO: fail if compilerOptions includes a conflict with an attribute?
-        compiler_options = tsconfig.setdefault("compilerOptions", {})
+        compiler_options = tsconfig["compilerOptions"]
         source_map = compiler_options.setdefault("sourceMap", source_map)
         declaration = compiler_options.setdefault("declaration", declaration)
         declaration_map = compiler_options.setdefault("declarationMap", declaration_map)
