@@ -2,6 +2,7 @@
 
 load("@aspect_rules_js//js:providers.bzl", "JsInfo")
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("//ts:defs.bzl", "ts_project")
 
@@ -91,18 +92,21 @@ def _use_dir_test_impl(ctx):
 
 _use_dir_test = analysistest.make(_use_dir_test_impl)
 
+# Use a dict() defined at the top level so it gets analyzed as part of .bzl file loading
+# and is therefore immutable. See https://bazel.build/rules/language#mutability
+_TSCONFIG = {
+    "compilerOptions": {
+        "declaration": True,
+        "sourceMap": True,
+    },
+}
+
 def ts_project_test_suite(name):
     """Test suite including all tests and data
 
     Args:
         name: Target name of the test_suite target.
     """
-    _TSCONFIG = {
-        "compilerOptions": {
-            "declaration": True,
-            "sourceMap": True,
-        },
-    }
 
     write_file(
         name = "dir_ts",
@@ -139,10 +143,36 @@ def ts_project_test_suite(name):
         target_under_test = "use_dir",
     )
 
+    write_file(
+        name = "wrapper_ts",
+        out = "wrapper.ts",
+        content = ["console.log(1)"],
+        tags = ["manual"],
+    )
+    ts_project_wrapper(
+        name = "wrapper",
+        srcs = ["wrapper.ts"],
+        declaration_map = True,  # a value that will override the tsconfig dict()
+        tsconfig = _TSCONFIG,
+        tags = ["manual"],
+    )
+
+    build_test(
+        name = "wrapper_test",
+        targets = [":wrapper.d.ts.map"],
+    )
+
     native.test_suite(
         name = name,
         tests = [
             ":dir_test",
             ":use_dir_test",
+            ":wrapper_test",
         ],
+    )
+
+def ts_project_wrapper(name, **kwargs):
+    ts_project(
+        name = name,
+        **kwargs
     )
