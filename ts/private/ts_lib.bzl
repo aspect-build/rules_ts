@@ -144,6 +144,9 @@ OUTPUT_ATTRS = {
     "typings_outs": attr.output_list(
         doc = "Locations in bazel-out where tsc will write `.d.ts` files",
     ),
+    "assets_outs": attr.output_list(
+        doc = "Locations in bazel-out where ts_project will output asset files",
+    ),
 }
 
 def _join(*elements):
@@ -191,17 +194,32 @@ def _replace_ext(f, ext_map):
         return new_ext
     return None
 
-def _out_paths(srcs, out_dir, root_dir, allow_js, resolve_json_module, ext_map):
-    rootdir_replace_pattern = root_dir + "/" if root_dir else ""
+def _to_out_path(f, out_dir, root_dir):
+    if root_dir:
+        f = f.removeprefix(root_dir + "/")
+    if out_dir:
+        f = _join(out_dir, f)
+    return f
+
+def _to_js_out_paths(srcs, out_dir, root_dir, allow_js, resolve_json_module, ext_map):
     outs = []
     for f in srcs:
         if _is_ts_src(f, allow_js, resolve_json_module):
-            out = _join(out_dir, f[:f.rindex(".")].replace(rootdir_replace_pattern, "", 1) + _replace_ext(f, ext_map))
+            out = _to_out_path(f, out_dir, root_dir)
+            out = out[:out.rindex(".")] + _replace_ext(out, ext_map)
 
             # Don't declare outputs that collide with inputs
             # for example, a.js -> a.js
             if out != f:
                 outs.append(out)
+    return outs
+
+def _calculate_assets_outs(assets, out_dir = ".", root_dir = "."):
+    outs = []
+    for a in assets:
+        out = _to_out_path(a, out_dir, root_dir)
+        if out != a:
+            outs.append(out)
     return outs
 
 def _calculate_js_outs(srcs, out_dir = ".", root_dir = ".", allow_js = False, resolve_json_module = False, preserve_jsx = False, emit_declaration_only = False):
@@ -221,7 +239,7 @@ def _calculate_js_outs(srcs, out_dir = ".", root_dir = ".", allow_js = False, re
         exts[".jsx"] = ".jsx"
         exts[".tsx"] = ".jsx"
 
-    return _out_paths(srcs, out_dir, root_dir, allow_js, resolve_json_module, exts)
+    return _to_js_out_paths(srcs, out_dir, root_dir, allow_js, resolve_json_module, exts)
 
 def _calculate_map_outs(srcs, out_dir = ".", root_dir = ".", source_map = True, preserve_jsx = False, emit_declaration_only = False):
     if not source_map or emit_declaration_only:
@@ -237,7 +255,7 @@ def _calculate_map_outs(srcs, out_dir = ".", root_dir = ".", source_map = True, 
     if preserve_jsx:
         exts[".tsx"] = ".jsx.map"
 
-    return _out_paths(srcs, out_dir, root_dir, False, False, exts)
+    return _to_js_out_paths(srcs, out_dir, root_dir, False, False, exts)
 
 def _calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, composite, allow_js):
     if not (declaration or composite):
@@ -251,7 +269,7 @@ def _calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, compos
         ".cjs": ".d.cts",
     }
 
-    return _out_paths(srcs, typings_out_dir, root_dir, allow_js, False, exts)
+    return _to_js_out_paths(srcs, typings_out_dir, root_dir, allow_js, False, exts)
 
 def _calculate_typing_maps_outs(srcs, typings_out_dir, root_dir, declaration_map, allow_js):
     if not declaration_map:
@@ -265,7 +283,7 @@ def _calculate_typing_maps_outs(srcs, typings_out_dir, root_dir, declaration_map
         ".cjs": ".d.cts.map",
     }
 
-    return _out_paths(srcs, typings_out_dir, root_dir, allow_js, False, exts)
+    return _to_js_out_paths(srcs, typings_out_dir, root_dir, allow_js, False, exts)
 
 def _calculate_root_dir(ctx):
     return _join(
@@ -287,10 +305,12 @@ lib = struct(
     is_typings_src = _is_typings_src,
     is_ts_src = _is_ts_src,
     is_js_src = _is_js_src,
-    out_paths = _out_paths,
+    out_paths = _to_js_out_paths,
+    to_out_path = _to_out_path,
     calculate_js_outs = _calculate_js_outs,
     calculate_map_outs = _calculate_map_outs,
     calculate_typings_outs = _calculate_typings_outs,
     calculate_typing_maps_outs = _calculate_typing_maps_outs,
     calculate_root_dir = _calculate_root_dir,
+    calculate_assets_outs = _calculate_assets_outs,
 )

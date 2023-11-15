@@ -49,6 +49,7 @@ bzl_library(
         ":ts_config",
         ":ts_lib",
         ":ts_validate_options",
+        "@aspect_bazel_lib//lib:copy_file",
         "@aspect_bazel_lib//lib:copy_to_bin",
         "@aspect_bazel_lib//lib:paths",
         "@aspect_bazel_lib//lib:platform_utils",
