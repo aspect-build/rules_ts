@@ -1,0 +1,82 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+
+ts_config(
+    name = "config",
+    src = "tsconfig.json",
+    deps = [
+        "types/typings.d.ts",
+        "//examples:node_modules/@types/node",
+    ],
+)
+
+ts_project(
+    name = "ts",
+    srcs = [
+        "src/index.ts",
+    ],
+    assets = [
+        "src/styles.css",
+    ],
+    tsconfig = ":config",
+)
+
+ts_project(
+    name = "ts-out",
+    srcs = [
+        "src/index.ts",
+    ],
+    assets = [
+        "src/styles.css",
+    ],
+    extends = ":config",
+    out_dir = "out",
+    tsconfig = {"compilerOptions": {"outDir": "out"}},
+)
+
+ts_project(
+    name = "ts-root",
+    srcs = [
+        "src/index.ts",
+    ],
+    assets = [
+        "src/styles.css",
+    ],
+    root_dir = "src",
+    tsconfig = ":config",
+)
+
+ts_project(
+    name = "ts-root-out",
+    srcs = [
+        "src/index.ts",
+    ],
+    assets = [
+        "src/styles.css",
+    ],
+    out_dir = "root-out",
+    root_dir = "src",
+    tsconfig = ":config",
+)
+
+build_test(
+    name = "test",
+    targets = [
+        # Defaults of no root/out_dir
+        ":ts",
+        ":src/index.js",
+        ":src/styles.css",
+        # out_dir
+        ":ts-out",
+        ":out/src/index.js",
+        ":out/src/styles.css",
+        # root_dir
+        ":ts-root",
+        ":index.js",
+        ":styles.css",
+        # root_dir + out_dir
+        ":ts-root-out",
+        ":root-out/index.js",
+        ":root-out/styles.css",
+    ],
+)

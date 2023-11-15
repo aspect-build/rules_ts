@@ -1,5 +1,6 @@
 "ts_project rule"
 
+load("@aspect_bazel_lib//lib:copy_file.bzl", "copy_file_action")
 load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "COPY_FILE_TO_BIN_TOOLCHAINS", "copy_file_to_bin_action", "copy_files_to_bin_actions")
 load("@aspect_bazel_lib//lib:paths.bzl", "to_output_relative_path")
 load("@aspect_bazel_lib//lib:platform_utils.bzl", "platform_utils")
@@ -141,6 +142,14 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
     tsconfig_inputs = copy_files_to_bin_actions(ctx, _validate_lib.tsconfig_inputs(ctx).to_list())
     inputs.extend(tsconfig_inputs)
 
+    assets_outs = []
+    for a in ctx.files.assets:
+        a_path = _lib.relative_to_package(a.short_path, ctx)
+        a_out = _lib.to_out_path(a_path, ctx.attr.out_dir, ctx.attr.root_dir)
+        asset = ctx.actions.declare_file(a_out)
+        copy_file_action(ctx, a, asset)
+        assets_outs.append(asset)
+
     outputs = js_outs + map_outs + typings_outs + typing_maps_outs
     if ctx.outputs.buildinfo_out:
         arguments.add_all([
@@ -149,11 +158,11 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         ])
         outputs.append(ctx.outputs.buildinfo_out)
 
-    output_sources = js_outs + map_outs + copy_files_to_bin_actions(ctx, ctx.files.assets)
+    output_sources = js_outs + map_outs + assets_outs
 
     # Add JS inputs that collide with outputs (see #250).
     #
-    # Unfortunately this duplicates logic in ts_lib._out_paths:
+    # Unfortunately this duplicates logic in ts_lib._to_js_out_paths:
     # files collide iff the following conditions are met:
     # - They are JS files (ext in [js, json])
     # - out_dir == root_dir
