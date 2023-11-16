@@ -1,5 +1,6 @@
 "Private implementation details for ts_proto_library"
 
+load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "COPY_FILE_TO_BIN_TOOLCHAINS")
 load("@aspect_rules_js//js:libs.bzl", "js_lib_helpers")
 load("@aspect_rules_js//js:providers.bzl", "JsInfo", "js_info")
 load("@rules_proto//proto:defs.bzl", "ProtoInfo", "proto_common")
@@ -118,4 +119,5 @@ ts_proto_library = rule(
             cfg = "exec",
         ),
     },
+    toolchains = COPY_FILE_TO_BIN_TOOLCHAINS,
 )

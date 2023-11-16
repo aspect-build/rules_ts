@@ -20,6 +20,7 @@ def http_archive(**kwargs):
 # ours took precedence. Such breakages are challenging for users, so any
 # changes in this function should be marked as BREAKING in the commit message
 # and released only in semver majors.
+# buildifier: disable=function-docstring
 def rules_ts_bazel_dependencies():
     http_archive(
         name = "bazel_skylib",
@@ -36,9 +37,9 @@ def rules_ts_bazel_dependencies():
 
     http_archive(
         name = "aspect_rules_js",
-        sha256 = "bdbd6df52fc7963f55281fe0a140e21de8ec587ab711a8a2fff0715b6710a4f8",
-        strip_prefix = "rules_js-1.32.0",
-        url = "https://github.com/aspect-build/rules_js/releases/download/v1.32.0/rules_js-v1.32.0.tar.gz",
+        sha256 = "295a73d963bad4b04a3c488d60dc8a76a659ee64708be3a66be75726e6277c7e",
+        strip_prefix = "rules_js-1.33.3",
+        url = "https://github.com/aspect-build/rules_js/releases/download/v1.33.3/rules_js-v1.33.3.tar.gz",
     )
 
     http_archive(

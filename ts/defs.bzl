@@ -4,6 +4,7 @@ The most commonly used is the [ts_project](#ts_project) macro which accepts Type
 inputs and produces JavaScript or declaration (.d.ts) outputs.
 """
 
+load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "COPY_FILE_TO_BIN_TOOLCHAINS")
 load("@aspect_bazel_lib//lib:utils.bzl", "to_label")
 load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@bazel_skylib//lib:partial.bzl", "partial")
@@ -21,6 +22,7 @@ validate_options = rule(
     See the documentation of [`ts_project`](#ts_project) for more information.""",
     implementation = validate_lib.implementation,
     attrs = validate_lib.attrs,
+    toolchains = COPY_FILE_TO_BIN_TOOLCHAINS,
 )
 
 ts_project_rule = _ts_project
