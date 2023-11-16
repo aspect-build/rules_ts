@@ -14,7 +14,7 @@
 
 "tsconfig.json files using extends"
 
-load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_file_to_bin_action", "copy_files_to_bin_actions")
+load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "COPY_FILE_TO_BIN_TOOLCHAINS", "copy_file_to_bin_action", "copy_files_to_bin_actions")
 load("@aspect_bazel_lib//lib:paths.bzl", "relative_file")
 load("@aspect_rules_js//js:libs.bzl", "js_lib_helpers")
 load("@aspect_rules_js//js:providers.bzl", "js_info")
@@ -111,6 +111,7 @@ of a `ts_library` or `ts_project` rule. However, if your `tsconfig.json` uses th
 feature from TypeScript, then the Bazel implementation needs to know about that
 extended configuration file as well, to pass them both to the TypeScript compiler.
 """,
+    toolchains = COPY_FILE_TO_BIN_TOOLCHAINS,
 )
 
 def _filter_input_files(files, allow_js, resolve_json_module):
