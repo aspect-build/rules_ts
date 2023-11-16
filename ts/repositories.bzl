@@ -28,18 +28,35 @@ def rules_ts_bazel_dependencies():
         urls = ["https://github.com/bazelbuild/bazel-skylib/releases/download/1.4.1/bazel-skylib-1.4.1.tar.gz"],
     )
 
+    # http_archive(
+    #     name = "aspect_bazel_lib",
+    #     sha256 = "ee95bbc80f9ca219b93a8cc49fa19a2d4aa8649ddc9024f46abcdd33935753ca",
+    #     strip_prefix = "bazel-lib-1.29.2",
+    #     url = "https://github.com/aspect-build/bazel-lib/releases/download/v1.29.2/bazel-lib-v1.29.2.tar.gz",
+    # )
+
+    # TODO: remove before landing
     http_archive(
         name = "aspect_bazel_lib",
-        sha256 = "ee95bbc80f9ca219b93a8cc49fa19a2d4aa8649ddc9024f46abcdd33935753ca",
-        strip_prefix = "bazel-lib-1.29.2",
-        url = "https://github.com/aspect-build/bazel-lib/releases/download/v1.29.2/bazel-lib-v1.29.2.tar.gz",
+        strip_prefix = "bazel-lib-14f685015cb1219a9ee2c83859a5c1e79fa0ca27",
+        url = "https://github.com/kormide/bazel-lib/archive/14f685015cb1219a9ee2c83859a5c1e79fa0ca27.zip",
+        patches = [
+            "@aspect_rules_ts//:version.patch",
+        ],
     )
 
+    # http_archive(
+    #     name = "aspect_rules_js",
+    #     sha256 = "295a73d963bad4b04a3c488d60dc8a76a659ee64708be3a66be75726e6277c7e",
+    #     strip_prefix = "rules_js-1.33.3",
+    #     url = "https://github.com/aspect-build/rules_js/releases/download/v1.33.3/rules_js-v1.33.3.tar.gz",
+    # )
+
+    # TODO: remove before landing
     http_archive(
         name = "aspect_rules_js",
-        sha256 = "295a73d963bad4b04a3c488d60dc8a76a659ee64708be3a66be75726e6277c7e",
-        strip_prefix = "rules_js-1.33.3",
-        url = "https://github.com/aspect-build/rules_js/releases/download/v1.33.3/rules_js-v1.33.3.tar.gz",
+        strip_prefix = "rules_js-0085348f221540e9c1712db1ca944d2fd8ae7666",
+        url = "https://github.com/kormide/rules_js/archive/0085348f221540e9c1712db1ca944d2fd8ae7666.zip",
     )
 
     http_archive(

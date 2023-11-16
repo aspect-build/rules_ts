@@ -10,6 +10,20 @@ bazel_dep(name = "bazel_skylib", version = "1.4.1")
 bazel_dep(name = "aspect_rules_js", version = "1.33.3")
 bazel_dep(name = "aspect_bazel_lib", version = "1.29.2")
 
+# TODO: remove before landing
+archive_override(
+    module_name = "aspect_bazel_lib",
+    patches = ["//:version.patch"],
+    strip_prefix = "bazel-lib-14f685015cb1219a9ee2c83859a5c1e79fa0ca27",
+    urls = ["https://github.com/kormide/bazel-lib/archive/14f685015cb1219a9ee2c83859a5c1e79fa0ca27.zip"],
+)
+
+archive_override(
+    module_name = "aspect_rules_js",
+    strip_prefix = "rules_js-0085348f221540e9c1712db1ca944d2fd8ae7666",
+    urls = ["https://github.com/kormide/rules_js/archive/0085348f221540e9c1712db1ca944d2fd8ae7666.zip"],
+)
+
 # Similar to rules_python/MODULE.bazel, see https://github.com/bazelbuild/rules_python/pull/832
 # These are loaded only when using ts_proto_library
 bazel_dep(name = "rules_proto", version = "5.3.0-21.7")

@@ -28,6 +28,11 @@ load("@aspect_rules_js//js:repositories.bzl", "rules_js_dependencies")
 
 rules_js_dependencies()
 
+# TODO: remove after landing
+load("@aspect_bazel_lib//lib:repositories.bzl", "register_coreutils_toolchains")
+
+register_coreutils_toolchains()
+
 load("@bazel_features//:deps.bzl", "bazel_features_deps")
 
 bazel_features_deps()
