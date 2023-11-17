@@ -25,6 +25,8 @@ rules_js_dependencies()
 
 load("@aspect_bazel_lib//lib:repositories.bzl", "aspect_bazel_lib_dependencies", "register_coreutils_toolchains")
 
+register_coreutils_toolchains()
+
 aspect_bazel_lib_dependencies()
 
 register_coreutils_toolchains()
