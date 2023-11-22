@@ -9,10 +9,12 @@ module(
 bazel_dep(name = "bazel_skylib", version = "1.4.1")
 bazel_dep(name = "aspect_rules_js", version = "1.34.0")
 bazel_dep(name = "aspect_bazel_lib", version = "1.38.1")
+bazel_dep(name = "aspect_rules_jasmine", version = "1.1.1")
 
 # Similar to rules_python/MODULE.bazel, see https://github.com/bazelbuild/rules_python/pull/832
 # These are loaded only when using ts_proto_library
 bazel_dep(name = "rules_proto", version = "5.3.0-21.7")
+bazel_dep(name = "platforms", version = "0.0.5")
 
 # Only needed because rules_proto doesn't provide the protoc toolchain yet.
 # TODO(alex/sahin): remove in the future
@@ -20,6 +22,20 @@ bazel_dep(name = "protobuf", version = "21.7", repo_name = "com_google_protobuf"
 
 bazel_dep(name = "buildifier_prebuilt", version = "6.0.0.1", dev_dependency = True)
 bazel_dep(name = "rules_nodejs", version = "5.8.2", dev_dependency = True)
+bazel_dep(name = "gazelle", version = "0.33.0", dev_dependency = True, repo_name = "bazel_gazelle")
+bazel_dep(name = "bazel_skylib_gazelle_plugin", version = "1.4.1", dev_dependency = True)
+
+npm = use_extension(
+    "@aspect_rules_js//npm:extensions.bzl",
+    "npm",
+    dev_dependency = True,
+)
+npm.npm_translate_lock(
+    name = "npm",
+    pnpm_lock = "//examples:pnpm-lock.yaml",
+    verify_node_modules_ignored = "//:.bazelignore",
+)
+use_repo(npm, "npm")
 
 rules_ts_ext = use_extension(
     "@aspect_rules_ts//ts:extensions.bzl",
@@ -27,3 +43,4 @@ rules_ts_ext = use_extension(
     dev_dependency = True,
 )
 rules_ts_ext.deps(ts_version_from = "//examples:package.json")
+use_repo(rules_ts_ext, "npm_typescript")
