@@ -13,15 +13,17 @@ jobs:
     warming-archive:
         name: Aspect Workflows Warming
         runs-on: [self-hosted, aspect-workflows, aspect-warming]
+        env:
+            ASPECT_WORKFLOWS_BIN_DIR: /etc/aspect/workflows/bin
         steps:
             - name: Configure environment
-              run: configure_workflows_env
+              run: ${ASPECT_WORKFLOWS_BIN_DIR}/configure_workflows_env
             - uses: actions/checkout@v3
             - name: Agent health checks
-              run: agent_health_check
+              run: ${ASPECT_WORKFLOWS_BIN_DIR}/agent_health_check
             - name: Create warming archive
-              uses: aspect-build/workflows-action@5.8.7
+              uses: aspect-build/workflows-action@5.8.10
               with:
                   task: warming
             - name: Archive warming tars
-              run: warming_archive
+              run: ${ASPECT_WORKFLOWS_BIN_DIR}/warming_archive

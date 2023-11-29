@@ -1,7 +1,7 @@
 # ==================================================================================================
-# Aspect Workflows Reusable Workflow for GitHub Actions (v5.8.7)
+# Aspect Workflows Reusable Workflow for GitHub Actions (v5.8.10)
 #
-# https://github.com/marketplace/actions/aspect-workflows?version=5.8.7
+# https://github.com/marketplace/actions/aspect-workflows?version=5.8.10
 #
 # At this time, GitHub Actions does not allow referencing reusable workflows from public
 # repositories in other organizations. See
@@ -37,10 +37,10 @@
 #    jobs:
 #      aspect-workflows:
 #        name: Aspect Workflows
-#        uses: my-github-org/workflows-action/.github/workflows/.aspect-workflows-reusable.yaml@5.8.7
+#        uses: my-github-org/workflows-action/.github/workflows/.aspect-workflows-reusable.yaml@5.8.10
 #    ```
 # ==================================================================================================
-name: Aspect Workflows Reusable Workflow (v5.8.7)
+name: Aspect Workflows Reusable Workflow (v5.8.10)
 
 on:
   # Makes this workflow reusable, see
@@ -70,7 +70,7 @@ jobs:
   setup:
     runs-on: [self-hosted, aspect-workflows, "${{ inputs.queue }}"]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - id: rosetta-generate
         run: |
           echo "json=$( \
@@ -93,13 +93,13 @@ jobs:
 
     steps:
       - name: Configure environment
-        run: configure_workflows_env
+        run: ${{ fromJson(needs.setup.outputs.cfg).platform.directories.WORKFLOWS_BIN_DIR }}/configure_workflows_env
 
       - name: Clone repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Agent health checks
-        run: agent_health_check
+        run: ${{ fromJson(needs.setup.outputs.cfg).platform.directories.WORKFLOWS_BIN_DIR }}/agent_health_check
         timeout-minutes: ${{ fromJson(needs.setup.outputs.cfg).task_config[fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].workspace].tasks['bazel_health_probe'].timeout_in_minutes }}
 
       - name: Process Secrets
@@ -111,7 +111,7 @@ jobs:
           echo "filtered_secrets=${FILTERED_SECRETS}" | tee ${GITHUB_OUTPUT}
 
       - name: Branch Freshness
-        uses: aspect-build/workflows-action@5.8.7
+        uses: aspect-build/workflows-action@5.8.10
         timeout-minutes: ${{ fromJson(needs.setup.outputs.cfg).task_config[fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].workspace].tasks['branch_freshness'].timeout_in_minutes }}
         with:
           workspace: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].workspace }}
@@ -121,7 +121,7 @@ jobs:
         run: rm -rf ${{ join(fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].artifact_paths, ' ') }}
 
       - name: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].task }}
-        uses: aspect-build/workflows-action@5.8.7
+        uses: aspect-build/workflows-action@5.8.10
         env: ${{ inputs.inherited_secrets != '' && fromJson(steps.process_secrets.outputs.filtered_secrets) || fromJson('{}') }}
         timeout-minutes: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].timeout_in_minutes }}
         with:
@@ -143,7 +143,7 @@ jobs:
 
       - name: Delivery Manifest
         if: fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].generate_manifest
-        uses: aspect-build/workflows-action@5.8.7
+        uses: aspect-build/workflows-action@5.8.10
         timeout-minutes: ${{ fromJson(needs.setup.outputs.cfg).task_config[fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].workspace].tasks['delivery'].timeout_in_minutes }}
         with:
             workspace: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].workspace }}
@@ -174,6 +174,7 @@ jobs:
           functionalities: search # Disable searching for coverage reports. If enabled, it gets confused
                                   # by the bazel convenience symlinks and finds the same coverage report
                                   # under bazel-out and {workspace}/bazel-out.
+
       - name: Trigger Delivery
         # This uses the following API: https://docs.github.com/en/rest/actions/workflows?apiVersion=2022-11-28#create-a-workflow-dispatch-event
         run: |
