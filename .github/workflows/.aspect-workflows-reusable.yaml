@@ -1,7 +1,7 @@
 # ==================================================================================================
-# Aspect Workflows Reusable Workflow for GitHub Actions (v5.8.15)
+# Aspect Workflows Reusable Workflow for GitHub Actions (v5.9.0-beta.2)
 #
-# https://github.com/marketplace/actions/aspect-workflows?version=5.8.15
+# https://github.com/marketplace/actions/aspect-workflows?version=5.9.0-beta.2
 #
 # At this time, GitHub Actions does not allow referencing reusable workflows from public
 # repositories in other organizations. See
@@ -37,10 +37,10 @@
 #    jobs:
 #      aspect-workflows:
 #        name: Aspect Workflows
-#        uses: my-github-org/workflows-action/.github/workflows/.aspect-workflows-reusable.yaml@5.8.15
+#        uses: my-github-org/workflows-action/.github/workflows/.aspect-workflows-reusable.yaml@5.9.0-beta.2
 #    ```
 # ==================================================================================================
-name: Aspect Workflows Reusable Workflow (v5.8.15)
+name: Aspect Workflows Reusable Workflow (v5.9.0-beta.2)
 
 on:
   # Makes this workflow reusable, see
@@ -87,6 +87,7 @@ jobs:
     needs: [setup]
     runs-on: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].labels }}
     strategy:
+      fail-fast: false
       matrix: ${{ fromJson(needs.setup.outputs.cfg).matrix_config }}
     env:
       ASPECT_WORKFLOWS_CONFIG: ${{ inputs.aspect-config }}
@@ -110,18 +111,26 @@ jobs:
           FILTERED_SECRETS=$(${{ fromJson(needs.setup.outputs.cfg).platform.directories.WORKFLOWS_BIN_DIR }}/jq --compact-output --argjson secrets "${REQUIRED_SECRETS}" 'with_entries( select (.key | test($secrets[]) ) )' <<< '''${{ toJson(secrets) }}''' )
           echo "filtered_secrets=${FILTERED_SECRETS}" | tee ${GITHUB_OUTPUT}
 
+      - name: Prepare archive directories
+        run: rm -rf ${{ join(fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].artifact_paths, ' ') }}
+
+      - name: Determine changed files
+        uses: tj-actions/changed-files@v40
+        if: endsWith(matrix.job, 'format')
+        with:
+          json: true
+          write_output_files: true
+          output_dir: ${{ fromJson(needs.setup.outputs.cfg).platform.directories.ARTIFACTS_DIR }}
+
       - name: Branch Freshness
-        uses: aspect-build/workflows-action@5.8.15
+        uses: aspect-build/workflows-action@5.9.0-beta.2
         timeout-minutes: ${{ fromJson(needs.setup.outputs.cfg).task_config[fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].workspace].tasks['branch_freshness'].timeout_in_minutes }}
         with:
           workspace: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].workspace }}
           task: branch_freshness
 
-      - name: Prepare archive directories
-        run: rm -rf ${{ join(fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].artifact_paths, ' ') }}
-
       - name: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].task }}
-        uses: aspect-build/workflows-action@5.8.15
+        uses: aspect-build/workflows-action@5.9.0-beta.2
         env: ${{ inputs.inherited_secrets != '' && fromJson(steps.process_secrets.outputs.filtered_secrets) || fromJson('{}') }}
         timeout-minutes: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].timeout_in_minutes }}
         with:
@@ -143,7 +152,7 @@ jobs:
 
       - name: Delivery Manifest
         if: fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].generate_manifest
-        uses: aspect-build/workflows-action@5.8.15
+        uses: aspect-build/workflows-action@5.9.0-beta.2
         timeout-minutes: ${{ fromJson(needs.setup.outputs.cfg).task_config[fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].workspace].tasks['delivery'].timeout_in_minutes }}
         with:
             workspace: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].workspace }}
