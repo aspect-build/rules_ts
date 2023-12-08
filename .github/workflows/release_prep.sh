@@ -10,10 +10,10 @@ PREFIX="rules_ts-${TAG:1}"
 ARCHIVE="rules_ts-$TAG.tar.gz"
 
 # NB: configuration for 'git archive' is in /.gitattributes
-git archive --format=tar --prefix=${PREFIX}/ ${TAG} | gzip > $ARCHIVE
+git archive --format=tar --prefix=${PREFIX}/ ${TAG} | gzip >$ARCHIVE
 SHA=$(shasum -a 256 $ARCHIVE | awk '{print $1}')
 
-cat << EOF
+cat <<EOF
 ## Using [Bzlmod] with Bazel 6:
 
 Add to your \`MODULE.bazel\` file:
@@ -49,9 +49,9 @@ http_archive(
 EOF
 
 awk 'f;/--SNIP--/{f=1}' e2e/workspace/WORKSPACE
-echo "\`\`\`" 
+echo "\`\`\`"
 
-cat << EOF
+cat <<EOF
 
 To use rules_ts with bazel-lib 2.x, you must additionally register the coreutils toolchain.
 
