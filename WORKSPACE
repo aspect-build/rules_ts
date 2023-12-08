@@ -91,3 +91,14 @@ rules_ts_dependencies(ts_version_from = "@npm//examples:typescript/resolved.json
 load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies")
 
 rules_proto_dependencies()
+
+# rules_lint
+load(
+    "@aspect_rules_lint//format:repositories.bzl",
+    "fetch_shfmt",
+    "fetch_terraform",
+)
+
+fetch_shfmt()
+
+fetch_terraform()
