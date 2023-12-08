@@ -87,7 +87,7 @@ module "aspect_workflows" {
       # gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/aspect-build/rules_ts/actions/workflows
       # https://docs.github.com/en/rest/actions/workflows?apiVersion=2022-11-28#list-repository-workflows
       gha_workflow_ids          = ["66360195"] # Aspect Workflows
-      max_runners               = 5
+      max_runners = 5
       min_runners               = 0
       queue                     = "aspect-default"
       resource_type             = "default"
