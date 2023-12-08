@@ -50,7 +50,7 @@ module "aspect_workflows" {
     # PagerDuty key for this deployment
     pagerduty_integration_key = "39eddf9c91be4100d0a709f2d04bc4bd"
     # Whether or not to allow SSM access to runners
-    enable_ssm_access  = true
+    enable_ssm_access = true
   }
 
   # Remote cache properties
@@ -64,7 +64,7 @@ module "aspect_workflows" {
 
   # Warming set definitions
   warming_sets = {
-    default  = {}
+    default = {}
   }
 
   # Resource types for use by runner groups
@@ -81,12 +81,12 @@ module "aspect_workflows" {
   gha_runner_groups = {
     # The default runner group is use for the main build & test workflows.
     default = {
-      agent_idle_timeout_min    = 1
-      gh_repo                   = "aspect-build/rules_ts"
+      agent_idle_timeout_min = 1
+      gh_repo                = "aspect-build/rules_ts"
       # Determine the workflow ID with:
       # gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/aspect-build/rules_ts/actions/workflows
       # https://docs.github.com/en/rest/actions/workflows?apiVersion=2022-11-28#list-repository-workflows
-      gha_workflow_ids          = ["66360195"]  # Aspect Workflows
+      gha_workflow_ids          = ["66360195"] # Aspect Workflows
       max_runners               = 5
       min_runners               = 0
       queue                     = "aspect-default"
@@ -103,12 +103,12 @@ module "aspect_workflows" {
       # Determine the workflow ID with:
       # gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/aspect-build/rules_ts/actions/workflows
       # https://docs.github.com/en/rest/actions/workflows?apiVersion=2022-11-28#list-repository-workflows
-      gha_workflow_ids       = ["66594869"]  # Aspect Workflows Warming
-      max_runners            = 1
-      min_runners            = 0
-      policies               = { warming_manage : module.aspect_workflows.warming_management_policies["default"].arn }
-      queue                  = "aspect-warming"
-      resource_type          = "default"
+      gha_workflow_ids = ["66594869"] # Aspect Workflows Warming
+      max_runners      = 1
+      min_runners      = 0
+      policies         = { warming_manage : module.aspect_workflows.warming_management_policies["default"].arn }
+      queue            = "aspect-warming"
+      resource_type    = "default"
     }
   }
 }
