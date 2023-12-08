@@ -61,6 +61,13 @@ def rules_ts_internal_deps():
     )
 
     http_archive(
+        name = "aspect_rules_lint",
+        sha256 = "604666ec7ffd4f5f2636001ae892a0fbc29c77401bb33dd10601504e3ba6e9a7",
+        strip_prefix = "rules_lint-0.6.1",
+        url = "https://github.com/aspect-build/rules_lint/releases/download/v0.6.1/rules_lint-v0.6.1.tar.gz",
+    )
+
+    http_archive(
         name = "aspect_rules_swc",
         sha256 = "b647c7c31feeb7f9330fff08b45f8afe7de674d3a9c89c712b8f9d1723d0c8f9",
         strip_prefix = "rules_swc-1.0.1",

@@ -24,3 +24,10 @@ repos:
       rev: 'v2.4.0'
       hooks:
           - id: prettier
+    - repo: local
+      hooks:
+          - id: aspect_rules_lint
+            name: Format
+            language: system
+            entry: bazel run //:format
+            files: .*
