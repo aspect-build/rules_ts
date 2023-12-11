@@ -20,7 +20,7 @@ data "aws_ami" "runner_ami" {
   most_recent = true
   filter {
     name   = "name"
-    values = ["aspect-workflows-al2023-gcc-*"]
+    values = ["aspect-workflows-al2023-gcc-amd64-*"]
   }
 }
 
@@ -75,6 +75,13 @@ module "aspect_workflows" {
       instance_types = ["c5ad.xlarge"]
       image_id       = data.aws_ami.runner_ami.id
     }
+    "small" = {
+      # Aspect Workflows requires instance types that have nvme drives. See
+      # https://aws.amazon.com/ec2/instance-types/ for full list of instance types available on AWS.
+      # TODO: switch to Graviton processor when 5.9.0-beta.3 or rc.0 is out
+      instance_types = ["c5ad.large"]
+      image_id       = data.aws_ami.runner_ami.id
+    }
   }
 
   # GitHub Actions runner group definitions
@@ -91,9 +98,22 @@ module "aspect_workflows" {
       min_runners               = 0
       queue                     = "aspect-default"
       resource_type             = "default"
-      scale_out_factor          = 2
       scaling_polling_frequency = 1 # check for queued jobs every 60s
       warming                   = true
+    }
+    small = {
+      agent_idle_timeout_min = 1
+      gh_repo                = "aspect-build/rules_ts"
+      # Determine the workflow ID with:
+      # gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/aspect-build/rules_ts/actions/workflows
+      # https://docs.github.com/en/rest/actions/workflows?apiVersion=2022-11-28#list-repository-workflows
+      gha_workflow_ids          = ["66360195"] # Aspect Workflows
+      max_runners               = 5
+      min_runners               = 0
+      queue                     = "aspect-small"
+      resource_type             = "small"
+      scaling_polling_frequency = 1 # check for queued jobs every 60s
+      warming                   = false
     }
     # The warming runner group is used for the periodic warming job that creates
     # warming archives for use by other runner groups.
