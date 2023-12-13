@@ -15,4 +15,4 @@ jobs:
         name: Aspect Workflows
         uses: ./.github/workflows/.aspect-workflows-reusable.yaml
         with:
-            queue: aspect-small
+            queue: aspect-small-arm64
