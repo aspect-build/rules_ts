@@ -1,0 +1,41 @@
+name: Aspect Workflows Delivery
+
+on:
+    # Allow this to be triggered manually via the GH UI. See
+    # https://docs.aspect.build/workflows/delivery#break-glass-deliver-on-red
+    workflow_dispatch:
+        inputs:
+            delivery_commit:
+                description: commit to run
+                type: string
+                required: true
+            delivery_targets:
+                description: targets to run, delimited by comma and/or space
+                type: string
+                required: false
+
+jobs:
+    delivery:
+        name: Aspect Workflows Delivery
+        runs-on: [self-hosted, aspect-workflows, aspect-default]
+        env:
+            ASPECT_WORKFLOWS_BIN_DIR: /etc/aspect/workflows/bin
+        steps:
+            - name: Configure environment
+              run: ${ASPECT_WORKFLOWS_BIN_DIR}/configure_workflows_env
+            - uses: actions/checkout@v4
+              with:
+                  ref: ${{ inputs.delivery_commit }}
+                  # Fetch all history for all tags and branches, so the --workspace_status_command can find
+                  # any tags that it needs for `git describe`.
+                  # See https://github.com/actions/checkout#Fetch-all-history-for-all-tags-and-branches
+                  fetch-depth: 0
+            - name: Agent health checks
+              run: ${ASPECT_WORKFLOWS_BIN_DIR}/agent_health_check
+            - name: Run Delivery
+              uses: ./workflows/rosetta/gh-actions
+              with:
+                  task: delivery
+              env:
+                  DELIVERY_COMMIT: ${{ inputs.delivery_commit }}
+                  DELIVERY_TARGETS: ${{ inputs.delivery_targets }}
