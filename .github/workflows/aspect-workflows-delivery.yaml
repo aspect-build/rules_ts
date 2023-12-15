@@ -33,7 +33,7 @@ jobs:
             - name: Agent health checks
               run: ${ASPECT_WORKFLOWS_BIN_DIR}/agent_health_check
             - name: Run Delivery
-              uses: ./workflows/rosetta/gh-actions
+              uses: aspect-build/workflows-action@5.9.0-rc.7
               with:
                   task: delivery
               env:
