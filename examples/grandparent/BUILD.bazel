@@ -1,0 +1,33 @@
+load("@aspect_rules_swc//swc:defs.bzl", "swc")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
+load("@bazel_skylib//lib:partial.bzl", "partial")
+load("@npm//examples:tsconfig-to-swcconfig/package_json.bzl", tsconfig_to_swcconfig = "bin")
+
+ts_config(
+    name = "tsconfig",
+    src = "tsconfig.json",
+    visibility = [":__subpackages__"],
+)
+
+tsconfig_to_swcconfig.t2s(
+    name = "write_swcrc",
+    srcs = ["tsconfig.json"],
+    args = [
+        "--filename",
+        "$(location tsconfig.json)",
+    ],
+    stdout = ".swcrc",
+    visibility = [":__subpackages__"],
+)
+
+ts_project(
+    name = "grandparent",
+    srcs = ["index.ts"],
+    declaration = True,
+    transpiler = partial.make(
+        swc,
+        swcrc = ":.swcrc",
+    ),
+    tsconfig = ":tsconfig",
+    deps = ["//examples/grandparent/parent"],
+)
