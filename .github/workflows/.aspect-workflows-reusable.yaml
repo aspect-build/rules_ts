@@ -115,7 +115,7 @@ jobs:
         run: rm -rf ${{ join(fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].artifact_paths, ' ') }}
 
       - name: Determine changed files
-        uses: tj-actions/changed-files@v40
+        uses: tj-actions/changed-files@v41
         if: endsWith(matrix.job, 'format')
         with:
           json: true
