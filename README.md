@@ -58,7 +58,7 @@ ensure that your developers load your macro rather than loading from `@aspect_ru
 
 Aspect provides a TypeScript BUILD file generator as part of the [Aspect CLI](https://aspect.build/cli).
 Run `aspect configure` to create or update `BUILD.bazel` files as you edit TypeScript sources.
-See <https://docs.aspect.build/v/cli/commands/aspect_configure>.
+See <https://docs.aspect.build/cli/commands/aspect_configure>.
 
 ### Advanced: custom rules
 

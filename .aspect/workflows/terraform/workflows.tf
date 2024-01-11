@@ -13,7 +13,7 @@ provider "aws" {
 data "aws_ami" "runner_amd64_ami" {
   # Aspect's AWS account 213396452403 provides public Aspect Workflows images for getting started
   # during the trial period. We recommend that all Workflows users build their own AMIs and keep
-  # up-to date with patches. See https://docs.aspect.build/v/workflows/install/packer for more info
+  # up-to date with patches. See https://docs.aspect.build/workflows/install/packer for more info
   # and/or https://github.com/aspect-build/workflows-images for example packer scripts and BUILD
   # targets for building AMIs for Workflows.
   owners      = ["213396452403"]
@@ -27,7 +27,7 @@ data "aws_ami" "runner_amd64_ami" {
 data "aws_ami" "runner_arm64_ami" {
   # Aspect's AWS account 213396452403 provides public Aspect Workflows images for getting started
   # during the trial period. We recommend that all Workflows users build their own AMIs and keep
-  # up-to date with patches. See https://docs.aspect.build/v/workflows/install/packer for more info
+  # up-to date with patches. See https://docs.aspect.build/workflows/install/packer for more info
   # and/or https://github.com/aspect-build/workflows-images for example packer scripts and BUILD
   # targets for building AMIs for Workflows.
   owners      = ["213396452403"]
