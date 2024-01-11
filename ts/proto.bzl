@@ -14,7 +14,7 @@ This Bazel integration follows the "Local Generation" mechanism described at
 https://connectrpc.com/docs/web/generating-code#local-generation,
 using the `@bufbuild/protoc-gen-connect-es` and `@bufbuild/protoc-gen-es` packages as plugins to protoc.
 
-The [aspect configure](https://docs.aspect.build/v/cli/commands/aspect_configure) command
+The [aspect configure](https://docs.aspect.build/cli/commands/aspect_configure) command
 auto-generates `ts_proto_library` rules as of the 5.7.2 release.
 It's also possible to compile this library into your Gazelle binary.
 
