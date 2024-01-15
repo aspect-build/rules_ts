@@ -73,12 +73,13 @@ jobs:
       - uses: actions/checkout@v4
       - id: rosetta-generate
         run: |
-          echo "json=$( \
+          ROSETTA_RESULT=$( \
             rosetta steps \
             --config ${{ inputs.aspect-config }} \
             --gha_task generate \
-            --gha_json_pretty_print=false \
-          )" | tee ${GITHUB_OUTPUT}
+            --gha_json_pretty_print=false; exit 1 \
+          )
+          echo "json=${ROSETTA_RESULT}" | tee ${GITHUB_OUTPUT}
 
     outputs:
       cfg: ${{ steps.rosetta-generate.outputs.json }}
