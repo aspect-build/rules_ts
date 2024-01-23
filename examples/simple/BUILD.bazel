@@ -9,7 +9,7 @@ load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 ts_project(
     name = "ts",
     srcs = ["foo.ts"],
-    declaration = False,
+    declaration = True,
     # "." is the same as default
     # explicitly given as a regression test for https://github.com/aspect-build/rules_ts/issues/195
     out_dir = ".",

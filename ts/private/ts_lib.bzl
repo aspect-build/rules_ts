@@ -129,6 +129,9 @@ COMPILER_OPTION_ATTRS = {
     "source_map": attr.bool(
         doc = "https://www.typescriptlang.org/tsconfig#sourceMap",
     ),
+    "ts_build_info_file": attr.string(
+        doc = "https://www.typescriptlang.org/tsconfig#tsBuildInfoFile",
+    ),
 }
 
 # tsc knows how to produce the following kinds of output files.

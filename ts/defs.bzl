@@ -408,6 +408,7 @@ def ts_project(
         declaration_dir = declaration_dir,
         source_map = source_map,
         declaration_map = declaration_map,
+        ts_build_info_file = ts_build_info_file,
         out_dir = out_dir,
         root_dir = root_dir,
         js_outs = tsc_js_outs,
