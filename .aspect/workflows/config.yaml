@@ -10,3 +10,6 @@ tasks:
     - test:
     - delivery:
           always_deliver: true
+notifications:
+    # Report progress of the tasks in a comment on the code review thread
+    github: {}
