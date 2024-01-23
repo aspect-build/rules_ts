@@ -17,8 +17,11 @@ load("//ts/private:ts_validate_options.bzl", validate_lib = "lib")
 ts_config = _ts_config
 TsConfigInfo = _TsConfigInfo
 
+# TODO(3.0): remove this rule; not needed with validation actions
 validate_options = rule(
-    doc = """Validates that some tsconfig.json properties match attributes on ts_project.
+    doc = """DEPRECATED. Use Validation Actions instead.
+    
+    Validates that some tsconfig.json properties match attributes on ts_project.
     See the documentation of [`ts_project`](#ts_project) for more information.""",
     implementation = validate_lib.implementation,
     attrs = validate_lib.attrs,
@@ -83,7 +86,7 @@ def ts_project(
 
     Some TypeScript options affect which files are emitted, and Bazel needs to predict these ahead-of-time.
     As a result, several options from the tsconfig file must be mirrored as attributes to ts_project.
-    A validator action is run to help ensure that these are correctly mirrored.
+    A validation action is run to help ensure that these are correctly mirrored.
     See https://www.typescriptlang.org/tsconfig for a listing of the TypeScript options.
 
     If you have problems getting your `ts_project` to work correctly, read the dedicated
@@ -180,7 +183,6 @@ def ts_project(
         validate: Whether to check that the dependencies are valid and the tsconfig JSON settings match the attributes on this target.
             Set this to `False` to skip running our validator, in case you have a legitimate reason for these to differ,
             e.g. you have a setting enabled just for the editor but you want different behavior when Bazel runs `tsc`.
-
 
         root_dir: String specifying a subdirectory under the input package which should be consider the
             root directory of all the input files.
@@ -318,27 +320,6 @@ def ts_project(
         # user supplied a tsconfig.json InputArtifact
         tsconfig = "tsconfig_%s.json" % name
 
-    if validate:
-        validate_options(
-            name = "_validate_%s_options" % name,
-            target = "//%s:%s" % (native.package_name(), name),
-            declaration = declaration,
-            source_map = source_map,
-            declaration_map = declaration_map,
-            preserve_jsx = preserve_jsx,
-            composite = composite,
-            incremental = incremental,
-            ts_build_info_file = ts_build_info_file,
-            emit_declaration_only = emit_declaration_only,
-            resolve_json_module = resolve_json_module,
-            allow_js = allow_js,
-            tsconfig = tsconfig,
-            extends = extends,
-            deps = deps,
-            validator = validator,
-            **common_kwargs
-        )
-
     typings_out_dir = declaration_dir if declaration_dir else out_dir
     tsbuildinfo_path = ts_build_info_file if ts_build_info_file else name + ".tsbuildinfo"
 
@@ -444,5 +425,7 @@ def ts_project(
             "@npm_typescript//:is_typescript_5_or_greater": True,
             "//conditions:default": False,
         }),
+        validate = validate,
+        validator = validator,
         **kwargs
     )

@@ -83,6 +83,12 @@ See more details on the `assets` parameter of the `ts_project` macro.
         mandatory = True,
         allow_single_file = [".json"],
     ),
+    "validate": attr.bool(
+        doc = """whether to add a Validation Action to verify the other attributes match
+            settings in the tsconfig.json file""",
+        default = True,
+    ),
+    "validator": attr.label(mandatory = True, executable = True, cfg = "exec"),
     "_options": attr.label(
         default = "@aspect_rules_ts//ts:options",
     ),

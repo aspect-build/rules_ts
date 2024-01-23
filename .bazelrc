@@ -4,6 +4,14 @@ import %workspace%/.bazelrc.common
 # passes an argument `--skipLibCheck` to *every* spawn of tsc
 build --@aspect_rules_ts//ts:skipLibCheck=always
 
+# Disable lockfile for now. It is unstable.
+# https://github.com/bazelbuild/bazel/issues/19026
+# https://github.com/bazelbuild/bazel/issues/19621
+# https://github.com/bazelbuild/bazel/issues/19971
+# https://github.com/bazelbuild/bazel/issues/20272
+# https://github.com/bazelbuild/bazel/issues/20369
+common --lockfile_mode=off
+
 # verbose
 build:verbose --@aspect_rules_ts//ts:verbose --worker_verbose
 

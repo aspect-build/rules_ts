@@ -41,7 +41,7 @@ ts_project_rule(<a href="#ts_project_rule-name">name</a>, <a href="#ts_project_r
                 <a href="#ts_project_rule-declaration">declaration</a>, <a href="#ts_project_rule-declaration_dir">declaration_dir</a>, <a href="#ts_project_rule-declaration_map">declaration_map</a>, <a href="#ts_project_rule-deps">deps</a>, <a href="#ts_project_rule-emit_declaration_only">emit_declaration_only</a>, <a href="#ts_project_rule-extends">extends</a>,
                 <a href="#ts_project_rule-incremental">incremental</a>, <a href="#ts_project_rule-is_typescript_5_or_greater">is_typescript_5_or_greater</a>, <a href="#ts_project_rule-js_outs">js_outs</a>, <a href="#ts_project_rule-map_outs">map_outs</a>, <a href="#ts_project_rule-out_dir">out_dir</a>, <a href="#ts_project_rule-preserve_jsx">preserve_jsx</a>,
                 <a href="#ts_project_rule-resolve_json_module">resolve_json_module</a>, <a href="#ts_project_rule-root_dir">root_dir</a>, <a href="#ts_project_rule-source_map">source_map</a>, <a href="#ts_project_rule-srcs">srcs</a>, <a href="#ts_project_rule-supports_workers">supports_workers</a>, <a href="#ts_project_rule-transpile">transpile</a>, <a href="#ts_project_rule-tsc">tsc</a>,
-                <a href="#ts_project_rule-tsc_worker">tsc_worker</a>, <a href="#ts_project_rule-tsconfig">tsconfig</a>, <a href="#ts_project_rule-typing_maps_outs">typing_maps_outs</a>, <a href="#ts_project_rule-typings_outs">typings_outs</a>)
+                <a href="#ts_project_rule-tsc_worker">tsc_worker</a>, <a href="#ts_project_rule-tsconfig">tsconfig</a>, <a href="#ts_project_rule-typing_maps_outs">typing_maps_outs</a>, <a href="#ts_project_rule-typings_outs">typings_outs</a>, <a href="#ts_project_rule-validate">validate</a>, <a href="#ts_project_rule-validator">validator</a>)
 </pre>
 
 Implementation rule behind the ts_project macro.
@@ -87,6 +87,8 @@ Implementation rule behind the ts_project macro.
 | <a id="ts_project_rule-tsconfig"></a>tsconfig |  tsconfig.json file, see https://www.typescriptlang.org/tsconfig   | <a href="https://bazel.build/concepts/labels">Label</a> | required |  |
 | <a id="ts_project_rule-typing_maps_outs"></a>typing_maps_outs |  Locations in bazel-out where tsc will write <code>.d.ts.map</code> files   | List of labels | optional |  |
 | <a id="ts_project_rule-typings_outs"></a>typings_outs |  Locations in bazel-out where tsc will write <code>.d.ts</code> files   | List of labels | optional |  |
+| <a id="ts_project_rule-validate"></a>validate |  whether to add a Validation Action to verify the other attributes match             settings in the tsconfig.json file   | Boolean | optional | <code>True</code> |
+| <a id="ts_project_rule-validator"></a>validator |  -   | <a href="https://bazel.build/concepts/labels">Label</a> | required |  |
 
 
 <a id="validate_options"></a>
@@ -99,7 +101,9 @@ validate_options(<a href="#validate_options-name">name</a>, <a href="#validate_o
                  <a href="#validate_options-source_map">source_map</a>, <a href="#validate_options-target">target</a>, <a href="#validate_options-ts_build_info_file">ts_build_info_file</a>, <a href="#validate_options-tsconfig">tsconfig</a>, <a href="#validate_options-validator">validator</a>)
 </pre>
 
-Validates that some tsconfig.json properties match attributes on ts_project.
+DEPRECATED. Use Validation Actions instead.
+    
+    Validates that some tsconfig.json properties match attributes on ts_project.
     See the documentation of [`ts_project`](#ts_project) for more information.
 
 **ATTRIBUTES**
@@ -169,7 +173,7 @@ Worker mode is on by default to speed up build and typechecking process.
 
 Some TypeScript options affect which files are emitted, and Bazel needs to predict these ahead-of-time.
 As a result, several options from the tsconfig file must be mirrored as attributes to ts_project.
-A validator action is run to help ensure that these are correctly mirrored.
+A validation action is run to help ensure that these are correctly mirrored.
 See https://www.typescriptlang.org/tsconfig for a listing of the TypeScript options.
 
 If you have problems getting your `ts_project` to work correctly, read the dedicated
