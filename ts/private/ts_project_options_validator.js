@@ -227,7 +227,11 @@ if (require.main === module) {
     try {
         process.exitCode = main(process.argv.slice(2))
         if (process.exitCode != 0) {
-            console.error('Or to suppress this error, run:')
+            console.error('Or to suppress this error, either:')
+            console.error(
+                ' - pass --norun_validations to Bazel to turn off the feature completely, or'
+            )
+            console.error(' - disable validation for this target by running:')
             console.error(
                 "    npx @bazel/buildozer 'set validate False' " +
                     process.argv[4]
