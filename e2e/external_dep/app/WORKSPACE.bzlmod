@@ -1,0 +1,4 @@
+local_repository(
+    name = "lib_wksp",
+    path = "..",
+)
