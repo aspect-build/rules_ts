@@ -1,5 +1,5 @@
 import { fastify } from 'fastify'
-import { fastifyConnectPlugin } from '@bufbuild/connect-fastify'
+import { fastifyConnectPlugin } from '@connectrpc/connect-fastify'
 import routes from './connect.js'
 
 async function main() {

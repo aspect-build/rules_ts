@@ -1,4 +1,4 @@
-import { ConnectRouter } from '@bufbuild/connect'
+import { ConnectRouter } from '@connectrpc/connect'
 import { ElizaService } from './proto/eliza_connect.js'
 
 export default (router: ConnectRouter) =>
