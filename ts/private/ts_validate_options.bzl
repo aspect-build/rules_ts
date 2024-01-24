@@ -20,12 +20,8 @@ def _tsconfig_inputs(ctx):
             inputs.append(ctx.attr.extends.files)
     return depset(transitive = inputs)
 
+# TODO(3.0): remove this along with the validate_options rule
 def _validate_options_impl(ctx):
-    # Bazel won't run our action unless its output is needed, so make a marker file
-    # We make it a .d.ts file so we can plumb it to the deps of the ts_project compile.
-    marker = ctx.actions.declare_file("%s.optionsvalid.d.ts" % ctx.label.name)
-    tsconfig = copy_file_to_bin_action(ctx, ctx.file.tsconfig)
-
     # Provider validation
     if not ctx.attr.allow_js:
         for d in ctx.attr.deps:
@@ -39,7 +35,19 @@ To disable this check, set the validate attribute to False:
   npx @bazel/buildozer 'set validate False' {1}
 """.format(d.label, ctx.attr.target))
 
-    # External validation
+    inputs = _tsconfig_inputs(ctx)
+    return [
+        # https://bazel.build/extending/rules#validations_output_group
+        # "hold the otherwise unused outputs of validation actions"
+        OutputGroupInfo(_validation = depset(_validate_action(ctx, inputs.to_list()))),
+    ]
+
+def _validate_action(ctx, tsconfig_inputs):
+    # Bazel won't run our action unless its output is needed, so make a marker file
+    # We make it a .d.ts file so we can plumb it to the deps of the ts_project compile.
+    marker = ctx.actions.declare_file("%s.optionsvalid.d.ts" % ctx.label.name)
+    tsconfig = copy_file_to_bin_action(ctx, ctx.file.tsconfig)
+
     arguments = ctx.actions.args()
     config = struct(
         allow_js = ctx.attr.allow_js,
@@ -56,15 +64,14 @@ To disable this check, set the validate attribute to False:
     arguments.add_all([
         to_output_relative_path(tsconfig),
         to_output_relative_path(marker),
-        ctx.attr.target,
+        str(ctx.label),
+        ctx.label.package,
         json.encode(config),
     ])
 
-    inputs = _tsconfig_inputs(ctx)
-
     ctx.actions.run(
         executable = ctx.executable.validator,
-        inputs = copy_files_to_bin_actions(ctx, inputs.to_list()),
+        inputs = copy_files_to_bin_actions(ctx, tsconfig_inputs),
         outputs = [marker],
         arguments = [arguments],
         mnemonic = "TsValidateOptions",
@@ -73,10 +80,9 @@ To disable this check, set the validate attribute to False:
         },
     )
 
-    return [
-        OutputGroupInfo(_validation = depset([marker])),
-    ]
+    return [marker]
 
+# TODO(3.0): remove this along with the validate_options rule
 _ATTRS = dict(COMPILER_OPTION_ATTRS, **{
     "deps": attr.label_list(mandatory = True, providers = [JsInfo]),
     "target": attr.string(),
@@ -89,4 +95,5 @@ lib = struct(
     attrs = _ATTRS,
     implementation = _validate_options_impl,
     tsconfig_inputs = _tsconfig_inputs,
+    validation_action = _validate_action,
 )

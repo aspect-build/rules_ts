@@ -51,6 +51,9 @@ def _ts_project_impl(ctx):
     srcs_inputs = copy_files_to_bin_actions(ctx, ctx.files.srcs)
     tsconfig = copy_file_to_bin_action(ctx, ctx.file.tsconfig)
 
+    # Gather TsConfig info from both the direct (tsconfig) and indirect (extends) attribute
+    tsconfig_inputs = copy_files_to_bin_actions(ctx, _validate_lib.tsconfig_inputs(ctx).to_list())
+
     srcs = [_lib.relative_to_package(src.path, ctx) for src in srcs_inputs]
 
     # Recalculate outputs inside the rule implementation.
@@ -63,6 +66,7 @@ def _ts_project_impl(ctx):
     map_outs = _lib.declare_outputs(ctx, [] if ctx.attr.transpile == 0 else _lib.calculate_map_outs(srcs, ctx.attr.out_dir, ctx.attr.root_dir, ctx.attr.source_map, ctx.attr.preserve_jsx, ctx.attr.emit_declaration_only))
     typings_outs = _lib.declare_outputs(ctx, _lib.calculate_typings_outs(srcs, typings_out_dir, ctx.attr.root_dir, ctx.attr.declaration, ctx.attr.composite, ctx.attr.allow_js))
     typing_maps_outs = _lib.declare_outputs(ctx, _lib.calculate_typing_maps_outs(srcs, typings_out_dir, ctx.attr.root_dir, ctx.attr.declaration_map, ctx.attr.allow_js))
+    validation_outs = _validate_lib.validation_action(ctx, tsconfig_inputs) if ctx.attr.validate else []
 
     arguments = ctx.actions.args()
     execution_requirements = {}
@@ -138,8 +142,6 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         if ctx.attr.composite and TsConfigInfo in dep:
             transitive_inputs.append(dep[TsConfigInfo].deps)
 
-    # Gather TsConfig info from both the direct (tsconfig) and indirect (extends) attribute
-    tsconfig_inputs = copy_files_to_bin_actions(ctx, _validate_lib.tsconfig_inputs(ctx).to_list())
     inputs.extend(tsconfig_inputs)
 
     assets_outs = []
@@ -309,6 +311,9 @@ This is an error because Bazel does not run actions unless their outputs are nee
             types = output_declarations_depset,
             # make the inputs to the tsc action available for analysis testing
             _action_inputs = inputs_depset,
+            # https://bazel.build/extending/rules#validations_output_group
+            # "hold the otherwise unused outputs of validation actions"
+            _validation = validation_outs,
         ),
         coverage_common.instrumented_files_info(
             ctx,

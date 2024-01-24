@@ -20,7 +20,8 @@ function main(_a) {
     var tsconfigPath = _a[0],
         output = _a[1],
         target = _a[2],
-        attrsStr = _a[3]
+        packageDir = _a[3],
+        attrsStr = _a[4]
     // The Bazel ts_project attributes were json-encoded
     // (on Windows the quotes seem to be quoted wrong, so replace backslash with quotes :shrug:)
     var attrs = JSON.parse(attrsStr.replace(/\\/g, '"'))
@@ -60,8 +61,6 @@ function main(_a) {
             // Currently the only string-typed options are filepaths.
             // TypeScript will resolve these to a project path
             // so when echoing that back to the user, we need to reverse that resolution.
-            // First turn //path/to/pkg:tsconfig into path/to/pkg
-            var packageDir = target.substr(2, target.indexOf(':') - 2)
             return path_1.relative(packageDir, options[option])
         }
         return options[option]
@@ -227,7 +226,11 @@ if (require.main === module) {
     try {
         process.exitCode = main(process.argv.slice(2))
         if (process.exitCode != 0) {
-            console.error('Or to suppress this error, run:')
+            console.error('Or to suppress this error, either:')
+            console.error(
+                ' - pass --norun_validations to Bazel to turn off the feature completely, or'
+            )
+            console.error(' - disable validation for this target by running:')
             console.error(
                 "    npx @bazel/buildozer 'set validate False' " +
                     process.argv[4]
