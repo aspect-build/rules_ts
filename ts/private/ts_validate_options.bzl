@@ -65,6 +65,7 @@ def _validate_action(ctx, tsconfig_inputs):
         to_output_relative_path(tsconfig),
         to_output_relative_path(marker),
         str(ctx.label),
+        ctx.label.package,
         json.encode(config),
     ])
 
