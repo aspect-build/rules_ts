@@ -1,3 +1,14 @@
 load("//.github/workflows:deps.bzl", "aspect_workflows_github_actions_deps")
 
 aspect_workflows_github_actions_deps()
+
+# TODO: rules_lint doesn't have a way to bring deps in under bzlmod
+load(
+    "@aspect_rules_lint//format:repositories.bzl",
+    "fetch_shfmt",
+    "fetch_terraform",
+)
+
+fetch_shfmt()
+
+fetch_terraform()
