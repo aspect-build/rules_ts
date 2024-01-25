@@ -13,6 +13,6 @@ on:
 jobs:
     aspect-workflows:
         name: Aspect Workflows
-        uses: ./.github/workflows/.aspect-workflows-reusable.yaml
+        uses: JesseTatasciore/reuseable-workflow-test/.github/workflows/.aspect-workflows-reusable.yaml@main
         with:
             queue: aspect-nano
