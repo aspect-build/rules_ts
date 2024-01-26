@@ -38,13 +38,28 @@ data "aws_ami" "runner_arm64_ami" {
   }
 }
 
+module "remote_cache_dns" {
+  source  = "terraform-aws-modules/route53/aws//modules/zones"
+  version = "2.10.2"
+
+  zones = {
+    "rules-ts-remote-cache.aspect.build" = {
+      domain_name = "rules-ts-remote-cache.aspect.build"
+      comment     = "rules-ts-remote-cache.aspect.build"
+      tags = {
+        Name = "rules-ts-remote-cache.aspect.build"
+      }
+    }
+  }
+}
+
 module "aspect_workflows" {
   providers = {
     aws = aws.workflows
   }
 
   # Aspect Workflows terraform module
-  source = "https://s3.us-east-2.amazonaws.com/static.aspect.build/aspect/5.9.0-rc.16/workflows/terraform-aws-aspect-workflows.zip"
+  source = "https://s3.us-east-2.amazonaws.com/static.aspect.build/aspect/5.9.0-rc.19/workflows/terraform-aws-aspect-workflows.zip"
 
   # Non-terraform Aspect Workflows release artifacts are pulled from the region specific
   # aspect-artifacts bucket during apply. Aspect will grant your AWS account access to this bucket
@@ -58,7 +73,7 @@ module "aspect_workflows" {
   # VPC properties
   vpc_id             = module.vpc.vpc_id
   vpc_subnets        = module.vpc.private_subnets
-  vpc_subnets_public = []
+  vpc_subnets_public = module.vpc.public_subnets
 
   support = {
     # PagerDuty key for this deployment
@@ -69,15 +84,27 @@ module "aspect_workflows" {
 
   # Remote cache properties
   remote_cache = {
-    buildbarn = {
-      cache_shards = 1
-      frontend = {
-        cpu         = 2048
-        memory      = 4096
-        max_scaling = 5
-        min_scaling = 1
-      }
+    # The remote cache in this deployment is tuned for cost. In a deployment that requires a large
+    # high-performance cache we recommend 3+ shards and i4i instances. The remote cache uses NVMe
+    # storage under the hood so the instance type selected must have NVMe storage available. The
+    # total size of the remote cache will be size of the NVMe drives available on the selected
+    # instance type multiplied by the number of cache shards.
+    cache_shards = 1
+    frontend = {
+      max_scaling = 5
+      min_scaling = 1
     }
+    storage_instance_type = "c5ad.large"
+  }
+
+  external_remote_cache = {
+    public_hosted_zone_id = module.remote_cache_dns.route53_zone_zone_id["rules-ts-remote-cache.aspect.build"]
+    cache_shards          = 1
+    frontend = {
+      max_scaling = 5
+      min_scaling = 1
+    }
+    storage_instance_type = "c5ad.large"
   }
 
   # Delivery properties
@@ -199,7 +226,7 @@ module "managed_grafana" {
 
 module "aspect_workflows_grafana_dashboards" {
   # Aspect Workflows grafana dashboard nested terraform module
-  source = "https://s3.us-east-2.amazonaws.com/static.aspect.build/aspect/5.9.0-rc.16/workflows/terraform-aws-aspect-workflows.zip//monitoring/dashboards"
+  source = "https://s3.us-east-2.amazonaws.com/static.aspect.build/aspect/5.9.0-rc.19/workflows/terraform-aws-aspect-workflows.zip//monitoring/dashboards"
 
   grafana_auth                = module.managed_grafana.grafana_admin_api_key
   grafana_url                 = module.managed_grafana.grafana_endpoint
