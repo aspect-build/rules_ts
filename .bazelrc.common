@@ -70,13 +70,9 @@ build:macos --nolegacy_external_runfiles
 build:freebsd --nolegacy_external_runfiles
 build:openbsd --nolegacy_external_runfiles
 
-# TODO: switch to 'common' once https://github.com/bazelbuild/bazel/pull/19363 is landed and available in Bazel
-build --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
-fetch --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
-query --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
-build --@aspect_rules_ts//ts:default_to_tsc_transpiler
-fetch --@aspect_rules_ts//ts:default_to_tsc_transpiler
-query --@aspect_rules_ts//ts:default_to_tsc_transpiler
+# Note: 'common' for custom flags requires Bazel 6.4.0 or greater
+common --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
+common --@aspect_rules_ts//ts:default_to_tsc_transpiler
 
 # Turn on --incompatible_strict_action_env which was on by default
 # in Bazel 0.21.0 but turned off again in 0.22.0. Follow
