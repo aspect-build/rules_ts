@@ -78,13 +78,15 @@ You can simply disable this error for all targets in the build, behaving the sam
 Just add this to `/.bazelrc``:
 
     # Use "tsc" as the transpiler when ts_project has no `transpiler` set.
-    # Bazel 6.3 or greater: 'common' means 'any command that supports this flag'
+    # Bazel 6.4 or greater: 'common' means 'any command that supports this flag'
     common --@aspect_rules_ts//ts:default_to_tsc_transpiler
 
-    # Prior to Bazel 6.3, you need all of this, to avoid discarding the analysis cache:
+    # Bazel between 6.0 and 6.3, you need all of this, to avoid discarding the analysis cache:
     build --@aspect_rules_ts//ts:default_to_tsc_transpiler
     fetch --@aspect_rules_ts//ts:default_to_tsc_transpiler
     query --@aspect_rules_ts//ts:default_to_tsc_transpiler
+
+    # ... but prior to Bazel 6.0 only the 'build' and 'fetch' lines.
 
 ### Other Transpilers
 
