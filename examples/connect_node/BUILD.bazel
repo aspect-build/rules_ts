@@ -11,8 +11,8 @@ ts_project(
         "server.ts",
     ],
     deps = [
-        ":node_modules/@bufbuild/connect",
-        ":node_modules/@bufbuild/connect-fastify",
+        ":node_modules/@connectrpc/connect",
+        ":node_modules/@connectrpc/connect-fastify",
         ":node_modules/@types/node",
         ":node_modules/fastify",
         "//examples/connect_node/proto:eliza_ts_proto",

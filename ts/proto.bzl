@@ -12,7 +12,7 @@ We intend to promote it to a stable API in a minor release, possibly as soon as 
 
 This Bazel integration follows the "Local Generation" mechanism described at
 https://connectrpc.com/docs/web/generating-code#local-generation,
-using the `@bufbuild/protoc-gen-connect-es` and `@bufbuild/protoc-gen-es` packages as plugins to protoc.
+using the `@connectrpc/protoc-gen-connect-es` and `@bufbuild/protoc-gen-es` packages as plugins to protoc.
 
 The [aspect configure](https://docs.aspect.build/cli/commands/aspect_configure) command
 auto-generates `ts_proto_library` rules as of the 5.7.2 release.
@@ -86,12 +86,12 @@ def ts_proto_library(name, node_modules, has_services = True, copy_files = True,
         directory_path(
             name = protoc_gen_connect_es_entry,
             tags = ["manual"],
-            directory = node_modules + "/@bufbuild/protoc-gen-connect-es/dir",
+            directory = node_modules + "/@connectrpc/protoc-gen-connect-es/dir",
             path = "bin/protoc-gen-connect-es",
         )
         js_binary(
             name = protoc_gen_connect_es_target,
-            data = [node_modules + "/@bufbuild/protoc-gen-connect-es"],
+            data = [node_modules + "/@connectrpc/protoc-gen-connect-es"],
             entry_point = protoc_gen_connect_es_entry,
         )
 
