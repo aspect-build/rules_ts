@@ -33,3 +33,8 @@ build:rbe --bes_results_url=https://app.buildbuddy.io/invocation/
 build:rbe --bes_backend=grpcs://remote.buildbuddy.io
 build:rbe --remote_timeout=3600
 build:rbe --remote_executor=grpcs://remote.buildbuddy.io
+
+# We are using RBE to test that the actions we create in rules_ts will work for our customers,
+# not to accelerate and parallelize the builds for unrelated actions that happen to appear in our dependencies.
+# So, turn off RBE for actions that are known to be problematic because they are non-hermetic.
+build:rbe --modify_execution_info=CppCompile=+no-remote-exec,CppLink=+no-remote-exec,GenProtoDescriptorSet=+no-remote-exec

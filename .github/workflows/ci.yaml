@@ -29,7 +29,7 @@ jobs:
             - id: rbe
               run: echo "config=rbe" >> $GITHUB_OUTPUT
               # Don't run RBE if there is no API token which is the case on forks
-              if: false # ${{ env.BUILDBUDDY_API_KEY != '' }}
+              if: ${{ env.BUILDBUDDY_API_KEY != '' }}
         outputs:
             # Will look like ["local", "rbe"]
             configs: ${{ toJSON(steps.*.outputs.config) }}
