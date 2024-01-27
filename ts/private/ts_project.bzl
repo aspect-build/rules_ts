@@ -210,7 +210,13 @@ This might be because
 This is an error because Bazel does not run actions unless their outputs are needed for the requested targets to build.
 """)
 
-    output_declarations = typings_outs + typing_maps_outs + typings_srcs
+    output_declarations = typings_outs + typing_maps_outs + typings_srcs + [
+        # Probably not the right spot: make .json outputs also appear in typings
+        # so they are propagated to dependents and available for typechecking
+        s
+        for s in output_sources
+        if s.path.endswith(".json") and ctx.attr.resolve_json_module
+    ]
 
     # Default outputs (DefaultInfo files) is what you see on the command-line for a built
     # library, and determines what files are used by a simple non-provider-aware downstream
