@@ -42,6 +42,7 @@ def _protoc_action(ctx, proto_info, outputs, options = {
         progress_message = "Generating .js/.d.ts from %{label}",
         outputs = outputs,
         inputs = inputs,
+        mnemonic = "ProtocGenEs",
         arguments = [args],
         tools = [ctx.executable.protoc_gen_es] + (
             [ctx.executable.protoc_gen_connect_es] if ctx.attr.has_services else []
