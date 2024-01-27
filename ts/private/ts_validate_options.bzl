@@ -27,7 +27,7 @@ def _validate_options_impl(ctx):
         for d in ctx.attr.deps:
             if not d[JsInfo].declarations:
                 fail("""\
-ts_project '{1}' dependency '{0}' does does not contain any declarations (.d.ts or other type-check files).
+ts_project '{1}' dependency '{0}' does not contain any declarations (.d.ts or other type-check files).
 Generally, targets which produce no declarations aren't useful as dependencies to the TypeScript type-checker.
 This likely means you forgot to set 'declaration = true' in the compilerOptions for that target.
 
