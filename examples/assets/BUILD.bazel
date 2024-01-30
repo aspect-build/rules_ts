@@ -84,14 +84,14 @@ build_test(
     targets = [
         # Defaults of no root/out_dir
         ":ts",
+        ":example.json",
         ":src/index.js",
         ":src/styles.css",
-        ":example.json",
+        ":src/example-copy.json",
         # out_dir
         ":ts-out",
         ":out/src/index.js",
         ":out/src/styles.css",
-        ":src/example-copy.json",
         # root_dir
         ":ts-root",
         ":index.js",
