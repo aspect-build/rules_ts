@@ -1,6 +1,13 @@
 load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 
+genrule(
+    name = "copy_example_json_file",
+    outs = ["src/example-copy.json"],
+    cmd = "cp ./$(location :example.json) $@",
+    srcs = [":example.json"],
+)
+
 ts_config(
     name = "config",
     src = "tsconfig.json",
@@ -15,8 +22,12 @@ ts_project(
     srcs = [
         "src/index.ts",
     ],
+    data = [
+        ":copy_example_json_file",
+    ],
     assets = [
         "src/styles.css",
+        ":copy_example_json_file",
     ],
     tsconfig = ":config",
 )
@@ -28,6 +39,9 @@ ts_project(
     ],
     assets = [
         "src/styles.css",
+    ],
+    data = [
+        ":copy_example_json_file",
     ],
     extends = ":config",
     out_dir = "out",
@@ -42,6 +56,9 @@ ts_project(
     assets = [
         "src/styles.css",
     ],
+    data = [
+        ":copy_example_json_file",
+    ],
     root_dir = "src",
     tsconfig = ":config",
 )
@@ -53,6 +70,9 @@ ts_project(
     ],
     assets = [
         "src/styles.css",
+    ],
+    data = [
+        ":copy_example_json_file",
     ],
     out_dir = "root-out",
     root_dir = "src",
