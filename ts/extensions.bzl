@@ -15,7 +15,6 @@ def _extension_impl(module_ctx):
                 ts_version = ts_version,
                 ts_version_from = attr.ts_version_from,
                 ts_integrity = attr.ts_integrity,
-                check_for_updates = attr.check_for_updates,
                 bzlmod = True,
             )
 
@@ -26,7 +25,6 @@ ext = module_extension(
             "ts_version": attr.string(),
             "ts_version_from": attr.label(),
             "ts_integrity": attr.string(),
-            "check_for_updates": attr.bool(default = True),
         }),
     },
 )

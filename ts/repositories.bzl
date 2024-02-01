@@ -48,7 +48,7 @@ def rules_ts_bazel_dependencies():
         urls = ["https://github.com/bazelbuild/rules_nodejs/releases/download/5.8.2/rules_nodejs-core-5.8.2.tar.gz"],
     )
 
-def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrity = None, check_for_updates = True):
+def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrity = None):
     """Dependencies needed by users of rules_ts.
 
     To skip fetching the typescript package, call `rules_ts_bazel_dependencies` instead.
@@ -70,22 +70,6 @@ def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrit
             By default, uses values mirrored into rules_ts.
             For example, to get the integrity of version 4.6.3 you could run
             `curl --silent https://registry.npmjs.org/typescript/4.6.3 | jq -r '.dist.integrity'`
-        check_for_updates: Whether to check for newer releases of rules_ts and notify the user with
-            a log message when an update is available.
-
-            Note, to better understand our users, we also include basic information about the build
-            in the request to the update server. This never includes confidential or
-            personally-identifying information (PII). The values sent are:
-
-            - Currently used version. Helps us understand which older release(s) users are stuck on.
-            - bzlmod (true/false). Helps us roll out this feature which is mandatory by Bazel 9.
-            - Some CI-related environment variables to understand usage:
-                - BUILDKITE_ORGANIZATION_SLUG
-                - CIRCLE_PROJECT_USERNAME (this is *not* the username of the logged in user)
-                - GITHUB_REPOSITORY_OWNER
-                - BUILDKITE_BUILD_NUMBER
-                - CIRCLE_BUILD_NUM
-                - GITHUB_RUN_NUMBER
     """
 
     rules_ts_bazel_dependencies()
@@ -94,5 +78,4 @@ def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrit
         ts_version_from = ts_version_from,
         ts_version = ts_version,
         ts_integrity = ts_integrity,
-        check_for_updates = check_for_updates,
     )
