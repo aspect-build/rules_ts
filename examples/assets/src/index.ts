@@ -1,6 +1,6 @@
 import css from './styles.css'
 
-import data from './example-copy.json'
+import data from './generated.json'
 
 console.log(__dirname, css)
 console.log(__dirname, data)

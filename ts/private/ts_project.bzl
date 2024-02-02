@@ -148,7 +148,7 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
     for a in ctx.files.assets:
         a_path = _lib.relative_to_package(a.short_path, ctx)
         a_out = _lib.to_out_path(a_path, ctx.attr.out_dir, ctx.attr.root_dir)
-        if a_path != a_out:
+        if a.is_source or a_path != a_out:
             asset = ctx.actions.declare_file(a_out)
             copy_file_action(ctx, a, asset)
             assets_outs.append(asset)
