@@ -76,6 +76,7 @@ build_test(
         ":ts",
         ":src/index.js",
         ":src/styles.css",
+        ":src/generated.json",
         # out_dir
         ":ts-out",
         ":out/src/index.js",
@@ -85,6 +86,7 @@ build_test(
         ":ts-root",
         ":index.js",
         ":styles.css",
+        ":generated.json",
         # root_dir + out_dir
         ":ts-root-out",
         ":root-out/index.js",
