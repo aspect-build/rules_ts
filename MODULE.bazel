@@ -48,5 +48,5 @@ rules_ts_ext.deps(ts_version_from = "//examples:package.json")
 use_repo(rules_ts_ext, "npm_typescript")
 
 go_sdk = use_extension("@io_bazel_rules_go//go:extensions.bzl", "go_sdk", dev_dependency = True)
-go_sdk.download()
+go_sdk.download(version = "1.19.3")
 use_repo(go_sdk, go_sdk = "go_default_sdk")
