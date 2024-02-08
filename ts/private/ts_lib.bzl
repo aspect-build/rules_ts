@@ -164,15 +164,12 @@ def _join(*elements):
         return "/".join(segments)
     return "."
 
-def _strip_external(path):
-    return path[len("external/"):] if path.startswith("external/") else path
-
 def _relative_to_package(path, ctx):
-    for prefix in [ctx.bin_dir.path, ctx.label.workspace_name, ctx.label.package]:
-        prefix += "/"
-        path = _strip_external(path)
-        if path.startswith(prefix):
-            path = path[len(prefix):]
+    # TODO: "external/" should only be needed to be removed once
+    path = path.removeprefix("external/").removeprefix(ctx.bin_dir.path + "/")
+    path = path.removeprefix("external/").removeprefix(ctx.label.workspace_name + "/")
+    if ctx.label.package:
+        path = path.removeprefix("external/").removeprefix(ctx.label.package + "/")
     return path
 
 def _is_typings_src(src):
