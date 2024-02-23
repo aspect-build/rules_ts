@@ -66,7 +66,11 @@ def _ts_project_impl(ctx):
     map_outs = _lib.declare_outputs(ctx, [] if ctx.attr.transpile == 0 else _lib.calculate_map_outs(srcs, ctx.attr.out_dir, ctx.attr.root_dir, ctx.attr.source_map, ctx.attr.preserve_jsx, ctx.attr.emit_declaration_only))
     typings_outs = _lib.declare_outputs(ctx, _lib.calculate_typings_outs(srcs, typings_out_dir, ctx.attr.root_dir, ctx.attr.declaration, ctx.attr.composite, ctx.attr.allow_js))
     typing_maps_outs = _lib.declare_outputs(ctx, _lib.calculate_typing_maps_outs(srcs, typings_out_dir, ctx.attr.root_dir, ctx.attr.declaration_map, ctx.attr.allow_js))
-    validation_outs = _validate_lib.validation_action(ctx, tsconfig_inputs) if ctx.attr.validate else []
+
+    validation_outs = []
+    if ctx.attr.validate:
+        validation_outs.extend(_validate_lib.validation_action(ctx, tsconfig_inputs))
+        _lib.validate_tsconfig_dirs(ctx.attr.root_dir, ctx.attr.out_dir, typings_out_dir)
 
     arguments = ctx.actions.args()
     execution_requirements = {}

@@ -228,6 +228,18 @@ def _calculate_assets_outs(assets, out_dir = ".", root_dir = "."):
             outs.append(out)
     return outs
 
+# Quick check to validate path options
+# One usecase: https://github.com/aspect-build/rules_ts/issues/551
+def _validate_tsconfig_dirs(root_dir, out_dir, typings_out_dir):
+    if root_dir and root_dir.find("../") != -1:
+        fail("root_dir cannot access parent directories")
+
+    if out_dir and out_dir.find("../") != -1:
+        fail("out_dir cannot output to parent directory")
+
+    if typings_out_dir and typings_out_dir.find("../") != -1:
+        fail("typings_out_dir cannot output to parent directory")
+
 def _calculate_js_outs(srcs, out_dir = ".", root_dir = ".", allow_js = False, resolve_json_module = False, preserve_jsx = False, emit_declaration_only = False):
     if emit_declaration_only:
         return []
@@ -313,6 +325,7 @@ lib = struct(
     is_js_src = _is_js_src,
     out_paths = _to_js_out_paths,
     to_out_path = _to_out_path,
+    validate_tsconfig_dirs = _validate_tsconfig_dirs,
     calculate_js_outs = _calculate_js_outs,
     calculate_map_outs = _calculate_map_outs,
     calculate_typings_outs = _calculate_typings_outs,
