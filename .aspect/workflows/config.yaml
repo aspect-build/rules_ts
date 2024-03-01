@@ -10,6 +10,17 @@ tasks:
     - test:
     - delivery:
           auto_deliver: true
+          rules:
+              - deliverable: 'attr("tags", "\bdeliverable\b", //...)'
+                condition:
+                    branches:
+                        - main
+              - deliverable:
+                    - //docs:docs_delivery
+                condition:
+                    only_on_change: false
+                    branches:
+                        - main
 notifications:
     # Report progress of the tasks in a comment on the code review thread
     github: {}
