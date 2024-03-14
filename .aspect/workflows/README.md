@@ -1,19 +1,14 @@
 # Aspect Workflows demonstration deployment
 
-This deployment of [Aspect Workflows](https://www.aspect.build/workflows) is configured to run on AWS + GitHub Actions.
+This deployment of [Aspect Workflows](https://www.aspect.build/workflows) is configured to run on GitHub Actions.
 
 You can see this Aspect Workflows demonstration deployment live at
 https://github.com/aspect-build/rules_ts/actions/workflows/aspect-workflows.yaml.
 
-The three components of the configuration are,
+The two components of the configuration in this repository are,
 
-1. Aspect Workflows terraform module
 1. Aspect Workflows configuration yaml
 1. GitHub Actions workflows configurations
-
-## Aspect Workflows terraform module
-
-This is found under the [.aspect/workflows/terraform](./terraform) directory.
 
 ## Aspect Workflows configuration yaml
 

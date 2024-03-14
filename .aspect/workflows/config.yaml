@@ -2,11 +2,11 @@
 ---
 tasks:
     - format:
-          queue: aspect-small-amd64
+          queue: aspect-small
     - buildifier:
-          queue: aspect-small-arm64
+          queue: aspect-small
     - configure:
-          queue: aspect-small-arm64
+          queue: aspect-small-graviton
     - test:
     - delivery:
           auto_deliver: true
@@ -21,6 +21,3 @@ tasks:
                     only_on_change: false
                     branches:
                         - main
-notifications:
-    # Report progress of the tasks in a comment on the code review thread
-    github: {}
