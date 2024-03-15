@@ -8,7 +8,7 @@ load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "COPY_FILE_TO_BIN_TOOLCHAINS")
 load("@aspect_bazel_lib//lib:utils.bzl", "to_label")
 load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@bazel_skylib//lib:partial.bzl", "partial")
-load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("//ts/private:build_test.bzl", "build_test")
 load("//ts/private:ts_config.bzl", "write_tsconfig", _TsConfigInfo = "TsConfigInfo", _ts_config = "ts_config")
 load("//ts/private:ts_lib.bzl", _lib = "lib")
 load("//ts/private:ts_project.bzl", _ts_project = "ts_project")
@@ -372,6 +372,7 @@ def ts_project(
             name = test_target_name,
             targets = [typecheck_target_name],
             tags = common_kwargs.get("tags"),
+            size = "small",
             visibility = common_kwargs.get("visibility"),
         )
 

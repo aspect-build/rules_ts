@@ -84,6 +84,12 @@ bzl_library(
 )
 
 bzl_library(
+    name = "build_test",
+    srcs = ["build_test.bzl"],
+    visibility = ["//ts:__subpackages__"],
+)
+
+bzl_library(
     name = "options",
     srcs = ["options.bzl"],
     visibility = ["//ts:__subpackages__"],
