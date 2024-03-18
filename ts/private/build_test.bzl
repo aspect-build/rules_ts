@@ -12,6 +12,7 @@ It is used to force Bazel to build some of its dependencies, in the case where
 
 def _build_test_impl(ctx):
     executable = ctx.actions.declare_file(ctx.label.name + ".sh")
+
     ctx.actions.write(
         output = executable,
         is_executable = True,
