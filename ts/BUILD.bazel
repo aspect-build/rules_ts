@@ -146,6 +146,7 @@ bzl_library(
     srcs = ["defs.bzl"],
     visibility = ["//visibility:public"],
     deps = [
+        "//ts/private:build_test",
         "//ts/private:options",
         "//ts/private:ts_config",
         "//ts/private:ts_project",
