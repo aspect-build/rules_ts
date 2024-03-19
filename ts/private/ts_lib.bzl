@@ -190,6 +190,9 @@ def _is_ts_src(src, allow_js, resolve_json_module):
 
     return _is_js_src(src, allow_js, resolve_json_module)
 
+def _is_asset_src(src):
+    return not src.startswith(":") and not src.startswith("//")
+
 def _replace_ext(f, ext_map):
     cur_ext = f[f.rindex("."):]
     new_ext = ext_map.get(cur_ext)
@@ -223,9 +226,10 @@ def _to_js_out_paths(srcs, out_dir, root_dir, allow_js, resolve_json_module, ext
 def _calculate_assets_outs(assets, out_dir = ".", root_dir = "."):
     outs = []
     for a in assets:
-        out = _to_out_path(a, out_dir, root_dir)
-        if out != a:
-            outs.append(out)
+        if _is_asset_src(a):
+            out = _to_out_path(a, out_dir, root_dir)
+            if out != a:
+                outs.append(out)
     return outs
 
 # Quick check to validate path options
