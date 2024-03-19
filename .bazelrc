@@ -12,6 +12,11 @@ common --lockfile_mode=off
 # verbose
 build:verbose --@aspect_rules_ts//ts:verbose --worker_verbose
 
+# Bazel 7 upgrade: disable --incompatible_sandbox_hermetic_tmp which was flipped
+# to true in bazel7 (https://github.com/bazelbuild/bazel/issues/19915) to workaround
+# issues such as https://github.com/bazelbuild/rules_proto/issues/201
+common --noincompatible_sandbox_hermetic_tmp
+
 # Load any settings specific to the current user.
 # .bazelrc.user should appear in .gitignore so that settings are not shared with team members
 # This needs to be last statement in this
