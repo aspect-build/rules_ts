@@ -1,5 +1,5 @@
-load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("@aspect_bazel_lib//lib:write_source_files.bzl", "write_source_file")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
 write_source_file(
     name = "aspect_workflows_reusable",
