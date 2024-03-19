@@ -48,9 +48,9 @@ jobs:
             - id: bazel_6
               run: echo "bazelversion=$(head -n 1 .bazelversion)" >> $GITHUB_OUTPUT
             - id: bazel_7
-              run: echo "bazelversion=7.0.0-pre.20230530.3" >> $GITHUB_OUTPUT
+              run: echo "bazelversion=7.1.0" >> $GITHUB_OUTPUT
         outputs:
-            # Will look like ["<version from .bazelversion>", "7.0.0-pre.*", "6.3.1"]
+            # Will look like ["<version from .bazelversion>", "7.1.0"]
             bazelversions: ${{ toJSON(steps.*.outputs.bazelversion) }}
 
     matrix-prep-os:
@@ -95,7 +95,7 @@ jobs:
                 exclude:
                     # Don't test MacOS with Bazel 7 to minimize MacOS minutes (billed at 10X)
                     - os: macos-latest
-                      bazelversion: 7.0.0-pre.20230530.3
+                      bazelversion: 7.1.0
                     # Don't test RBE with on MacOS (not configured)
                     - os: macos-latest
                       config: rbe
@@ -179,7 +179,7 @@ jobs:
             matrix:
                 bazelversion: ${{ fromJSON(needs.matrix-prep-bazelversion.outputs.bazelversions) }}
                 exclude:
-                    - bazelversion: 7.0.0-pre.20230530.3
+                    - bazelversion: 7.1.0
         steps:
             - uses: actions/checkout@v4
 
