@@ -26,6 +26,7 @@ ts_project(
     srcs = ["big.ts"],
     declaration = True,
     out_dir = "build-babel",
+    resource_set = "mem_1g",
     source_map = True,
     transpiler = babel,
 )

@@ -3,6 +3,58 @@
 load("@aspect_rules_js//js:libs.bzl", "js_lib_helpers")
 load("@aspect_rules_js//js:providers.bzl", "JsInfo")
 
+resource_set_values = [
+    "default",
+    "mem_512m",
+    "mem_1g",
+    "mem_2g",
+    "mem_4g",
+    "mem_8g",
+    "mem_16g",
+    "mem_32g",
+]
+
+def _resource_set_mem_512m(_, __):
+    return { "memory": 512 }
+
+def _resource_set_mem_1g(_, __):
+    return { "memory": 1024 }
+
+def _resource_set_mem_2g(_, __):
+    return { "memory": 2048 }
+
+def _resource_set_mem_4g(_, __):
+    return { "memory": 4096 }
+
+def _resource_set_mem_8g(_, __):
+    return { "memory": 8192 }
+
+def _resource_set_mem_16g(_, __):
+    return { "memory": 16384 }
+
+def _resource_set_mem_32g(_, __):
+    return { "memory": 32768 }
+
+# buildifier: disable=function-docstring
+def resource_set(name):
+    if name == "default":
+        return None
+    if name == "mem_512m":
+        return _resource_set_mem_512m
+    if name == "mem_1g":
+        return _resource_set_mem_1g
+    if name == "mem_2g":
+        return _resource_set_mem_2g
+    if name == "mem_4g":
+        return _resource_set_mem_4g
+    if name == "mem_8g":
+        return _resource_set_mem_8g
+    if name == "mem_16g":
+        return _resource_set_mem_16g
+    if name == "mem_32g":
+        return _resource_set_mem_32g
+    fail("unknown resource set", name)
+
 # Attributes common to all TypeScript rules
 STD_ATTRS = {
     "assets": attr.label_list(
@@ -28,6 +80,14 @@ See more details on the `assets` parameter of the `ts_project` macro.
     ),
     "out_dir": attr.string(
         doc = "https://www.typescriptlang.org/tsconfig#outDir",
+    ),
+    "resource_set": attr.string(
+        doc = """a predefined function used as the resource_set for TsProject mnemonic actions.
+
+        Used with --experimental_action_resource_set to reserve more RAM/CPU, preventing Bazel overscheduling
+        typechecking actions.""",
+        default = "default",
+        values = resource_set_values,
     ),
     "root_dir": attr.string(
         doc = "https://www.typescriptlang.org/tsconfig#rootDir",
