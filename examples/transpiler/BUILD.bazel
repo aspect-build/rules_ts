@@ -29,3 +29,16 @@ ts_project(
     source_map = True,
     transpiler = babel,
 )
+
+# Transpiler with no dts being omitted
+ts_project(
+    name = "no-emit",
+    srcs = ["big.ts"],
+    no_emit = True,
+    transpiler = babel,
+    tsconfig = {
+        "compilerOptions": {
+            "noEmit": True,
+        },
+    },
+)

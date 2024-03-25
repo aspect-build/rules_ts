@@ -1,0 +1,16 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+
+write_file(
+    name = "gen_ts",
+    out = "a.ts",
+    content = [
+        "export const a: number = 42",
+    ],
+)
+
+ts_project(
+    name = "no-emit",
+    srcs = ["a.ts"],
+    no_emit = True,
+)

@@ -114,6 +114,9 @@ COMPILER_OPTION_ATTRS = {
     "declaration_map": attr.bool(
         doc = "https://www.typescriptlang.org/tsconfig#declarationMap",
     ),
+    "no_emit": attr.bool(
+        doc = "https://www.typescriptlang.org/tsconfig#noEmit",
+    ),
     "emit_declaration_only": attr.bool(
         doc = "https://www.typescriptlang.org/tsconfig#emitDeclarationOnly",
     ),
@@ -234,8 +237,8 @@ def _validate_tsconfig_dirs(root_dir, out_dir, typings_out_dir):
     if typings_out_dir and typings_out_dir.find("../") != -1:
         fail("typings_out_dir cannot output to parent directory")
 
-def _calculate_js_outs(srcs, out_dir, root_dir, allow_js, resolve_json_module, preserve_jsx, emit_declaration_only):
-    if emit_declaration_only:
+def _calculate_js_outs(srcs, out_dir, root_dir, allow_js, resolve_json_module, preserve_jsx, no_emit, emit_declaration_only):
+    if no_emit or emit_declaration_only:
         return []
 
     exts = {
@@ -253,8 +256,8 @@ def _calculate_js_outs(srcs, out_dir, root_dir, allow_js, resolve_json_module, p
 
     return _to_js_out_paths(srcs, out_dir, root_dir, allow_js, resolve_json_module, exts)
 
-def _calculate_map_outs(srcs, out_dir, root_dir, source_map, preserve_jsx, emit_declaration_only):
-    if not source_map or emit_declaration_only:
+def _calculate_map_outs(srcs, out_dir, root_dir, source_map, preserve_jsx, no_emit, emit_declaration_only):
+    if no_emit or not source_map or emit_declaration_only:
         return []
 
     exts = {
@@ -269,8 +272,8 @@ def _calculate_map_outs(srcs, out_dir, root_dir, source_map, preserve_jsx, emit_
 
     return _to_js_out_paths(srcs, out_dir, root_dir, False, False, exts)
 
-def _calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, composite, allow_js):
-    if not (declaration or composite):
+def _calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, composite, allow_js, no_emit):
+    if no_emit or not (declaration or composite):
         return []
 
     exts = {
@@ -283,8 +286,8 @@ def _calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, compos
 
     return _to_js_out_paths(srcs, typings_out_dir, root_dir, allow_js, False, exts)
 
-def _calculate_typing_maps_outs(srcs, typings_out_dir, root_dir, declaration_map, allow_js):
-    if not declaration_map:
+def _calculate_typing_maps_outs(srcs, typings_out_dir, root_dir, declaration_map, allow_js, no_emit):
+    if no_emit or not declaration_map:
         return []
 
     exts = {

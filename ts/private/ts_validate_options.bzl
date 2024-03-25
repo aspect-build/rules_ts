@@ -20,9 +20,7 @@ def _tsconfig_inputs(ctx):
 
 def _validate_action(ctx, tsconfig_inputs):
     # Bazel validation actions must still produce an output file.
-    # Choose to make it a .d.ts file so it's possible to plumb it to the deps of the ts_project compile,
-    # even though validation action outputs don't need to be used anywhere.
-    marker = ctx.actions.declare_file("%s.optionsvalid.d.ts" % ctx.label.name)
+    marker = ctx.actions.declare_file("%s_params.validation" % ctx.label.name)
     tsconfig = copy_file_to_bin_action(ctx, ctx.file.tsconfig)
 
     arguments = ctx.actions.args()
@@ -32,6 +30,7 @@ def _validate_action(ctx, tsconfig_inputs):
         declaration_map = ctx.attr.declaration_map,
         preserve_jsx = ctx.attr.preserve_jsx,
         composite = ctx.attr.composite,
+        no_emit = ctx.attr.no_emit,
         emit_declaration_only = ctx.attr.emit_declaration_only,
         resolve_json_module = ctx.attr.resolve_json_module,
         source_map = ctx.attr.source_map,
