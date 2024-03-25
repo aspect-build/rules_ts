@@ -32,10 +32,10 @@ def _impl1(ctx):
 
     return unittest.end(env)
 
-# transpile_with_failing_typecheck_test = unittest.make(_impl1, attrs = {
-#     "lib": attr.label(default = ":transpile_with_typeerror"),
-#     "expected_js": attr.string_list(default = ["typeerror.js", "typeerror.js.map"]),
-# })
+transpile_with_failing_typecheck_test = unittest.make(_impl1, attrs = {
+    "lib": attr.label(default = ":transpile_with_typeerror"),
+    "expected_js": attr.string_list(default = ["typeerror.js", "typeerror.js.map"]),
+})
 
 def _impl2(ctx):
     env = unittest.begin(ctx)
@@ -132,6 +132,7 @@ def transpiler_test_suite():
         ],
     )
 
+    # TODO: Tests related to this will only pass if run with --norun_validations
     # This target proves that transpilation doesn't require typechecking:
     #
     # $ bazel build examples/swc:transpile_with_typeerror
@@ -145,21 +146,22 @@ def transpiler_test_suite():
     # INFO: Analyzed target //examples/swc:transpile_with_typeerror_typecheck (0 packages loaded, 1 target configured).
     # ERROR: /home/alexeagle/Projects/rules_ts/examples/swc/BUILD.bazel:30:11: Compiling TypeScript project //examples/swc:transpile_with_typeerror_typings
     # examples/swc/typeerror.ts(1,14): error TS2322: Type 'number' is not assignable to type 'string'
-#    ts_project(
-#        name = "transpile_with_typeerror",
-#        srcs = ["typeerror.ts"],
-#        # The transpile_with_typeerror.check target will have a build failure
-#        # But the default transpile_with_typeerror target should still produce JS outs
-#        tags = ["manual"],
-#        transpiler = mock,
-#        tsconfig = _TSCONFIG,
-#    )
+    ts_project(
+        name = "transpile_with_typeerror",
+        srcs = ["typeerror.ts"],
+        # The transpile_with_typeerror.check target will have a build failure
+        # But the default transpile_with_typeerror target should still produce JS outs
+        tags = ["manual"],
+        transpiler = mock,
+        tsconfig = _TSCONFIG,
+    )
 
-#   # Assert that the JS can be produced despite that type error
-#   build_test(
-#       name = "smoke_test",
-#       targets = ["typeerror.js"],
-#   )
+    # Assert that the JS can be produced despite that type error
+    build_test(
+        name = "smoke_test",
+        targets = ["typeerror.js"],
+        tags = ["manual"]
+    )
 
     ts_project(
         name = "transpile_with_dts",
