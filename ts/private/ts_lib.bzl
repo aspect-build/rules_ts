@@ -83,6 +83,10 @@ See more details on the `assets` parameter of the `ts_project` macro.
         mandatory = True,
         allow_single_file = [".json"],
     ),
+    "typecheck_only": attr.bool(
+        doc = """Whether or not rule is to be run as a validation action for typechecking""",
+        default = False,
+    ),
     "validate": attr.bool(
         doc = """whether to add a Validation Action to verify the other attributes match
             settings in the tsconfig.json file""",

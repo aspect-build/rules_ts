@@ -67,7 +67,8 @@ def _ts_project_impl(ctx):
     typings_outs = _lib.declare_outputs(ctx, _lib.calculate_typings_outs(srcs, typings_out_dir, ctx.attr.root_dir, ctx.attr.declaration, ctx.attr.composite, ctx.attr.allow_js))
     typing_maps_outs = _lib.declare_outputs(ctx, _lib.calculate_typing_maps_outs(srcs, typings_out_dir, ctx.attr.root_dir, ctx.attr.declaration_map, ctx.attr.allow_js))
 
-    validation_outs = []
+    validation_output = ctx.actions.declare_file(ctx.attr.name + ".validation")
+    validation_outs = [validation_output]
     if ctx.attr.validate:
         validation_outs.extend(_validate_lib.validation_action(ctx, tsconfig_inputs))
         _lib.validate_tsconfig_dirs(ctx.attr.root_dir, ctx.attr.out_dir, typings_out_dir)
@@ -158,6 +159,7 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             assets_outs.append(asset)
 
     outputs = js_outs + map_outs + typings_outs + typing_maps_outs
+
     if ctx.outputs.buildinfo_out:
         arguments.add_all([
             "--tsBuildInfoFile",
@@ -183,38 +185,6 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
 
     typings_srcs = [s for s in srcs_inputs if _lib.is_typings_src(s.path)]
 
-    if len(js_outs) + len(typings_outs) < 1:
-        label = "//{}:{}".format(ctx.label.package, ctx.label.name)
-        if len(typings_srcs) > 0:
-            no_outs_msg = """ts_project target {target} only has typings in srcs.
-Since there is no `tsc` action to perform, there are no generated outputs.
-
-> ts_project doesn't support "typecheck-only"; see https://github.com/aspect-build/rules_ts/issues/88
-
-This should be changed to js_library, which can be done by running:
-
-    buildozer 'new_load @aspect_rules_js//js:defs.bzl js_library' //{pkg}:__pkg__
-    buildozer 'set kind js_library' {target}
-    buildozer 'remove declaration' {target}
-
-""".format(
-                target = label,
-                pkg = ctx.label.package,
-            )
-        elif ctx.attr.transpile != 0:
-            no_outs_msg = """ts_project target %s is configured to produce no outputs.
-
-This might be because
-- you configured it with `noEmit`
-- the `srcs` are empty
-- `srcs` has elements producing non-ts outputs
-""" % label
-        else:
-            no_outs_msg = "ts_project target %s with custom transpiler needs 'declaration = True'." % label
-        fail(no_outs_msg + """
-This is an error because Bazel does not run actions unless their outputs are needed for the requested targets to build.
-""")
-
     output_declarations = typings_outs + typing_maps_outs + typings_srcs
 
     # Default outputs (DefaultInfo files) is what you see on the command-line for a built
@@ -233,16 +203,17 @@ This is an error because Bazel does not run actions unless their outputs are nee
         # unless the output_declarations are requested.
         default_outputs = []
 
-    inputs_depset = depset()
-    if len(outputs) > 0:
-        inputs_depset = depset(
+    inputs_depset = depset(
             copy_files_to_bin_actions(ctx, inputs),
             transitive = transitive_inputs + [_gather_declarations_from_js_providers(ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps)],
         )
 
+    verb = "Type-checking"
+    # TODO: Find better way to do this 
+    if len(outputs) > 0 or (ctx.outputs.buildinfo_out and len(outputs) > 1):
         if ctx.attr.transpile != 0 and not ctx.attr.emit_declaration_only:
             # Make sure the user has acknowledged that transpiling is slow
-            if ctx.attr.transpile == -1 and not options.default_to_tsc_transpiler:
+            if ctx.attr.transpile == -1 and not options.default_to_tsc_transpiler and not ctx.attr.typecheck_only:
                 fail(transpiler_selection_required)
             if ctx.attr.declaration:
                 verb = "Transpiling & type-checking"
@@ -251,23 +222,26 @@ This is an error because Bazel does not run actions unless their outputs are nee
         else:
             verb = "Type-checking"
 
-        ctx.actions.run(
-            executable = executable,
-            inputs = inputs_depset,
-            arguments = [arguments],
-            outputs = outputs,
-            mnemonic = "TsProject",
-            execution_requirements = execution_requirements,
-            progress_message = "%s TypeScript project %s [tsc -p %s]" % (
-                verb,
-                ctx.label,
-                tsconfig_path,
-            ),
-            env = {
-                "BAZEL_BINDIR": ctx.bin_dir.path,
-            },
-        )
-
+    run_cmd = """{} $@ && echo "" > {} """.format(executable.path, validation_output.path)
+    
+    ctx.actions.run_shell(
+        tools = [executable],
+        inputs = inputs_depset,
+        arguments = [arguments],
+        outputs = outputs + [validation_output],
+        mnemonic = "TsProject",
+        command = run_cmd,
+        execution_requirements = execution_requirements,
+        progress_message = "%s TypeScript project %s [tsc -p %s]" % (
+            verb,
+            ctx.label,
+            tsconfig_path,
+        ),
+        env = {
+            "BAZEL_BINDIR": ctx.bin_dir.path,
+        },           
+    )
+        
     transitive_sources = js_lib_helpers.gather_transitive_sources(output_sources, ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps)
 
     transitive_declarations = js_lib_helpers.gather_transitive_declarations(output_declarations, ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps)
