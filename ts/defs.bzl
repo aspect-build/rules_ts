@@ -62,7 +62,6 @@ def ts_project(
         composite = False,
         incremental = False,
         emit_declaration_only = False,
-        typecheck_only = False,
         transpiler = None,
         ts_build_info_file = None,
         tsc = _tsc,
@@ -422,7 +421,6 @@ def ts_project(
         emit_declaration_only = emit_declaration_only,
         tsc = tsc,
         tsc_worker = tsc_worker,
-        typecheck_only = typecheck_only, 
         transpile = -1 if not transpiler else int(transpiler == "tsc"),
         supports_workers = supports_workers,
         is_typescript_5_or_greater = select({

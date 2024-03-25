@@ -199,7 +199,10 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
     else:
         # We must avoid tsc writing any JS files in this case, as tsc was only run for typings, and some other
         # action will try to write the JS files. We must avoid collisions where two actions write the same file.
-        arguments.add("--emitDeclarationOnly")
+        if ctx.attr.declaration:
+            arguments.add("--emitDeclarationOnly")
+        else:
+            arguments.add('--noEmit')
 
         # We don't produce any DefaultInfo outputs in this case, because we avoid running the tsc action
         # unless the output_declarations are requested.
