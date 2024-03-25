@@ -160,6 +160,8 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
 
     outputs = js_outs + map_outs + typings_outs + typing_maps_outs
 
+    is_tsc_performing_typecheck_only = len(outputs) == 0
+
     if ctx.outputs.buildinfo_out:
         arguments.add_all([
             "--tsBuildInfoFile",
@@ -209,18 +211,16 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         )
 
     verb = "Type-checking"
-    # TODO: Find better way to do this 
-    if len(outputs) > 0 or (ctx.outputs.buildinfo_out and len(outputs) > 1):
+
+    if not is_tsc_performing_typecheck_only:
         if ctx.attr.transpile != 0 and not ctx.attr.emit_declaration_only:
             # Make sure the user has acknowledged that transpiling is slow
-            if ctx.attr.transpile == -1 and not options.default_to_tsc_transpiler and not ctx.attr.typecheck_only:
+            if ctx.attr.transpile == -1 and not options.default_to_tsc_transpiler:
                 fail(transpiler_selection_required)
             if ctx.attr.declaration:
                 verb = "Transpiling & type-checking"
             else:
                 verb = "Transpiling"
-        else:
-            verb = "Type-checking"
 
     run_cmd = """{} $@ && echo "" > {} """.format(executable.path, validation_output.path)
     
