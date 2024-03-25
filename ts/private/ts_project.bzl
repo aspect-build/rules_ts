@@ -62,10 +62,10 @@ def _ts_project_impl(ctx):
     # However, it is not possible to evaluate files in outputs of other rules such as filegroup, therefore the outs are
     # recalculated here.
     typings_out_dir = ctx.attr.declaration_dir or ctx.attr.out_dir
-    js_outs = _lib.declare_outputs(ctx, [] if ctx.attr.transpile == 0 else _lib.calculate_js_outs(srcs, ctx.attr.out_dir, ctx.attr.root_dir, ctx.attr.allow_js, ctx.attr.resolve_json_module, ctx.attr.preserve_jsx, ctx.attr.emit_declaration_only))
-    map_outs = _lib.declare_outputs(ctx, [] if ctx.attr.transpile == 0 else _lib.calculate_map_outs(srcs, ctx.attr.out_dir, ctx.attr.root_dir, ctx.attr.source_map, ctx.attr.preserve_jsx, ctx.attr.emit_declaration_only))
-    typings_outs = _lib.declare_outputs(ctx, _lib.calculate_typings_outs(srcs, typings_out_dir, ctx.attr.root_dir, ctx.attr.declaration, ctx.attr.composite, ctx.attr.allow_js))
-    typing_maps_outs = _lib.declare_outputs(ctx, _lib.calculate_typing_maps_outs(srcs, typings_out_dir, ctx.attr.root_dir, ctx.attr.declaration_map, ctx.attr.allow_js))
+    js_outs = _lib.declare_outputs(ctx, [] if ctx.attr.transpile == 0 else _lib.calculate_js_outs(srcs, ctx.attr.out_dir, ctx.attr.root_dir, ctx.attr.allow_js, ctx.attr.resolve_json_module, ctx.attr.preserve_jsx, ctx.attr.no_emit, ctx.attr.emit_declaration_only))
+    map_outs = _lib.declare_outputs(ctx, [] if ctx.attr.transpile == 0 else _lib.calculate_map_outs(srcs, ctx.attr.out_dir, ctx.attr.root_dir, ctx.attr.source_map, ctx.attr.preserve_jsx, ctx.attr.no_emit, ctx.attr.emit_declaration_only))
+    typings_outs = _lib.declare_outputs(ctx, _lib.calculate_typings_outs(srcs, typings_out_dir, ctx.attr.root_dir, ctx.attr.declaration, ctx.attr.composite, ctx.attr.allow_js, ctx.attr.no_emit))
+    typing_maps_outs = _lib.declare_outputs(ctx, _lib.calculate_typing_maps_outs(srcs, typings_out_dir, ctx.attr.root_dir, ctx.attr.declaration_map, ctx.attr.allow_js, ctx.attr.no_emit))
 
     validation_outs = []
     if ctx.attr.validate:
@@ -181,15 +181,15 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
 
     typings_srcs = [s for s in srcs_inputs if _lib.is_typings_src(s.path)]
 
-    if len(js_outs) + len(typings_outs) < 1:
+    if len(js_outs) + len(typings_outs) < 1 and not ctx.attr.no_emit:
         label = "//{}:{}".format(ctx.label.package, ctx.label.name)
         if len(typings_srcs) > 0:
             no_outs_msg = """ts_project target {target} only has typings in srcs.
 Since there is no `tsc` action to perform, there are no generated outputs.
 
-> ts_project doesn't support "typecheck-only"; see https://github.com/aspect-build/rules_ts/issues/88
+For "typecheck-only" the TypeScript 'noEmit' feature can be used.
 
-This should be changed to js_library, which can be done by running:
+For grouping typings this should be changed to js_library, which can be done by running:
 
     buildozer 'new_load @aspect_rules_js//js:defs.bzl js_library' //{pkg}:__pkg__
     buildozer 'set kind js_library' {target}
@@ -229,13 +229,30 @@ This is an error because Bazel does not run actions unless their outputs are nee
     else:
         # We must avoid tsc writing any JS files in this case, as tsc was only run for typings, and some other
         # action will try to write the JS files. We must avoid collisions where two actions write the same file.
-        arguments.add("--emitDeclarationOnly")
+        if not ctx.attr.no_emit:
+            arguments.add("--emitDeclarationOnly")
 
         # We don't produce any DefaultInfo outputs in this case, because we avoid running the tsc action
         # unless the output_types are requested.
         default_outputs = []
 
     srcs_tsconfig_deps = ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps
+
+    stdout_file = ""
+
+    if ctx.attr.no_emit:
+        # Validation actions still need to produce some output, so we output the stdout
+        # to a .validation file that ends up in the _validation output group.
+        validation_output = ctx.actions.declare_file(ctx.attr.name + ".validation")
+        validation_outs.append(validation_output)
+
+        outputs.append(validation_output)
+        stdout_file = validation_output.path
+
+        if supports_workers:
+            arguments.add_all(["--bazelValidationFile", validation_output.short_path])
+
+        arguments.add("--noEmit")
 
     inputs_depset = depset()
     if len(outputs) > 0:
@@ -246,13 +263,20 @@ This is an error because Bazel does not run actions unless their outputs are nee
             transitive = transitive_inputs,
         )
 
-        if ctx.attr.transpile != 0 and not ctx.attr.emit_declaration_only:
+        if ctx.attr.transpile != 0 and not ctx.attr.emit_declaration_only and not ctx.attr.no_emit:
             if ctx.attr.declaration:
                 verb = "Transpiling & type-checking"
             else:
                 verb = "Transpiling"
         else:
             verb = "Type-checking"
+
+        env = {
+            "BAZEL_BINDIR": ctx.bin_dir.path,
+        }
+
+        if stdout_file != "":
+            env["JS_BINARY__STDOUT_OUTPUT_FILE"] = stdout_file
 
         ctx.actions.run(
             executable = executable,
@@ -267,9 +291,7 @@ This is an error because Bazel does not run actions unless their outputs are nee
                 ctx.label,
                 tsconfig_path,
             ),
-            env = {
-                "BAZEL_BINDIR": ctx.bin_dir.path,
-            },
+            env = env,
         )
 
     transitive_sources = js_lib_helpers.gather_transitive_sources(output_sources, srcs_tsconfig_deps)

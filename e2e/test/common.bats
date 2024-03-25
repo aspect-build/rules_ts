@@ -82,6 +82,7 @@ function tsconfig() {
 	local target="ES2020"
 	local module_resolution="node"
 	local composite="false"
+	local no_emit="false"
 	local trace_resolution="false"
 	local extended_diagnostics="false"
 	while (($# > 0)); do
@@ -111,6 +112,10 @@ function tsconfig() {
 			composite="true"
 			shift
 			;;
+		--no-emit)
+			shift
+			no_emit="true"
+			;;
 		--target)
 			shift
 			target="$1"
@@ -139,6 +144,7 @@ function tsconfig() {
         "isolatedModules": $isolated_modules,
         "sourceMap": $source_map,
         "declaration": $declaration,
+        "noEmit": $no_emit,
         "target": "$target",
         "moduleResolution": "$module_resolution",
         "traceResolution": $trace_resolution,
@@ -161,6 +167,9 @@ function ts_project() {
 	local source_map=""
 	local declaration=""
 	local composite=""
+	local transpiler=""
+	local mock_transpiler_disabled="#"
+	local no_emit=""
 	while (($# > 0)); do
 		case "$1" in
 		--path)
@@ -215,6 +224,15 @@ function ts_project() {
 			shift
 			composite="composite = True,"
 			;;
+		--transpiler-mock)
+			shift;
+			transpiler="transpiler = mock,"
+			mock_transpiler_disabled=""
+			;;
+		--no-emit)
+			shift
+			no_emit="no_emit = True,"
+			;;
 		--)
 			shift
 			break
@@ -238,6 +256,7 @@ function ts_project() {
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 ${npm_link_all_packages}load("@npm//:defs.bzl", "npm_link_all_packages")
 ${npm_link_all_packages}npm_link_all_packages(name = "node_modules")
+${mock_transpiler_disabled}load("@aspect_rules_ts//ts/test:mock_transpiler.bzl", "mock")
 
 ts_project(
     name = "${name}",
@@ -250,6 +269,8 @@ ts_project(
     $source_map
     $declaration
     $composite
+    $transpiler
+    $no_emit
 )
 EOF
 }

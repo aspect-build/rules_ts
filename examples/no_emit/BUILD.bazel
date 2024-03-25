@@ -1,0 +1,20 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+
+write_file(
+    name = "gen_ts",
+    out = "a.ts",
+    content = [
+        "export const a: number = 42",
+    ],
+)
+
+# Shows how to run `tsc` producing no outputs at all.
+# It will use a validation action to type-check the file:
+# https://bazel.build/extending/rules#validation_actions
+# Run bazel with --norun_validations to skip type-checking.
+ts_project(
+    name = "typecheck_only",
+    srcs = ["a.ts"],
+    no_emit = True,
+)

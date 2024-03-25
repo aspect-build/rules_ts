@@ -47,6 +47,7 @@ def ts_project(
         preserve_jsx = False,
         composite = False,
         incremental = False,
+        no_emit = False,
         emit_declaration_only = False,
         transpiler = None,
         ts_build_info_file = None,
@@ -215,6 +216,8 @@ def ts_project(
             Instructs Bazel to expect a `.tsbuildinfo` output and a `.d.ts` output for each `.ts` source.
         incremental: Whether the `incremental` bit is set in the tsconfig.
             Instructs Bazel to expect a `.tsbuildinfo` output.
+        no_emit: Whether the `noEmit` bit is set in the tsconfig.
+            Instructs Bazel *not* to expect any outputs. Only a validation action is used.
         emit_declaration_only: Whether the `emitDeclarationOnly` bit is set in the tsconfig.
             Instructs Bazel *not* to expect `.js` or `.js.map` outputs for `.ts` sources.
         ts_build_info_file: The user-specified value of `tsBuildInfoFile` from the tsconfig.
@@ -276,6 +279,7 @@ def ts_project(
         source_map = compiler_options.setdefault("sourceMap", source_map)
         declaration = compiler_options.setdefault("declaration", declaration)
         declaration_map = compiler_options.setdefault("declarationMap", declaration_map)
+        no_emit = compiler_options.setdefault("noEmit", no_emit)
         emit_declaration_only = compiler_options.setdefault("emitDeclarationOnly", emit_declaration_only)
         allow_js = compiler_options.setdefault("allowJs", allow_js)
         if resolve_json_module != None:
@@ -309,14 +313,14 @@ def ts_project(
     typings_out_dir = declaration_dir if declaration_dir else out_dir
     tsbuildinfo_path = ts_build_info_file if ts_build_info_file else name + ".tsbuildinfo"
 
-    tsc_typings_outs = _lib.calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, composite, allow_js)
-    tsc_typing_maps_outs = _lib.calculate_typing_maps_outs(srcs, typings_out_dir, root_dir, declaration_map, allow_js)
+    tsc_typings_outs = _lib.calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, composite, allow_js, no_emit)
+    tsc_typing_maps_outs = _lib.calculate_typing_maps_outs(srcs, typings_out_dir, root_dir, declaration_map, allow_js, no_emit)
 
     tsc_js_outs = []
     tsc_map_outs = []
-    if not transpiler or transpiler == "tsc":
-        tsc_js_outs = _lib.calculate_js_outs(srcs, out_dir, root_dir, allow_js, resolve_json_module, preserve_jsx, emit_declaration_only)
-        tsc_map_outs = _lib.calculate_map_outs(srcs, out_dir, root_dir, source_map, preserve_jsx, emit_declaration_only)
+    if no_emit or not transpiler or transpiler == "tsc":
+        tsc_js_outs = _lib.calculate_js_outs(srcs, out_dir, root_dir, allow_js, resolve_json_module, preserve_jsx, no_emit, emit_declaration_only)
+        tsc_map_outs = _lib.calculate_map_outs(srcs, out_dir, root_dir, source_map, preserve_jsx, no_emit, emit_declaration_only)
         tsc_target_name = name
     else:
         # To stitch together a tree of ts_project where transpiler is a separate rule,
@@ -401,6 +405,7 @@ def ts_project(
         typings_outs = tsc_typings_outs,
         typing_maps_outs = tsc_typing_maps_outs,
         buildinfo_out = tsbuildinfo_path if composite or incremental else None,
+        no_emit = no_emit,
         emit_declaration_only = emit_declaration_only,
         tsc = tsc,
         tsc_worker = tsc_worker,
