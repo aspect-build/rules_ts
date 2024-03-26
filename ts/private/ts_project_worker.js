@@ -1000,7 +1000,7 @@ if (require.main === module && worker_protocol.isPersistentWorker(process.argv))
     const args = fs.readFileSync(p).toString().trim().split('\n');
     
     const [_arg, validationPath] = args.splice(args.indexOf('--bazelValidationFile'), 2);    
-    fs.writeFileSync(path.resolve(p, validationPath), '');
+    fs.writeFileSync(path.resolve(process.cwd(), validationPath), '');
 
     ts.sys.args = process.argv = [process.argv0, process.argv[1], ...args];
     execute(ts.sys, ts.noop, args);

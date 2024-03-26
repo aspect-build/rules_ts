@@ -77,6 +77,7 @@ EOF
   fi
 }
 
+
 function tsconfig() {
     local path="."
     local no_implicit_any="false"
@@ -120,6 +121,20 @@ function tsconfig() {
 EOF
 }
 
+function load_mock_transpiler() {
+    local path="."
+
+    while (( $# > 0 )); do
+        case "$1" in
+        --path) shift; path="$1"; shift ;;
+        *) break ;;
+        esac
+    done
+    
+    cat > "$path/BUILD.bazel" <<EOF
+load("@aspect_rules_ts//ts/test:mock_transpiler.bzl", "mock")     
+EOF 
+}
 
 function ts_project() {
     local path="."
@@ -133,6 +148,7 @@ function ts_project() {
     local source_map=""
     local declaration=""
     local composite=""
+    local tranpsiler="" 
     while (( $# > 0 )); do
         case "$1" in
         --path) shift; path="$1"; shift ;;
@@ -146,6 +162,7 @@ function ts_project() {
         --source-map) shift; source_map="source_map = True," ;;
         --declaration) shift; declaration="declaration = True," ;;
         --composite) shift; composite="composite = True," ;;
+        --mockTranspiler) shift; composite="transpiler = mock," ;;
         --) shift; break ;;
         *) break ;;
         esac
