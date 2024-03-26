@@ -225,6 +225,8 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             else:
                 verb = "Transpiling"
 
+    # Validation actions still need to produce some output, so we output a .validation file
+    # that ends up in the _validation output group.
     if supports_workers:
         run_cmd = "{} $@".format(executable.path)
         arguments.add_all(["--bazelValidationFile", validation_output.short_path])        
