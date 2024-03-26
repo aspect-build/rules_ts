@@ -880,6 +880,9 @@ async function emit(request) {
     debug(`# Beginning new work`);
     debug(`arguments: ${request.arguments.join(' ')}`)
 
+    const validationPath = request.arguments[request.arguments.indexOf('--bazelValidationFile') + 1]
+    fs.writeFileSync(path.resolve(process.cwd(), validationPath), '');
+    
     const inputs = Object.fromEntries(
         request.inputs.map(input => [
             input.path,
@@ -952,9 +955,11 @@ async function emit(request) {
     if (ts.performance && ts.performance.isEnabled()) {
         ts.performance.forEachMeasure((name, duration) => request.output.write(`${name} time: ${duration}\n`));
     }
+
  
     worker.previousInputs = inputs;
     worker.postRun();
+    
 
     debug(`# Finished the work`);
     return succeded ? 0 : 1;

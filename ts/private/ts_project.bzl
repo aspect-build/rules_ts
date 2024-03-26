@@ -225,7 +225,11 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             else:
                 verb = "Transpiling"
 
-    run_cmd = """{} $@ && echo "" > {} """.format(executable.path, validation_output.path)
+    if supports_workers:
+        run_cmd = "{} $@".format(executable.path)
+        arguments.add_all(["--bazelValidationFile", validation_output.short_path])        
+    else:
+        run_cmd = """{} $@ && echo "" > {} """.format(executable.path, validation_output.path)
     
     ctx.actions.run_shell(
         tools = [executable],
