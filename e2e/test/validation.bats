@@ -26,4 +26,5 @@ teardown() {
     
     run bazel build :foo --run_validations
     assert_failure
+    assert_output -p "error TS2322: Type 'number' is not assignable to type 'string'"
 }
