@@ -32,27 +32,12 @@ def _impl1(ctx):
 
     return unittest.end(env)
 
-transpile_with_failing_typecheck_test = unittest.make(_impl1, attrs = {
-    "lib": attr.label(default = ":transpile_with_typeerror"),
-    "expected_js": attr.string_list(default = ["typeerror.js", "typeerror.js.map"]),
-})
-
-def _impl2(ctx):
-    env = unittest.begin(ctx)
-
-    js_files = []
-    for js in ctx.attr.lib[DefaultInfo].files.to_list():
-        js_files.append(js.basename)
-    asserts.equals(env, ctx.attr.expected_js, sorted(js_files))
-
-    return unittest.end(env)
-
-transpile_with_dts_test = unittest.make(_impl2, attrs = {
+transpile_with_dts_test = unittest.make(_impl1, attrs = {
     "lib": attr.label(default = ":transpile_with_dts"),
     "expected_js": attr.string_list(default = ["index.js", "index.js.map"]),
 })
 
-def _impl3(ctx):
+def _impl2(ctx):
     env = unittest.begin(ctx)
 
     js_files = []
@@ -67,7 +52,7 @@ def _impl3(ctx):
 
     return unittest.end(env)
 
-transitive_filegroup_test = unittest.make(_impl3, attrs = {
+transitive_filegroup_test = unittest.make(_impl2, attrs = {
     "lib": attr.label(default = ":transpile_filegroup"),
     "expected_js": attr.string_list(default = ["src_fg_a.js", "src_fg_a.js.map", "src_fg_b.js", "src_fg_b.js.map"]),
     "expected_declarations": attr.string_list(default = ["src_fg_a.d.ts", "src_fg_b.d.ts"]),
@@ -132,37 +117,6 @@ def transpiler_test_suite():
         ],
     )
 
-    # TODO: Tests related to this will only pass if run with --norun_validations
-    # This target proves that transpilation doesn't require typechecking:
-    #
-    # $ bazel build examples/swc:transpile_with_typeerror
-    # INFO: Analyzed target //examples/swc:transpile_with_typeerror (1 packages loaded, 8 targets configured).
-    # Target //examples/swc:transpile_with_typeerror up-to-date:
-    #   bazel-bin/examples/swc/typeerror.js
-    #
-    # But the _typecheck target fails to build:
-    #
-    # $ bazel build examples/swc:transpile_with_typeerror_typecheck
-    # INFO: Analyzed target //examples/swc:transpile_with_typeerror_typecheck (0 packages loaded, 1 target configured).
-    # ERROR: /home/alexeagle/Projects/rules_ts/examples/swc/BUILD.bazel:30:11: Compiling TypeScript project //examples/swc:transpile_with_typeerror_typings
-    # examples/swc/typeerror.ts(1,14): error TS2322: Type 'number' is not assignable to type 'string'
-    ts_project(
-        name = "transpile_with_typeerror",
-        srcs = ["typeerror.ts"],
-        # The transpile_with_typeerror.check target will have a build failure
-        # But the default transpile_with_typeerror target should still produce JS outs
-        tags = ["manual"],
-        transpiler = mock,
-        tsconfig = _TSCONFIG,
-    )
-
-    # Assert that the JS can be produced despite that type error
-    build_test(
-        name = "smoke_test",
-        targets = ["typeerror.js"],
-        tags = ["manual"]
-    )
-
     ts_project(
         name = "transpile_with_dts",
         srcs = [
@@ -204,6 +158,5 @@ def transpiler_test_suite():
     )
 
     unittest.suite("t0", transitive_declarations_test)
-    # unittest.suite("t1", transpile_with_failing_typecheck_test)
-    unittest.suite("t2", transpile_with_dts_test)
-    unittest.suite("t3", transitive_filegroup_test)
+    unittest.suite("t1", transpile_with_dts_test)
+    unittest.suite("t2", transitive_filegroup_test)

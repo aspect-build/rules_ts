@@ -19,6 +19,10 @@ teardown() {
 
     run bazel build :foo --norun_validations
     assert_success
+    run cat bazel-bin/source.js
+    assert_success
+    # Mock transpiler just copies source input to output
+    assert_output -p 'export const a: string = 1;'
     
     run bazel build :foo --run_validations
     assert_failure
