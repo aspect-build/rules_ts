@@ -121,20 +121,6 @@ function tsconfig() {
 EOF
 }
 
-function load_mock_transpiler() {
-    local path="."
-
-    while (( $# > 0 )); do
-        case "$1" in
-        --path) shift; path="$1"; shift ;;
-        *) break ;;
-        esac
-    done
-    
-    cat > "$path/BUILD.bazel" <<EOF
-load("@aspect_rules_ts//ts/test:mock_transpiler.bzl", "mock")     
-EOF 
-}
 
 function ts_project() {
     local path="."
@@ -174,6 +160,7 @@ function ts_project() {
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 ${npm_link_all_packages}load("@npm//:defs.bzl", "npm_link_all_packages")
 ${npm_link_all_packages}npm_link_all_packages(name = "node_modules")
+load("@aspect_rules_ts//ts/test:mock_transpiler.bzl", "mock")     
 
 ts_project(
     name = "${name}",
