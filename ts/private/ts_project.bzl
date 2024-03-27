@@ -202,16 +202,16 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         if ctx.attr.declaration:
             arguments.add("--emitDeclarationOnly")
         else:
-            arguments.add('--noEmit')
+            arguments.add("--noEmit")
 
         # We don't produce any DefaultInfo outputs in this case, because we avoid running the tsc action
         # unless the output_declarations are requested.
         default_outputs = []
 
     inputs_depset = depset(
-            copy_files_to_bin_actions(ctx, inputs),
-            transitive = transitive_inputs + [_gather_declarations_from_js_providers(ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps)],
-        )
+        copy_files_to_bin_actions(ctx, inputs),
+        transitive = transitive_inputs + [_gather_declarations_from_js_providers(ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps)],
+    )
 
     verb = "Type-checking"
 
@@ -229,10 +229,10 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
     # that ends up in the _validation output group.
     if supports_workers:
         run_cmd = "{} $@".format(executable.path)
-        arguments.add_all(["--bazelValidationFile", validation_output.short_path])        
+        arguments.add_all(["--bazelValidationFile", validation_output.short_path])
     else:
         run_cmd = """{} $@ && echo "" > {} """.format(executable.path, validation_output.path)
-    
+
     ctx.actions.run_shell(
         tools = [executable],
         inputs = inputs_depset,
@@ -248,9 +248,9 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         ),
         env = {
             "BAZEL_BINDIR": ctx.bin_dir.path,
-        },           
+        },
     )
-        
+
     transitive_sources = js_lib_helpers.gather_transitive_sources(output_sources, ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps)
 
     transitive_declarations = js_lib_helpers.gather_transitive_declarations(output_declarations, ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps)
