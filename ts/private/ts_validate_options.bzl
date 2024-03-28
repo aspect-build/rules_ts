@@ -43,9 +43,7 @@ To disable this check, set the validate attribute to False:
     ]
 
 def _validate_action(ctx, tsconfig_inputs):
-    # Bazel won't run our action unless its output is needed, so make a marker file
-    # We make it a .d.ts file so we can plumb it to the deps of the ts_project compile.
-    marker = ctx.actions.declare_file("%s.optionsvalid.d.ts" % ctx.label.name)
+    marker = ctx.actions.declare_file("%s_params.validation" % ctx.label.name)
     tsconfig = copy_file_to_bin_action(ctx, ctx.file.tsconfig)
 
     arguments = ctx.actions.args()

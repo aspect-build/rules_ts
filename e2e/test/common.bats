@@ -77,6 +77,7 @@ EOF
   fi
 }
 
+
 function tsconfig() {
     local path="."
     local no_implicit_any="false"
@@ -133,6 +134,7 @@ function ts_project() {
     local source_map=""
     local declaration=""
     local composite=""
+    local tranpsiler="" 
     while (( $# > 0 )); do
         case "$1" in
         --path) shift; path="$1"; shift ;;
@@ -146,6 +148,7 @@ function ts_project() {
         --source-map) shift; source_map="source_map = True," ;;
         --declaration) shift; declaration="declaration = True," ;;
         --composite) shift; composite="composite = True," ;;
+        --mockTranspiler) shift; composite="transpiler = mock," ;;
         --) shift; break ;;
         *) break ;;
         esac
@@ -157,6 +160,7 @@ function ts_project() {
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 ${npm_link_all_packages}load("@npm//:defs.bzl", "npm_link_all_packages")
 ${npm_link_all_packages}npm_link_all_packages(name = "node_modules")
+load("@aspect_rules_ts//ts/test:mock_transpiler.bzl", "mock")     
 
 ts_project(
     name = "${name}",
