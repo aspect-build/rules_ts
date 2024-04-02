@@ -22,3 +22,5 @@ common --genrule_strategy=remote
 # not to accelerate and parallelize the builds for unrelated actions that happen to appear in our dependencies.
 # So, turn off RBE for actions that are known to be problematic because they are non-hermetic.
 # build:rbe --modify_execution_info=CppCompile=+no-remote-exec,CppLink=+no-remote-exec,GenProtoDescriptorSet=+no-remote-exec,ProtocGenEs=+no-remote-exec
+
+build --announce_rc
