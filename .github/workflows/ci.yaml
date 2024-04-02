@@ -24,22 +24,6 @@ jobs:
     # inspired from
     # https://stackoverflow.com/questions/65384420/how-to-make-a-github-action-matrix-element-conditional
 
-    matrix-prep-config:
-        # Prepares the 'config' axis of the test matrix
-        runs-on: ubuntu-latest
-        env:
-            BUILDBUDDY_API_KEY: ${{ secrets.BUILDBUDDY_API_KEY }}
-        steps:
-            - id: local
-              run: echo "config=local" >> $GITHUB_OUTPUT
-            - id: rbe
-              run: echo "config=rbe" >> $GITHUB_OUTPUT
-              # Don't run RBE if there is no API token which is the case on forks
-              if: ${{ env.BUILDBUDDY_API_KEY != '' }}
-        outputs:
-            # Will look like ["local", "rbe"]
-            configs: ${{ toJSON(steps.*.outputs.config) }}
-
     matrix-prep-bazelversion:
         # Prepares the 'bazelversion' axis of the test matrix
         runs-on: ubuntu-latest
@@ -74,7 +58,6 @@ jobs:
         runs-on: ${{ matrix.os }}
 
         needs:
-            - matrix-prep-config
             - matrix-prep-bazelversion
             - matrix-prep-os
 
@@ -82,7 +65,6 @@ jobs:
             fail-fast: false
             matrix:
                 os: ${{ fromJSON(needs.matrix-prep-os.outputs.os) }}
-                config: ${{ fromJSON(needs.matrix-prep-config.outputs.configs) }}
                 bazelversion: ${{ fromJSON(needs.matrix-prep-bazelversion.outputs.bazelversions) }}
                 bzlmodEnabled: [true, false]
                 folder:
@@ -96,12 +78,6 @@ jobs:
                     # Don't test MacOS with Bazel 7 to minimize MacOS minutes (billed at 10X)
                     - os: macos-latest
                       bazelversion: 7.0.0-pre.20230530.3
-                    # Don't test RBE with on MacOS (not configured)
-                    - os: macos-latest
-                      config: rbe
-                    # TODO(https://github.com/aspect-build/rules_ts/issues/432): re-enable
-                    - folder: e2e/bzlmod
-                      config: rbe
                     # TODO: combine bzlmod and workspace into a single 'smoke' e2e
                     - folder: e2e/bzlmod
                       bzlmodEnabled: false
@@ -147,16 +123,6 @@ jobs:
               if: matrix.bzlmodEnabled
               run: echo "bzlmod_flag=--enable_bzlmod" >> $GITHUB_OUTPUT
 
-            - name: Write RBE credentials
-              if: ${{ matrix.config == 'rbe' }}
-              working-directory: ${{ matrix.folder }}
-              run: |
-                  touch $HOME/.bazelrc
-                  chmod 0600 $HOME/.bazelrc
-                  echo "build --remote_header=x-buildbuddy-api-key=$BUILDBUDDY_API_KEY" > $HOME/.bazelrc
-              env:
-                  BUILDBUDDY_API_KEY: ${{ secrets.BUILDBUDDY_API_KEY }}
-
             - name: bazel test //...
               env:
                   # Bazelisk will download bazel to here, ensure it is cached between runs.
@@ -166,7 +132,6 @@ jobs:
                   bazel --bazelrc=$GITHUB_WORKSPACE/.github/workflows/ci.bazelrc \
                     --bazelrc=.bazelrc \
                     test \
-                    --config=${{ matrix.config }} \
                     //... \
                     ${{ steps.set_bzlmod_flag.outputs.bzlmod_flag }}
 
