@@ -16,9 +16,8 @@ common --remote_executor=unix:///mnt/ephemeral/buildbarn/.cache/bb_clientd/grpc
 # 8 is the max scaling for the "staging" RBE cluster
 common --jobs=8
 common --remote_timeout=3600
+common --genrule_strategy=remote
 
-# TODO: do we need these?
-# build:rbe --genrule_strategy=remote
 # We are using RBE to test that the actions we create in rules_ts will work for our customers,
 # not to accelerate and parallelize the builds for unrelated actions that happen to appear in our dependencies.
 # So, turn off RBE for actions that are known to be problematic because they are non-hermetic.
