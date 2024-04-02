@@ -10,13 +10,13 @@ test --test_env=XDG_CACHE_HOME
 #
 # Always enable remote execution.
 # We test the local execution case in the "vanilla GitHub Actions" setup in /.github/workflows/ci.yaml
-common --host_platform=@aspect_bazel_lib//platforms:x86_64_linux_remote
-common --extra_execution_platforms=@aspect_bazel_lib//platforms:x86_64_linux_remote
-common --remote_executor=unix:///mnt/ephemeral/buildbarn/.cache/bb_clientd/grpc
+build --host_platform=@aspect_bazel_lib//platforms:x86_64_linux_remote
+build --extra_execution_platforms=@aspect_bazel_lib//platforms:x86_64_linux_remote
+build --remote_executor=unix:///mnt/ephemeral/buildbarn/.cache/bb_clientd/grpc
 # 8 is the max scaling for the "staging" RBE cluster
-common --jobs=8
-common --remote_timeout=3600
-common --genrule_strategy=remote
+build --jobs=8
+build --remote_timeout=3600
+build --genrule_strategy=remote
 
 # We are using RBE to test that the actions we create in rules_ts will work for our customers,
 # not to accelerate and parallelize the builds for unrelated actions that happen to appear in our dependencies.
