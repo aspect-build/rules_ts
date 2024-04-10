@@ -128,7 +128,7 @@ jobs:
         timeout-minutes: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].branch_freshness_timeout }}
         with:
           workspace: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].workspace }}
-          task: branch_freshness
+          task: checkout
 
       - name: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].name }}
         uses: aspect-build/workflows-action@5.9.24
