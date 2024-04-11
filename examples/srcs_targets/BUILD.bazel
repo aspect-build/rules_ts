@@ -1,0 +1,51 @@
+"""Shows different ways to pass source files into ts_project"""
+
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+
+[
+    write_file(
+        name = "gen-%s-ts" % n,
+        out = "%s.ts" % n,
+        content = [
+            "export const %s = 42" % n,
+        ],
+    )
+    for n in [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+    ]
+]
+
+# Various ways of declaring sources
+ts_project(
+    name = "out-refs",
+    srcs = [
+        # Labels of various syntaxes to files
+        "a.ts",
+        ":b.ts",
+        "//%s:c.ts" % package_name(),
+        "@//%s:d.ts" % package_name(),
+        "@aspect_rules_ts//%s:e.ts" % package_name(),
+
+        # Label to a rule
+        ":gen-a-ts",
+    ],
+    out_dir = "out",
+)
+
+# Ensure all the outputs are pre-declared
+build_test(
+    name = "test",
+    targets = [
+        "out/a.js",
+        "out/b.js",
+        "out/c.js",
+        "out/d.js",
+        "out/e.js",
+    ],
+)
