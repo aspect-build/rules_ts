@@ -26,3 +26,5 @@ tasks:
                     only_on_change: false
                     branches:
                         - main
+notifications:
+    github: {}
