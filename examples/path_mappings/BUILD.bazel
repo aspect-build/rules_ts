@@ -9,7 +9,9 @@ load("@bazel_skylib//rules:build_test.bzl", "build_test")
 # bazel-bin/examples/path_mappings/foo.d.ts
 ts_project(
     name = "path_mappings",
-    srcs = ["foo.ts"],
+    # Use a fully-qualified label as a test that the macro logic still produces
+    # the expected pre-declared output file for foo.js
+    srcs = ["//examples/path_mappings:foo.ts"],
     declaration = True,
     validate = False,
     deps = [
@@ -20,5 +22,5 @@ ts_project(
 
 build_test(
     name = "path_mappings_test",
-    targets = [":path_mappings"],
+    targets = [":foo.js"],
 )

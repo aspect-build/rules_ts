@@ -40,9 +40,11 @@ write_file(
 ts_project(
     name = "srcs-generated",
     # Demonstrates that you can mix sources with generated files
+    # (Also verifies that relative labels work with macro logic for predeclared outputs)
     srcs = [
-        "a.ts",
-        "generated.ts",
+        "//examples/srcs:a.ts",
+        ":b.ts",
+        ":generated.ts",
     ],
     out_dir = "generated",
 )
