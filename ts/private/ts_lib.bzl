@@ -201,6 +201,7 @@ def _replace_ext(f, ext_map):
     return None
 
 def _to_out_path(f, out_dir, root_dir):
+    f = f[f.find(":") + 1:]
     if root_dir:
         f = f.removeprefix(root_dir + "/")
     if out_dir:
