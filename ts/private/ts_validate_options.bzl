@@ -53,6 +53,7 @@ def _validate_action(ctx, tsconfig_inputs):
         declaration_map = ctx.attr.declaration_map,
         preserve_jsx = ctx.attr.preserve_jsx,
         composite = ctx.attr.composite,
+        no_emit = ctx.attr.no_emit,
         emit_declaration_only = ctx.attr.emit_declaration_only,
         resolve_json_module = ctx.attr.resolve_json_module,
         source_map = ctx.attr.source_map,
