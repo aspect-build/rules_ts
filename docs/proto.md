@@ -47,7 +47,8 @@ Future work
 ## ts_proto_library
 
 <pre>
-ts_proto_library(<a href="#ts_proto_library-name">name</a>, <a href="#ts_proto_library-node_modules">node_modules</a>, <a href="#ts_proto_library-has_services">has_services</a>, <a href="#ts_proto_library-copy_files">copy_files</a>, <a href="#ts_proto_library-files_to_copy">files_to_copy</a>, <a href="#ts_proto_library-kwargs">kwargs</a>)
+ts_proto_library(<a href="#ts_proto_library-name">name</a>, <a href="#ts_proto_library-node_modules">node_modules</a>, <a href="#ts_proto_library-gen_connect_es">gen_connect_es</a>, <a href="#ts_proto_library-gen_connect_query">gen_connect_query</a>,
+                 <a href="#ts_proto_library-gen_connect_query_service_mapping">gen_connect_query_service_mapping</a>, <a href="#ts_proto_library-copy_files">copy_files</a>, <a href="#ts_proto_library-files_to_copy">files_to_copy</a>, <a href="#ts_proto_library-kwargs">kwargs</a>)
 </pre>
 
     A macro to generate JavaScript code and TypeScript typings from .proto files.
@@ -58,8 +59,10 @@ ts_proto_library(<a href="#ts_proto_library-name">name</a>, <a href="#ts_proto_l
 | Name  | Description | Default Value |
 | :------------- | :------------- | :------------- |
 | <a id="ts_proto_library-name"></a>name |  name of resulting ts_proto_library target   |  none |
-| <a id="ts_proto_library-node_modules"></a>node_modules |  Label pointing to the linked node_modules target where @bufbuild/protoc-gen-es is linked, e.g. //:node_modules. Since the generated code depends on @bufbuild/protobuf, this package must also be linked. If <code>has_services = True</code> then @bufbuild/proto-gen-connect-es should be linked as well.   |  none |
-| <a id="ts_proto_library-has_services"></a>has_services |  whether the proto file contains a service, and therefore *_connect.{js,d.ts} should be written.   |  <code>True</code> |
+| <a id="ts_proto_library-node_modules"></a>node_modules |  Label pointing to the linked node_modules target where @bufbuild/protoc-gen-es is linked, e.g. //:node_modules. Since the generated code depends on @bufbuild/protobuf, this package must also be linked. If <code>gen_connect_es = True</code> then @bufbuild/proto-gen-connect-es should be linked as well. If <code>gen_connect_query = True</code> then @bufbuild/proto-gen-connect-query should be linked as well.   |  none |
+| <a id="ts_proto_library-gen_connect_es"></a>gen_connect_es |  whether the proto file contains a service, and therefore *_connect.{js,d.ts} should be written.   |  <code>True</code> |
+| <a id="ts_proto_library-gen_connect_query"></a>gen_connect_query |  whether the proto file contains a service, and therefore *_connect.{js,d.ts} should be written.   |  <code>False</code> |
+| <a id="ts_proto_library-gen_connect_query_service_mapping"></a>gen_connect_query_service_mapping |  mapping from source proto file to the named RPC services that file contains. For example, if I have a.proto which contains a service Foo and b.proto that contains a service Bar, the mapping I would pass would be: <code>gen_connect_query_service_mapping = {"a.proto": ["Foo"], "b.proto": ["Bar"]}</code> See https://github.com/connectrpc/connect-query-es/tree/main/examples/react/basic/src/gen   |  <code>{}</code> |
 | <a id="ts_proto_library-copy_files"></a>copy_files |  whether to copy the resulting .d.ts files back to the source tree, for the editor to locate them.   |  <code>True</code> |
 | <a id="ts_proto_library-files_to_copy"></a>files_to_copy |  which files from the protoc output to copy. By default, scans for *.proto in the current package and replaces with the typical output filenames.   |  <code>None</code> |
 | <a id="ts_proto_library-kwargs"></a>kwargs |  additional named arguments to the ts_proto_library rule   |  none |

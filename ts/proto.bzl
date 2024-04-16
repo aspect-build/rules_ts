@@ -46,7 +46,7 @@ load("@aspect_bazel_lib//lib:write_source_files.bzl", "write_source_files")
 load("@aspect_rules_js//js:defs.bzl", "js_binary")
 load("//ts/private:ts_proto_library.bzl", ts_proto_library_rule = "ts_proto_library")
 
-def ts_proto_library(name, node_modules, has_services = True, copy_files = True, files_to_copy = None, **kwargs):
+def ts_proto_library(name, node_modules, gen_connect_es = True, gen_connect_query = False, gen_connect_query_service_mapping = {}, copy_files = True, files_to_copy = None, **kwargs):
     """
     A macro to generate JavaScript code and TypeScript typings from .proto files.
 
@@ -54,8 +54,15 @@ def ts_proto_library(name, node_modules, has_services = True, copy_files = True,
         name: name of resulting ts_proto_library target
         node_modules: Label pointing to the linked node_modules target where @bufbuild/protoc-gen-es is linked, e.g. //:node_modules.
             Since the generated code depends on @bufbuild/protobuf, this package must also be linked.
-            If `has_services = True` then @bufbuild/proto-gen-connect-es should be linked as well.
-        has_services: whether the proto file contains a service, and therefore *_connect.{js,d.ts} should be written.
+            If `gen_connect_es = True` then @bufbuild/proto-gen-connect-es should be linked as well.
+            If `gen_connect_query = True` then @bufbuild/proto-gen-connect-query should be linked as well.
+        gen_connect_es: whether the proto file contains a service, and therefore *_connect.{js,d.ts} should be written.
+        gen_connect_query: whether the proto file contains a service, and therefore *_connect.{js,d.ts} should be written.
+        gen_connect_query_service_mapping: mapping from source proto file to the named RPC services that file contains.
+          For example, if I have a.proto which contains a service Foo and b.proto that contains a service Bar,
+          the mapping I would pass would be:
+          `gen_connect_query_service_mapping = {"a.proto": ["Foo"], "b.proto": ["Bar"]}`
+          See https://github.com/connectrpc/connect-query-es/tree/main/examples/react/basic/src/gen
         copy_files: whether to copy the resulting .d.ts files back to the source tree, for the editor to locate them.
         files_to_copy: which files from the protoc output to copy. By default, scans for *.proto in the current package
             and replaces with the typical output filenames.
@@ -80,7 +87,7 @@ def ts_proto_library(name, node_modules, has_services = True, copy_files = True,
     )
 
     protoc_gen_connect_es_target = None
-    if has_services:
+    if gen_connect_es:
         protoc_gen_connect_es_target = "_{}.gen_connect_es".format(name)
         protoc_gen_connect_es_entry = protoc_gen_connect_es_target + "__entry_point"
         directory_path(
@@ -95,13 +102,32 @@ def ts_proto_library(name, node_modules, has_services = True, copy_files = True,
             entry_point = protoc_gen_connect_es_entry,
         )
 
+    protoc_gen_connect_query_target = None
+    if gen_connect_query:
+        protoc_gen_connect_query_target = "_{}.gen_connect_query".format(name)
+        protoc_gen_connect_query_entry = protoc_gen_connect_query_target + "__entry_point"
+        directory_path(
+            name = protoc_gen_connect_query_entry,
+            tags = ["manual"],
+            directory = node_modules + "/@connectrpc/protoc-gen-connect-query/dir",
+            path = "bin/protoc-gen-connect-query",
+        )
+        js_binary(
+            name = protoc_gen_connect_query_target,
+            data = [node_modules + "/@connectrpc/protoc-gen-connect-query"],
+            entry_point = protoc_gen_connect_query_entry,
+        )
+
     ts_proto_library_rule(
         name = name,
         protoc_gen_es = protoc_gen_es_target,
         protoc_gen_connect_es = protoc_gen_connect_es_target,
+        protoc_gen_connect_query = protoc_gen_connect_query_target,
         # The codegen always has a runtime dependency on the protobuf runtime
         deps = kwargs.pop("deps", []) + [node_modules + "/@bufbuild/protobuf"],
-        has_services = has_services,
+        gen_connect_es = gen_connect_es,
+        gen_connect_query = gen_connect_query,
+        gen_connect_query_service_mapping = gen_connect_query_service_mapping,
         **kwargs
     )
 
@@ -110,8 +136,11 @@ def ts_proto_library(name, node_modules, has_services = True, copy_files = True,
     if not files_to_copy:
         proto_srcs = native.glob(["**/*.proto"])
         files_to_copy = [s.replace(".proto", "_pb.d.ts") for s in proto_srcs]
-        if has_services:
+        if gen_connect_es:
             files_to_copy.extend([s.replace(".proto", "_connect.d.ts") for s in proto_srcs])
+        if gen_connect_query:
+            for proto, services in gen_connect_query_service_mapping.items():
+                files_to_copy.extend([proto.replace(".proto", "-{}_connectquery.d.ts".format(s)) for s in services])
 
     files_target = "_{}.filegroup".format(name)
     dir_target = "_{}.directory".format(name)
