@@ -117,11 +117,11 @@ ts_proto_library = rule(
             default = True,
         ),
         "gen_connect_query": attr.bool(
-            doc = "whether to generate service stubs with gen-connect-query",
+            doc = "whether to generate TanStack Query clients with gen-connect-query",
             default = False,
         ),
         "gen_connect_query_service_mapping": attr.string_list_dict(
-            doc = "what services to generate for connect-query",
+            doc = "mapping from protos to services those protos contain used to dervice file names for gen-connect-query",
             default = {},
         ),
         "proto": attr.label(
@@ -142,7 +142,7 @@ ts_proto_library = rule(
             cfg = "exec",
         ),
         "protoc_gen_connect_query": attr.label(
-            doc = "protoc plugin to generate react query services",
+            doc = "protoc plugin to generate TanStack Query services",
             executable = True,
             cfg = "exec",
         ),
