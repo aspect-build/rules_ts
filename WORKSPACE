@@ -16,11 +16,9 @@ load("@aspect_rules_js//js:repositories.bzl", "rules_js_dependencies")
 
 rules_js_dependencies()
 
-load("@aspect_bazel_lib//lib:repositories.bzl", "aspect_bazel_lib_dependencies", "register_coreutils_toolchains")
+load("@aspect_rules_js//js:toolchains.bzl", "DEFAULT_NODE_VERSION", "rules_js_register_toolchains")
 
-aspect_bazel_lib_dependencies()
-
-register_coreutils_toolchains()
+rules_js_register_toolchains(node_version = DEFAULT_NODE_VERSION)
 
 load("@rules_nodejs//nodejs:repositories.bzl", "nodejs_register_toolchains")
 
@@ -85,7 +83,7 @@ buildifier_prebuilt_register_toolchains()
 
 ###########################################
 # A pnpm workspace so we can test 3p deps
-load("@aspect_rules_js//npm:npm_import.bzl", "npm_translate_lock")
+load("@aspect_rules_js//npm:repositories.bzl", "npm_translate_lock")
 
 npm_translate_lock(
     name = "npm",

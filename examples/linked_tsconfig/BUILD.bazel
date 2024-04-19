@@ -13,7 +13,7 @@ ts_config(
 )
 
 npm_package(
-    name = "linked_tsconfig",
+    name = "pkg",
     srcs = [":tsconfig"],
     visibility = ["//visibility:public"],
 )

@@ -360,7 +360,7 @@ def ts_project(
         native.filegroup(
             name = typecheck_target_name,
             srcs = [tsc_target_name],
-            # This causes the declarations to be produced, which in turn triggers the tsc action to typecheck
+            # This causes the types to be produced, which in turn triggers the tsc action to typecheck
             output_group = "types",
             **common_kwargs
         )

@@ -9,7 +9,7 @@ ts_config(
 )
 
 ts_project(
-    name = "deps_ts",
+    name = "lib",
     srcs = ["index.ts"],
     data = [
         # Also propagate the date-fns npm package downstream so it is an runtime dependency
@@ -25,9 +25,9 @@ ts_project(
 )
 
 npm_package(
-    name = "deps_lib_transpiler",
+    name = "pkg",
     srcs = [
-        ":deps_ts",
+        ":lib",
     ],
     package = "@myorg/deps_lib_transpiler",
     visibility = ["//examples:__subpackages__"],
@@ -39,7 +39,7 @@ ts_project(
     declaration = True,
     transpiler = babel,
     deps = [
-        ":deps_ts",
+        ":lib",
     ],
 )
 

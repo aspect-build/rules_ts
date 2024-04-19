@@ -6,7 +6,7 @@ npm_link_all_packages(name = "node_modules")
 
 # A basic library with 2 simple dependencies (packages with no dependencies)
 ts_project(
-    name = "ts_lib",
+    name = "lib",
     srcs = ["index.ts"],
     declaration = True,
     visibility = ["//visibility:public"],
@@ -19,10 +19,10 @@ ts_project(
 
 # Exposed via npm_package()
 npm_package(
-    name = "linked",
+    name = "pkg",
     srcs = [
         "package.json",
-        ":ts_lib",
+        ":lib",
     ],
     visibility = ["//visibility:public"],
 )
