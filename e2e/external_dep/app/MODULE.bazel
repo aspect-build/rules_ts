@@ -6,7 +6,7 @@ module(
 bazel_dep(name = "bazel_skylib", version = "1.4.1")
 
 # TODO: see note on rules_js in the parent MODULE.bazel
-bazel_dep(name = "aspect_rules_js", version = "1.37.1")
+bazel_dep(name = "aspect_rules_js", version = "2.0.0-alpha.1")
 bazel_dep(name = "aspect_rules_ts", version = "0.0.0")
 local_path_override(
     module_name = "aspect_rules_ts",

@@ -6,7 +6,6 @@ load("@aspect_bazel_lib//lib:paths.bzl", "to_output_relative_path")
 load("@aspect_bazel_lib//lib:platform_utils.bzl", "platform_utils")
 load("@aspect_rules_js//js:libs.bzl", "js_lib_helpers")
 load("@aspect_rules_js//js:providers.bzl", "JsInfo", "js_info")
-load("@aspect_rules_js//npm:providers.bzl", "NpmPackageStoreInfo")
 load("@bazel_skylib//lib:dicts.bzl", "dicts")
 load(":options.bzl", "OptionsInfo", "transpiler_selection_required")
 load(":ts_config.bzl", "TsConfigInfo")
@@ -14,23 +13,18 @@ load(":ts_lib.bzl", "COMPILER_OPTION_ATTRS", "OUTPUT_ATTRS", "STD_ATTRS", _lib =
 load(":ts_validate_options.bzl", _validate_lib = "lib")
 
 # Forked from js_lib_helpers.js_lib_helpers.gather_files_from_js_providers to not
-# include any sources; only transitive declarations & npm linked packages
-def _gather_declarations_from_js_providers(targets):
+# include any sources; only transitive types & npm sources
+def _gather_types_from_js_infos(targets):
     files_depsets = []
     files_depsets.extend([
-        target[JsInfo].transitive_declarations
+        target[JsInfo].transitive_types
         for target in targets
-        if JsInfo in target and hasattr(target[JsInfo], "transitive_declarations")
+        if JsInfo in target and hasattr(target[JsInfo], "transitive_types")
     ])
     files_depsets.extend([
-        target[JsInfo].transitive_npm_linked_package_files
+        target[JsInfo].npm_sources
         for target in targets
-        if JsInfo in target and hasattr(target[JsInfo], "transitive_npm_linked_package_files")
-    ])
-    files_depsets.extend([
-        target[NpmPackageStoreInfo].transitive_files
-        for target in targets
-        if NpmPackageStoreInfo in target and hasattr(target[NpmPackageStoreInfo], "transitive_files")
+        if JsInfo in target and hasattr(target[JsInfo], "npm_sources")
     ])
     return depset([], transitive = files_depsets)
 
@@ -215,29 +209,29 @@ This might be because
 This is an error because Bazel does not run actions unless their outputs are needed for the requested targets to build.
 """)
 
-    output_declarations = typings_outs + typing_maps_outs + typings_srcs
+    output_types = typings_outs + typing_maps_outs + typings_srcs
 
     # Default outputs (DefaultInfo files) is what you see on the command-line for a built
     # library, and determines what files are used by a simple non-provider-aware downstream
     # library. Only the JavaScript outputs are intended for use in non-TS-aware dependents.
     if ctx.attr.transpile != 0:
         # Special case case where there are no source outputs and we don't have a custom
-        # transpiler so we add output_declarations to the default outputs
-        default_outputs = output_sources[:] if len(output_sources) else output_declarations[:]
+        # transpiler so we add output_types to the default outputs
+        default_outputs = output_sources[:] if len(output_sources) else output_types[:]
     else:
         # We must avoid tsc writing any JS files in this case, as tsc was only run for typings, and some other
         # action will try to write the JS files. We must avoid collisions where two actions write the same file.
         arguments.add("--emitDeclarationOnly")
 
         # We don't produce any DefaultInfo outputs in this case, because we avoid running the tsc action
-        # unless the output_declarations are requested.
+        # unless the output_types are requested.
         default_outputs = []
 
     inputs_depset = depset()
     if len(outputs) > 0:
         inputs_depset = depset(
             copy_files_to_bin_actions(ctx, inputs),
-            transitive = transitive_inputs + [_gather_declarations_from_js_providers(ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps)],
+            transitive = transitive_inputs + [_gather_types_from_js_infos(ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps)],
         )
 
         if ctx.attr.transpile != 0 and not ctx.attr.emit_declaration_only:
@@ -270,18 +264,18 @@ This is an error because Bazel does not run actions unless their outputs are nee
 
     transitive_sources = js_lib_helpers.gather_transitive_sources(output_sources, ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps)
 
-    transitive_declarations = js_lib_helpers.gather_transitive_declarations(output_declarations, ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps)
+    transitive_types = js_lib_helpers.gather_transitive_types(output_types, ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps)
 
-    npm_linked_packages = js_lib_helpers.gather_npm_linked_packages(
+    npm_sources = js_lib_helpers.gather_npm_sources(
         srcs = ctx.attr.srcs + [ctx.attr.tsconfig],
         deps = ctx.attr.deps,
     )
 
-    npm_package_store_deps = js_lib_helpers.gather_npm_package_store_deps(
-        targets = ctx.attr.data + ctx.attr.deps,
+    npm_package_store_infos = js_lib_helpers.gather_npm_package_store_infos(
+        targets = ctx.attr.srcs + ctx.attr.data + ctx.attr.deps,
     )
 
-    output_declarations_depset = depset(output_declarations)
+    output_types_depset = depset(output_types)
     output_sources_depset = depset(output_sources)
 
     runfiles = js_lib_helpers.gather_runfiles(
@@ -297,15 +291,13 @@ This is an error because Bazel does not run actions unless their outputs are nee
             runfiles = runfiles,
         ),
         js_info(
-            declarations = output_declarations_depset,
-            npm_linked_package_files = npm_linked_packages.direct_files,
-            npm_linked_packages = npm_linked_packages.direct,
-            npm_package_store_deps = npm_package_store_deps,
+            target = ctx.label,
             sources = output_sources_depset,
-            transitive_declarations = transitive_declarations,
-            transitive_npm_linked_package_files = npm_linked_packages.transitive_files,
-            transitive_npm_linked_packages = npm_linked_packages.transitive,
+            types = output_types_depset,
             transitive_sources = transitive_sources,
+            transitive_types = transitive_types,
+            npm_sources = npm_sources,
+            npm_package_store_infos = npm_package_store_infos,
         ),
         TsConfigInfo(deps = depset(tsconfig_inputs, transitive = [
             dep[TsConfigInfo].deps
@@ -313,7 +305,7 @@ This is an error because Bazel does not run actions unless their outputs are nee
             if TsConfigInfo in dep
         ])),
         OutputGroupInfo(
-            types = output_declarations_depset,
+            types = output_types_depset,
             # make the inputs to the tsc action available for analysis testing
             _action_inputs = inputs_depset,
             # https://bazel.build/extending/rules#validations_output_group

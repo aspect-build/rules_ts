@@ -33,13 +33,9 @@ load("@bazel_features//:deps.bzl", "bazel_features_deps")
 
 bazel_features_deps()
 
-# Fetch and register node, if you haven't already
-load("@rules_nodejs//nodejs:repositories.bzl", "DEFAULT_NODE_VERSION", "nodejs_register_toolchains")
+load("@aspect_rules_js//js:toolchains.bzl", "rules_js_register_toolchains")
 
-nodejs_register_toolchains(
-    name = "nodejs",
-    node_version = DEFAULT_NODE_VERSION,
-)
+rules_js_register_toolchains()
 
 # Register aspect_bazel_lib toolchains;
 # If you use npm_translate_lock or npm_import from aspect_rules_js you can omit this block.

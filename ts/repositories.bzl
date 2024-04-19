@@ -30,16 +30,16 @@ def rules_ts_bazel_dependencies():
 
     http_archive(
         name = "aspect_bazel_lib",
-        sha256 = "262e3d6693cdc16dd43880785cdae13c64e6a3f63f75b1993c716295093d117f",
-        strip_prefix = "bazel-lib-1.38.1",
-        url = "https://github.com/aspect-build/bazel-lib/releases/download/v1.38.1/bazel-lib-v1.38.1.tar.gz",
+        sha256 = "357dad9d212327c35d9244190ef010aad315e73ffa1bed1a29e20c372f9ca346",
+        strip_prefix = "bazel-lib-2.7.0",
+        url = "https://github.com/aspect-build/bazel-lib/releases/download/v2.7.0/bazel-lib-v2.7.0.tar.gz",
     )
 
     http_archive(
         name = "aspect_rules_js",
-        sha256 = "d9ceb89e97bb5ad53b278148e01a77a3e9100db272ce4ebdcd59889d26b9076e",
-        strip_prefix = "rules_js-1.34.0",
-        url = "https://github.com/aspect-build/rules_js/releases/download/v1.34.0/rules_js-v1.34.0.tar.gz",
+        sha256 = "7acf515f0d70723f0c6f4cdec352db8fcc06d4eccdc44d2b9c36d6f07088f49e",
+        strip_prefix = "rules_js-2.0.0-alpha.1",
+        url = "https://github.com/aspect-build/rules_js/releases/download/v2.0.0-alpha.1/rules_js-v2.0.0-alpha.1.tar.gz",
     )
 
     http_archive(

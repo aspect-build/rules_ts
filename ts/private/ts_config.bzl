@@ -34,30 +34,32 @@ def _ts_config_impl(ctx):
 
     transitive_deps = [
         depset(copy_files_to_bin_actions(ctx, ctx.files.deps)),
-        js_lib_helpers.gather_files_from_js_providers(
+        js_lib_helpers.gather_files_from_js_infos(
             targets = ctx.attr.deps,
+            include_sources = True,
+            include_types = True,
             include_transitive_sources = True,
-            include_declarations = True,
-            include_npm_linked_packages = True,
+            include_transitive_types = True,
+            include_npm_sources = True,
         ),
     ]
 
     # TODO: now that ts_config.bzl provides a JsInfo, we should be able to remove TsConfigInfo in the future
-    # since transitive files will now be passed through transitive_declarations in JsInfo
+    # since transitive files will now be passed through transitive_types in JsInfo
     for dep in ctx.attr.deps:
         if TsConfigInfo in dep:
             transitive_deps.append(dep[TsConfigInfo].deps)
 
     transitive_sources = js_lib_helpers.gather_transitive_sources([], ctx.attr.deps)
 
-    transitive_declarations = js_lib_helpers.gather_transitive_declarations(files, ctx.attr.deps)
+    transitive_types = js_lib_helpers.gather_transitive_types(files, ctx.attr.deps)
 
-    npm_linked_packages = js_lib_helpers.gather_npm_linked_packages(
+    npm_sources = js_lib_helpers.gather_npm_sources(
         srcs = [],
         deps = ctx.attr.deps,
     )
 
-    npm_package_store_deps = js_lib_helpers.gather_npm_package_store_deps(
+    npm_package_store_infos = js_lib_helpers.gather_npm_package_store_infos(
         targets = ctx.attr.deps,
     )
 
@@ -76,17 +78,15 @@ def _ts_config_impl(ctx):
             runfiles = runfiles,
         ),
         js_info(
-            # provide tsconfig.json file via `declarations` and not `sources` since they are only needed
+            # provide tsconfig.json file via `types` and not `sources` since they are only needed
             # for downstream ts_project rules and not in downstream runtime binary rules
-            declarations = files_depset,
-            npm_linked_package_files = npm_linked_packages.direct_files,
-            npm_linked_packages = npm_linked_packages.direct,
-            npm_package_store_deps = npm_package_store_deps,
+            target = ctx.label,
             sources = depset(),
-            transitive_declarations = transitive_declarations,
-            transitive_npm_linked_package_files = npm_linked_packages.transitive_files,
-            transitive_npm_linked_packages = npm_linked_packages.transitive,
+            types = files_depset,
             transitive_sources = transitive_sources,
+            transitive_types = transitive_types,
+            npm_sources = npm_sources,
+            npm_package_store_infos = npm_package_store_infos,
         ),
         TsConfigInfo(deps = depset(files, transitive = transitive_deps)),
     ]

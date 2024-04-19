@@ -78,10 +78,11 @@ def _ts_proto_library_impl(ctx):
         ),
         OutputGroupInfo(types = direct_decls),
         js_info(
-            declarations = direct_decls,
+            target = ctx.label,
+            types = direct_decls,
             sources = direct_srcs,
-            transitive_declarations = js_lib_helpers.gather_transitive_declarations(
-                declarations = dts_outs,
+            transitive_types = js_lib_helpers.gather_transitive_types(
+                types = dts_outs,
                 targets = ctx.attr.deps,
             ),
             transitive_sources = js_lib_helpers.gather_transitive_sources(
