@@ -11,8 +11,8 @@ local_path_override(
 # no such package '@[unknown repo 'aspect_rules_js' requested from @]//platforms':
 # The repository '@[unknown repo 'aspect_rules_js' requested from @]' could not be resolved:
 # No repository visible as '@aspect_rules_js' from main repository
-bazel_dep(name = "aspect_rules_js", version = "1.37.1", dev_dependency = True)
-bazel_dep(name = "bazel_skylib", version = "1.4.2", dev_dependency = True)
+bazel_dep(name = "aspect_rules_js", version = "2.0.0-rc0", dev_dependency = True)
+bazel_dep(name = "bazel_skylib", version = "1.5.0", dev_dependency = True)
 
 rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext", dev_dependency = True)
 rules_ts_ext.deps()

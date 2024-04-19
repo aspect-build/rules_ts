@@ -143,11 +143,11 @@ ts_project(name = a) --foo.d.ts--> npm_package ---> npm_link_package ---> ts_pro
 In this diagram, we'd like to be able to change the TypeScript sources of `a` and then re-run the test target, without waiting for type-checking.
 However, since `foo.d.ts` is declared as an input to the `npm_package` rule, Bazel needs to produce it.
 
-To solve this, you can add the flag `--@aspect_rules_js//npm:exclude_declarations_from_npm_packages` to your `bazel` command.
+To solve this, you can add the flag `--@aspect_rules_js//npm:exclude_types_from_npm_packages` to your `bazel` command.
 
 Use this flag only for local development! You can add a line to your `.bazelrc` to make this easier to type, for example:
 
 ```
 # Run bazel --config=dev to choose these options:
-build:dev --@aspect_rules_js//npm:exclude_declarations_from_npm_packages
+build:dev --@aspect_rules_js//npm:exclude_types_from_npm_packages
 ```
