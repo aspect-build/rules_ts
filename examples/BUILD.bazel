@@ -5,28 +5,28 @@ load("@npm//:defs.bzl", "npm_link_all_packages")
 # TypeScript and other node programs beneath bazel-bin/examples are able to resolve its location.
 npm_link_package(
     name = "node_modules/@myorg/js_lib",
-    src = "//examples/js_lib",
+    src = "//examples/js_lib:pkg",
     root_package = "examples",
     visibility = ["//examples:__subpackages__"],
 )
 
 npm_link_package(
     name = "node_modules/@myorg/dts_lib",
-    src = "//examples/dts_lib",
+    src = "//examples/dts_lib:pkg",
     root_package = "examples",
     visibility = ["//examples:__subpackages__"],
 )
 
 npm_link_package(
     name = "node_modules/@myorg/deps_lib",
-    src = "//examples/deps_lib",
+    src = "//examples/deps_lib:pkg",
     root_package = "examples",
     visibility = ["//examples:__subpackages__"],
 )
 
 npm_link_package(
     name = "node_modules/@myorg/deps_lib_transpiler",
-    src = "//examples/deps_lib_transpiler",
+    src = "//examples/deps_lib_transpiler:pkg",
     root_package = "examples",
     visibility = ["//examples:__subpackages__"],
 )

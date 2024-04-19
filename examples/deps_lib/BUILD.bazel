@@ -8,7 +8,7 @@ ts_config(
 )
 
 ts_project(
-    name = "deps_ts",
+    name = "lib",
     srcs = ["index.ts"],
     data = [
         # Also propagate the date-fns npm package downstream so it is an runtime dependency
@@ -23,9 +23,9 @@ ts_project(
 )
 
 npm_package(
-    name = "deps_lib",
+    name = "pkg",
     srcs = [
-        ":deps_ts",
+        ":lib",
     ],
     package = "@myorg/deps_lib",
     visibility = ["//examples:__subpackages__"],
@@ -36,7 +36,7 @@ ts_project(
     srcs = ["importer_rel.ts"],
     declaration = True,
     deps = [
-        ":deps_ts",
+        ":lib",
     ],
 )
 

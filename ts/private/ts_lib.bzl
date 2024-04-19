@@ -1,8 +1,5 @@
 "Utilities functions for selecting and filtering ts and other files"
 
-load("@aspect_rules_js//js:libs.bzl", "js_lib_helpers")
-load("@aspect_rules_js//js:providers.bzl", "JsInfo")
-
 # Attributes common to all TypeScript rules
 STD_ATTRS = {
     "assets": attr.label_list(
@@ -15,16 +12,23 @@ See more details on the `assets` parameter of the `ts_project` macro.
     "args": attr.string_list(
         doc = "https://www.typescriptlang.org/docs/handbook/compiler-options.html",
     ),
-    "data": js_lib_helpers.JS_LIBRARY_DATA_ATTR,
+    "data": attr.label_list(
+        doc = """Runtime dependencies to include in binaries/tests that depend on this target.
+
+Follows the same semantics as `js_library` `data` attribute. See
+https://docs.aspect.build/rulesets/aspect_rules_js/docs/js_library#data for more info.
+""",
+        allow_files = True,
+    ),
     "declaration_dir": attr.string(
         doc = "https://www.typescriptlang.org/tsconfig#declarationDir",
     ),
     "deps": attr.label_list(
         doc = """List of targets that produce TypeScript typings (`.d.ts` files)
 
-{downstream_linked_npm_deps}
-""".format(downstream_linked_npm_deps = js_lib_helpers.DOWNSTREAM_LINKED_NPM_DEPS_DOCSTRING),
-        providers = [JsInfo],
+Follows the same runfiles semantics as `js_library` `deps` attribute. See
+https://docs.aspect.build/rulesets/aspect_rules_js/docs/js_library#deps for more info.
+""",
     ),
     "out_dir": attr.string(
         doc = "https://www.typescriptlang.org/tsconfig#outDir",

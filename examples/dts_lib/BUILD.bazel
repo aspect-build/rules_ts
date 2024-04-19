@@ -14,7 +14,7 @@ ts_project(
 )
 
 npm_package(
-    name = "dts_lib",
+    name = "pkg",
     srcs = [":lib"],
     package = "@myorg/dts_lib",
     visibility = ["//examples:__subpackages__"],

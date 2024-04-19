@@ -11,15 +11,15 @@ def _impl0(ctx):
     env = unittest.begin(ctx)
 
     decls = []
-    for decl in ctx.attr.lib[JsInfo].declarations.to_list():
+    for decl in ctx.attr.lib[JsInfo].types.to_list():
         decls.append(decl.basename)
-    asserts.equals(env, ctx.attr.expected_declarations, sorted(decls))
+    asserts.equals(env, ctx.attr.expected_types, sorted(decls))
 
     return unittest.end(env)
 
-transitive_declarations_test = unittest.make(_impl0, attrs = {
+transitive_types_test = unittest.make(_impl0, attrs = {
     "lib": attr.label(default = ":transpile"),
-    "expected_declarations": attr.string_list(default = ["big.d.ts"]),
+    "expected_types": attr.string_list(default = ["big.d.ts"]),
 })
 
 def _impl1(ctx):
@@ -61,16 +61,16 @@ def _impl3(ctx):
     asserts.equals(env, ctx.attr.expected_js, sorted(js_files))
 
     decls = []
-    for decl in ctx.attr.lib[JsInfo].declarations.to_list():
+    for decl in ctx.attr.lib[JsInfo].types.to_list():
         decls.append(decl.basename)
-    asserts.equals(env, ctx.attr.expected_declarations, sorted(decls))
+    asserts.equals(env, ctx.attr.expected_types, sorted(decls))
 
     return unittest.end(env)
 
 transitive_filegroup_test = unittest.make(_impl3, attrs = {
     "lib": attr.label(default = ":transpile_filegroup"),
     "expected_js": attr.string_list(default = ["src_fg_a.js", "src_fg_a.js.map", "src_fg_b.js", "src_fg_b.js.map"]),
-    "expected_declarations": attr.string_list(default = ["src_fg_a.d.ts", "src_fg_b.d.ts"]),
+    "expected_types": attr.string_list(default = ["src_fg_a.d.ts", "src_fg_b.d.ts"]),
 })
 
 # buildifier: disable=function-docstring
@@ -201,7 +201,7 @@ def transpiler_test_suite():
         tsconfig = _TSCONFIG,
     )
 
-    unittest.suite("t0", transitive_declarations_test)
+    unittest.suite("t0", transitive_types_test)
     unittest.suite("t1", transpile_with_failing_typecheck_test)
     unittest.suite("t2", transpile_with_dts_test)
     unittest.suite("t3", transitive_filegroup_test)
