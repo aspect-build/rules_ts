@@ -1,3 +1,5 @@
+load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
+load("@aspect_bazel_lib//lib:testing.bzl", "assert_outputs")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 
@@ -42,6 +44,84 @@ ts_project(
     tsconfig = {"compilerOptions": {"outDir": "out"}},
 )
 
+filegroup(
+    name = "assets-filegroup",
+    srcs = [
+        "src/generated.json",
+        "src/styles.css",
+    ],
+)
+
+ts_project(
+    name = "ts-out-target",
+    srcs = [
+        "src/index.ts",
+    ],
+    assets = [":assets-filegroup"],
+    out_dir = "out-target",
+    tsconfig = ":config",
+)
+
+assert_outputs(
+    name = "ts-out-target_outputs_test",
+    actual = ":ts-out-target",
+    expected = [
+        "examples/assets/out-target/src/generated.json",
+        "examples/assets/out-target/src/index.js",
+        "examples/assets/out-target/src/styles.css",
+    ],
+)
+
+copy_to_directory(
+    name = "assets-directory",
+    srcs = [
+        "src/generated.json",
+        "src/styles.css",
+    ],
+)
+
+ts_project(
+    name = "ts-out-copy-target",
+    srcs = [
+        "src/index.ts",
+    ],
+    assets = [":assets-filegroup"],
+    out_dir = "out-copy-target",
+    tsconfig = ":config",
+)
+
+assert_outputs(
+    name = "ts-out-copy-target_outputs_test",
+    actual = ":ts-out-copy-target",
+    expected = [
+        "examples/assets/out-copy-target/src/generated.json",
+        "examples/assets/out-copy-target/src/index.js",
+        "examples/assets/out-copy-target/src/styles.css",
+    ],
+)
+
+ts_project(
+    name = "ts-out-copy-target-abs",
+    srcs = [
+        "src/index.ts",
+    ],
+    assets = [
+        "//%s:assets-filegroup" % package_name(),
+    ],
+    out_dir = "out-copy-target-abs",
+    tsconfig = ":config",
+)
+
+assert_outputs(
+    name = "ts-out-copy-target-abs_outputs_test",
+    actual = ":ts-out-copy-target-abs",
+    expected = [
+        "examples/assets/out-copy-target-abs/src/generated.json",
+        "examples/assets/out-copy-target-abs/src/index.js",
+        "examples/assets/out-copy-target-abs/src/styles.css",
+    ],
+)
+
 ts_project(
     name = "ts-root",
     srcs = [
@@ -75,22 +155,18 @@ build_test(
         # Defaults of no root/out_dir
         ":ts",
         ":src/index.js",
-        ":src/styles.css",
-        ":src/generated.json",
         # out_dir
         ":ts-out",
         ":out/src/index.js",
-        ":out/src/styles.css",
-        ":out/src/generated.json",
         # root_dir
         ":ts-root",
         ":index.js",
-        ":styles.css",
-        ":generated.json",
         # root_dir + out_dir
         ":ts-root-out",
         ":root-out/index.js",
-        ":root-out/styles.css",
-        ":root-out/generated.json",
+        # asset targets instead of files
+        ":ts-out-target",
+        ":ts-out-copy-target",
+        ":ts-out-copy-target-abs",
     ],
 )

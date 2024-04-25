@@ -153,9 +153,6 @@ OUTPUT_ATTRS = {
     "typings_outs": attr.output_list(
         doc = "Locations in bazel-out where tsc will write `.d.ts` files",
     ),
-    "assets_outs": attr.output_list(
-        doc = "Locations in bazel-out where ts_project will output asset files",
-    ),
 }
 
 def _join(*elements):
@@ -219,14 +216,6 @@ def _to_js_out_paths(srcs, out_dir, root_dir, allow_js, resolve_json_module, ext
             # for example, a.js -> a.js
             if out != f:
                 outs.append(out)
-    return outs
-
-def _calculate_assets_outs(assets, out_dir = ".", root_dir = "."):
-    outs = []
-    for a in assets:
-        out = _to_out_path(a, out_dir, root_dir)
-        if out != a:
-            outs.append(out)
     return outs
 
 # Quick check to validate path options
@@ -332,5 +321,4 @@ lib = struct(
     calculate_typings_outs = _calculate_typings_outs,
     calculate_typing_maps_outs = _calculate_typing_maps_outs,
     calculate_root_dir = _calculate_root_dir,
-    calculate_assets_outs = _calculate_assets_outs,
 )
