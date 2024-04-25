@@ -230,7 +230,7 @@ def _validate_tsconfig_dirs(root_dir, out_dir, typings_out_dir):
     if typings_out_dir and typings_out_dir.find("../") != -1:
         fail("typings_out_dir cannot output to parent directory")
 
-def _calculate_js_outs(srcs, out_dir = ".", root_dir = ".", allow_js = False, resolve_json_module = False, preserve_jsx = False, emit_declaration_only = False):
+def _calculate_js_outs(srcs, out_dir, root_dir, allow_js, resolve_json_module, preserve_jsx, emit_declaration_only):
     if emit_declaration_only:
         return []
 
@@ -249,7 +249,7 @@ def _calculate_js_outs(srcs, out_dir = ".", root_dir = ".", allow_js = False, re
 
     return _to_js_out_paths(srcs, out_dir, root_dir, allow_js, resolve_json_module, exts)
 
-def _calculate_map_outs(srcs, out_dir = ".", root_dir = ".", source_map = True, preserve_jsx = False, emit_declaration_only = False):
+def _calculate_map_outs(srcs, out_dir, root_dir, source_map, preserve_jsx, emit_declaration_only):
     if not source_map or emit_declaration_only:
         return []
 
