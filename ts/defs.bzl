@@ -323,8 +323,6 @@ def ts_project(
     typings_out_dir = declaration_dir if declaration_dir else out_dir
     tsbuildinfo_path = ts_build_info_file if ts_build_info_file else name + ".tsbuildinfo"
 
-    assets_outs = _lib.calculate_assets_outs(assets, out_dir, root_dir)
-
     tsc_typings_outs = _lib.calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, composite, allow_js)
     tsc_typing_maps_outs = _lib.calculate_typing_maps_outs(srcs, typings_out_dir, root_dir, declaration_map, allow_js)
 
@@ -416,7 +414,6 @@ def ts_project(
         map_outs = tsc_map_outs,
         typings_outs = tsc_typings_outs,
         typing_maps_outs = tsc_typing_maps_outs,
-        assets_outs = assets_outs,
         buildinfo_out = tsbuildinfo_path if composite or incremental else None,
         emit_declaration_only = emit_declaration_only,
         tsc = tsc,
