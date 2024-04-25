@@ -10,7 +10,7 @@ load("@aspect_rules_js//npm:providers.bzl", "NpmPackageStoreInfo")
 load("@bazel_skylib//lib:dicts.bzl", "dicts")
 load(":options.bzl", "OptionsInfo", "transpiler_selection_required")
 load(":ts_config.bzl", "TsConfigInfo")
-load(":ts_lib.bzl", "COMPILER_OPTION_ATTRS", "OUTPUT_ATTRS", "STD_ATTRS", _lib = "lib")
+load(":ts_lib.bzl", "COMPILER_OPTION_ATTRS", "OUTPUT_ATTRS", "STD_ATTRS", "resource_set", _lib = "lib")
 load(":ts_validate_options.bzl", _validate_lib = "lib")
 
 # Forked from js_lib_helpers.js_lib_helpers.gather_files_from_js_providers to not
@@ -258,6 +258,7 @@ This is an error because Bazel does not run actions unless their outputs are nee
             outputs = outputs,
             mnemonic = "TsProject",
             execution_requirements = execution_requirements,
+            resource_set = resource_set(ctx.attr.resource_set),
             progress_message = "%s TypeScript project %s [tsc -p %s]" % (
                 verb,
                 ctx.label,
