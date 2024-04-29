@@ -121,7 +121,7 @@ ts_proto_library = rule(
             default = False,
         ),
         "gen_connect_query_service_mapping": attr.string_list_dict(
-            doc = "mapping from protos to services those protos contain used to dervice file names for gen-connect-query",
+            doc = "mapping from protos to services those protos contain used to predict output file names for gen-connect-query",
             default = {},
         ),
         "proto": attr.label(
