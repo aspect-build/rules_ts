@@ -15,8 +15,8 @@ proto_library(
 
 ts_proto_library(
     name = "foo_ts_proto",
-    has_services = False,
     copy_files = False,
+    gen_connect_es = False,
     node_modules = ":node_modules",
     proto = ":foo_proto",
 )

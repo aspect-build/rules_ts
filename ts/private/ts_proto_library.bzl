@@ -26,11 +26,17 @@ def _protoc_action(ctx, proto_info, outputs, options = {
         args.add_joined(["--es_opt", key, value], join_with = "=")
     args.add_joined(["--es_out", ctx.bin_dir.path], join_with = "=")
 
-    if ctx.attr.has_services:
+    if ctx.attr.gen_connect_es:
         args.add_joined(["--plugin", "protoc-gen-connect-es", ctx.executable.protoc_gen_connect_es.path], join_with = "=")
         for (key, value) in options.items():
             args.add_joined(["--connect-es_opt", key, value], join_with = "=")
         args.add_joined(["--connect-es_out", ctx.bin_dir.path], join_with = "=")
+
+    if ctx.attr.gen_connect_query:
+        args.add_joined(["--plugin", "protoc-gen-connect-query", ctx.executable.protoc_gen_connect_query.path], join_with = "=")
+        for (key, value) in options.items():
+            args.add_joined(["--connect-query_opt", key, value], join_with = "=")
+        args.add_joined(["--connect-query_out", ctx.bin_dir.path], join_with = "=")
 
     args.add("--descriptor_set_in")
     args.add_joined(proto_info.transitive_descriptor_sets, join_with = ":")
@@ -45,15 +51,23 @@ def _protoc_action(ctx, proto_info, outputs, options = {
         mnemonic = "ProtocGenEs",
         arguments = [args],
         tools = [ctx.executable.protoc_gen_es] + (
-            [ctx.executable.protoc_gen_connect_es] if ctx.attr.has_services else []
+            [ctx.executable.protoc_gen_connect_es] if ctx.attr.gen_connect_es else []
+        ) + (
+            [ctx.executable.protoc_gen_connect_query] if ctx.attr.gen_connect_query else []
         ),
         env = {"BAZEL_BINDIR": ctx.bin_dir.path},
     )
 
 def _declare_outs(ctx, info, ext):
     outs = proto_common.declare_generated_files(ctx.actions, info, "_pb" + ext)
-    if ctx.attr.has_services:
+    if ctx.attr.gen_connect_es:
         outs.extend(proto_common.declare_generated_files(ctx.actions, info, "_connect" + ext))
+    if ctx.attr.gen_connect_query:
+        for proto, services in ctx.attr.gen_connect_query_service_mapping.items():
+            for service in services:
+                prefix = proto.replace(".proto", "")
+                outs.append(ctx.actions.declare_file("{}-{}_connectquery{}".format(prefix, service, ext)))
+
     return outs
 
 def _ts_proto_library_impl(ctx):
@@ -98,9 +112,17 @@ ts_proto_library = rule(
             providers = [JsInfo],
             doc = "Other ts_proto_library rules. TODO: could we collect them with an aspect",
         ),
-        "has_services": attr.bool(
+        "gen_connect_es": attr.bool(
             doc = "whether to generate service stubs with gen-connect-es",
             default = True,
+        ),
+        "gen_connect_query": attr.bool(
+            doc = "whether to generate TanStack Query clients with gen-connect-query",
+            default = False,
+        ),
+        "gen_connect_query_service_mapping": attr.string_list_dict(
+            doc = "mapping from protos to services those protos contain used to predict output file names for gen-connect-query",
+            default = {},
         ),
         "proto": attr.label(
             doc = "proto_library to generate JS/DTS for",
@@ -116,6 +138,11 @@ ts_proto_library = rule(
         ),
         "protoc_gen_connect_es": attr.label(
             doc = "protoc plugin to generate services",
+            executable = True,
+            cfg = "exec",
+        ),
+        "protoc_gen_connect_query": attr.label(
+            doc = "protoc plugin to generate TanStack Query services",
             executable = True,
             cfg = "exec",
         ),
