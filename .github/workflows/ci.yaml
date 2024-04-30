@@ -100,13 +100,19 @@ jobs:
                     - bazel-version:
                           major: 6
                       bzlmod: 1
-                    # Don't test MacOS with Bazel 6 to minimize MacOS minutes (billed at 10X)
-                    - os: macos
-                      bazel-version:
-                          major: 6
                     # Don't test RBE with on MacOS (not configured)
                     - os: macos
                       config: rbe
+                    # Don't test RBE with on Windows (not configured)
+                    - os: windows
+                      config: rbe
+                    # Disable some broken tests on Windows
+                    - os: windows
+                      folder: .
+                    - os: windows
+                      folder: e2e/worker
+                    - os: windows
+                      folder: e2e/bzlmod
                     # TODO(https://github.com/aspect-build/rules_ts/issues/432): re-enable
                     - folder: e2e/bzlmod
                       config: rbe
@@ -143,6 +149,13 @@ jobs:
                   # still bootstraps Aspect CLI from configuration in .bazeliskrc. Aspect CLI will
                   # then use .bazelversion to determine which Bazel version to use.
                   echo "${{ matrix.bazel-version.version }}" > .bazelversion
+
+            # TODO: remove this block once we have Aspect CLI Windows releases
+            - name: Don't use Aspect CLI on Windows
+              if: matrix.os == 'windows'
+              working-directory: ${{ matrix.folder }}
+              shell: bash
+              run: rm -f .bazeliskrc
 
             - name: Write RBE credentials
               # Writes RBE credential files

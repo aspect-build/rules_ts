@@ -96,9 +96,6 @@ rules_proto_dependencies()
 load(
     "@aspect_rules_lint//format:repositories.bzl",
     "fetch_shfmt",
-    "fetch_terraform",
 )
 
 fetch_shfmt()
-
-fetch_terraform()

@@ -1,6 +1,5 @@
 bazel-*
 .bazelrc.user
-**/.terraform/*
 node_modules/
 
 # Don't commit lockfile for now as it is unstable. Do allow for it to be
