@@ -1,17 +1,13 @@
-module(
-    version = "0.0.0",
-    compatibility_level = 1,
-)
-
-bazel_dep(name = "bazel_skylib", version = "1.4.1")
-
-# TODO: see note on rules_js in the parent MODULE.bazel
-bazel_dep(name = "aspect_rules_js", version = "1.37.1")
-bazel_dep(name = "aspect_rules_ts", version = "0.0.0")
+bazel_dep(name = "aspect_rules_ts", version = "0.0.0", dev_dependency = True)
 local_path_override(
     module_name = "aspect_rules_ts",
     path = "../../..",
 )
+
+bazel_dep(name = "bazel_skylib", version = "1.4.1", dev_dependency = True)
+
+# TODO: see note on rules_js in the parent MODULE.bazel
+bazel_dep(name = "aspect_rules_js", version = "1.37.1", dev_dependency = True)
 
 rules_ts_ext = use_extension(
     "@aspect_rules_ts//ts:extensions.bzl",
