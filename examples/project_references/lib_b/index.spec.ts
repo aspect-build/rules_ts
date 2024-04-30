@@ -1,10 +1,10 @@
 import { sayHello } from './'
 
-describe('b', () => {
-    it('should say hello', () => {
-        let captured: string = ''
-        console.log = (s: string) => (captured = s)
-        sayHello(' world')
-        expect(captured).toBe('hello world')
-    })
-})
+let captured: string = ''
+console.log = (s: string) => (captured = s)
+sayHello(' world')
+
+if (captured !== 'hello world') {
+    console.error("Expected output to be 'hello world'")
+    process.exit(1)
+}
