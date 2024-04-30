@@ -83,9 +83,16 @@ bzl_library(
     ],
 )
 
+# keep
 bzl_library(
     name = "build_test",
     srcs = ["build_test.bzl"],
+    visibility = ["//ts:__subpackages__"],
+)
+
+bzl_library(
+    name = "is_bazel_7_or_greater",
+    srcs = ["is_bazel_7_or_greater.bzl"],
     visibility = ["//ts:__subpackages__"],
 )
 

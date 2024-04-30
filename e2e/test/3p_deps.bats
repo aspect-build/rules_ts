@@ -19,7 +19,7 @@ teardown() {
     echo 'console.log("test")' >> source.ts
 
     ts_project -l -s "source.ts" -d ":node_modules/@types/node" -d ":node_modules/@nestjs/core"  -d ":node_modules/@nestjs/common"
-    run bazel build :foo --noexperimental_allow_unresolved_symlinks
+    run bazel build :foo
     assert_success 
     refute_output -p "error" "@nestjs/core" "@types/node"
 
@@ -27,7 +27,7 @@ teardown() {
     # dowgrade: @types/node from 18.11.9 to 18.6.1
     run pnpm add @nestjs/core@9.2.1 @types/node@18.6.1 --lockfile-only
 
-    run bazel build :foo --noexperimental_allow_unresolved_symlinks
+    run bazel build :foo
     assert_failure
     assert_output -p "error TS2403: Subsequent variable declarations must have the same type.  Variable 'AbortSignal' must be of type"
 
@@ -35,7 +35,7 @@ teardown() {
     # upgrade: @types/node from 18.6.1 to 18.11.9  
     run pnpm add @nestjs/core@9.2.0 @types/node@18.11.9 --lockfile-only
 
-    run bazel build :foo --noexperimental_allow_unresolved_symlinks
+    run bazel build :foo
     assert_success 
     refute_output -p "error" "@nestjs/core" "@types/node"
 }
