@@ -1,4 +1,4 @@
-load("@aspect_rules_jasmine//jasmine:defs.bzl", "jasmine_test")
+load("@aspect_rules_js//js:defs.bzl", "js_test")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 
 package(default_visibility = ["//examples/project_references:__subpackages__"])
@@ -22,18 +22,13 @@ ts_project(
     tsconfig = "tsconfig-test.json",
     deps = [
         ":lib_b",
-        "//examples:node_modules/@types/jasmine",
         "//examples:node_modules/@types/node",
     ],
 )
 
-jasmine_test(
+js_test(
     name = "test",
-    args = ["*.spec.js"],
     chdir = package_name(),
-    data = [
-        "index.spec.js",
-        ":lib_b",
-    ],
-    node_modules = "//examples:node_modules",
+    data = [":transpile_test"],
+    entry_point = ":index.spec.js",
 )
