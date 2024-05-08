@@ -1,5 +1,3 @@
-workspace(name = "worker")
-
 local_repository(
     name = "aspect_rules_ts",
     path = "../..",

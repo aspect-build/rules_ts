@@ -4,8 +4,6 @@ local_path_override(
     path = "../..",
 )
 
-bazel_dep(name = "bazel_skylib", version = "1.4.2", dev_dependency = True)
-
 # TODO: rules_js shouldn't be required in this module, as we don't reference it anywhere.
 # However, on RBE only (!) we get an error:
 # ERROR: /home/runner/work/rules_ts/rules_ts/e2e/external_dep/app/BUILD:4:11:
@@ -14,6 +12,7 @@ bazel_dep(name = "bazel_skylib", version = "1.4.2", dev_dependency = True)
 # The repository '@[unknown repo 'aspect_rules_js' requested from @]' could not be resolved:
 # No repository visible as '@aspect_rules_js' from main repository
 bazel_dep(name = "aspect_rules_js", version = "1.37.1", dev_dependency = True)
+bazel_dep(name = "bazel_skylib", version = "1.4.2", dev_dependency = True)
 
 rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext", dev_dependency = True)
 rules_ts_ext.deps()
