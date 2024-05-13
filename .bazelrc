@@ -1,22 +1,24 @@
-# import common bazelrc settings used in this repository and in nested workspaces
-import %workspace%/.bazelrc.common
+# Import Aspect bazelrc presets
+try-import %workspace%/.aspect/bazelrc/bazel7.bazelrc
+import %workspace%/.aspect/bazelrc/convenience.bazelrc
+import %workspace%/.aspect/bazelrc/correctness.bazelrc
+import %workspace%/.aspect/bazelrc/debug.bazelrc
+import %workspace%/.aspect/bazelrc/javascript.bazelrc
+import %workspace%/.aspect/bazelrc/performance.bazelrc
 
-# Disable lockfile for now. It is unstable.
-# https://github.com/bazelbuild/bazel/issues/19026
-# https://github.com/bazelbuild/bazel/issues/19621
-# https://github.com/bazelbuild/bazel/issues/19971
-# https://github.com/bazelbuild/bazel/issues/20272
-# https://github.com/bazelbuild/bazel/issues/20369
-common --lockfile_mode=off
+### YOUR PROJECT SPECIFIC OPTIONS GO HERE ###
+
+common --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
+common --@aspect_rules_ts//ts:default_to_tsc_transpiler
+
+# We have some empty globs in this repo
+common --noincompatible_disallow_empty_glob
 
 # verbose
-build:verbose --@aspect_rules_ts//ts:verbose --worker_verbose
+common:verbose --@aspect_rules_ts//ts:verbose --worker_verbose
 
-# Load any settings specific to the current user.
-# .bazelrc.user should appear in .gitignore so that settings are not shared with team members
-# This needs to be last statement in this
-# config, as the user configuration should be able to overwrite flags from this file.
-# See https://docs.bazel.build/versions/master/best-practices.html#bazelrc
-# (Note that we use .bazelrc.user so the file appears next to .bazelrc in directory listing,
-# rather than user.bazelrc as suggested in the Bazel docs)
-try-import %workspace%/.bazelrc.user
+# Load any settings & overrides specific to the current user from `.aspect/bazelrc/user.bazelrc`.
+# This file should appear in `.gitignore` so that settings are not shared with team members. This
+# should be last statement in this config so the user configuration is able to overwrite flags from
+# this file. See https://bazel.build/configure/best-practices#bazelrc-file.
+try-import %workspace%/.aspect/bazelrc/user.bazelrc

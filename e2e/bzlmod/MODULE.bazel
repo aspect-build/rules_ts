@@ -12,7 +12,9 @@ bazel_dep(name = "rules_proto", version = "5.3.0-21.7", dev_dependency = True)
 npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm", dev_dependency = True)
 npm.npm_translate_lock(
     name = "npm",
+    npmrc = "//:.npmrc",
     pnpm_lock = "//:pnpm-lock.yaml",
+    verify_node_modules_ignored = "//:.bazelignore",
 )
 use_repo(npm, "npm")
 
