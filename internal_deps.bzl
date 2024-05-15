@@ -38,6 +38,13 @@ def rules_ts_internal_deps():
     )
 
     http_archive(
+        name = "bazel_features",
+        sha256 = "2cd9e57d4c38675d321731d65c15258f3a66438ad531ae09cb8bb14217dc8572",
+        strip_prefix = "bazel_features-1.11.0",
+        url = "https://github.com/bazel-contrib/bazel_features/releases/download/v1.11.0/bazel_features-v1.11.0.tar.gz",
+    )
+
+    http_archive(
         name = "rules_proto",
         sha256 = "303e86e722a520f6f326a50b41cfc16b98fe6d1955ce46642a5b7a67c11c0f5d",
         strip_prefix = "rules_proto-6.0.0",
