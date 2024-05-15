@@ -102,6 +102,10 @@ npm_repositories()
 # bazel run -- @npm_typescript//:tsc --version
 rules_ts_dependencies(ts_version_from = "@npm//examples:typescript/resolved.json")
 
+load("@bazel_features//:deps.bzl", "bazel_features_deps")
+
+bazel_features_deps()
+
 ###########################################
 # Protobuf rules to test ts_proto_library
 load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies")

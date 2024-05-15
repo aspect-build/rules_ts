@@ -4,6 +4,9 @@ load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "COPY_FILE_TO_BIN_TOOLCHAINS")
 load("@aspect_rules_js//js:libs.bzl", "js_lib_helpers")
 load("@aspect_rules_js//js:providers.bzl", "JsInfo", "js_info")
 load("@rules_proto//proto:defs.bzl", "ProtoInfo", "proto_common")
+load("@rules_proto//proto:proto_common.bzl", proto_toolchains = "toolchains")
+
+_PROTO_TOOLCHAIN_TYPE = "@rules_proto//proto:toolchain_type"
 
 # buildifier: disable=function-docstring-header
 def _protoc_action(ctx, proto_info, outputs, options = {
@@ -43,8 +46,9 @@ def _protoc_action(ctx, proto_info, outputs, options = {
 
     args.add_all(proto_info.direct_sources)
 
+    proto_toolchain_enabled = len(proto_toolchains.use_toolchain(_PROTO_TOOLCHAIN_TYPE)) > 0
     ctx.actions.run(
-        executable = ctx.executable.protoc,
+        executable = ctx.toolchains[_PROTO_TOOLCHAIN_TYPE].proto.proto_compiler if proto_toolchain_enabled else ctx.executable.protoc,
         progress_message = "Generating .js/.d.ts from %{label}",
         outputs = outputs,
         inputs = inputs,
@@ -107,7 +111,7 @@ def _ts_proto_library_impl(ctx):
 
 ts_proto_library = rule(
     implementation = _ts_proto_library_impl,
-    attrs = {
+    attrs = dict({
         "deps": attr.label_list(
             providers = [JsInfo],
             doc = "Other ts_proto_library rules. TODO: could we collect them with an aspect",
@@ -129,7 +133,6 @@ ts_proto_library = rule(
             providers = [ProtoInfo],
             mandatory = True,
         ),
-        "protoc": attr.label(default = "@com_google_protobuf//:protoc", executable = True, cfg = "exec"),
         "protoc_gen_es": attr.label(
             doc = "protoc plugin to generate messages",
             mandatory = True,
@@ -146,6 +149,8 @@ ts_proto_library = rule(
             executable = True,
             cfg = "exec",
         ),
-    },
-    toolchains = COPY_FILE_TO_BIN_TOOLCHAINS,
+    }, **proto_toolchains.if_legacy_toolchain({
+        "protoc": attr.label(default = "@com_google_protobuf//:protoc", executable = True, cfg = "exec"),
+    })),
+    toolchains = COPY_FILE_TO_BIN_TOOLCHAINS + proto_toolchains.use_toolchain(_PROTO_TOOLCHAIN_TYPE),
 )
