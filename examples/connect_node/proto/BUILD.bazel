@@ -11,6 +11,11 @@ proto_library(
 
 ts_proto_library(
     name = "eliza_ts_proto",
+    gen_connect_es = True,
+    gen_connect_query = True,
+    gen_connect_query_service_mapping = {
+        "eliza.proto": ["ElizaService"],
+    },
     node_modules = "//examples/connect_node:node_modules",
     proto = ":eliza_proto",
 )

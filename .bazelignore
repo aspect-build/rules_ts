@@ -1,5 +1,4 @@
 e2e/
-bazel-output-base
 examples/connect_node/node_modules
 examples/node_modules
 examples/proto_grpc/node_modules

@@ -1,5 +1,6 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
+load("//ts/private:is_bazel_7_or_greater.bzl", "is_bazel_7_or_greater")
 load("//ts/private:options.bzl", "options")
 
 exports_files(
@@ -153,7 +154,7 @@ bzl_library(
         "@aspect_rules_js//js:defs",
         "@bazel_skylib//lib:partial",
         "@bazel_skylib//rules:build_test",
-    ],
+    ] + (["@bazel_tools//tools/build_defs/repo:cache.bzl"] if is_bazel_7_or_greater() else []),
 )
 
 bzl_library(
@@ -165,7 +166,7 @@ bzl_library(
         "//ts/private:versions",
         "@bazel_tools//tools/build_defs/repo:http.bzl",
         "@bazel_tools//tools/build_defs/repo:utils.bzl",
-    ],
+    ] + (["@bazel_tools//tools/build_defs/repo:cache.bzl"] if is_bazel_7_or_greater() else []),
 )
 
 bzl_library(
@@ -190,5 +191,5 @@ bzl_library(
         "@aspect_rules_js//js:defs",
         "@aspect_rules_js//js:libs",
         "@aspect_rules_js//js:providers",
-    ],
+    ] + (["@bazel_tools//tools/build_defs/repo:cache.bzl"] if is_bazel_7_or_greater() else []),
 )

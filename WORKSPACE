@@ -1,11 +1,4 @@
-# Declare the local Bazel workspace.
-workspace(
-    # If your ruleset is "official"
-    # (i.e. is in the bazelbuild GitHub org)
-    # then this should just be named "rules_ts"
-    # see https://docs.bazel.build/versions/main/skylark/deploying.html#workspace
-    name = "aspect_rules_ts",
-)
+workspace(name = "aspect_rules_ts")
 
 load(":internal_deps.bzl", "rules_ts_internal_deps")
 
@@ -59,6 +52,28 @@ go_register_toolchains(version = "1.19.3")
 
 gazelle_dependencies()
 
+############################################
+# Stardoc
+load("@io_bazel_stardoc//:setup.bzl", "stardoc_repositories")
+
+stardoc_repositories()
+
+load("@rules_jvm_external//:repositories.bzl", "rules_jvm_external_deps")
+
+rules_jvm_external_deps()
+
+load("@rules_jvm_external//:setup.bzl", "rules_jvm_external_setup")
+
+rules_jvm_external_setup()
+
+load("@io_bazel_stardoc//:deps.bzl", "stardoc_external_deps")
+
+stardoc_external_deps()
+
+load("@stardoc_maven//:defs.bzl", stardoc_pinned_maven_install = "pinned_maven_install")
+
+stardoc_pinned_maven_install()
+
 # Buildifier
 load("@buildifier_prebuilt//:deps.bzl", "buildifier_prebuilt_deps")
 
@@ -74,6 +89,7 @@ load("@aspect_rules_js//npm:npm_import.bzl", "npm_translate_lock")
 
 npm_translate_lock(
     name = "npm",
+    npmrc = "//:.npmrc",
     pnpm_lock = "//examples:pnpm-lock.yaml",
     verify_node_modules_ignored = "//:.bazelignore",
 )
@@ -86,6 +102,10 @@ npm_repositories()
 # bazel run -- @npm_typescript//:tsc --version
 rules_ts_dependencies(ts_version_from = "@npm//examples:typescript/resolved.json")
 
+load("@bazel_features//:deps.bzl", "bazel_features_deps")
+
+bazel_features_deps()
+
 ###########################################
 # Protobuf rules to test ts_proto_library
 load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies")
@@ -96,9 +116,6 @@ rules_proto_dependencies()
 load(
     "@aspect_rules_lint//format:repositories.bzl",
     "fetch_shfmt",
-    "fetch_terraform",
 )
 
 fetch_shfmt()
-
-fetch_terraform()

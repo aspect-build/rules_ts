@@ -1,9 +1,19 @@
-# NB: we don't import common bazelrc shared with e2e workspaces so that we can test flag settings
+# Import Aspect bazelrc presets
+try-import %workspace%/../../.aspect/bazelrc/bazel7.bazelrc
+import %workspace%/../../.aspect/bazelrc/convenience.bazelrc
+import %workspace%/../../.aspect/bazelrc/correctness.bazelrc
+import %workspace%/../../.aspect/bazelrc/debug.bazelrc
+import %workspace%/../../.aspect/bazelrc/javascript.bazelrc
+import %workspace%/../../.aspect/bazelrc/performance.bazelrc
 
-build --enable_runfiles
-common --enable_bzlmod
+### YOUR PROJECT SPECIFIC OPTIONS GO HERE ###
 
-# TODO: switch to 'common' once https://github.com/bazelbuild/bazel/pull/19363 is landed and available in Bazel
-build --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
-query --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
-fetch --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
+common --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
+# NB: comment this line out to test the legacy path to @com_google_protobuf//:protoc
+common --incompatible_enable_proto_toolchain_resolution
+
+# Load any settings & overrides specific to the current user from `.aspect/bazelrc/user.bazelrc`.
+# This file should appear in `.gitignore` so that settings are not shared with team members. This
+# should be last statement in this config so the user configuration is able to overwrite flags from
+# this file. See https://bazel.build/configure/best-practices#bazelrc-file.
+try-import %workspace%/../../.aspect/bazelrc/user.bazelrc
