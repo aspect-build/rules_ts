@@ -114,7 +114,7 @@ COMPILER_OPTION_ATTRS = {
         doc = "https://www.typescriptlang.org/tsconfig#emitDeclarationOnly",
     ),
     "extends": attr.label(
-        allow_files = [".json"],
+        allow_files = True,
         doc = "https://www.typescriptlang.org/tsconfig#extends",
     ),
     "incremental": attr.bool(
