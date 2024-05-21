@@ -880,6 +880,9 @@ async function emit(request) {
     debug(`# Beginning new work`);
     debug(`arguments: ${request.arguments.join(' ')}`)
 
+    const validationPath = request.arguments[request.arguments.indexOf('--bazelValidationFile') + 1]
+    fs.writeFileSync(path.resolve(process.cwd(), validationPath), '');
+    
     const inputs = Object.fromEntries(
         request.inputs.map(input => [
             input.path,
@@ -952,9 +955,11 @@ async function emit(request) {
     if (ts.performance && ts.performance.isEnabled()) {
         ts.performance.forEachMeasure((name, duration) => request.output.write(`${name} time: ${duration}\n`));
     }
+
  
     worker.previousInputs = inputs;
     worker.postRun();
+    
 
     debug(`# Finished the work`);
     return succeded ? 0 : 1;
@@ -991,7 +996,12 @@ if (require.main === module && worker_protocol.isPersistentWorker(process.argv))
         // currentDir =  bazel-out/darwin_arm64-fastbuild/bin
         p = path.resolve('..', '..', '..', p.slice(1));
     }
+
     const args = fs.readFileSync(p).toString().trim().split('\n');
+    
+    const [_arg, validationPath] = args.splice(args.indexOf('--bazelValidationFile'), 2);    
+    fs.writeFileSync(path.resolve(process.cwd(), validationPath), '');
+
     ts.sys.args = process.argv = [process.argv0, process.argv[1], ...args];
     execute(ts.sys, ts.noop, args);
 }
