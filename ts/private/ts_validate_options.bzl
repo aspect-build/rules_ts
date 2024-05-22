@@ -25,10 +25,10 @@ def _validate_options_impl(ctx):
     # Provider validation
     if not ctx.attr.allow_js:
         for d in ctx.attr.deps:
-            if not d[JsInfo].declarations:
+            if not d[JsInfo].types:
                 fail("""\
-ts_project '{1}' dependency '{0}' does does not contain any declarations (.d.ts or other type-check files).
-Generally, targets which produce no declarations aren't useful as dependencies to the TypeScript type-checker.
+ts_project '{1}' dependency '{0}' does does not contain any types (.d.ts or other type-check files).
+Generally, targets which produce no types aren't useful as dependencies to the TypeScript type-checker.
 This likely means you forgot to set 'declaration = true' in the compilerOptions for that target.
 
 To disable this check, set the validate attribute to False:
