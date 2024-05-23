@@ -24,3 +24,4 @@ build --genrule_strategy=remote
 # build:rbe --modify_execution_info=CppCompile=+no-remote-exec,CppLink=+no-remote-exec,GenProtoDescriptorSet=+no-remote-exec,ProtocGenEs=+no-remote-exec
 
 build --announce_rc
+build --noremote_local_fallback
