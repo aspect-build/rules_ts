@@ -66,7 +66,7 @@ build --remote_upload_local_results
 # Fall back to standalone local execution strategy if remote execution fails. If the grpc remote
 # cache connection fails, it will fail the build, add this so it falls back to the local cache.
 # Docs: https://bazel.build/reference/command-line-reference#flag--remote_local_fallback
-build --remote_local_fallback
+# build --remote_local_fallback
 
 # Fixes builds hanging on CI that get the TCP connection closed without sending RST packets.
 # Docs: https://bazel.build/reference/command-line-reference#flag--grpc_keepalive_time
