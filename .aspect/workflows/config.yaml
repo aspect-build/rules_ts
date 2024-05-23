@@ -8,6 +8,9 @@ tasks:
     - configure:
           queue: aspect-small-graviton
     - test:
+          bazel:
+              flags:
+              - --noremote_accept_cached
           hooks:
               - type: before_task
                 command: mkdir -p /workflows/artifacts && vmstat -a -S M -t 1 2>&1 > /workflows/artifacts/vmstat.out &
