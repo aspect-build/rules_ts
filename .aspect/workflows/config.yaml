@@ -11,6 +11,7 @@ tasks:
           bazel:
               flags:
                   - --noremote_accept_cached
+                  - --noremote_upload_local_results
           hooks:
               - type: before_task
                 command: mkdir -p /workflows/artifacts && vmstat -a -S M -t 1 2>&1 > /workflows/artifacts/vmstat.out &
