@@ -1,5 +1,5 @@
 # Directories caches by GitHub actions
-common:local --disk_cache=~/.cache/bazel-disk-cache
+common --disk_cache=~/.cache/bazel-disk-cache
 common --repository_cache=~/.cache/bazel-repository-cache
 
 # Debug where options came from
@@ -10,20 +10,3 @@ common --test_env=XDG_CACHE_HOME
 
 # Still required for Windows until we upgrade to a minimum rules_js that no longer requires it
 common --enable_runfiles
-
-# Generic remote build execution
-build:rbe --extra_execution_platforms=@aspect_rules_js//platforms:x86_64_linux_remote
-build:rbe --genrule_strategy=remote
-build:rbe --host_platform=@aspect_rules_js//platforms:x86_64_linux_remote
-build:rbe --jobs=32
-
-# BuildBuddy remote exec
-build:rbe --bes_results_url=https://app.buildbuddy.io/invocation/
-build:rbe --bes_backend=grpcs://remote.buildbuddy.io
-build:rbe --remote_executor=grpcs://remote.buildbuddy.io
-
-# We are using RBE to test that the actions we create in rules_ts will work for our customers,
-# not to accelerate and parallelize the builds for unrelated actions that happen to appear in our dependencies.
-# So, turn off RBE for actions that are known to be problematic because they are non-hermetic.
-build:rbe --modify_execution_info=CppCompile=+no-remote-exec,CppLink=+no-remote-exec,GenProtoDescriptorSet=+no-remote-exec,ProtocGenEs=+no-remote-exec
-
