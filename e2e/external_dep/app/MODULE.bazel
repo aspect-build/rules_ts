@@ -5,7 +5,7 @@ local_path_override(
 )
 
 # TODO: see note on rules_js in the parent MODULE.bazel
-bazel_dep(name = "aspect_rules_js", version = "2.0.0-rc0", dev_dependency = True)
+bazel_dep(name = "aspect_rules_js", version = "2.0.0-rc1", dev_dependency = True)
 bazel_dep(name = "bazel_skylib", version = "1.5.0", dev_dependency = True)
 
 rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext", dev_dependency = True)
