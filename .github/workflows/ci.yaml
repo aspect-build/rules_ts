@@ -34,20 +34,6 @@ jobs:
                   )
                   printf -v j '{%s},' "${a[@]}"
                   echo "res=[${j%,}]" | tee -a $GITHUB_OUTPUT
-            - id: config
-              name: Prepare 'config' matrix axis
-              # Don't run RBE if there is no API key which is the case on forks.
-              run: |
-                  a=( local )
-                  if [[ "${{ github.ref_name }}" == "main" ]] || [[ "${{ github.head_ref }}" == *"rbe"* ]]; then
-                    if [[ "${{ env.BUILDBUDDY_API_KEY }}" ]]; then
-                      a+=( rbe )
-                    fi
-                  fi
-                  printf -v j '"%s",' "${a[@]}"
-                  echo "res=[${j%,}]" | tee -a $GITHUB_OUTPUT
-              env:
-                  BUILDBUDDY_API_KEY: ${{ secrets.BUILDBUDDY_API_KEY }}
             - id: os
               name: Prepare 'os' matrix axis
               # Only run MacOS and Windows on main branch (not PRs) to minimize minutes (billed at 10X and 2X respectively)
@@ -64,7 +50,6 @@ jobs:
                   echo "res=[${j%,}]" | tee -a $GITHUB_OUTPUT
         outputs:
             bazel-version: ${{ steps.bazel-version.outputs.res }}
-            config: ${{ steps.config.outputs.res }}
             os: ${{ steps.os.outputs.res }}
 
     test:
@@ -77,7 +62,6 @@ jobs:
                 bazel-version: ${{ fromJSON(needs.matrix-prep.outputs.bazel-version) }}
                 bzlmod: [1, 0]
                 os: ${{ fromJSON(needs.matrix-prep.outputs.os) }}
-                config: ${{ fromJSON(needs.matrix-prep.outputs.config) }}
                 folder:
                     - '.'
                     - 'e2e/bzlmod'
@@ -94,10 +78,6 @@ jobs:
                     - os: windows
                       bazel-version:
                           major: 6
-                    # Don't run RBE tests with Bazel 6 to reduce the size of the test matrix
-                    - bazel-version:
-                          major: 6
-                      config: rbe
                     # Dont' test root workspace with Bazel 6 to reduce the size of the test matrix
                     - bazel-version:
                           major: 6
@@ -106,12 +86,6 @@ jobs:
                     - bazel-version:
                           major: 6
                       bzlmod: 1
-                    # Don't test RBE with on MacOS (not configured)
-                    - os: macos
-                      config: rbe
-                    # Don't test RBE with on Windows (not configured)
-                    - os: windows
-                      config: rbe
                     # Disable some broken tests on Windows
                     - os: windows
                       folder: .
@@ -119,9 +93,6 @@ jobs:
                       folder: e2e/worker
                     - os: windows
                       folder: e2e/bzlmod
-                    # TODO(https://github.com/aspect-build/rules_ts/issues/432): re-enable
-                    - folder: e2e/bzlmod
-                      config: rbe
                     # TODO: combine bzlmod and workspace into a single 'smoke' e2e
                     - folder: e2e/bzlmod
                       bzlmod: 0
@@ -141,11 +112,11 @@ jobs:
                       ~/.cache/bazel-repository-cache
                       ~/.cache/xdg-cache
                   key: >-
-                      bazel-cache-${{ matrix.bazel-version.version }}-${{ matrix.bzlmod }}-${{ matrix.os }}-${{ matrix.config }}-${{ matrix.folder }}-
+                      bazel-cache-${{ matrix.bazel-version.version }}-${{ matrix.bzlmod }}-${{ matrix.os }}-${{ matrix.folder }}-
                       ${{ hashFiles('.bazelrc', '.bazelversion', '.bazeliskrc', '**/BUILD', '**/BUILD.bazel', '**/*.bzl', 'WORKSPACE', 'WORKSPACE.bazel', 'WORKSPACE.bzlmod', 'MODULE.bazel', '**/*.js', '!e2e') }}-
                       ${{ hashFiles(format('{0}/.bazelrc', matrix.folder), format('{0}/.bazelversion', matrix.folder), format('{0}/.bazeliskrc', matrix.folder), format('{0}/**/BUILD', matrix.folder), format('{0}/**/BUILD.bazel', matrix.folder), format('{0}/**/*.bzl', matrix.folder), format('{0}/WORKSPACE', matrix.folder), format('{0}/WORKSPACE.bazel', matrix.folder), format('{0}/WORKSPACE.bzlmod', matrix.folder), format('{0}/MODULE.bazel', matrix.folder), format('{0}/MODULE.bazel.lock', matrix.folder), format('{0}/**/*.js', matrix.folder)) }}
                   restore-keys: |
-                      bazel-cache-${{ matrix.bazel-version.version }}-${{ matrix.bzlmod }}-${{ matrix.os }}-${{ matrix.config }}-${{ matrix.folder }}-
+                      bazel-cache-${{ matrix.bazel-version.version }}-${{ matrix.bzlmod }}-${{ matrix.os }}-${{ matrix.folder }}-
 
             - name: Configure Bazel version
               working-directory: ${{ matrix.folder }}
@@ -168,18 +139,6 @@ jobs:
               shell: bash
               run: rm -f .bazeliskrc
 
-            - name: Write RBE credentials
-              # Writes RBE credential files
-              if: matrix.config == 'rbe'
-              working-directory: ${{ matrix.folder }}
-              shell: bash
-              run: |
-                  touch $HOME/.bazelrc
-                  chmod 0600 $HOME/.bazelrc
-                  echo "build --remote_header=x-buildbuddy-api-key=$BUILDBUDDY_API_KEY" > $HOME/.bazelrc
-              env:
-                  BUILDBUDDY_API_KEY: ${{ secrets.BUILDBUDDY_API_KEY }}
-
             - name: bazel test //...
               working-directory: ${{ matrix.folder }}
               shell: bash
@@ -189,9 +148,8 @@ jobs:
                     --bazelrc=${GITHUB_WORKSPACE//\\/\/}/.aspect/bazelrc/ci.bazelrc \
                     --bazelrc=${GITHUB_WORKSPACE//\\/\/}/.github/workflows/ci.bazelrc \
                     test \
-                    --config=${{ matrix.config }} \
-                    --test_tag_filters=-skip-on-${{ matrix.config }},-skip-on-bazel${{ matrix.bazel-version.major }},-skip-on-bzlmod-${{ matrix.bzlmod }} \
-                    --build_tag_filters=-skip-on-${{ matrix.config }},-skip-on-bazel${{ matrix.bazel-version.major }},-skip-on-bzlmod-${{ matrix.bzlmod }} \
+                    --test_tag_filters=-skip-on-bazel${{ matrix.bazel-version.major }},-skip-on-bzlmod-${{ matrix.bzlmod }} \
+                    --build_tag_filters=-skip-on-bazel${{ matrix.bazel-version.major }},-skip-on-bzlmod-${{ matrix.bzlmod }} \
                     --enable_bzlmod=${{ matrix.bzlmod }} \
                     //...
               env:
