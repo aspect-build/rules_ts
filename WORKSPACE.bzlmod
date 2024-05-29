@@ -1,3 +1,4 @@
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_jar")
 load("//.github/workflows:deps.bzl", "aspect_workflows_github_actions_deps")
 
 aspect_workflows_github_actions_deps()
@@ -9,3 +10,10 @@ load(
 )
 
 fetch_shfmt()
+
+# Needed for stardoc to compile from Java sources
+http_jar(
+    name = "protobuf-java",
+    integrity = "sha256-kHLmD+Zs/11sDxGh3yHY8+Sym17ngrRcP8dfWfviuDk=",
+    urls = ["https://repo1.maven.org/maven2/com/google/protobuf/protobuf-java/4.27.0/protobuf-java-4.27.0.jar"],
+)
