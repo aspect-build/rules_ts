@@ -39,6 +39,35 @@ load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
 
 bazel_skylib_workspace()
 
+######################
+# toolchains_protoc setup #
+######################
+# Fetches the toolchains_protoc dependencies.
+# If you want to have a different version of some dependency,
+# you should fetch it *before* calling this.
+# Alternatively, you can skip calling this function, so long as you've
+# already fetched all the dependencies.
+load("@toolchains_protoc//protoc:repositories.bzl", "rules_protoc_dependencies")
+
+rules_protoc_dependencies()
+
+load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies")
+
+rules_proto_dependencies()
+
+load("@bazel_features//:deps.bzl", "bazel_features_deps")
+
+bazel_features_deps()
+
+load("@toolchains_protoc//protoc:toolchain.bzl", "protoc_toolchains")
+
+protoc_toolchains(
+    name = "protoc_toolchains",
+    version = "v25.3",
+)
+
+register_toolchains("//tools/toolchains:all")
+
 ############################################
 # Gazelle, for generating bzl_library targets
 load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies")
@@ -100,13 +129,7 @@ npm_repositories()
 # bazel run -- @npm_typescript//:tsc --version
 rules_ts_dependencies(ts_version_from = "@npm//examples:typescript/resolved.json")
 
-load("@bazel_features//:deps.bzl", "bazel_features_deps")
-
 bazel_features_deps()
-
-###########################################
-# Protobuf rules to test ts_proto_library
-load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies")
 
 rules_proto_dependencies()
 

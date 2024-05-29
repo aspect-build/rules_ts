@@ -14,6 +14,14 @@ common --@aspect_rules_ts//ts:default_to_tsc_transpiler
 # We have some empty globs in this repo
 common --noincompatible_disallow_empty_glob
 
+# Never Compile protoc Again
+common --incompatible_enable_proto_toolchain_resolution
+
+# Ugh, stardoc needs to compile Java sources.
+# Don't depend on a JAVA_HOME pointing at a system JDK
+# see https://github.com/bazelbuild/rules_jvm_external/issues/445
+build --repo_env=JAVA_HOME=../bazel_tools/jdk
+
 # verbose
 common:verbose --@aspect_rules_ts//ts:verbose --worker_verbose
 
