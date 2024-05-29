@@ -7,6 +7,7 @@ stardoc_with_diff_test(
     bzl_library_target = "//ts:defs",
     tags = [
         "skip-on-bazel6",
+        "skip-on-bzlmod-0",
         "skip-on-rbe",
     ],
 )
@@ -16,6 +17,7 @@ stardoc_with_diff_test(
     bzl_library_target = "//ts:proto",
     tags = [
         "skip-on-bazel6",
+        "skip-on-bzlmod-0",
         "skip-on-rbe",
     ],
 )
@@ -26,6 +28,7 @@ stardoc_with_diff_test(
     symbol_names = ["rules_ts_dependencies"],
     tags = [
         "skip-on-bazel6",
+        "skip-on-bzlmod-0",
         "skip-on-rbe",
     ],
 )
@@ -34,6 +37,7 @@ update_docs(
     name = "update",
     tags = [
         "skip-on-bazel6",
+        "skip-on-bzlmod-0",
         "skip-on-rbe",
     ],
 )
