@@ -98,6 +98,9 @@ jobs:
                     - bazel-version:
                           major: 6
                       config: rbe
+                    - bazel-version:
+                          major: 6
+                      folder: .
                     # Don't run bzlmod tests with Bazel 6 to reduce the size of the test matrix
                     - bazel-version:
                           major: 6
