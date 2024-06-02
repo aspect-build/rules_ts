@@ -68,8 +68,7 @@ def ts_proto_library(name, node_modules, gen_connect_es = True, gen_connect_quer
         copy_files: whether to copy the resulting `.d.ts` files back to the source tree, for the editor to locate them.
         proto_srcs: the .proto files that are being generated. Repeats the `srcs` of the `proto_library` target.
             This is used only to determine a default for `files_to_copy`.
-        files_to_copy: which files from the protoc output to copy. By default, scans for *.proto in the current package
-            and replaces with the typical output filenames.
+        files_to_copy: which files from the protoc output to copy. By default, performs a replacement on `proto_srcs` with the typical output filenames.
         **kwargs: additional named arguments to the ts_proto_library rule
     """
     if type(node_modules) != "string":
