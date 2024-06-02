@@ -6,9 +6,13 @@ load("@rules_proto//proto:defs.bzl", "proto_library")
 
 npm_link_all_packages(name = "node_modules")
 
+logger_srcs = ["logger.proto"]
+
+status_srcs = ["status.proto"]
+
 proto_library(
     name = "logger_proto",
-    srcs = ["logger.proto"],
+    srcs = logger_srcs,
     visibility = ["//visibility:public"],
     deps = [
         "//examples/connect_node/proto:eliza_proto",
@@ -19,7 +23,7 @@ proto_library(
 
 proto_library(
     name = "status_proto",
-    srcs = ["status.proto"],
+    srcs = status_srcs,
     visibility = ["//visibility:public"],
     deps = [
         "@com_google_protobuf//:any_proto",
@@ -28,27 +32,18 @@ proto_library(
 
 ts_proto_library(
     name = "logger_ts_proto",
-    # Must give explicit files_to_copy since the default behavior tries to glob(["*.proto"])
-    # and that doesn't work when there are two ts_proto_library in the same package.
-    files_to_copy = [
-        "logger_pb.d.ts",
-        "logger_connect.d.ts",
-    ],
     node_modules = ":node_modules",
     proto = ":logger_proto",
+    proto_srcs = logger_srcs,
     visibility = ["//visibility:public"],
     deps = ["//examples/connect_node/proto"],
 )
 
 ts_proto_library(
     name = "status_ts_proto",
-    # See comment above
-    files_to_copy = [
-        "status_pb.d.ts",
-        "status_connect.d.ts",
-    ],
     node_modules = ":node_modules",
     proto = ":status_proto",
+    proto_srcs = status_srcs,
     visibility = ["//visibility:public"],
 )
 
