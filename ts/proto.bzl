@@ -47,7 +47,7 @@ load("@aspect_bazel_lib//lib:write_source_files.bzl", "write_source_files")
 load("@aspect_rules_js//js:defs.bzl", "js_binary")
 load("//ts/private:ts_proto_library.bzl", ts_proto_library_rule = "ts_proto_library")
 
-def ts_proto_library(name, node_modules, gen_connect_es = True, gen_connect_query = False, gen_connect_query_service_mapping = {}, copy_files = True, files_to_copy = None, **kwargs):
+def ts_proto_library(name, node_modules, gen_connect_es = True, gen_connect_query = False, gen_connect_query_service_mapping = {}, copy_files = True, files_to_copy = None, proto_srcs = None, **kwargs):
     """
     A macro to generate JavaScript code and TypeScript typings from .proto files.
 
@@ -136,6 +136,8 @@ def ts_proto_library(name, node_modules, gen_connect_es = True, gen_connect_quer
     if not copy_files:
         return
     if not files_to_copy:
+        if not proto_srcs:
+            fail("no `proto_scrs`")
         proto_srcs = native.glob(["**/*.proto"])
         files_to_copy = [s.replace(".proto", "_pb.d.ts") for s in proto_srcs]
         if gen_connect_es:
