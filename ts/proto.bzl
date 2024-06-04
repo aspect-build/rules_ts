@@ -47,7 +47,7 @@ load("@aspect_bazel_lib//lib:write_source_files.bzl", "write_source_files")
 load("@aspect_rules_js//js:defs.bzl", "js_binary")
 load("//ts/private:ts_proto_library.bzl", ts_proto_library_rule = "ts_proto_library")
 
-def ts_proto_library(name, node_modules, gen_connect_es = True, gen_connect_query = False, gen_connect_query_service_mapping = {}, copy_files = True, files_to_copy = None, proto_srcs = None, **kwargs):
+def ts_proto_library(name, node_modules, gen_connect_es = True, gen_connect_query = False, gen_connect_query_service_mapping = {}, copy_files = True, proto_srcs = None, files_to_copy = None, **kwargs):
     """
     A macro to generate JavaScript code and TypeScript typings from .proto files.
 
@@ -66,8 +66,9 @@ def ts_proto_library(name, node_modules, gen_connect_es = True, gen_connect_quer
           For example, given `a.proto` which contains a service `Foo` and `b.proto` that contains a service `Bar`,
           the mapping would be `{"a.proto": ["Foo"], "b.proto": ["Bar"]}`
         copy_files: whether to copy the resulting `.d.ts` files back to the source tree, for the editor to locate them.
-        files_to_copy: which files from the protoc output to copy. By default, scans for *.proto in the current package
-            and replaces with the typical output filenames.
+        proto_srcs: the .proto files that are being generated. Repeats the `srcs` of the `proto_library` target.
+            This is used only to determine a default for `files_to_copy`.
+        files_to_copy: which files from the protoc output to copy. By default, performs a replacement on `proto_srcs` with the typical output filenames.
         **kwargs: additional named arguments to the ts_proto_library rule
     """
     if type(node_modules) != "string":
@@ -137,8 +138,7 @@ def ts_proto_library(name, node_modules, gen_connect_es = True, gen_connect_quer
         return
     if not files_to_copy:
         if not proto_srcs:
-            fail("no `proto_scrs`")
-        proto_srcs = native.glob(["**/*.proto"])
+            fail("Either proto_srcs should be set, or copy_files should be False")
         files_to_copy = [s.replace(".proto", "_pb.d.ts") for s in proto_srcs]
         if gen_connect_es:
             files_to_copy.extend([s.replace(".proto", "_connect.d.ts") for s in proto_srcs])

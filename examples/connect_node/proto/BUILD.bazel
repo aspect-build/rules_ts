@@ -4,9 +4,11 @@ load("@rules_proto//proto:defs.bzl", "proto_library")
 
 package(default_visibility = ["//visibility:public"])
 
+proto_srcs = ["eliza.proto"]
+
 proto_library(
     name = "eliza_proto",
-    srcs = ["eliza.proto"],
+    srcs = proto_srcs,
 )
 
 ts_proto_library(
@@ -18,6 +20,7 @@ ts_proto_library(
     },
     node_modules = "//examples/connect_node:node_modules",
     proto = ":eliza_proto",
+    proto_srcs = proto_srcs,
 )
 
 js_library(
