@@ -32,12 +32,23 @@ proto_library(
 )
 
 ts_proto_library(
+    name = "com_google_protobuf_timestamp",
+    node_modules = ":node_modules",
+    # Usually not accessible.
+    proto_srcs = ["@com_google_protobuf//:timestamp.proto"],
+    proto = "@com_google_protobuf//:timestamp_proto",
+)
+
+ts_proto_library(
     name = "logger_ts_proto",
     node_modules = ":node_modules",
     proto = ":logger_proto",
     proto_srcs = logger_srcs,
     visibility = ["//visibility:public"],
-    deps = ["//examples/connect_node/proto"],
+    deps = [
+        "//examples/connect_node/proto",
+        ":com_google_protobuf_timestamp",
+    ],
 )
 
 ts_proto_library(
