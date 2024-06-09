@@ -44,9 +44,9 @@ def rules_ts_bazel_dependencies():
 
     http_archive(
         name = "rules_nodejs",
-        sha256 = "dddd60acc3f2f30359bef502c9d788f67e33814b0ddd99aa27c5a15eb7a41b8c",
-        strip_prefix = "rules_nodejs-6.1.0",
-        url = "https://github.com/bazelbuild/rules_nodejs/releases/download/v6.1.0/rules_nodejs-v6.1.0.tar.gz",
+        sha256 = "87c6171c5be7b69538d4695d9ded29ae2626c5ed76a9adeedce37b63c73bef67",
+        strip_prefix = "rules_nodejs-6.2.0",
+        url = "https://github.com/bazelbuild/rules_nodejs/releases/download/v6.2.0/rules_nodejs-v6.2.0.tar.gz",
     )
 
 def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrity = None):
