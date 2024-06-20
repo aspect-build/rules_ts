@@ -13,7 +13,7 @@ load(":babel.bzl", "babel")
 write_file(
     name = "gen_ts",
     out = "big.ts",
-    content = [
+    content = ["export const b: string = 1"] + [
         "export const a{0}: number = {0}".format(x)
         for x in range(10000)
     ],
