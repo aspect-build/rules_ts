@@ -14,6 +14,7 @@ ts_project(
         ":node_modules/@aspect-test/e",
         ":node_modules/@aspect-test/f",
         ":node_modules/@types/node",
+        ":node_modules/alias-e",
     ],
 )
 
