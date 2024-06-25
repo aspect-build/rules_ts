@@ -16,7 +16,7 @@ ts_project(
 assert_contains(
     name = "test",
     actual = "index.js",
-    expected = """JSON.stringify(data_json_1["default"])""",
+    expected = """JSON.stringify(data_json_1.default)""",
 )
 
 js_test(
