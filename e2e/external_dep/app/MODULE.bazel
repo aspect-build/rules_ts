@@ -9,5 +9,5 @@ bazel_dep(name = "aspect_rules_js", version = "2.0.0-rc1", dev_dependency = True
 bazel_dep(name = "bazel_skylib", version = "1.5.0", dev_dependency = True)
 
 rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext", dev_dependency = True)
-rules_ts_ext.deps()
+rules_ts_ext.deps(ts_version = "4.8.4")
 use_repo(rules_ts_ext, "npm_typescript")
