@@ -3,6 +3,7 @@
 const testLib = require('@lib/test')
 
 console.log('loaded dependency', testLib.importDep().id())
+console.log('loaded aliased dependency', testLib.importAliasedDep().id())
 
 let e = null
 try {

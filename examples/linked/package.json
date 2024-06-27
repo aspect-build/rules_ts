@@ -2,7 +2,8 @@
     "name": "@lib/test",
     "private": true,
     "dependencies": {
-        "@aspect-test/e": "1.0.0"
+        "@aspect-test/e": "1.0.0",
+        "alias-e": "npm:@aspect-test/e"
     },
     "devDependencies": {
         "@types/node": "18.13.0",
