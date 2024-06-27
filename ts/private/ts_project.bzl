@@ -19,12 +19,12 @@ def _gather_types_from_js_infos(targets):
     files_depsets.extend([
         target[JsInfo].transitive_types
         for target in targets
-        if JsInfo in target and hasattr(target[JsInfo], "transitive_types")
+        if JsInfo in target
     ])
     files_depsets.extend([
         target[JsInfo].npm_sources
         for target in targets
-        if JsInfo in target and hasattr(target[JsInfo], "npm_sources")
+        if JsInfo in target
     ])
     return depset([], transitive = files_depsets)
 
