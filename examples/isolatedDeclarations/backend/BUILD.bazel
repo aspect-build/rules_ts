@@ -1,0 +1,13 @@
+load("@aspect_bazel_lib//lib:testing.bzl", "assert_outputs")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "backend",
+    tsconfig = "//examples/isolatedDeclarations:tsconfig",
+)
+
+assert_outputs(
+    name = "test_backend_default_outputs",
+    actual = "backend",
+    expected = ["export declare const a"],
+)
