@@ -1,3 +1,5 @@
 {
-    "extends": "@tsconfig/strictest/tsconfig.json"
+    "extends": "@tsconfig/strictest/tsconfig.json",
+    // Workaround https://github.com/microsoft/TypeScript/issues/59036
+    "exclude": []
 }

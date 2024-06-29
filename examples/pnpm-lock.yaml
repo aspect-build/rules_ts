@@ -1,5 +1,9 @@
 lockfileVersion: '6.0'
 
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
 importers:
 
   .:
@@ -8,8 +12,8 @@ importers:
         specifier: ^18
         version: 18.0.0(@angular/core@18.0.0)
       '@angular/compiler-cli':
-        specifier: ^18
-        version: 18.0.0(@angular/compiler@18.0.0)(typescript@5.4.5)
+        specifier: 18.1.0-next.0
+        version: 18.1.0-next.0(@angular/compiler@18.0.0)(typescript@5.5.2)
       '@angular/core':
         specifier: ^18
         version: 18.0.0(rxjs@7.5.7)(zone.js@0.12.0)
@@ -44,8 +48,8 @@ importers:
         specifier: ^0.5.21
         version: 0.5.21
       typescript:
-        specifier: 5.4.5
-        version: 5.4.5
+        specifier: 5.5.2
+        version: 5.5.2
       zone.js:
         specifier: 0.12.0
         version: 0.12.0
@@ -143,13 +147,13 @@ packages:
       '@jridgewell/trace-mapping': 0.3.19
     dev: false
 
-  /@angular/compiler-cli@18.0.0(@angular/compiler@18.0.0)(typescript@5.4.5):
-    resolution: {integrity: sha512-fy9MBSHDM/YAyrIWa15JV1ZrpuSc51HHUSA3W/UKrDqUqSfYyj11/0PeYkdIWUD/dACZSrEge3nVnYCjdyJqPA==}
+  /@angular/compiler-cli@18.1.0-next.0(@angular/compiler@18.0.0)(typescript@5.5.2):
+    resolution: {integrity: sha512-3O4THadJLx/H4+KaXRllMGMih2b+Jj9ufCUAU0c6X8SMT4OCBrntq9y/LSkFwjvRO3sKhCv9c41rX+pcexS0Sw==}
     engines: {node: ^18.13.0 || >=20.9.0}
     hasBin: true
     peerDependencies:
-      '@angular/compiler': 18.0.0
-      typescript: '>=5.4 <5.5'
+      '@angular/compiler': 18.1.0-next.0
+      typescript: '>=5.4 <5.6'
     dependencies:
       '@angular/compiler': 18.0.0(@angular/core@18.0.0)
       '@babel/core': 7.24.4
@@ -159,7 +163,7 @@ packages:
       reflect-metadata: 0.2.2
       semver: 7.5.4
       tslib: 2.6.2
-      typescript: 5.4.5
+      typescript: 5.5.2
       yargs: 17.7.2
     transitivePeerDependencies:
       - supports-color
@@ -1744,8 +1748,8 @@ packages:
     hasBin: true
     dev: true
 
-  /typescript@5.4.5:
-    resolution: {integrity: sha512-vcI4UpRgg81oIRUFwR0WSIHKt11nJ7SAVlYNIu+QpqeyXP+gpQJy/Z4+F0aGxSE4MqwjyXvW/TzgkLAx2AGHwQ==}
+  /typescript@5.5.2:
+    resolution: {integrity: sha512-NcRtPEOsPFFWjobJEtfihkLCZCXZt/os3zf8nTxjVH3RvTSxjrCamJpbExGvYOF+tFHc3pA65qpdwPbzjohhew==}
     engines: {node: '>=14.17'}
     hasBin: true
     dev: false
@@ -1823,7 +1827,3 @@ packages:
     dependencies:
       tslib: 2.6.2
     dev: false
-
-settings:
-  autoInstallPeers: true
-  excludeLinksFromLockfile: false
