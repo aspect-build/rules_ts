@@ -1,7 +1,7 @@
 {
     "private": true,
     "dependencies": {
-        "@angular/compiler-cli": "^18",
+        "@angular/compiler-cli": "18.1.0-next.0",
         "@angular/compiler": "^18",
         "@angular/core": "^18",
         "@babel/cli": "~7.23.9",
@@ -14,7 +14,7 @@
         "date-fns": "2.29.3",
         "rxjs": "7.5.7",
         "source-map-support": "^0.5.21",
-        "typescript": "5.4.5",
+        "typescript": "5.5.2",
         "zone.js": "0.12.0"
     }
 }
