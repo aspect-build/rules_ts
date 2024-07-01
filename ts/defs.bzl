@@ -327,9 +327,8 @@ def ts_project(
     else:
         # To stitch together a tree of ts_project where transpiler is a separate rule,
         # we have to produce a few targets
-        tsc_target_name = "%s_tsc" % name
+        tsc_target_name = "%s_typings" % name
         transpile_target_name = "%s_transpile" % name
-        typings_target_name = "%s_typings" % name
         typecheck_target_name = "%s_typecheck" % name
         test_target_name = "%s_typecheck_test" % name
 
@@ -349,31 +348,14 @@ def ts_project(
         else:
             fail("transpiler attribute should be a rule/macro or a skylib partial. Got " + type(transpiler))
 
-        if isolated_declarations:
-            # Users should build this target to get a failed build when typechecking fails
-            native.filegroup(
-                name = typecheck_target_name,
-                srcs = [tsc_target_name],
-                output_group = "typecheck",
-                **common_kwargs
-            )
-
-            native.filegroup(
-                name = typings_target_name,
-                srcs = [tsc_target_name],
-                # This causes the declarations to be produced, which in turn triggers the tsc action to typecheck
-                output_group = "types",
-                **common_kwargs
-            )
-        else:
-            # Users should build this target to get a failed build when typechecking fails
-            native.filegroup(
-                name = typecheck_target_name,
-                srcs = [tsc_target_name],
-                # This causes the declarations to be produced, which in turn triggers the tsc action to typecheck
-                output_group = "types",
-                **common_kwargs
-            )
+        # Users should build this target to get a failed build when typechecking fails
+        native.filegroup(
+            name = typecheck_target_name,
+            srcs = [tsc_target_name],
+            # This causes the declarations to be produced, which in turn triggers the tsc action to typecheck
+            output_group = "types",
+            **common_kwargs
+        )
 
         # Ensures the typecheck target gets built under `bazel test --build_tests_only`
         build_test(
