@@ -153,7 +153,9 @@ def ts_project(
             See https://www.typescriptlang.org/docs/handbook/compiler-options.html#compiler-options
             Typically useful arguments for debugging are `--listFiles` and `--listEmittedFiles`.
 
-        isolated_declarations: TODO
+        isolated_declarations: Whether to enforce that declaration output (.d.ts file) can be produced for a
+            single source file at a time. Requires some additional explicit types on exported symbols.
+            See https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-5.html#isolated-declarations
 
         transpiler: A custom transpiler tool to run that produces the JavaScript outputs instead of `tsc`.
 
