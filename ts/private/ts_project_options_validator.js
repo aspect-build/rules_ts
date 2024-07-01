@@ -170,6 +170,7 @@ function main(_a) {
     check('declaration')
     check('incremental')
     check('tsBuildInfoFile', 'ts_build_info_file')
+    check('isolatedDeclarations', 'isolated_declarations')
     check_preserve_jsx()
     if (failures.length > 0) {
         console.error(

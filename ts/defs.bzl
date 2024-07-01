@@ -281,6 +281,7 @@ def ts_project(
         source_map = compiler_options.setdefault("sourceMap", source_map)
         declaration = compiler_options.setdefault("declaration", declaration)
         declaration_map = compiler_options.setdefault("declarationMap", declaration_map)
+        isolated_declarations = compiler_options.setdefault("isolatedDeclarations", isolated_declarations)
         emit_declaration_only = compiler_options.setdefault("emitDeclarationOnly", emit_declaration_only)
         allow_js = compiler_options.setdefault("allowJs", allow_js)
         if resolve_json_module != None:
