@@ -161,6 +161,8 @@ function main(_a) {
         )
         return 1
     }
+
+    check('isolatedDeclarations', 'isolated_declarations')
     check('allowJs', 'allow_js')
     check('declarationMap', 'declaration_map')
     check('emitDeclarationOnly', 'emit_declaration_only')
@@ -170,7 +172,6 @@ function main(_a) {
     check('declaration')
     check('incremental')
     check('tsBuildInfoFile', 'ts_build_info_file')
-    check('isolatedDeclarations', 'isolated_declarations')
     check_preserve_jsx()
     if (failures.length > 0) {
         console.error(
