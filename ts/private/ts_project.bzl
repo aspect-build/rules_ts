@@ -228,9 +228,12 @@ This is an error because Bazel does not run actions unless their outputs are nee
         default_outputs = []
 
     inputs_depset = depset()
-    typecheck_validation_outs = depset()
-
     if len(outputs) > 0:
+        inputs_depset = depset(
+            copy_files_to_bin_actions(ctx, inputs),
+            transitive = transitive_inputs + [_gather_types_from_js_infos(ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps)],
+        )
+
         if ctx.attr.transpile != 0 and not ctx.attr.emit_declaration_only:
             # Make sure the user has acknowledged that transpiling is slow
             if ctx.attr.transpile == -1 and not options.default_to_tsc_transpiler:
@@ -242,66 +245,22 @@ This is an error because Bazel does not run actions unless their outputs are nee
         else:
             verb = "Type-checking"
 
-        copied_srcs = copy_files_to_bin_actions(ctx, inputs)
-        inputs_depset = depset(
-            copied_srcs,
-            transitive = transitive_inputs + [_gather_types_from_js_infos(ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps)],
+        ctx.actions.run(
+            executable = executable,
+            inputs = inputs_depset,
+            arguments = [arguments],
+            outputs = outputs,
+            mnemonic = "TsProject",
+            execution_requirements = execution_requirements,
+            progress_message = "%s TypeScript project %s [tsc -p %s]" % (
+                verb,
+                ctx.label,
+                tsconfig_path,
+            ),
+            env = {
+                "BAZEL_BINDIR": ctx.bin_dir.path,
+            },
         )
-
-        if ctx.attr.isolated_declarations:
-            ctx.actions.run(
-                executable = executable,
-                inputs = depset(copied_srcs),
-                arguments = [arguments, "--noCheck"],
-                outputs = outputs,
-                mnemonic = "TsProjectEmit",
-                execution_requirements = execution_requirements,
-                progress_message = "%s TypeScript project %s [tsc -p %s --noCheck]" % (
-                    verb,
-                    ctx.label,
-                    tsconfig_path,
-                ),
-                env = {
-                    "BAZEL_BINDIR": ctx.bin_dir.path,
-                },
-            )
-
-            typecheck_marker = ctx.actions.declare_file(ctx.label.name + ".typecheck_ok")
-            typecheck_validation_outs = depset([typecheck_marker])
-
-            ctx.actions.run(
-                executable = executable,
-                inputs = inputs_depset,
-                arguments = [arguments, "--noEmit"],
-                outputs = [typecheck_marker],
-                mnemonic = "TsProjectCheck",
-                execution_requirements = execution_requirements,
-                progress_message = "%s TypeScript project %s [tsc -p %s --noEmit]" % (
-                    verb,
-                    ctx.label,
-                    tsconfig_path,
-                ),
-                env = {
-                    "BAZEL_BINDIR": ctx.bin_dir.path,
-                },
-            )
-        else:
-            ctx.actions.run(
-                executable = executable,
-                inputs = inputs_depset,
-                arguments = [arguments],
-                outputs = outputs,
-                mnemonic = "TsProject",
-                execution_requirements = execution_requirements,
-                progress_message = "%s TypeScript project %s [tsc -p %s]" % (
-                    verb,
-                    ctx.label,
-                    tsconfig_path,
-                ),
-                env = {
-                    "BAZEL_BINDIR": ctx.bin_dir.path,
-                },
-            )
 
     transitive_sources = js_lib_helpers.gather_transitive_sources(output_sources, ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps)
 
@@ -352,7 +311,6 @@ This is an error because Bazel does not run actions unless their outputs are nee
             # https://bazel.build/extending/rules#validations_output_group
             # "hold the otherwise unused outputs of validation actions"
             _validation = validation_outs,
-            typecheck = typecheck_validation_outs,
         ),
         coverage_common.instrumented_files_info(
             ctx,
