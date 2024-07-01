@@ -40,7 +40,7 @@ def ts_project(
         assets = [],
         extends = None,
         allow_js = False,
-        isolated_declarations = False,
+        isolated_declarations = None,
         declaration = False,
         source_map = False,
         declaration_map = False,
@@ -281,11 +281,12 @@ def ts_project(
         source_map = compiler_options.setdefault("sourceMap", source_map)
         declaration = compiler_options.setdefault("declaration", declaration)
         declaration_map = compiler_options.setdefault("declarationMap", declaration_map)
-        isolated_declarations = compiler_options.setdefault("isolatedDeclarations", isolated_declarations)
         emit_declaration_only = compiler_options.setdefault("emitDeclarationOnly", emit_declaration_only)
         allow_js = compiler_options.setdefault("allowJs", allow_js)
         if resolve_json_module != None:
             resolve_json_module = compiler_options.setdefault("resolveJsonModule", resolve_json_module)
+        if isolated_declarations != None:
+            isolated_declarations = compiler_options.setdefault("isolatedDeclarations", isolated_declarations)
 
         # These options are always passed on the tsc command line so don't include them
         # in the tsconfig. At best they're redundant, but at worst we'll have a conflict
