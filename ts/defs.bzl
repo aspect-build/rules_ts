@@ -285,7 +285,9 @@ def ts_project(
         allow_js = compiler_options.setdefault("allowJs", allow_js)
         if resolve_json_module != None:
             resolve_json_module = compiler_options.setdefault("resolveJsonModule", resolve_json_module)
-        if isolated_declarations != None:
+
+        # Take care not to add isolatedDeclarations: False to tsconfig.json as that's an error in TS <5.5
+        if isolated_declarations != None or compiler_options.get("isolatedDeclarations"):
             isolated_declarations = compiler_options.setdefault("isolatedDeclarations", isolated_declarations)
 
         # These options are always passed on the tsc command line so don't include them
