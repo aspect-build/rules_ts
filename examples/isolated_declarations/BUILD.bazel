@@ -1,5 +1,7 @@
 load("@aspect_rules_ts//ts:defs.bzl", "ts_config")
 
+exports_files([".swcrc"])
+
 ts_config(
     name = "tsconfig",
     src = "tsconfig.json",

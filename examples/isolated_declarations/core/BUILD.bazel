@@ -1,8 +1,22 @@
+load("@aspect_bazel_lib//lib:testing.bzl", "assert_contains")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_skylib//lib:partial.bzl", "partial")
+load("//examples/isolated_declarations:swc_decls.bzl", "swc_decls")
 
 ts_project(
     name = "core",
     declaration = True,
+    declaration_transpiler = partial.make(
+        swc_decls,
+        swcrc = "//examples/isolated_declarations:.swcrc",
+    ),
     tsconfig = "//examples/isolated_declarations:tsconfig",
     visibility = ["//examples/isolated_declarations:__subpackages__"],
+)
+
+assert_contains(
+    name = "test",
+    actual = "core_declarations",
+    # FIXME: this is the WRONG output, it's the javascript emit rather than the declaration!
+    expected = "export { }",
 )

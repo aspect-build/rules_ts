@@ -58,6 +58,9 @@ https://docs.aspect.build/rulesets/aspect_rules_js/docs/js_library#deps for more
         doc = "Whether TypeScript version is >= 5.0.0",
         default = False,
     ),
+    "declaration_transpile": attr.bool(
+        doc = "whether tsc should be used to produce .d.ts outputs",
+    ),
     "transpile": attr.int(
         doc = """\
         Whether tsc should be used to produce .js outputs
