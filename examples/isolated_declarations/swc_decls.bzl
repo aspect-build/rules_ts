@@ -1,6 +1,7 @@
 "SWC rule for producing isolated declarations"
 
 load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "COPY_FILE_TO_BIN_TOOLCHAINS", "copy_files_to_bin_actions")
+load("@aspect_rules_js//js:providers.bzl", "js_info")
 
 # buildifier: disable=bzl-visibility
 load("@aspect_rules_swc//swc/private:swc.bzl", _swc_lib = "swc")
@@ -51,7 +52,14 @@ def _swc_decls_impl(ctx):
         outputs = typings_outs,
     )
 
-    return [DefaultInfo(files = depset(typings_outs))]
+    return [
+        DefaultInfo(files = depset(typings_outs)),
+        js_info(
+            target = ctx.label,
+            types = depset(typings_outs),
+            transitive_types = depset(typings_outs),
+        ),
+    ]
 
 swc_decls = rule(
     implementation = _swc_decls_impl,

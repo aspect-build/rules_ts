@@ -315,10 +315,10 @@ def ts_project(
 
     tsc_typings_outs = []
     tsc_typing_maps_outs = []
+    declarations_target_name = None
     if not declaration_transpiler or declaration_transpiler == "tsc":
         tsc_typings_outs = _lib.calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, composite, allow_js)
         tsc_typing_maps_outs = _lib.calculate_typing_maps_outs(srcs, typings_out_dir, root_dir, declaration_map, allow_js)
-        declarations_target_name = name
     else:
         # TODO: we should update the validator to ensure isolatedDeclarations is present in tsconfig or args
         declarations_target_name = "%s_declarations" % name
