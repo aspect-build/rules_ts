@@ -75,6 +75,3 @@ swc.toolchain(
     name = "swc",
     swc_version = "v1.6.6",
 )
-use_repo(swc, "swc_toolchains")
-
-register_toolchains("@swc_toolchains//:all")
