@@ -260,6 +260,7 @@ This is an error because Bazel does not run actions unless their outputs are nee
             env = {
                 "BAZEL_BINDIR": ctx.bin_dir.path,
             },
+            use_default_shell_env = True,
         )
 
     transitive_sources = js_lib_helpers.gather_transitive_sources(output_sources, ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps)

@@ -60,6 +60,7 @@ def _protoc_action(ctx, proto_info, outputs, options = {
             [ctx.executable.protoc_gen_connect_query] if ctx.attr.gen_connect_query else []
         ),
         env = {"BAZEL_BINDIR": ctx.bin_dir.path},
+        use_default_shell_env = True,
     )
 
 def _declare_outs(ctx, info, ext):
