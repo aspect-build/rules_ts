@@ -108,9 +108,6 @@ COMPILER_OPTION_ATTRS = {
     "composite": attr.bool(
         doc = "https://www.typescriptlang.org/tsconfig#composite",
     ),
-    "isolated_declarations": attr.bool(
-        doc = "https://www.typescriptlang.org/tsconfig/#isolatedDeclarations",
-    ),
     "declaration": attr.bool(
         doc = "https://www.typescriptlang.org/tsconfig#declaration",
     ),

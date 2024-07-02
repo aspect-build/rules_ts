@@ -40,7 +40,6 @@ def ts_project(
         assets = [],
         extends = None,
         allow_js = False,
-        isolated_declarations = None,
         declaration = False,
         source_map = False,
         declaration_map = False,
@@ -152,10 +151,6 @@ def ts_project(
         args: List of strings of additional command-line arguments to pass to tsc.
             See https://www.typescriptlang.org/docs/handbook/compiler-options.html#compiler-options
             Typically useful arguments for debugging are `--listFiles` and `--listEmittedFiles`.
-
-        isolated_declarations: Whether to enforce that declaration output (.d.ts file) can be produced for a
-            single source file at a time. Requires some additional explicit types on exported symbols.
-            See https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-5.html#isolated-declarations
 
         transpiler: A custom transpiler tool to run that produces the JavaScript outputs instead of `tsc`.
 
@@ -286,10 +281,6 @@ def ts_project(
         if resolve_json_module != None:
             resolve_json_module = compiler_options.setdefault("resolveJsonModule", resolve_json_module)
 
-        # Take care not to add isolatedDeclarations: False to tsconfig.json as that's an error in TS <5.5
-        if isolated_declarations != None or compiler_options.get("isolatedDeclarations"):
-            isolated_declarations = compiler_options.setdefault("isolatedDeclarations", isolated_declarations)
-
         # These options are always passed on the tsc command line so don't include them
         # in the tsconfig. At best they're redundant, but at worst we'll have a conflict
         if "outDir" in compiler_options.keys():
@@ -355,7 +346,7 @@ def ts_project(
         native.filegroup(
             name = typecheck_target_name,
             srcs = [tsc_target_name],
-            # This causes the declarations to be produced, which in turn triggers the tsc action to typecheck
+            # This causes the types to be produced, which in turn triggers the tsc action to typecheck
             output_group = "types",
             **common_kwargs
         )
@@ -398,7 +389,6 @@ def ts_project(
         incremental = incremental,
         preserve_jsx = preserve_jsx,
         composite = composite,
-        isolated_declarations = isolated_declarations,
         declaration = declaration,
         declaration_dir = declaration_dir,
         source_map = source_map,
