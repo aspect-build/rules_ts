@@ -40,6 +40,7 @@ def ts_project(
         assets = [],
         extends = None,
         allow_js = False,
+        isolated_declarations = None,
         declaration = False,
         source_map = False,
         declaration_map = False,
@@ -49,6 +50,7 @@ def ts_project(
         incremental = False,
         emit_declaration_only = False,
         transpiler = None,
+        declaration_transpiler = None,
         ts_build_info_file = None,
         tsc = _tsc,
         tsc_worker = _tsc_worker,
@@ -151,6 +153,13 @@ def ts_project(
         args: List of strings of additional command-line arguments to pass to tsc.
             See https://www.typescriptlang.org/docs/handbook/compiler-options.html#compiler-options
             Typically useful arguments for debugging are `--listFiles` and `--listEmittedFiles`.
+
+        isolated_declarations: Whether to enforce that declaration output (.d.ts file) can be produced for a
+            single source file at a time. Requires some additional explicit types on exported symbols.
+            See https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-5.html#isolated-declarations
+
+        declaration_transpiler: A tool that produces declaration (`.d.ts`) outputs instead of `tsc`.
+            This requires `isolated_declarations` to be True.
 
         transpiler: A custom transpiler tool to run that produces the JavaScript outputs instead of `tsc`.
 
@@ -281,6 +290,10 @@ def ts_project(
         if resolve_json_module != None:
             resolve_json_module = compiler_options.setdefault("resolveJsonModule", resolve_json_module)
 
+        # Take care not to add isolatedDeclarations: False to tsconfig.json as that's an error in TS <5.5
+        if isolated_declarations != None or compiler_options.get("isolatedDeclarations"):
+            isolated_declarations = compiler_options.setdefault("isolatedDeclarations", isolated_declarations)
+
         # These options are always passed on the tsc command line so don't include them
         # in the tsconfig. At best they're redundant, but at worst we'll have a conflict
         if "outDir" in compiler_options.keys():
@@ -309,8 +322,29 @@ def ts_project(
     typings_out_dir = declaration_dir if declaration_dir else out_dir
     tsbuildinfo_path = ts_build_info_file if ts_build_info_file else name + ".tsbuildinfo"
 
-    tsc_typings_outs = _lib.calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, composite, allow_js)
-    tsc_typing_maps_outs = _lib.calculate_typing_maps_outs(srcs, typings_out_dir, root_dir, declaration_map, allow_js)
+    tsc_typings_outs = []
+    tsc_typing_maps_outs = []
+    if not declaration_transpiler or declaration_transpiler == "tsc":
+        tsc_typings_outs = _lib.calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, composite, allow_js)
+        tsc_typing_maps_outs = _lib.calculate_typing_maps_outs(srcs, typings_out_dir, root_dir, declaration_map, allow_js)
+        declarations_target_name = name
+    else:
+        declarations_target_name = "%s_declarations" % name
+        if type(declaration_transpiler) == "function" or type(declaration_transpiler) == "rule":
+            declaration_transpiler(
+                name = declarations_target_name,
+                srcs = srcs,
+                **common_kwargs
+            )
+        elif partial.is_instance(declaration_transpiler):
+            partial.call(
+                declaration_transpiler,
+                name = declarations_target_name,
+                srcs = srcs,
+                **common_kwargs
+            )
+        else:
+            fail("declaration_transpiler attribute should be a rule/macro or a skylib partial. Got " + type(declaration_transpiler))
 
     tsc_js_outs = []
     tsc_map_outs = []
@@ -321,7 +355,7 @@ def ts_project(
     else:
         # To stitch together a tree of ts_project where transpiler is a separate rule,
         # we have to produce a few targets
-        tsc_target_name = "%s_typings" % name
+        tsc_target_name = "%s_tsc" % name
         transpile_target_name = "%s_transpile" % name
         typecheck_target_name = "%s_typecheck" % name
         test_target_name = "%s_typecheck_test" % name
@@ -346,7 +380,7 @@ def ts_project(
         native.filegroup(
             name = typecheck_target_name,
             srcs = [tsc_target_name],
-            # This causes the types to be produced, which in turn triggers the tsc action to typecheck
+            # This causes the declarations to be produced, which in turn triggers the tsc action to typecheck
             output_group = "types",
             **common_kwargs
         )
@@ -389,7 +423,9 @@ def ts_project(
         incremental = incremental,
         preserve_jsx = preserve_jsx,
         composite = composite,
+        isolated_declarations = isolated_declarations,
         declaration = declaration,
+        declaration_transpile = not declaration_transpiler,
         declaration_dir = declaration_dir,
         source_map = source_map,
         declaration_map = declaration_map,

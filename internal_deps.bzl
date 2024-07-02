@@ -67,9 +67,9 @@ def rules_ts_internal_deps():
 
     http_archive(
         name = "aspect_rules_swc",
-        sha256 = "b647c7c31feeb7f9330fff08b45f8afe7de674d3a9c89c712b8f9d1723d0c8f9",
-        strip_prefix = "rules_swc-1.0.1",
-        url = "https://github.com/aspect-build/rules_swc/releases/download/v1.0.1/rules_swc-v1.0.1.tar.gz",
+        sha256 = "0c2e8912725a1d97a37bb751777c9846783758f5a0a8e996f1b9d21cad42e839",
+        strip_prefix = "rules_swc-2.0.0-rc1",
+        url = "https://github.com/aspect-build/rules_swc/releases/download/v2.0.0-rc1/rules_swc-v2.0.0-rc1.tar.gz",
     )
 
     http_archive(

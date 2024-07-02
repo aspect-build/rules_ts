@@ -27,11 +27,11 @@ nodejs_register_toolchains(
     node_version = "18.12.0",
 )
 
-load("@aspect_rules_swc//swc:repositories.bzl", "LATEST_SWC_VERSION", "swc_register_toolchains")
+load("@aspect_rules_swc//swc:repositories.bzl", "swc_register_toolchains")
 
 swc_register_toolchains(
     name = "swc",
-    swc_version = LATEST_SWC_VERSION,
+    swc_version = "v1.6.6",
 )
 
 # For running our own unit tests
