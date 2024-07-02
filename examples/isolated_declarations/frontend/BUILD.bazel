@@ -7,5 +7,6 @@ ts_project(
             "declaration": True,
         },
     },
-    deps = ["//examples/isolated_declarations/core"],
+    # FIXME: should just be core:core
+    deps = ["//examples/isolated_declarations/core:core_declarations"],
 )

@@ -5,7 +5,8 @@ ts_project(
     name = "backend",
     declaration = True,
     tsconfig = "//examples/isolated_declarations:tsconfig",
-    deps = ["//examples/isolated_declarations/core"],
+    # FIXME: should just be core:core
+    deps = ["//examples/isolated_declarations/core:core_declarations"],
 )
 
 assert_outputs(
