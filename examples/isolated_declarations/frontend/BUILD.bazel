@@ -1,0 +1,11 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "frontend",
+    tsconfig = {
+        "compilerOptions": {
+            "declaration": True,
+        },
+    },
+    deps = ["//examples/isolated_declarations/core"],
+)
