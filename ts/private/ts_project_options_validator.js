@@ -161,6 +161,8 @@ function main(_a) {
         )
         return 1
     }
+
+    check('isolatedDeclarations', 'isolated_declarations')
     check('allowJs', 'allow_js')
     check('declarationMap', 'declaration_map')
     check('emitDeclarationOnly', 'emit_declaration_only')
