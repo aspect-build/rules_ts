@@ -1,6 +1,6 @@
 # TypeScript isolated declarations
 
-When the `isolated_declarations` flag is used, it ensures that a declarations file `.d.ts` can be produced from a single source file at a time.
+When the `isolatedDeclarations` compiler option is set, it ensures that a declarations file `.d.ts` can be produced from a single source file at a time.
 
 See https://devblogs.microsoft.com/typescript/announcing-typescript-5-5/#isolated-declarations
 in particular, the section "Use-case: Parallel Declaration Emit and Parallel Checking"

@@ -40,7 +40,6 @@ def ts_project(
         assets = [],
         extends = None,
         allow_js = False,
-        isolated_declarations = None,
         declaration = False,
         source_map = False,
         declaration_map = False,
@@ -154,12 +153,8 @@ def ts_project(
             See https://www.typescriptlang.org/docs/handbook/compiler-options.html#compiler-options
             Typically useful arguments for debugging are `--listFiles` and `--listEmittedFiles`.
 
-        isolated_declarations: Whether to enforce that declaration output (.d.ts file) can be produced for a
-            single source file at a time. Requires some additional explicit types on exported symbols.
-            See https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-5.html#isolated-declarations
-
         declaration_transpiler: A tool that produces declaration (`.d.ts`) outputs instead of `tsc`.
-            This requires `isolated_declarations` to be True.
+            This requires `isolatedDeclarations` to be enabled in the tsconfig.
 
         transpiler: A custom transpiler tool to run that produces the JavaScript outputs instead of `tsc`.
 
@@ -290,10 +285,6 @@ def ts_project(
         if resolve_json_module != None:
             resolve_json_module = compiler_options.setdefault("resolveJsonModule", resolve_json_module)
 
-        # Take care not to add isolatedDeclarations: False to tsconfig.json as that's an error in TS <5.5
-        if isolated_declarations != None or compiler_options.get("isolatedDeclarations"):
-            isolated_declarations = compiler_options.setdefault("isolatedDeclarations", isolated_declarations)
-
         # These options are always passed on the tsc command line so don't include them
         # in the tsconfig. At best they're redundant, but at worst we'll have a conflict
         if "outDir" in compiler_options.keys():
@@ -329,6 +320,7 @@ def ts_project(
         tsc_typing_maps_outs = _lib.calculate_typing_maps_outs(srcs, typings_out_dir, root_dir, declaration_map, allow_js)
         declarations_target_name = name
     else:
+        # TODO: we should update the validator to ensure isolatedDeclarations is present in tsconfig or args
         declarations_target_name = "%s_declarations" % name
         if type(declaration_transpiler) == "function" or type(declaration_transpiler) == "rule":
             declaration_transpiler(
@@ -423,7 +415,6 @@ def ts_project(
         incremental = incremental,
         preserve_jsx = preserve_jsx,
         composite = composite,
-        isolated_declarations = isolated_declarations,
         declaration = declaration,
         declaration_transpile = not declaration_transpiler,
         declaration_dir = declaration_dir,
