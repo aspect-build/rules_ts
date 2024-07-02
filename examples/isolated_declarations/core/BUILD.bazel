@@ -17,6 +17,5 @@ ts_project(
 assert_contains(
     name = "test",
     actual = "core_declarations",
-    # FIXME: this is the WRONG output, it's the javascript emit rather than the declaration!
-    expected = "export { }",
+    expected = "export type IntersectionType = UnionToIntersection<UnionType>",
 )

@@ -34,7 +34,7 @@ def _swc_decls_impl(ctx):
     # Add user specified arguments *before* rule supplied arguments
     args.add_all(ctx.attr.args)
 
-    args.add("--out-file", typings_outs[0].path)
+    args.add("--out-dir", ".")
     if ctx.attr.swcrc:
         args.add("--config-file", ctx.file.swcrc)
         inputs.append(ctx.file.swcrc)
