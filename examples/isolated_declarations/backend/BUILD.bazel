@@ -4,7 +4,6 @@ load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 ts_project(
     name = "backend",
     declaration = True,
-    isolated_declarations = True,
     tsconfig = "//examples/isolated_declarations:tsconfig",
     deps = ["//examples/isolated_declarations/core"],
 )
