@@ -4,6 +4,7 @@ load("@aspect_bazel_lib//lib:copy_file.bzl", "copy_file_action")
 load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "COPY_FILE_TO_BIN_TOOLCHAINS", "copy_file_to_bin_action", "copy_files_to_bin_actions")
 load("@aspect_bazel_lib//lib:paths.bzl", "to_output_relative_path")
 load("@aspect_bazel_lib//lib:platform_utils.bzl", "platform_utils")
+load("@aspect_bazel_lib//lib:resource_sets.bzl", "resource_set", "resource_set_attr")
 load("@aspect_rules_js//js:libs.bzl", "js_lib_helpers")
 load("@aspect_rules_js//js:providers.bzl", "JsInfo", "js_info")
 load("@bazel_skylib//lib:dicts.bzl", "dicts")
@@ -252,6 +253,7 @@ This is an error because Bazel does not run actions unless their outputs are nee
             outputs = outputs,
             mnemonic = "TsProject",
             execution_requirements = execution_requirements,
+            resource_set = resource_set(ctx.attr),
             progress_message = "%s TypeScript project %s [tsc -p %s]" % (
                 verb,
                 ctx.label,
@@ -324,7 +326,7 @@ This is an error because Bazel does not run actions unless their outputs are nee
 
 lib = struct(
     implementation = _ts_project_impl,
-    attrs = dicts.add(COMPILER_OPTION_ATTRS, STD_ATTRS, OUTPUT_ATTRS),
+    attrs = dicts.add(COMPILER_OPTION_ATTRS, STD_ATTRS, OUTPUT_ATTRS, resource_set_attr),
 )
 
 ts_project = rule(
