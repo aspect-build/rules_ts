@@ -37,6 +37,8 @@ js_binary(
 ts_project(
     name = "big",
     srcs = ["big.ts"],
+    # Tell Bazel to reserve more than the default 250MB of RAM for the TsProject action
+    resource_set = "mem_8g",
     tsc = ":tsc_with_more_heap",
 )
 
