@@ -5,6 +5,10 @@ load("@aspect_rules_js//js:defs.bzl", "js_library")
 js_library(
     name = "pkg",
     srcs = [
+        # A typescript file is required to ensure types will exist within the `JsInfo(types)`
+        # that can be passed along the package linking chain. Otherwise no files will be copied
+        # into the sandbox for type-checking (even though tsc would pass if only the .js was there).
+        "index.d.ts",
         "index.js",
     ],
     visibility = ["//examples:__subpackages__"],

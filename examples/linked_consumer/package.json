@@ -3,6 +3,7 @@
     "private": true,
     "dependencies": {
         "@lib/test": "workspace:*",
-        "@lib/test2": "workspace:*"
+        "@lib/test2": "workspace:*",
+        "@myorg/lib_nocompile_linked": "workspace:*"
     }
 }

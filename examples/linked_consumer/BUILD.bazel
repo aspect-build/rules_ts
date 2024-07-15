@@ -22,3 +22,14 @@ js_test(
     ],
     entry_point = "test_pkg_deps_linked.js",
 )
+
+# References to non-compiling js_library packages should not force typechecking when
+# consumed by a js_test that does not require dts type information.
+js_test(
+    name = "pkg_no_typechecking",
+    data = [
+        ":node_modules/@myorg/lib_nocompile_linked",
+        "//examples:node_modules/@myorg/lib_nocompile",
+    ],
+    entry_point = "test_pkg_nocompile_linked.js",
+)
