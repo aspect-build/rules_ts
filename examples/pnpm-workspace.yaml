@@ -6,4 +6,5 @@ packages:
     - linked_empty_node_modules
     - linked_tsconfig
     - linked_tsconfig_consumer
+    - lib_nocompile_linked
     - proto_grpc
