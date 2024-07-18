@@ -55,38 +55,45 @@ def _use_dir_test_impl(ctx):
     # the inputs should *NOT* includes the sources from any deps or transitive deps;
     # only types from deps should be included as action inputs.
     action_inputs = target_under_test[OutputGroupInfo]._action_inputs.to_list()
+    action_inputs = sorted([f.path for f in action_inputs])
     asserts.equals(env, 3, len(action_inputs))
-    asserts.true(env, action_inputs[0].path.find("/dir.d.ts") != -1)
-    asserts.true(env, action_inputs[1].path.find("/use_dir.ts") != -1)
-    asserts.true(env, action_inputs[2].path.find("/tsconfig_use_dir.json") != -1)
+    asserts.true(env, action_inputs[0].find("/dir.d.ts") != -1)
+    asserts.true(env, action_inputs[1].find("/tsconfig_use_dir.json") != -1)
+    asserts.true(env, action_inputs[2].find("/use_dir.ts") != -1)
 
     # sources should contain the .js output
     sources = target_under_test[JsInfo].sources.to_list()
+    sources = sorted([f.path for f in sources])
     asserts.equals(env, 2, len(sources))
-    asserts.true(env, sources[0].path.find("/use_dir.js") != -1)
-    asserts.true(env, sources[1].path.find("/use_dir.js.map") != -1)
+    asserts.true(env, sources[0].find("/use_dir.js") != -1)
+    asserts.true(env, sources[1].find("/use_dir.js.map") != -1)
 
     # transitive_sources should contain the .js output
     transitive_sources = target_under_test[JsInfo].transitive_sources.to_list()
+    transitive_sources = sorted([f.path for f in transitive_sources])
     asserts.equals(env, 4, len(transitive_sources))
-    asserts.true(env, transitive_sources[0].path.find("/use_dir.js") != -1)
-    asserts.true(env, transitive_sources[1].path.find("/use_dir.js.map") != -1)
-    asserts.true(env, transitive_sources[2].path.find("/dir.js") != -1)
-    asserts.true(env, transitive_sources[3].path.find("/dir.js.map") != -1)
+    asserts.true(env, transitive_sources[0].find("/dir.js") != -1)
+    asserts.true(env, transitive_sources[1].find("/dir.js.map") != -1)
+    asserts.true(env, transitive_sources[2].find("/use_dir.js") != -1)
+    asserts.true(env, transitive_sources[3].find("/use_dir.js.map") != -1)
 
     # types should only have the source types
     types = target_under_test[JsInfo].types.to_list()
+    types = sorted([f.path for f in types])
     asserts.equals(env, 1, len(types))
-    asserts.true(env, types[0].path.find("/use_dir.d.ts") != -1)
+    asserts.true(env, types[0].find("/use_dir.d.ts") != -1)
 
     # transitive_types should have the source types and transitive types
     transitive_types = target_under_test[JsInfo].transitive_types.to_list()
+    transitive_types = sorted([f.path for f in transitive_types])
     asserts.equals(env, 2, len(transitive_types))
-    asserts.true(env, transitive_types[0].path.find("/use_dir.d.ts") != -1)
-    asserts.true(env, transitive_types[1].path.find("/dir.d.ts") != -1)
+    asserts.true(env, transitive_types[0].find("/dir.d.ts") != -1)
+    asserts.true(env, transitive_types[1].find("/use_dir.d.ts") != -1)
 
     # types OutputGroupInfo should be the same as types
-    asserts.equals(env, types, target_under_test[OutputGroupInfo].types.to_list())
+    types_group = target_under_test[OutputGroupInfo].types.to_list()
+    types_group = sorted([f.path for f in types_group])
+    asserts.equals(env, types, types_group)
 
     return analysistest.end(env)
 
