@@ -7,7 +7,8 @@ npm_link_all_packages(name = "node_modules")
 js_test(
     name = "direct",
     data = [
-        "//examples/linked:lib",
+        "//examples/linked_lib:lib",
+        "//examples/linked_pkg:lib",
     ],
     entry_point = "test_file_all_linked.js",
 )
@@ -17,6 +18,7 @@ js_test(
     name = "pkg",
     data = [
         ":node_modules/@lib/test",
+        ":node_modules/@lib/test2",
     ],
     entry_point = "test_pkg_deps_linked.js",
 )

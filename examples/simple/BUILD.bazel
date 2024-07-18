@@ -19,6 +19,7 @@ ts_project(
         # Two dependencies are linked from first-party code in this repo
         # by the npm_link_package calls in /examples/BUILD.bazel
         "//examples:node_modules/@myorg/js_lib",
+        "//examples:node_modules/@myorg/js_lib_pkg",
         "//examples:node_modules/@myorg/dts_lib",
         # Two dependencies are linked from third-party npm packages
         # by the npm_link_all_packages call in /examples/BUILD.bazel

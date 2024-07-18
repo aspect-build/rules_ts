@@ -85,7 +85,23 @@ importers:
         specifier: 18.11.9
         version: 18.11.9
 
-  linked:
+  linked_pkg:
+    dependencies:
+      '@aspect-test/e':
+        specifier: 1.0.0
+        version: 1.0.0
+      alias-e:
+        specifier: npm:@aspect-test/e
+        version: /@aspect-test/e@1.0.0
+    devDependencies:
+      '@aspect-test/f':
+        specifier: 1.0.0
+        version: 1.0.0
+      '@types/node':
+        specifier: 18.13.0
+        version: 18.13.0
+
+  linked_lib:
     dependencies:
       '@aspect-test/e':
         specifier: 1.0.0
@@ -105,7 +121,10 @@ importers:
     dependencies:
       '@lib/test':
         specifier: workspace:*
-        version: link:../linked
+        version: link:../linked_pkg
+      '@lib/test2':
+        specifier: workspace:*
+        version: link:../linked_lib
 
   linked_empty_node_modules: {}
 
