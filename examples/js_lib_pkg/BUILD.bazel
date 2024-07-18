@@ -1,0 +1,11 @@
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+
+# A package only using js_library() instead of npm_package()
+
+js_library(
+    name = "pkg",
+    srcs = [
+        "index.js",
+    ],
+    visibility = ["//examples:__subpackages__"],
+)

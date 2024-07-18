@@ -11,6 +11,14 @@ npm_link_package(
 )
 
 npm_link_package(
+    name = "node_modules/@myorg/js_lib_pkg",
+    src = "//examples/js_lib_pkg:pkg",
+    package = "@myorg/js_lib_pkg",
+    root_package = "examples",
+    visibility = ["//examples:__subpackages__"],
+)
+
+npm_link_package(
     name = "node_modules/@myorg/dts_lib",
     src = "//examples/dts_lib:pkg",
     root_package = "examples",
