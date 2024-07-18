@@ -2,8 +2,8 @@
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-ASPECT_WORKFLOWS_VERSION = "5.10.3"
-ASPECT_WORKFLOWS_ACTION_INTEGRITY = "sha256-dmPZsD44JlQ2udeDRJmMpxGiGOQL6PhwEdX71wNCfvk="
+ASPECT_WORKFLOWS_VERSION = "5.10.8"
+ASPECT_WORKFLOWS_ACTION_INTEGRITY = "sha256-+9msenI48vxjD5wFjaLwCXF8DIbnLIuMH/IQuz2oZDU="
 
 def aspect_workflows_github_actions_deps():
     "Fetch deps needed for Aspect Workflows on GitHub Actions"
