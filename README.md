@@ -71,3 +71,5 @@ ts_project attributes are well-formed.
 You can also write a custom rule from scratch. We expose helper functions from /ts/private in this
 repo. Be aware that these are not a public API, so you may have to account for breaking changes
 which aren't subject to our usual semver policy.
+
+FOOBAR
