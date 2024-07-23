@@ -7,10 +7,7 @@ load("@rules_proto//proto:proto_common.bzl", proto_toolchains = "toolchains")
 _PROTO_TOOLCHAIN_TYPE = "@rules_proto//proto:toolchain_type"
 
 # buildifier: disable=function-docstring-header
-def _protoc_action(ctx, proto_info, outputs, options = {
-    "keep_empty_files": True,
-    "target": "js+dts",
-}):
+def _protoc_action(ctx, proto_info, outputs):
     """Create an action like
     bazel-out/k8-opt-exec-2B5CBBC6/bin/external/com_google_protobuf/protoc $@' '' \
       '--plugin=protoc-gen-es=bazel-out/k8-opt-exec-2B5CBBC6/bin/plugin/bufbuild/protoc-gen-es.sh' \
@@ -20,6 +17,16 @@ def _protoc_action(ctx, proto_info, outputs, options = {
       example/person/person.proto
     """
     inputs = depset(proto_info.direct_sources, transitive = [proto_info.transitive_descriptor_sets])
+
+    options = dict({
+        "keep_empty_files": True,
+        "target": "js+dts",
+    }, **ctx.attr.protoc_gen_options)
+
+    if not options["keep_empty_files"]:
+        fail("protoc_gen_options.keep_empty_files must be True")
+    if options["target"] != "js+dts":
+        fail("protoc_gen_options.target must be 'js+dts'")
 
     args = ctx.actions.args()
     args.add_joined(["--plugin", "protoc-gen-es", ctx.executable.protoc_gen_es.path], join_with = "=")
@@ -104,6 +111,10 @@ ts_proto_library = rule(
             doc = "proto_library to generate JS/DTS for",
             providers = [ProtoInfo],
             mandatory = True,
+        ),
+        "protoc_gen_options": attr.string_dict(
+            doc = "dict of protoc_gen_es options",
+            default = {},
         ),
         "protoc_gen_es": attr.label(
             doc = "protoc plugin to generate messages",
