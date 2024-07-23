@@ -1,8 +1,6 @@
 "Private implementation details for ts_proto_library"
 
 load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "COPY_FILE_TO_BIN_TOOLCHAINS")
-load("@aspect_rules_js//js:libs.bzl", "js_lib_helpers")
-load("@aspect_rules_js//js:providers.bzl", "JsInfo", "js_info")
 load("@rules_proto//proto:defs.bzl", "ProtoInfo", "proto_common")
 load("@rules_proto//proto:proto_common.bzl", proto_toolchains = "toolchains")
 
@@ -81,42 +79,15 @@ def _ts_proto_library_impl(ctx):
 
     _protoc_action(ctx, info, js_outs + dts_outs)
 
-    direct_srcs = depset(js_outs)
-    direct_decls = depset(dts_outs)
-
     return [
         DefaultInfo(
-            files = direct_srcs,
-            runfiles = js_lib_helpers.gather_runfiles(
-                ctx = ctx,
-                sources = direct_srcs,
-                data = [],
-                deps = ctx.attr.deps,
-            ),
-        ),
-        OutputGroupInfo(types = direct_decls),
-        js_info(
-            target = ctx.label,
-            types = direct_decls,
-            sources = direct_srcs,
-            transitive_types = js_lib_helpers.gather_transitive_types(
-                types = dts_outs,
-                targets = ctx.attr.deps,
-            ),
-            transitive_sources = js_lib_helpers.gather_transitive_sources(
-                sources = js_outs,
-                targets = ctx.attr.deps,
-            ),
+            files = depset(js_outs + dts_outs),
         ),
     ]
 
 ts_proto_library = rule(
     implementation = _ts_proto_library_impl,
     attrs = dict({
-        "deps": attr.label_list(
-            providers = [JsInfo],
-            doc = "Other ts_proto_library rules. TODO: could we collect them with an aspect",
-        ),
         "gen_connect_es": attr.bool(
             doc = "whether to generate service stubs with gen-connect-es",
             default = True,
