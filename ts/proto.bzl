@@ -44,10 +44,10 @@ Future work
 load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
 load("@aspect_bazel_lib//lib:directory_path.bzl", "directory_path", "make_directory_path")
 load("@aspect_bazel_lib//lib:write_source_files.bzl", "write_source_files")
-load("@aspect_rules_js//js:defs.bzl", "js_binary")
+load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library")
 load("//ts/private:ts_proto_library.bzl", ts_proto_library_rule = "ts_proto_library")
 
-def ts_proto_library(name, node_modules, gen_connect_es = True, gen_connect_query = False, gen_connect_query_service_mapping = {}, copy_files = True, proto_srcs = None, files_to_copy = None, **kwargs):
+def ts_proto_library(name, node_modules, proto, gen_connect_es = True, gen_connect_query = False, gen_connect_query_service_mapping = {}, copy_files = True, proto_srcs = None, files_to_copy = None, **kwargs):
     """
     A macro to generate JavaScript code and TypeScript typings from .proto files.
 
@@ -57,6 +57,7 @@ def ts_proto_library(name, node_modules, gen_connect_es = True, gen_connect_quer
             Since the generated code depends on @bufbuild/protobuf, this package must also be linked.
             If `gen_connect_es = True` then @bufbuild/proto-gen-connect-es should be linked as well.
             If `gen_connect_query = True` then @bufbuild/proto-gen-connect-query should be linked as well.
+        proto: the `proto_library` target that contains the .proto files to generate code for.
         gen_connect_es: whether protoc_gen_connect_es should generate grpc services, and therefore `*_connect.{js,d.ts}` should be written.
         gen_connect_query: whether protoc_gen_connect_query should generate [TanStack Query](https://tanstack.com/query) clients, and therefore `*_connectquery.{js,d.ts}` should be written.
         gen_connect_query_service_mapping: mapping from source proto file to the named RPC services that file contains.
@@ -121,16 +122,24 @@ def ts_proto_library(name, node_modules, gen_connect_es = True, gen_connect_quer
             entry_point = protoc_gen_connect_query_entry,
         )
 
+    protoc_target = "_{}_protoc".format(name)
     ts_proto_library_rule(
-        name = name,
+        name = protoc_target,
         protoc_gen_es = protoc_gen_es_target,
         protoc_gen_connect_es = protoc_gen_connect_es_target,
         protoc_gen_connect_query = protoc_gen_connect_query_target,
-        # The codegen always has a runtime dependency on the protobuf runtime
-        deps = kwargs.pop("deps", []) + [node_modules + "/@bufbuild/protobuf"],
         gen_connect_es = gen_connect_es,
         gen_connect_query = gen_connect_query,
         gen_connect_query_service_mapping = gen_connect_query_service_mapping,
+        proto = proto,
+    )
+
+    js_library(
+        name = name,
+        srcs = [":{}".format(protoc_target)],
+        # The codegen always has a runtime dependency on the protobuf runtime
+        # TODO: could we collect them with an aspect?
+        deps = kwargs.pop("deps", []) + [node_modules + "/@bufbuild/protobuf"],
         **kwargs
     )
 
