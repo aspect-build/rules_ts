@@ -13,8 +13,8 @@ ts_project(
     declaration = True,
     validate = False,
     deps = [
-        "//examples/dts_lib:lib",
-        "//examples/js_lib:lib",
+        "//examples/dts_pkg:lib",
+        "//examples/js_pkg:lib",
     ],
 )
 

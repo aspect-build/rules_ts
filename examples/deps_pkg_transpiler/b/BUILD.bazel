@@ -6,6 +6,6 @@ ts_project(
     srcs = ["index.ts"],
     declaration = True,
     transpiler = babel,
-    tsconfig = "//examples/deps_lib_transpiler:tsconfig",
-    visibility = ["//examples/deps_lib_transpiler:__subpackages__"],
+    tsconfig = "//examples/deps_pkg_transpiler:tsconfig",
+    visibility = ["//examples/deps_pkg_transpiler:__subpackages__"],
 )
