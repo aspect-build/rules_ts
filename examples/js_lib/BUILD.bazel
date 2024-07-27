@@ -1,17 +1,15 @@
 load("@aspect_rules_js//js:defs.bzl", "js_library")
-load("@aspect_rules_js//npm:defs.bzl", "npm_package")
 
-npm_package(
-    name = "pkg",
-    srcs = ["index.js"],
-    package = "@myorg/js_lib",
-    visibility = ["//examples:__subpackages__"],
-)
+# A package only using js_library() instead of npm_package()
 
 js_library(
-    name = "lib",
-    # Provide index.js as types available to downstream type checking rules
-    # since it has no corresponding .d.ts file.
-    types = ["index.js"],
+    name = "pkg",
+    srcs = [
+        # A typescript file is required to ensure types will exist within the `JsInfo(types)`
+        # that can be passed along the package linking chain. Otherwise no files will be copied
+        # into the sandbox for type-checking (even though tsc would pass if only the .js was there).
+        "index.d.ts",
+        "index.js",
+    ],
     visibility = ["//examples:__subpackages__"],
 )

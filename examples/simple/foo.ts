@@ -1,6 +1,6 @@
-import num from '@myorg/js_lib'
-import num2 from '@myorg/js_lib_pkg'
-import { A } from '@myorg/dts_lib'
+import num from '@myorg/js_pkg'
+import num2 from '@myorg/js_lib'
+import { A } from '@myorg/dts_pkg'
 import { format } from 'date-fns'
 
 export const a: A = 123

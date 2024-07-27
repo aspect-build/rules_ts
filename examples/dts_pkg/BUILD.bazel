@@ -16,7 +16,7 @@ ts_project(
 npm_package(
     name = "pkg",
     srcs = [":lib"],
-    package = "@myorg/dts_lib",
+    package = "@myorg/dts_pkg",
     visibility = ["//examples:__subpackages__"],
 )
 
@@ -34,7 +34,7 @@ ts_project(
     srcs = ["importer_linked.ts"],
     declaration = True,
     deps = [
-        "//examples:node_modules/@myorg/dts_lib",
+        "//examples:node_modules/@myorg/dts_pkg",
     ],
 )
 

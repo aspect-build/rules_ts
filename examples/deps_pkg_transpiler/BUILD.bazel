@@ -1,5 +1,6 @@
 load("@aspect_rules_js//npm:defs.bzl", "npm_package")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
+load("//examples/transpiler:babel.bzl", "babel")
 
 ts_config(
     name = "tsconfig",
@@ -16,9 +17,10 @@ ts_project(
         "//examples:node_modules/date-fns",
     ],
     declaration = True,
+    transpiler = babel,
     deps = [
         "//examples:node_modules/date-fns",
-        "//examples/deps_lib/b",
+        "//examples/deps_pkg_transpiler/b",
     ],
 )
 
@@ -27,7 +29,7 @@ npm_package(
     srcs = [
         ":lib",
     ],
-    package = "@myorg/deps_lib",
+    package = "@myorg/deps_pkg_transpiler",
     visibility = ["//examples:__subpackages__"],
 )
 
@@ -35,6 +37,7 @@ ts_project(
     name = "importer_rel_ts",
     srcs = ["importer_rel.ts"],
     declaration = True,
+    transpiler = babel,
     deps = [
         ":lib",
     ],
@@ -44,7 +47,8 @@ ts_project(
     name = "importer_linked_ts",
     srcs = ["importer_linked.ts"],
     declaration = True,
+    transpiler = babel,
     deps = [
-        "//examples:node_modules/@myorg/deps_lib",
+        "//examples:node_modules/@myorg/deps_pkg_transpiler",
     ],
 )

@@ -4,6 +4,6 @@ ts_project(
     name = "b",
     srcs = ["index.ts"],
     declaration = True,
-    tsconfig = "//examples/deps_lib:tsconfig",
-    visibility = ["//examples/deps_lib:__subpackages__"],
+    tsconfig = "//examples/deps_pkg:tsconfig",
+    visibility = ["//examples/deps_pkg:__subpackages__"],
 )
