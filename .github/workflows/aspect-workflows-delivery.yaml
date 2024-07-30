@@ -38,7 +38,7 @@ jobs:
             - name: Agent health check
               run: ${ASPECT_WORKFLOWS_BIN_DIR}/agent_health_check
             - name: Run delivery
-              uses: aspect-build/workflows-action@5.10.11
+              uses: aspect-build/workflows-action@5.10.12
               with:
                   task: delivery
                   workspace: ${{ inputs.workspace }}
