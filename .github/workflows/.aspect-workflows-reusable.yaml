@@ -73,6 +73,7 @@ jobs:
       - uses: actions/checkout@v4
       - id: rosetta-generate
         run: |
+          env
           ROSETTA_RESULT=$( \
             rosetta steps \
             --config ${{ inputs.aspect-config }} \
