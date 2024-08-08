@@ -11,7 +11,7 @@ Transpilation is mostly "erase the type syntax" and can be done well by a variet
 - Development activities which rely only on runtime code, like running tests or manually verifying behavior in a devserver, should not need to wait on type-checking.
 - Type-checking still needs to be verified before checking in the code, but only needs to be as fast as a typical test.
 
-Read more: https://blog.aspect.dev/typescript-speedup
+Read more: https://blog.aspect.build/typescript-speedup
 
 ## ts_project#transpiler
 
