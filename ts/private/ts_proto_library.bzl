@@ -7,7 +7,7 @@ load("@rules_proto//proto:proto_common.bzl", proto_toolchains = "toolchains")
 
 _PROTO_TOOLCHAIN_TYPE = "@rules_proto//proto:toolchain_type"
 
-def _windows_path_normalize(ctx, path):
+def _windows_path_normalize(path):
     """Changes forward slashs to backslashs for Windows paths."""
     host_is_windows = platform_utils.host_platform_is_windows()
     if host_is_windows:
@@ -37,19 +37,19 @@ def _protoc_action(ctx, proto_info, outputs):
         fail("protoc_gen_options.target must be 'js+dts'")
 
     args = ctx.actions.args()
-    args.add_joined(["--plugin", "protoc-gen-es", _windows_path_normalize(ctx, ctx.executable.protoc_gen_es.path)], join_with = "=")
+    args.add_joined(["--plugin", "protoc-gen-es", _windows_path_normalize(ctx.executable.protoc_gen_es.path)], join_with = "=")
     for (key, value) in options.items():
         args.add_joined(["--es_opt", key, value], join_with = "=")
     args.add_joined(["--es_out", ctx.bin_dir.path], join_with = "=")
 
     if ctx.attr.gen_connect_es:
-        args.add_joined(["--plugin", "protoc-gen-connect-es", _windows_path_normalize(ctx, ctx.executable.protoc_gen_connect_es.path)], join_with = "=")
+        args.add_joined(["--plugin", "protoc-gen-connect-es", _windows_path_normalize(ctx.executable.protoc_gen_connect_es.path)], join_with = "=")
         for (key, value) in options.items():
             args.add_joined(["--connect-es_opt", key, value], join_with = "=")
         args.add_joined(["--connect-es_out", ctx.bin_dir.path], join_with = "=")
 
     if ctx.attr.gen_connect_query:
-        args.add_joined(["--plugin", "protoc-gen-connect-query", _windows_path_normalize(ctx, ctx.executable.protoc_gen_connect_query.path)], join_with = "=")
+        args.add_joined(["--plugin", "protoc-gen-connect-query", _windows_path_normalize(ctx.executable.protoc_gen_connect_query.path)], join_with = "=")
         for (key, value) in options.items():
             args.add_joined(["--connect-query_opt", key, value], join_with = "=")
         args.add_joined(["--connect-query_out", ctx.bin_dir.path], join_with = "=")
