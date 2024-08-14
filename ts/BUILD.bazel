@@ -188,6 +188,7 @@ bzl_library(
         "//ts/private:ts_proto_library",
         "@aspect_bazel_lib//lib:copy_to_directory",
         "@aspect_bazel_lib//lib:directory_path",
+        "@aspect_bazel_lib//lib:platform_utils",
         "@aspect_bazel_lib//lib:write_source_files",
         "@aspect_rules_js//js:defs",
         "@aspect_rules_js//js:libs",
