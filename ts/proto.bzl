@@ -88,7 +88,10 @@ def ts_proto_library(name, node_modules, proto, protoc_gen_options = {}, gen_con
     )
     js_binary(
         name = protoc_gen_es_target,
-        data = [node_modules + "/@bufbuild/protoc-gen-es"],
+        data = [
+            node_modules + "/@bufbuild/protoc-gen-es",
+            node_modules + "/@bufbuild/protobuf",
+        ],
         entry_point = protoc_gen_es_entry,
     )
 
