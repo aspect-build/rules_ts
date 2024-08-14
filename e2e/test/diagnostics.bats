@@ -13,23 +13,22 @@ teardown() {
     workspace
     ts_project --src "source.ts"
     tsconfig
-    echo 'const t: string = 1' > source.ts 
+    echo 'const t: string = 1' >source.ts
     run bazel build :foo
     assert_failure
     assert_output -p "source.ts(1,7): error TS2322: Type 'number' is not assignable to type 'string'" "FAILED: Build did NOT complete successfully"
 }
 
-
 @test 'should stop reporting diagnostics' {
     workspace
     ts_project --src "source.ts"
     tsconfig
-    echo 'const t: string;' > source.ts 
+    echo 'const t: string;' >source.ts
     run bazel build :foo
     assert_failure
     assert_output -p "source.ts(1,7): error TS1155: 'const' declarations must be initialized."
 
-    echo 'const t: string = "";' > source.ts 
+    echo 'const t: string = "";' >source.ts
     run bazel build :foo
     assert_success
     refute_output -p "error"
@@ -39,9 +38,9 @@ teardown() {
     workspace
     ts_project --src "source.ts" --src "to_be_removed.ts"
     tsconfig
-    echo 'let t: string;' > source.ts 
-    echo 'const t2: string;' > to_be_removed.ts 
-    
+    echo 'let t: string;' >source.ts
+    echo 'const t2: string;' >to_be_removed.ts
+
     run bazel build :foo
     assert_failure
     assert_output -p "to_be_removed.ts(1,7): error TS1155: 'const' declarations must be initialized."
@@ -57,8 +56,8 @@ teardown() {
     workspace
     ts_project --src "source.ts"
     tsconfig
-    echo 'export function t(a) { return typeof a != "string" }' > source.ts
-    
+    echo 'export function t(a) { return typeof a != "string" }' >source.ts
+
     run bazel build :foo
     assert_success
     refute_output -p "error"
