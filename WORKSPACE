@@ -27,13 +27,6 @@ nodejs_register_toolchains(
     node_version = "18.12.0",
 )
 
-load("@aspect_rules_swc//swc:repositories.bzl", "LATEST_SWC_VERSION", "swc_register_toolchains")
-
-swc_register_toolchains(
-    name = "swc",
-    swc_version = LATEST_SWC_VERSION,
-)
-
 # For running our own unit tests
 load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
 
