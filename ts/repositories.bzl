@@ -37,9 +37,9 @@ def rules_ts_bazel_dependencies():
 
     http_archive(
         name = "aspect_rules_js",
-        sha256 = "c1c33715f459d112b53b2bb15fd53a738824c6d331a181abe33fe0ef2a2c3f1f",
-        strip_prefix = "rules_js-2.0.0-rc8",
-        url = "https://github.com/aspect-build/rules_js/releases/download/v2.0.0-rc8/rules_js-v2.0.0-rc8.tar.gz",
+        sha256 = "6b7e73c35b97615a09281090da3645d9f03b2a09e8caa791377ad9022c88e2e6",
+        strip_prefix = "rules_js-2.0.0",
+        url = "https://github.com/aspect-build/rules_js/releases/download/v2.0.0/rules_js-v2.0.0.tar.gz",
     )
 
     http_archive(
