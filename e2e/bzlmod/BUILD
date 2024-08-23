@@ -31,20 +31,6 @@ ts_project(
     },
 )
 
-# Demonstrate how to use a different typescript where required
-# Picks up TypeScript 3.9.9 defined in MODULE.bazel
-ts_project(
-    name = "ts3",
-    srcs = ["foo.ts"],
-    extends = "tsconfig.json",
-    out_dir = "ts3_out",
-    transpiler = "tsc",
-    tsc = "@npm_typescript3//:tsc",
-    tsconfig = {
-        "extends": "tsconfig.json",
-    },
-)
-
 build_test(
     name = "test",
     targets = [":ts"],
