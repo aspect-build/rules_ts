@@ -16,4 +16,10 @@ bazel_dep(name = "bazel_skylib", version = "1.5.0", dev_dependency = True)
 
 rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext", dev_dependency = True)
 rules_ts_ext.deps()
-use_repo(rules_ts_ext, "npm_typescript")
+
+# Example demonstrating that you can also have a second typescript version
+rules_ts_ext.deps(
+    name = "npm_typescript3",
+    ts_version = "3.9.9",
+)
+use_repo(rules_ts_ext, "npm_typescript", "npm_typescript3")

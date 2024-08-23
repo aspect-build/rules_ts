@@ -12,6 +12,16 @@ ts_project(
     visibility = ["//visibility:public"],
 )
 
+# Demonstrate how to use a different typescript where required
+# Picks up TypeScript 3.9.9 defined in MODULE.bazel
+ts_project(
+    name = "lib.ts3",
+    srcs = ["lib.ts"],
+    composite = True,
+    out_dir = "ts3_out",
+    tsc = "@npm_typescript3//:tsc",
+)
+
 build_test(
     name = "test",
     targets = [":lib"],
