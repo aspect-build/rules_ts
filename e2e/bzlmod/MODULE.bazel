@@ -23,4 +23,10 @@ rules_ts_ext.deps(
     # This keeps the TypeScript version in-sync with the editor, which is typically best.
     ts_version_from = "//:package.json",
 )
-use_repo(rules_ts_ext, "npm_typescript")
+
+# Example demonstrating that you can also have a second typescript version
+rules_ts_ext.deps(
+    name = "npm_typescript3",
+    ts_version = "3.9.9",
+)
+use_repo(rules_ts_ext, "npm_typescript", "npm_typescript3")

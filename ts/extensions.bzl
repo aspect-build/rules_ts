@@ -12,6 +12,7 @@ def _extension_impl(module_ctx):
             if not ts_version and not attr.ts_version_from:
                 ts_version = LATEST_TYPESCRIPT_VERSION
             npm_dependencies(
+                name = attr.name,
                 ts_version = ts_version,
                 ts_version_from = attr.ts_version_from,
                 ts_integrity = attr.ts_integrity,
@@ -22,6 +23,7 @@ ext = module_extension(
     implementation = _extension_impl,
     tag_classes = {
         "deps": tag_class(attrs = {
+            "name": attr.string(default = "npm_typescript"),
             "ts_version": attr.string(),
             "ts_version_from": attr.label(),
             "ts_integrity": attr.string(),
