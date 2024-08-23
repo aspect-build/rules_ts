@@ -7,6 +7,11 @@ load("@aspect_rules_ts//ts:repositories.bzl", "LATEST_TYPESCRIPT_VERSION", "rule
 
 rules_ts_dependencies(ts_version = LATEST_TYPESCRIPT_VERSION)
 
+rules_ts_dependencies(
+    name = "npm_typescript3",
+    ts_version = "3.9.9",
+)
+
 load("@aspect_rules_js//js:repositories.bzl", "rules_js_dependencies")
 
 rules_js_dependencies()

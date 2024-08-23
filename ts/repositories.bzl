@@ -49,12 +49,13 @@ def rules_ts_bazel_dependencies():
         url = "https://github.com/bazelbuild/rules_nodejs/releases/download/v6.2.0/rules_nodejs-v6.2.0.tar.gz",
     )
 
-def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrity = None):
+def rules_ts_dependencies(name = "npm_typescript", ts_version_from = None, ts_version = None, ts_integrity = None):
     """Dependencies needed by users of rules_ts.
 
     To skip fetching the typescript package, call `rules_ts_bazel_dependencies` instead.
 
     Args:
+        name: name of the resulting external repository containing the TypeScript compiler.
         ts_version_from: label of a json file which declares a typescript version.
 
             This may be a `package.json` file, with "typescript" in the dependencies or
@@ -76,6 +77,7 @@ def rules_ts_dependencies(ts_version_from = None, ts_version = None, ts_integrit
     rules_ts_bazel_dependencies()
 
     npm_dependencies(
+        name = name,
         ts_version_from = ts_version_from,
         ts_version = ts_version,
         ts_integrity = ts_integrity,

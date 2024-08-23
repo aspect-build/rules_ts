@@ -9,6 +9,7 @@ ts_project(
     # Composite to also check the location of .tsbuildinfo
     # https://github.com/aspect-build/rules_ts/issues/329
     composite = True,
+    tsc = "@npm_typescript3//:tsc",
     visibility = ["//visibility:public"],
 )
 
