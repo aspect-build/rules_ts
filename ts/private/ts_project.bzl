@@ -48,6 +48,11 @@ def _ts_project_impl(ctx):
 
     # Gather TsConfig info from both the direct (tsconfig) and indirect (extends) attribute
     tsconfig_inputs = copy_files_to_bin_actions(ctx, _validate_lib.tsconfig_inputs(ctx).to_list())
+    tsconfig_transitive_deps = [
+        dep[TsConfigInfo].deps
+        for dep in ctx.attr.deps
+        if TsConfigInfo in dep
+    ]
 
     srcs = [_lib.relative_to_package(src.path, ctx) for src in srcs_inputs]
 
@@ -130,18 +135,16 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             declaration_dir,
         ])
 
-    inputs = srcs_inputs[:]
+    inputs = srcs_inputs + tsconfig_inputs
+
     transitive_inputs = []
-    for dep in ctx.attr.deps:
+    if ctx.attr.composite:
         # When TypeScript builds a composite project, our compilation will want to read the tsconfig.json of
         # composite projects we reference.
         # Otherwise we'd get an error like
         # examples/project_references/lib_b/tsconfig.json(5,9): error TS6053:
         # File 'execroot/aspect_rules_ts/bazel-out/k8-fastbuild/bin/examples/project_references/lib_a/tsconfig.json' not found.
-        if ctx.attr.composite and TsConfigInfo in dep:
-            transitive_inputs.append(dep[TsConfigInfo].deps)
-
-    inputs.extend(tsconfig_inputs)
+        transitive_inputs.extend(tsconfig_transitive_deps)
 
     assets_outs = []
     for a in ctx.files.assets:
@@ -218,7 +221,7 @@ This is an error because Bazel does not run actions unless their outputs are nee
     if ctx.attr.transpile != 0:
         # Special case case where there are no source outputs and we don't have a custom
         # transpiler so we add output_types to the default outputs
-        default_outputs = output_sources[:] if len(output_sources) else output_types[:]
+        default_outputs = output_sources if len(output_sources) else output_types
     else:
         # We must avoid tsc writing any JS files in this case, as tsc was only run for typings, and some other
         # action will try to write the JS files. We must avoid collisions where two actions write the same file.
@@ -228,11 +231,15 @@ This is an error because Bazel does not run actions unless their outputs are nee
         # unless the output_types are requested.
         default_outputs = []
 
+    srcs_tsconfig_deps = ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps
+
     inputs_depset = depset()
     if len(outputs) > 0:
+        transitive_inputs.append(_gather_types_from_js_infos(srcs_tsconfig_deps))
+
         inputs_depset = depset(
             copy_files_to_bin_actions(ctx, inputs),
-            transitive = transitive_inputs + [_gather_types_from_js_infos(ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps)],
+            transitive = transitive_inputs,
         )
 
         if ctx.attr.transpile != 0 and not ctx.attr.emit_declaration_only:
@@ -264,9 +271,9 @@ This is an error because Bazel does not run actions unless their outputs are nee
             },
         )
 
-    transitive_sources = js_lib_helpers.gather_transitive_sources(output_sources, ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps)
+    transitive_sources = js_lib_helpers.gather_transitive_sources(output_sources, srcs_tsconfig_deps)
 
-    transitive_types = js_lib_helpers.gather_transitive_types(output_types, ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps)
+    transitive_types = js_lib_helpers.gather_transitive_types(output_types, srcs_tsconfig_deps)
 
     npm_sources = js_lib_helpers.gather_npm_sources(
         srcs = ctx.attr.srcs + [ctx.attr.tsconfig],
@@ -284,7 +291,7 @@ This is an error because Bazel does not run actions unless their outputs are nee
         ctx = ctx,
         sources = output_sources_depset,
         data = ctx.attr.data,
-        deps = ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps,
+        deps = srcs_tsconfig_deps,
     )
 
     providers = [
@@ -301,11 +308,7 @@ This is an error because Bazel does not run actions unless their outputs are nee
             npm_sources = npm_sources,
             npm_package_store_infos = npm_package_store_infos,
         ),
-        TsConfigInfo(deps = depset(tsconfig_inputs, transitive = [
-            dep[TsConfigInfo].deps
-            for dep in ctx.attr.deps
-            if TsConfigInfo in dep
-        ])),
+        TsConfigInfo(deps = depset(tsconfig_inputs, transitive = tsconfig_transitive_deps)),
         OutputGroupInfo(
             types = output_types_depset,
             # make the inputs to the tsc action available for analysis testing
