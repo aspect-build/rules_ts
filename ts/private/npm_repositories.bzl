@@ -28,9 +28,6 @@ def _http_archive_version_impl(rctx):
             ts = p["dependencies"]["typescript"]
         else:
             fail("key 'typescript' not found in either dependencies or devDependencies of %s" % json_path)
-        if any([not seg.isdigit() for seg in ts.split(".")]):
-            fail("""typescript version in package.json must be exactly specified, not a semver range: %s.
-            You can supply an exact 'ts_version' attribute to 'rules_ts_dependencies' to bypass this check.""" % ts)
         version = ts
 
     if integrity:
@@ -42,6 +39,7 @@ def _http_archive_version_impl(rctx):
     else:
         fail("""typescript version {} is not mirrored in rules_ts, is this a real version?
             If so, you must manually set 'ts_integrity'.
+            If this is a semver range you must specify an exact version instead.
             See documentation on rules_ts_dependencies.""".format(version))
 
     rctx.download_and_extract(
