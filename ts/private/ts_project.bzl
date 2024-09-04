@@ -213,6 +213,10 @@ This might be because
 This is an error because Bazel does not run actions unless their outputs are needed for the requested targets to build.
 """)
 
+    # Make sure the user has acknowledged that transpiling is slow
+    if len(outputs) > 0 and ctx.attr.transpile == -1 and not ctx.attr.emit_declaration_only and not options.default_to_tsc_transpiler:
+        fail(transpiler_selection_required)
+
     output_types = typings_outs + typing_maps_outs + typings_srcs
 
     # Default outputs (DefaultInfo files) is what you see on the command-line for a built
@@ -243,9 +247,6 @@ This is an error because Bazel does not run actions unless their outputs are nee
         )
 
         if ctx.attr.transpile != 0 and not ctx.attr.emit_declaration_only:
-            # Make sure the user has acknowledged that transpiling is slow
-            if ctx.attr.transpile == -1 and not options.default_to_tsc_transpiler:
-                fail(transpiler_selection_required)
             if ctx.attr.declaration:
                 verb = "Transpiling & type-checking"
             else:
