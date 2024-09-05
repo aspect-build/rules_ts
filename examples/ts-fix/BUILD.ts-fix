@@ -1,8 +1,12 @@
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@microsoft_ts_fix__deps//:defs.bzl", "npm_link_all_packages")
+
+npm_link_all_packages()
 
 ts_project(
     name = "ts-fix",
     srcs = glob(["src/*.ts"]),
+    deps = [":node_modules"],
     source_map = True,
     declaration = True,
 )

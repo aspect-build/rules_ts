@@ -76,7 +76,14 @@ http_archive(
     build_file = "//examples/ts-fix:BUILD.ts-fix",
     integrity = "sha256-P0T3gsOl34pi8Nz6KvXtsgeaJnviivBL5V0992yzX5g=",
     patch_args = ["-p0"],
-    patches = ["//examples/ts-fix:patch"],
+    patches = ["//examples/ts-fix:ts-fix.patch"],
     strip_prefix = "ts-fix-9a4839d1a081a51f037155d4ad91a0e4489ca3f3",
     url = "https://github.com/microsoft/ts-fix/archive/9a4839d1a081a51f037155d4ad91a0e4489ca3f3.zip",
 )
+
+npm.npm_translate_lock(
+    name = "microsoft_ts_fix__deps",
+    npm_package_lock = "@microsoft_ts_fix//:package-lock.json",
+    pnpm_lock = "//examples/ts-fix:pnpm-lock.yaml",
+)
+use_repo(npm, "microsoft_ts_fix__deps")
