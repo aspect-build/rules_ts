@@ -39,6 +39,7 @@ def _http_archive_version_impl(rctx):
     else:
         fail("""typescript version {} is not mirrored in rules_ts, is this a real version?
             If so, you must manually set 'ts_integrity'.
+            If this is a semver range you must specify an exact version instead.
             See documentation on rules_ts_dependencies.""".format(version))
 
     rctx.download_and_extract(
