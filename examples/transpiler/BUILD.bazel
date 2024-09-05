@@ -30,7 +30,10 @@ ts_project(
     transpiler = babel,
 )
 
-# Transpiler with no dts being omitted
+# Runs babel to transpile ts -> js
+# and does not produce any declaration outputs.
+# `tsc` is used for type-check only, as a validation action
+# (run bazel with --norun_validations to skip typechecking)
 ts_project(
     name = "no-emit",
     srcs = ["big.ts"],
