@@ -1,0 +1,8 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "ts-fix",
+    srcs = glob(["src/*.ts"]),
+    source_map = True,
+    declaration = True,
+)

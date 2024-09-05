@@ -68,3 +68,15 @@ use_repo(
     go_sdk,
     go_sdk = "go_default_sdk",
 )
+
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+    name = "microsoft_ts_fix",
+    build_file = "//examples/ts-fix:BUILD.ts-fix",
+    integrity = "sha256-P0T3gsOl34pi8Nz6KvXtsgeaJnviivBL5V0992yzX5g=",
+    patch_args = ["-p0"],
+    patches = ["//examples/ts-fix:patch"],
+    strip_prefix = "ts-fix-9a4839d1a081a51f037155d4ad91a0e4489ca3f3",
+    url = "https://github.com/microsoft/ts-fix/archive/9a4839d1a081a51f037155d4ad91a0e4489ca3f3.zip",
+)
