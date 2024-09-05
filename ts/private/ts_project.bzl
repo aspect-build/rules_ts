@@ -238,45 +238,32 @@ This is an error because Bazel does not run actions unless their outputs are nee
 
     srcs_tsconfig_deps = ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps
 
-    transitive_inputs.append(_gather_types_from_js_infos(srcs_tsconfig_deps))
-
-    inputs_depset = depset(
-        copy_files_to_bin_actions(ctx, inputs),
-        transitive = transitive_inputs,
-    )
+    stdout_file = ""
 
     if ctx.attr.no_emit:
-        verb = "Type-checking"
-
         # Validation actions still need to produce some output, so we output the stdout
         # to a .validation file that ends up in the _validation output group.
         validation_output = ctx.actions.declare_file(ctx.attr.name + ".validation")
         validation_outs.append(validation_output)
 
+        outputs.append(validation_output)
+        stdout_file = validation_output.path
+
         if supports_workers:
             arguments.add_all(["--bazelValidationFile", validation_output.short_path])
 
-        ctx.actions.run_shell(
-            command = "{} $@".format(executable.path),
-            tools = [executable],
-            inputs = inputs_depset,
-            arguments = [arguments, "--noEmit"],
-            outputs = outputs + [validation_output],
-            mnemonic = "TsProject",
-            execution_requirements = execution_requirements,
-            resource_set = resource_set(ctx.attr),
-            progress_message = "%s TypeScript project %s [tsc -p %s]" % (
-                verb,
-                ctx.label,
-                tsconfig_path,
-            ),
-            env = {
-                "BAZEL_BINDIR": ctx.bin_dir.path,
-                "JS_BINARY__STDOUT_OUTPUT_FILE": validation_output.path,
-            },
+        arguments.add("--noEmit")
+
+    inputs_depset = depset()
+    if len(outputs) > 0:
+        transitive_inputs.append(_gather_types_from_js_infos(srcs_tsconfig_deps))
+
+        inputs_depset = depset(
+            copy_files_to_bin_actions(ctx, inputs),
+            transitive = transitive_inputs,
         )
-    elif len(outputs) > 0:
-        if ctx.attr.transpile != 0 and not ctx.attr.emit_declaration_only:
+
+        if ctx.attr.transpile != 0 and not ctx.attr.emit_declaration_only and not ctx.attr.no_emit:
             if ctx.attr.declaration:
                 verb = "Transpiling & type-checking"
             else:
@@ -299,6 +286,7 @@ This is an error because Bazel does not run actions unless their outputs are nee
             ),
             env = {
                 "BAZEL_BINDIR": ctx.bin_dir.path,
+                "JS_BINARY__STDOUT_OUTPUT_FILE": stdout_file,
             },
         )
 
