@@ -1,1 +1,2 @@
-const a: number = 'a-string'
+// Ensure importing from .js works
+export * from './lib'
