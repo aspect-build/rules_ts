@@ -248,8 +248,8 @@ This is an error because Bazel does not run actions unless their outputs are nee
     if ctx.attr.no_emit:
         verb = "Type-checking"
 
-        # Validation actions still need to produce some output, so we output a .validation file
-        # that ends up in the _validation output group.
+        # Validation actions still need to produce some output, so we output the stdout
+        # to a .validation file that ends up in the _validation output group.
         validation_output = ctx.actions.declare_file(ctx.attr.name + ".validation")
         validation_outs.append(validation_output)
 
