@@ -187,9 +187,9 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             no_outs_msg = """ts_project target {target} only has typings in srcs.
 Since there is no `tsc` action to perform, there are no generated outputs.
 
-> ts_project doesn't support "typecheck-only"; see https://github.com/aspect-build/rules_ts/issues/88
+For "typecheck-only" the TypeScript 'noEmit' feature can be used.
 
-This should be changed to js_library, which can be done by running:
+For grouping typings this should be changed to js_library, which can be done by running:
 
     buildozer 'new_load @aspect_rules_js//js:defs.bzl js_library' //{pkg}:__pkg__
     buildozer 'set kind js_library' {target}
