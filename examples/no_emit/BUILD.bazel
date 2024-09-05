@@ -9,8 +9,12 @@ write_file(
     ],
 )
 
+# Shows how to run `tsc` producing no outputs at all.
+# It will use a validation action to type-check the file:
+# https://bazel.build/extending/rules#validation_actions
+# Run bazel with --norun_validations to skip type-checking.
 ts_project(
-    name = "no-emit",
+    name = "typecheck_only",
     srcs = ["a.ts"],
     no_emit = True,
 )
