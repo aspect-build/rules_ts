@@ -271,6 +271,13 @@ This is an error because Bazel does not run actions unless their outputs are nee
         else:
             verb = "Type-checking"
 
+        env = {
+            "BAZEL_BINDIR": ctx.bin_dir.path,
+        }
+
+        if stdout_file != "":
+            env["JS_BINARY__STDOUT_OUTPUT_FILE"] = stdout_file
+
         ctx.actions.run(
             executable = executable,
             inputs = inputs_depset,
@@ -284,10 +291,7 @@ This is an error because Bazel does not run actions unless their outputs are nee
                 ctx.label,
                 tsconfig_path,
             ),
-            env = {
-                "BAZEL_BINDIR": ctx.bin_dir.path,
-                "JS_BINARY__STDOUT_OUTPUT_FILE": stdout_file,
-            },
+            env = env,
         )
 
     transitive_sources = js_lib_helpers.gather_transitive_sources(output_sources, srcs_tsconfig_deps)
