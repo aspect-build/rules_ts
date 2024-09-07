@@ -208,8 +208,8 @@ def _to_out_path(f, out_dir, root_dir):
     f = f[f.find(":") + 1:]
     if root_dir:
         f = f.removeprefix(root_dir + "/")
-    if out_dir:
-        f = _join(out_dir, f)
+    if out_dir and out_dir != ".":
+        f = out_dir + "/" + f
     return f
 
 def _to_js_out_paths(srcs, out_dir, root_dir, allow_js, resolve_json_module, ext_map):
