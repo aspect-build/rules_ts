@@ -194,15 +194,9 @@ def _is_ts_src(src, allow_js, resolve_json_module):
 
     return _is_js_src(src, allow_js, resolve_json_module)
 
-def _replace_ext(f, ext_map):
+def _replace_ext(f, ext_map, default_ext):
     cur_ext = f[f.rindex("."):]
-    new_ext = ext_map.get(cur_ext)
-    if new_ext != None:
-        return new_ext
-    new_ext = ext_map.get("*")
-    if new_ext != None:
-        return new_ext
-    return None
+    return ext_map.get(cur_ext, default_ext)
 
 def _to_out_path(f, out_dir, root_dir):
     f = f[f.find(":") + 1:]
@@ -212,12 +206,12 @@ def _to_out_path(f, out_dir, root_dir):
         f = _join(out_dir, f)
     return f
 
-def _to_js_out_paths(srcs, out_dir, root_dir, allow_js, resolve_json_module, ext_map):
+def _to_js_out_paths(srcs, out_dir, root_dir, allow_js, resolve_json_module, ext_map, default_ext):
     outs = []
     for f in srcs:
         if _is_ts_src(f, allow_js, resolve_json_module):
             out = _to_out_path(f, out_dir, root_dir)
-            out = out[:out.rindex(".")] + _replace_ext(out, ext_map)
+            out = out[:out.rindex(".")] + _replace_ext(out, ext_map, default_ext)
 
             # Don't declare outputs that collide with inputs
             # for example, a.js -> a.js
@@ -242,7 +236,6 @@ def _calculate_js_outs(srcs, out_dir, root_dir, allow_js, resolve_json_module, p
         return []
 
     exts = {
-        "*": ".js",
         ".mts": ".mjs",
         ".mjs": ".mjs",
         ".cjs": ".cjs",
@@ -254,14 +247,13 @@ def _calculate_js_outs(srcs, out_dir, root_dir, allow_js, resolve_json_module, p
         exts[".jsx"] = ".jsx"
         exts[".tsx"] = ".jsx"
 
-    return _to_js_out_paths(srcs, out_dir, root_dir, allow_js, resolve_json_module, exts)
+    return _to_js_out_paths(srcs, out_dir, root_dir, allow_js, resolve_json_module, exts, ".js")
 
 def _calculate_map_outs(srcs, out_dir, root_dir, source_map, preserve_jsx, no_emit, emit_declaration_only):
     if no_emit or not source_map or emit_declaration_only:
         return []
 
     exts = {
-        "*": ".js.map",
         ".mts": ".mjs.map",
         ".cts": ".cjs.map",
         ".mjs": ".mjs.map",
@@ -270,35 +262,33 @@ def _calculate_map_outs(srcs, out_dir, root_dir, source_map, preserve_jsx, no_em
     if preserve_jsx:
         exts[".tsx"] = ".jsx.map"
 
-    return _to_js_out_paths(srcs, out_dir, root_dir, False, False, exts)
+    return _to_js_out_paths(srcs, out_dir, root_dir, False, False, exts, ".js.map")
 
 def _calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, composite, allow_js, no_emit):
     if no_emit or not (declaration or composite):
         return []
 
     exts = {
-        "*": ".d.ts",
         ".mts": ".d.mts",
         ".cts": ".d.cts",
         ".mjs": ".d.mts",
         ".cjs": ".d.cts",
     }
 
-    return _to_js_out_paths(srcs, typings_out_dir, root_dir, allow_js, False, exts)
+    return _to_js_out_paths(srcs, typings_out_dir, root_dir, allow_js, False, exts, ".d.ts")
 
 def _calculate_typing_maps_outs(srcs, typings_out_dir, root_dir, declaration_map, allow_js, no_emit):
     if no_emit or not declaration_map:
         return []
 
     exts = {
-        "*": ".d.ts.map",
         ".mts": ".d.mts.map",
         ".cts": ".d.cts.map",
         ".mjs": ".d.mts.map",
         ".cjs": ".d.cts.map",
     }
 
-    return _to_js_out_paths(srcs, typings_out_dir, root_dir, allow_js, False, exts)
+    return _to_js_out_paths(srcs, typings_out_dir, root_dir, allow_js, False, exts, ".d.ts.map")
 
 def _calculate_root_dir(ctx):
     return _join(
