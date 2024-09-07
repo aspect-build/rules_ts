@@ -1,0 +1,16 @@
+load("@aspect_bazel_lib//lib:testing.bzl", "assert_outputs")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "backend",
+    declaration = True,
+    isolated_typecheck = True,
+    tsconfig = "//examples/isolated_typecheck:tsconfig",
+    deps = ["//examples/isolated_typecheck/core"],
+)
+
+assert_outputs(
+    name = "test_backend_default_outputs",
+    actual = "backend",
+    expected = ["examples/isolated_typecheck/backend/index.js"],
+)

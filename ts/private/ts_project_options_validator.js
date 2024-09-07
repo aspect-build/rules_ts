@@ -131,6 +131,17 @@ function main(_a) {
             )
         }
     }
+    function check_nocheck() {
+        if (attrs.isolated_typecheck) {
+            var optionVal = getTsOption('isolatedDeclarations')
+            if (!optionVal) {
+                failures.push(
+                    'attribute isolated_typecheck=True requires compilerOptions.isolatedDeclarations=true\nSee documentation on ts_project(isolated_typecheck) for more info"'
+                )
+                buildozerCmds.push('set isolated_typecheck False')
+            }
+        }
+    }
     if (options.preserveSymlinks) {
         console.error(
             'ERROR: ts_project rule ' +
@@ -152,6 +163,7 @@ function main(_a) {
     check('declaration')
     check('incremental')
     check('tsBuildInfoFile', 'ts_build_info_file')
+    check_nocheck()
     check_preserve_jsx()
     if (failures.length > 0) {
         console.error(

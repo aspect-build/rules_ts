@@ -36,6 +36,7 @@ def _validate_action(ctx, tsconfig_inputs):
         source_map = ctx.attr.source_map,
         incremental = ctx.attr.incremental,
         ts_build_info_file = ctx.attr.ts_build_info_file,
+        isolated_typecheck = ctx.attr.isolated_typecheck,
     )
     arguments.add_all([
         to_output_relative_path(tsconfig),

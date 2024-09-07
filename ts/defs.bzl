@@ -40,6 +40,7 @@ def ts_project(
         assets = [],
         extends = None,
         allow_js = False,
+        isolated_typecheck = False,
         declaration = False,
         source_map = False,
         declaration_map = False,
@@ -152,6 +153,10 @@ def ts_project(
         args: List of strings of additional command-line arguments to pass to tsc.
             See https://www.typescriptlang.org/docs/handbook/compiler-options.html#compiler-options
             Typically useful arguments for debugging are `--listFiles` and `--listEmittedFiles`.
+
+        isolated_typecheck: Whether to type-check asynchronously as a separate bazel action.
+            Requires https://devblogs.microsoft.com/typescript/announcing-typescript-5-6/#the---nocheck-option6
+            Requires https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-5.html#isolated-declarations
 
         transpiler: A custom transpiler tool to run that produces the JavaScript outputs instead of `tsc`.
 
@@ -416,6 +421,7 @@ def ts_project(
         incremental = incremental,
         preserve_jsx = preserve_jsx,
         composite = composite,
+        isolated_typecheck = isolated_typecheck,
         declaration = declaration,
         declaration_dir = declaration_dir,
         source_map = source_map,
