@@ -1,7 +1,7 @@
 # ==================================================================================================
-# Aspect Workflows Reusable Workflow for GitHub Actions (v5.10.12)
+# Aspect Workflows Reusable Workflow for GitHub Actions (v5.11.0)
 #
-# https://github.com/marketplace/actions/aspect-workflows?version=5.10.12
+# https://github.com/marketplace/actions/aspect-workflows?version=5.11.0
 #
 # At this time, GitHub Actions does not allow referencing reusable workflows from public
 # repositories in other organizations. See
@@ -37,11 +37,10 @@
 #    jobs:
 #      aspect-workflows:
 #        name: Aspect Workflows
-#        uses: my-github-org/workflows-action/.github/workflows/.aspect-workflows-reusable.yaml@5.10.12
+#        uses: my-github-org/workflows-action/.github/workflows/.aspect-workflows-reusable.yaml@5.11.0
 #    ```
 # ==================================================================================================
-name: Aspect Workflows Reusable Workflow (v5.10.12)
-
+name: Aspect Workflows Reusable Workflow (v5.11.0)
 on:
   # Makes this workflow reusable, see
   # https://github.blog/2022-02-10-using-reusable-workflows-github-actions
@@ -65,7 +64,6 @@ on:
       inherited_secrets:
         description: 'Comma separated list of secrets or regex (Oniguruma) describing secrets to be made available during the build. "secrets: inherit" must also be set. The regex is used by jq internally which uses the Oniguruma regular expression library: https://jqlang.github.io/jq/manual/'
         type: string
-
 jobs:
   setup:
     runs-on: [self-hosted, aspect-workflows, "${{ inputs.queue }}"]
@@ -80,10 +78,8 @@ jobs:
             --gha_json_pretty_print=false \
           )
           tee "${GITHUB_OUTPUT}" <<< "json=${ROSETTA_RESULT}"
-
     outputs:
       cfg: ${{ steps.rosetta-generate.outputs.json }}
-
   bazel:
     needs: [setup]
     runs-on: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].labels }}
@@ -92,18 +88,14 @@ jobs:
       matrix: ${{ fromJson(needs.setup.outputs.cfg).matrix_config }}
     env:
       ASPECT_WORKFLOWS_CONFIG: ${{ inputs.aspect-config }}
-
     steps:
       - name: Workflows environment
         run: ${{ fromJson(needs.setup.outputs.cfg).platform.directories.WORKFLOWS_BIN_DIR }}/configure_workflows_env
-
       - name: Clone repo
         uses: actions/checkout@v4
-
       - name: Agent health check
         run: ${{ fromJson(needs.setup.outputs.cfg).platform.directories.WORKFLOWS_BIN_DIR }}/agent_health_check
         timeout-minutes: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].health_check_timeout }}
-
       - name: Process secrets
         id: process_secrets
         if: inputs.inherited_secrets != ''
@@ -111,10 +103,8 @@ jobs:
           REQUIRED_SECRETS=$(${{ fromJson(needs.setup.outputs.cfg).platform.directories.WORKFLOWS_BIN_DIR }}/jq -R --compact-output 'gsub("\\s+";"";"g") | split(",")' <<< "${{ inputs.inherited_secrets }}")
           FILTERED_SECRETS=$(${{ fromJson(needs.setup.outputs.cfg).platform.directories.WORKFLOWS_BIN_DIR }}/jq --compact-output --argjson secrets "${REQUIRED_SECRETS}" 'with_entries( select (.key | test($secrets[]) ) )' <<< '''${{ toJson(secrets) }}''' )
           echo "filtered_secrets=${FILTERED_SECRETS}" | tee ${GITHUB_OUTPUT}
-
       - name: Prepare archive directories
         run: rm -rf ${{ join(fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].artifact_paths, ' ') }}
-
       - name: Determine changed files
         uses: tj-actions/changed-files@v42
         if: endsWith(matrix.job, 'format')
@@ -122,23 +112,20 @@ jobs:
           json: true
           write_output_files: true
           output_dir: ${{ fromJson(needs.setup.outputs.cfg).platform.directories.ARTIFACTS_DIR }}
-
       - name: Checkout health
-        uses: aspect-build/workflows-action@5.10.12
+        uses: aspect-build/workflows-action@5.11.0
         timeout-minutes: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].checkout_task_timeout }}
         if: fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].has_checkout_task
         with:
           workspace: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].workspace }}
           task: checkout
-
       - name: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].name }}
-        uses: aspect-build/workflows-action@5.10.12
+        uses: aspect-build/workflows-action@5.11.0
         env: ${{ inputs.inherited_secrets != '' && fromJson(steps.process_secrets.outputs.filtered_secrets) || fromJson('{}') }}
         timeout-minutes: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].timeout_in_minutes }}
         with:
-            workspace: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].workspace }}
-            task: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].task }}
-
+          workspace: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].workspace }}
+          task: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].task }}
       - name: Send notification to Slack
         id: slack
         # oncall cares about branches that do delivery, so key this on whether we produce a delivery manifest
@@ -151,16 +138,14 @@ jobs:
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets[inputs.slack_webhook_url] }}
-
       - name: Delivery manifest
         if: fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].generate_manifest
-        uses: aspect-build/workflows-action@5.10.12
+        uses: aspect-build/workflows-action@5.11.0
         timeout-minutes: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].delivery_manifest_timout }}
         with:
-            workspace: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].workspace }}
-            task: delivery_manifest
-            args: "--data TARGETS_SOURCE=${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].task }}"
-
+          workspace: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].workspace }}
+          task: delivery_manifest
+          args: "--data TARGETS_SOURCE=${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].task }}"
       # Upload all artifacts for the workspace
       - name: Upload artifacts
         # The `always()` condition makes this step run even if a previous step failed.
@@ -172,7 +157,6 @@ jobs:
           name: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].artifact_prefix }}${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].task }}.artifacts
           path: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].artifact_upload_pattern }}
           overwrite: true
-
       # Codecov
       - name: Codecov upload
         # The `always()` condition makes this step run even if a previous step failed.
@@ -185,9 +169,8 @@ jobs:
           files: bazel-out/_coverage/_coverage_report.dat
           token: ${{ secrets.CODECOV_TOKEN }}
           functionalities: search # Disable searching for coverage reports. If enabled, it gets confused
-                                  # by the bazel convenience symlinks and finds the same coverage report
-                                  # under bazel-out and {workspace}/bazel-out.
-
+          # by the bazel convenience symlinks and finds the same coverage report
+          # under bazel-out and {workspace}/bazel-out.
       - name: Trigger delivery
         # This uses the following API: https://docs.github.com/en/rest/actions/workflows?apiVersion=2022-11-28#create-a-workflow-dispatch-event
         run: |
