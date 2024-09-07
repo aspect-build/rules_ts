@@ -169,11 +169,11 @@ def _join(*elements):
     return "."
 
 def _relative_to_package(path, ctx):
-    # TODO: "external/" should only be needed to be removed once
-    path = path.removeprefix("external/").removeprefix(ctx.bin_dir.path + "/")
-    path = path.removeprefix("external/").removeprefix(ctx.label.workspace_name + "/")
+    path = path.removeprefix(ctx.bin_dir.path + "/")
+    path = path.removeprefix("external/")
+    path = path.removeprefix(ctx.label.workspace_name + "/")
     if ctx.label.package:
-        path = path.removeprefix("external/").removeprefix(ctx.label.package + "/")
+        path = path.removeprefix(ctx.label.package + "/")
     return path
 
 def _is_typings_src(src):
