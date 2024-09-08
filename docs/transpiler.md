@@ -111,16 +111,17 @@ then `load()` from your own macro rather than from `@aspect_rules_ts`.
 
 ## Macro expansion
 
-When `transpiler` is used, then the `ts_project` macro expands to these targets:
+When `no_emit`, `transpiler` or `declaration_transpiler` is set, then the `ts_project` macro expands to these targets:
 
 - `[name]` - the default target which can be included in the `deps` of downstream rules.
     Note that it will successfully build *even if there are typecheck failures* because invoking `tsc` is not needed to produce the default outputs.
     This is considered a feature, as it allows you to have a faster development mode where type-checking is not on the critical path.
-- `[name]_typecheck` - provides typings (`.d.ts` files) as the default output.
+- `[name]_types` - provides typings (`.d.ts` files) as the default outputs.
+    This target is not created if `no_emit` is set.
+- `[name]_typecheck` - provides default outputs asserting type-checking has been run.
     Building this target always causes the typechecker to run.
 - `[name]_typecheck_test` - a [`build_test`] target which simply depends on the `[name]_typecheck` target.
     This ensures that typechecking will be run under `bazel test` with [`--build_tests_only`].
-- `[name]_typings` - internal target which runs the binary from the `tsc` attribute
 -  Any additional target(s) the custom transpiler rule/macro produces.
     (For example, some rules produce one target per TypeScript input file.)
 

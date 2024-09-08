@@ -1,9 +1,11 @@
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_skylib//lib:partial.bzl", "partial")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 
 # Note, Bazel 6 starlark has lambda so maybe we can stop using partial
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load(":babel.bzl", "babel")
+load(":tsc.bzl", "tsc_dts", "tsc_js")
 
 ###
 # See a more full-featured example showing swc and babel at
@@ -88,5 +90,158 @@ build_test(
         ":no-declarations",
         ":no-declarations_typecheck",
         "a.js",  # NOTE: does not implement out_dir in this test
+    ],
+)
+
+# custom js & dts transpilers, tsc still run for typechecking
+ts_project(
+    name = "custom_transpilers",
+    srcs = ["a.ts"],
+    declaration = True,
+    declaration_transpiler = partial.make(
+        tsc_dts,
+        out_dir = "build-custom_transpilers",
+    ),
+    out_dir = "build-custom_transpilers",
+    source_map = True,
+    transpiler = partial.make(
+        tsc_js,
+        out_dir = "build-custom_transpilers",
+    ),
+)
+
+build_test(
+    name = "custom_transpilers_test",
+    targets = [
+        ":custom_transpilers",
+        ":custom_transpilers_types",
+        ":custom_transpilers_typecheck",
+        "build-custom_transpilers/a.js",
+        "build-custom_transpilers/a.d.ts",
+    ],
+)
+
+# custom js & dts transpilers, noEmit prevents any outputs, typechecking still exists
+ts_project(
+    name = "custom_transpilers-no_emit",
+    srcs = ["a.ts"],
+    declaration_transpiler = tsc_dts,
+    transpiler = tsc_js,
+    tsconfig = {
+        "compilerOptions": {
+            "noEmit": True,
+            "declaration": True,
+            "emitDeclarationOnly": True,
+        },
+    },
+)
+
+build_test(
+    name = "custom_transpilers-no_emit-test",
+    targets = [
+        ":custom_transpilers-no_emit",
+        ":custom_transpilers-no_emit_typecheck",
+    ],
+)
+
+# custom dts transpiler, noEmit prevents any outputs, typechecking still exists
+ts_project(
+    name = "custom_dts_transpiler-no_emit",
+    srcs = ["a.ts"],
+    declaration_transpiler = tsc_dts,
+    tsconfig = {
+        "compilerOptions": {
+            "noEmit": True,
+            "declaration": True,
+            "emitDeclarationOnly": True,
+        },
+    },
+)
+
+build_test(
+    name = "custom_dts_transpiler-no_emit-test",
+    targets = [
+        ":custom_dts_transpiler-no_emit",
+        ":custom_dts_transpiler-no_emit_typecheck",
+    ],
+)
+
+# custom dts transpiler but still invokes tsc for type-checking
+ts_project(
+    name = "custom_dts_transpiler",
+    srcs = ["a.ts"],
+    declaration = True,
+    declaration_transpiler = partial.make(
+        tsc_dts,
+        out_dir = "build-custom_dts_transpiler",
+    ),
+    out_dir = "build-custom_dts_transpiler",
+    source_map = True,
+    transpiler = "tsc",
+)
+
+build_test(
+    name = "custom_dts_transpiler-test",
+    targets = [
+        ":custom_dts_transpiler",
+        ":custom_dts_transpiler_types",
+        ":custom_dts_transpiler_typecheck",
+        "build-custom_dts_transpiler/a.js",
+        "build-custom_dts_transpiler/a.d.ts",
+    ],
+)
+
+# a custom dts transpiler but not actually outputting types
+# should stylle have a _typecheck target
+ts_project(
+    name = "custom_dts_transpiler-no_declarations",
+    srcs = ["a.ts"],
+    declaration_transpiler = partial.make(
+        tsc_dts,
+        out_dir = "build-custom_dts_transpiler-no_declarations",
+    ),
+    out_dir = "build-custom_dts_transpiler-no_declarations",
+    source_map = True,
+    transpiler = "tsc",
+    tsconfig = {
+        "compilerOptions": {
+            "declaration": False,
+        },
+    },
+)
+
+build_test(
+    name = "custom_dts_transpiler-no_declarations-test",
+    targets = [
+        ":custom_dts_transpiler-no_declarations",
+        ":custom_dts_transpiler-no_declarations_typecheck",
+        "build-custom_dts_transpiler-no_declarations/a.js",
+    ],
+)
+
+# custom dts transpiler and only outputting declarations
+ts_project(
+    name = "custom_dts_transpiler-declarations_only",
+    srcs = ["a.ts"],
+    declaration_transpiler = partial.make(
+        tsc_dts,
+        out_dir = "build-custom_dts_transpiler-no_declarations",
+    ),
+    out_dir = "build-custom_dts_transpiler-no_declarations",
+    transpiler = "tsc",
+    tsconfig = {
+        "compilerOptions": {
+            "declaration": True,
+            "emitDeclarationOnly": True,
+        },
+    },
+)
+
+build_test(
+    name = "custom_dts_transpiler-declarations_only-test",
+    targets = [
+        ":custom_dts_transpiler-declarations_only",
+        ":custom_dts_transpiler-declarations_only_typecheck",
+        "build-custom_dts_transpiler-no_declarations/a.d.ts",
     ],
 )
