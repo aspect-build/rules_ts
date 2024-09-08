@@ -124,7 +124,7 @@ def _filter_input_files(files, allow_js, resolve_json_module):
 
 def _write_tsconfig_rule(ctx):
     # TODO: is it useful to expand Make variables in the content?
-    content = "\n".join(ctx.attr.content)
+    content = ctx.attr.content
     if ctx.attr.extends:
         # Unlike other paths in the tsconfig file, the "extends" property
         # is documented: "The path may use Node.js style resolution."
@@ -150,7 +150,7 @@ def _write_tsconfig_rule(ctx):
 write_tsconfig_rule = rule(
     implementation = _write_tsconfig_rule,
     attrs = {
-        "content": attr.string_list(),
+        "content": attr.string(),
         "extends": attr.label(allow_single_file = True),
         "files": attr.label_list(allow_files = True),
         "out": attr.output(),
@@ -187,7 +187,7 @@ def write_tsconfig(name, config, files, out, extends = None, allow_js = None, re
         name = name,
         files = files,
         extends = extends,
-        content = [json.encode(amended_config)],
+        content = json.encode(amended_config),
         out = out,
         allow_js = allow_js,
         resolve_json_module = resolve_json_module,
