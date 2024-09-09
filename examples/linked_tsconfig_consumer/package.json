@@ -2,6 +2,6 @@
     "private": true,
     "devDependencies": {
         "@lib/tsconfig": "workspace:*",
-        "@types/node": "18.13.0"
+        "@types/node": "^20"
     }
 }

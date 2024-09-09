@@ -7,6 +7,6 @@
         "@nestjs/common": "^9.0.8",
         "rxjs": "^7.5.6",
         "reflect-metadata": "^0.1.13",
-        "@types/node": "18.11.9"
+        "@types/node": "^20"
     }
 }
