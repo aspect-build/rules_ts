@@ -72,6 +72,8 @@ def _ts_project_impl(ctx):
         validation_outs.extend(_validate_lib.validation_action(ctx, tsconfig_inputs))
         _lib.validate_tsconfig_dirs(ctx.attr.root_dir, ctx.attr.out_dir, typings_out_dir)
 
+    typecheck_outs = []
+
     arguments = ctx.actions.args()
     execution_requirements = {}
     executable = ctx.executable.tsc
@@ -235,18 +237,20 @@ This is an error because Bazel does not run actions unless their outputs are nee
     stdout_file = ""
 
     if ctx.attr.no_emit:
-        # Validation actions still need to produce some output, so we output the stdout
-        # to a .validation file that ends up in the _validation output group.
-        validation_output = ctx.actions.declare_file(ctx.attr.name + ".validation")
-        validation_outs.append(validation_output)
+        # The type-checking action still need to produce some output, so we output the stdout
+        # to a .typecheck file that ends up in the typecheck output group.
+        typecheck_output = ctx.actions.declare_file(ctx.attr.name + ".typecheck")
+        typecheck_outs.append(typecheck_output)
 
-        outputs.append(validation_output)
-        stdout_file = validation_output.path
+        outputs.append(typecheck_output)
+        stdout_file = typecheck_output.path
 
         if supports_workers:
-            arguments.add("--bazelValidationFile", validation_output.short_path)
+            arguments.add("--bazelValidationFile", typecheck_output.short_path)
 
         arguments.add("--noEmit")
+    else:
+        typecheck_outs.extend(output_types)
 
     inputs_depset = depset()
     if len(outputs) > 0:
@@ -328,6 +332,7 @@ This is an error because Bazel does not run actions unless their outputs are nee
         TsConfigInfo(deps = depset(tsconfig_inputs, transitive = tsconfig_transitive_deps)),
         OutputGroupInfo(
             types = output_types_depset,
+            typecheck = depset(typecheck_outs),
             # make the inputs to the tsc action available for analysis testing
             _action_inputs = inputs_depset,
             # https://bazel.build/extending/rules#validations_output_group

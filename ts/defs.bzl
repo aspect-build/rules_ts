@@ -327,8 +327,6 @@ def ts_project(
         # we have to produce a few targets
         tsc_target_name = "%s_typings" % name
         transpile_target_name = "%s_transpile" % name
-        typecheck_target_name = "%s_typecheck" % name
-        test_target_name = "%s_typecheck_test" % name
 
         if type(transpiler) == "function" or type(transpiler) == "rule":
             transpiler(
@@ -346,12 +344,37 @@ def ts_project(
         else:
             fail("transpiler attribute should be a rule/macro or a skylib partial. Got " + type(transpiler))
 
+        # Default target produced by the macro gives the js and map outs, with the transitive dependencies.
+        js_library(
+            name = name,
+            # Include the tsc target in srcs to pick-up both the direct & transitive declaration outputs so
+            # that this js_library can be a valid dep for downstream ts_project or other rules_js derivative rules.
+            srcs = [transpile_target_name, tsc_target_name] + assets,
+            deps = deps,
+            data = data,
+            **common_kwargs
+        )
+
+    # If the primary target does not output dts files then type-checking has a separate target.
+    if no_emit or (transpiler and transpiler != "tsc"):
+        types_target_name = "%s_types" % name
+        typecheck_target_name = "%s_typecheck" % name
+        test_target_name = "%s_typecheck_test" % name
+
+        # Users should build this target to get typing files
+        if not no_emit:
+            native.filegroup(
+                name = types_target_name,
+                srcs = [tsc_target_name],
+                output_group = "types",
+                **common_kwargs
+            )
+
         # Users should build this target to get a failed build when typechecking fails
         native.filegroup(
             name = typecheck_target_name,
             srcs = [tsc_target_name],
-            # This causes the types to be produced, which in turn triggers the tsc action to typecheck
-            output_group = "types",
+            output_group = "typecheck",
             **common_kwargs
         )
 
@@ -362,17 +385,6 @@ def ts_project(
             tags = common_kwargs.get("tags"),
             size = "small",
             visibility = common_kwargs.get("visibility"),
-        )
-
-        # Default target produced by the macro gives the js and map outs, with the transitive dependencies.
-        js_library(
-            name = name,
-            # Include the tsc target in srcs to pick-up both the direct & transitive declaration outputs so
-            # that this js_library can be a valid dep for downstream ts_project or other rules_js derivative rules.
-            srcs = [transpile_target_name, tsc_target_name] + assets,
-            deps = deps,
-            data = data,
-            **common_kwargs
         )
 
     # Disable workers if a custom tsc was provided but not a custom tsc_worker.
