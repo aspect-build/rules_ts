@@ -130,10 +130,7 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
     ])
     if len(typings_outs) > 0:
         declaration_dir = _lib.join(ctx.label.workspace_root, ctx.label.package, typings_out_dir)
-        arguments.add_all([
-            "--declarationDir",
-            declaration_dir,
-        ])
+        arguments.add("--declarationDir", declaration_dir)
 
     inputs = srcs_inputs + tsconfig_inputs
 
@@ -157,10 +154,7 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
 
     outputs = js_outs + map_outs + typings_outs + typing_maps_outs
     if ctx.outputs.buildinfo_out:
-        arguments.add_all([
-            "--tsBuildInfoFile",
-            to_output_relative_path(ctx.outputs.buildinfo_out),
-        ])
+        arguments.add("--tsBuildInfoFile", to_output_relative_path(ctx.outputs.buildinfo_out))
         outputs.append(ctx.outputs.buildinfo_out)
 
     output_sources = js_outs + map_outs + assets_outs
@@ -250,7 +244,7 @@ This is an error because Bazel does not run actions unless their outputs are nee
         stdout_file = validation_output.path
 
         if supports_workers:
-            arguments.add_all(["--bazelValidationFile", validation_output.short_path])
+            arguments.add("--bazelValidationFile", validation_output.short_path)
 
         arguments.add("--noEmit")
 
