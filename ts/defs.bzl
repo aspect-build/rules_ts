@@ -379,6 +379,17 @@ def ts_project(
     if tsc != _tsc and tsc_worker == _tsc_worker:
         supports_workers = 0
 
+    # Disable typescript version detection if tsc is not the default:
+    # - it would be wrong anyways
+    # - it is only used to warn if worker support is configured incorrectly.
+    if tsc != _tsc:
+        is_typescript_5_or_greater = None
+    else:
+        is_typescript_5_or_greater = select({
+            "@npm_typescript//:is_typescript_5_or_greater": True,
+            "//conditions:default": False,
+        })
+
     ts_project_rule(
         name = tsc_target_name,
         srcs = srcs,
@@ -411,10 +422,7 @@ def ts_project(
         tsc_worker = tsc_worker,
         transpile = -1 if not transpiler else int(transpiler == "tsc"),
         supports_workers = supports_workers,
-        is_typescript_5_or_greater = select({
-            "@npm_typescript//:is_typescript_5_or_greater": True,
-            "//conditions:default": False,
-        }),
+        is_typescript_5_or_greater = is_typescript_5_or_greater,
         validate = validate,
         validator = validator,
         **kwargs
