@@ -1,4 +1,4 @@
-# Bazel rules for TypeScript
+# Bazel rules for TypeScript!
 
 This is the canonical ruleset for using Bazel with TypeScript, based on
 <https://github.com/aspect-build/rules_js>.
