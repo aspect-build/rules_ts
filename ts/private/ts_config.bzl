@@ -136,16 +136,16 @@ def _write_tsconfig_rule(ctx):
         content = content.replace("__extends__", extends_path)
 
     filtered_files = _filter_input_files(ctx.files.files, ctx.attr.allow_js, ctx.attr.resolve_json_module)
-    if filtered_files:
-        # Update file paths to be relative to the tsconfig file, including a ./ prefix
-        # to ensure paths are all relative to the config file.
-        package_prefix = ctx.label.package + "/"
-        filtered_files = [
-            "./" + f.short_path.removeprefix(package_prefix)
-            for f in filtered_files
-        ]
 
-        content = content.replace("\"__files__\"", str(filtered_files))
+    # Update file paths to be relative to the tsconfig file, including a ./ prefix
+    # to ensure paths are all relative to the config file.
+    package_prefix = ctx.label.package + "/"
+    filtered_files = [
+        "./" + f.short_path.removeprefix(package_prefix)
+        for f in filtered_files
+    ]
+
+    content = content.replace("\"__files__\"", str(filtered_files))
     ctx.actions.write(
         output = ctx.outputs.out,
         content = content,
