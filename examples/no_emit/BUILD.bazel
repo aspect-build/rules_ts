@@ -1,4 +1,5 @@
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 
 write_file(
@@ -9,12 +10,43 @@ write_file(
     ],
 )
 
-# Shows how to run `tsc` producing no outputs at all.
-# It will use a validation action to type-check the file:
-# https://bazel.build/extending/rules#validation_actions
-# Run bazel with --norun_validations to skip type-checking.
+write_file(
+    name = "gen_js",
+    out = "b.js",
+    content = [
+        "export const b = 43",
+    ],
+)
+
+# Shows how to run `tsc` producing no outputs at all via noEmit.
 ts_project(
-    name = "typecheck_only",
+    name = "typecheck_only_noemit",
     srcs = ["a.ts"],
-    no_emit = True,
+    tsconfig = {
+        "compilerOptions": {
+            "noEmit": True,
+        },
+    },
+)
+
+# Shows how to run `tsc` with .js producing no outputs at all via noEmit
+ts_project(
+    name = "typecheck_nodeclarations_js",
+    srcs = ["b.js"],
+    out_dir = "typecheck_nodeclarations_js",
+    tsconfig = {
+        "compilerOptions": {
+            "allowJs": True,
+            "noEmit": True,
+        },
+    },
+)
+
+build_test(
+    name = "targets_test",
+    targets = [
+        # Ensure the _typecheck targets are declared despite no outputs.
+        ":typecheck_only_noemit_typecheck",
+        ":typecheck_nodeclarations_js_typecheck",
+    ],
 )
