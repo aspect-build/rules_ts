@@ -177,43 +177,12 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
 
     typings_srcs = [s for s in srcs_inputs if _lib.is_typings_src(s.path)]
 
-    if len(js_outs) + len(typings_outs) < 1 and not ctx.attr.no_emit:
-        label = "//{}:{}".format(ctx.label.package, ctx.label.name)
-        if len(typings_srcs) > 0:
-            no_outs_msg = """ts_project target {target} only has typings in srcs.
-Since there is no `tsc` action to perform, there are no generated outputs.
-
-For "typecheck-only" the TypeScript 'noEmit' feature can be used.
-
-For grouping typings this should be changed to js_library, which can be done by running:
-
-    buildozer 'new_load @aspect_rules_js//js:defs.bzl js_library' //{pkg}:__pkg__
-    buildozer 'set kind js_library' {target}
-    buildozer 'remove declaration' {target}
-
-""".format(
-                target = label,
-                pkg = ctx.label.package,
-            )
-        elif ctx.attr.transpile != 0:
-            no_outs_msg = """ts_project target %s is configured to produce no outputs.
-
-This might be because
-- you configured it with `noEmit`
-- the `srcs` are empty
-- `srcs` has elements producing non-ts outputs
-""" % label
-        else:
-            no_outs_msg = "ts_project target %s with custom transpiler needs 'declaration = True'." % label
-        fail(no_outs_msg + """
-This is an error because Bazel does not run actions unless their outputs are needed for the requested targets to build.
-""")
-
     # Make sure the user has acknowledged that transpiling is slow
     if len(outputs) > 0 and ctx.attr.transpile == -1 and not ctx.attr.emit_declaration_only and not options.default_to_tsc_transpiler:
         fail(transpiler_selection_required)
 
     output_types = typings_outs + typing_maps_outs + typings_srcs
+    use_tsc_noemit = ctx.attr.no_emit or (ctx.attr.transpile == 0 and not ctx.attr.declaration)
 
     # Default outputs (DefaultInfo files) is what you see on the command-line for a built
     # library, and determines what files are used by a simple non-provider-aware downstream
@@ -225,7 +194,7 @@ This is an error because Bazel does not run actions unless their outputs are nee
     else:
         # We must avoid tsc writing any JS files in this case, as tsc was only run for typings, and some other
         # action will try to write the JS files. We must avoid collisions where two actions write the same file.
-        if not ctx.attr.no_emit:
+        if not use_tsc_noemit:
             arguments.add("--emitDeclarationOnly")
 
         # We don't produce any DefaultInfo outputs in this case, because we avoid running the tsc action
@@ -236,7 +205,7 @@ This is an error because Bazel does not run actions unless their outputs are nee
 
     stdout_file = ""
 
-    if ctx.attr.no_emit:
+    if use_tsc_noemit:
         # The type-checking action still need to produce some output, so we output the stdout
         # to a .typecheck file that ends up in the typecheck output group.
         typecheck_output = ctx.actions.declare_file(ctx.attr.name + ".typecheck")

@@ -1,4 +1,5 @@
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 
 # Note, Bazel 6 starlark has lambda so maybe we can stop using partial
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
@@ -19,6 +20,14 @@ write_file(
     ],
 )
 
+write_file(
+    name = "gen_a",
+    out = "a.ts",
+    content = [
+        "export const b: number = 43",
+    ],
+)
+
 # Runs babel to transpile ts -> js
 # and tsc to type-check
 ts_project(
@@ -31,9 +40,8 @@ ts_project(
 )
 
 # Runs babel to transpile ts -> js
-# and does not produce any declaration outputs.
-# `tsc` is used for type-check only, as a validation action
-# (run bazel with --norun_validations to skip typechecking)
+# and does not produce any declaration outputs due to noEmit=True.
+# Type-checking will be a separate action and target.
 ts_project(
     name = "no-emit",
     srcs = ["big.ts"],
@@ -44,4 +52,41 @@ ts_project(
             "noEmit": True,
         },
     },
+)
+
+# Runs babel to transpile ts -> js
+# and does not produce any declaration outputs due to declaration=False.
+# Type-checking will be a separate action and target.
+ts_project(
+    name = "no-declarations",
+    srcs = ["a.ts"],
+    out_dir = "build-nodecls",
+    transpiler = babel,
+    tsconfig = {
+        "compilerOptions": {
+            "declaration": False,
+        },
+    },
+)
+
+build_test(
+    name = "targets_test",
+    targets = [
+        # babel ts_project
+        ":babel",
+        ":babel_typecheck",
+        # babel outputted js
+        "big.js",  # NOTE: does not implement out_dir in this test
+        # tsc outputted dts
+        "build-babel/big.d.ts",
+
+        # no-emit for type-checking
+        ":no-emit",
+        ":no-emit_typecheck",
+
+        # babel outputted .js with no declarations
+        ":no-declarations",
+        ":no-declarations_typecheck",
+        "a.js",  # NOTE: does not implement out_dir in this test
+    ],
 )
