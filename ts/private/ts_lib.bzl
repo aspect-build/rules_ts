@@ -87,6 +87,20 @@ https://docs.aspect.build/rulesets/aspect_rules_js/docs/js_library#deps for more
         mandatory = True,
         allow_single_file = [".json"],
     ),
+    "isolated_typecheck": attr.bool(
+        doc = """\
+        Whether type-checking should be a separate action.
+
+        This allows the transpilation action to run without waiting for typings from dependencies.
+
+        Requires a minimum version of typescript 5.6 for the [noCheck](https://www.typescriptlang.org/tsconfig#noCheck)
+        flag which is automatically set on the transpilation action when the typecheck action is isolated.
+
+        Requires [isolatedDeclarations](https://www.typescriptlang.org/tsconfig#isolatedDeclarations)
+        to be set so that declarations can be emitted without dependencies. The use of `isolatedDeclarations` may
+        require significant changes to your codebase and should be done as a pre-requisite to enabling `isolated_typecheck`.
+        """,
+    ),
     "validate": attr.bool(
         doc = """whether to add a Validation Action to verify the other attributes match
             settings in the tsconfig.json file""",

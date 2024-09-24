@@ -182,75 +182,101 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         fail(transpiler_selection_required)
 
     output_types = typings_outs + typing_maps_outs + typings_srcs
-    use_tsc_noemit = ctx.attr.no_emit or (ctx.attr.transpile == 0 and not ctx.attr.declaration)
+
+    # What tsc will be emitting
+    use_tsc_for_js = len(js_outs) > 0
+    use_tsc_for_dts = len(typings_outs) > 0
+
+    # Use a separate non-emitting action for type-checking when:
+    #  - a isolated typechecking action was explicitly requested
+    #  or
+    #  - not invoking tsc for output files at all
+    use_isolated_typecheck = ctx.attr.isolated_typecheck or not (use_tsc_for_js or use_tsc_for_dts)
+
+    # We don't produce any DefaultInfo outputs in this case, because we avoid running the tsc action
+    # unless the output_types are requested.
+    default_outputs = []
 
     # Default outputs (DefaultInfo files) is what you see on the command-line for a built
     # library, and determines what files are used by a simple non-provider-aware downstream
     # library. Only the JavaScript outputs are intended for use in non-TS-aware dependents.
-    if ctx.attr.transpile != 0:
+    if use_tsc_for_js:
         # Special case case where there are no source outputs and we don't have a custom
         # transpiler so we add output_types to the default outputs
         default_outputs = output_sources if len(output_sources) else output_types
-    else:
-        # We must avoid tsc writing any JS files in this case, as tsc was only run for typings, and some other
-        # action will try to write the JS files. We must avoid collisions where two actions write the same file.
-        if not use_tsc_noemit:
-            arguments.add("--emitDeclarationOnly")
-
-        # We don't produce any DefaultInfo outputs in this case, because we avoid running the tsc action
-        # unless the output_types are requested.
-        default_outputs = []
 
     srcs_tsconfig_deps = ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps
 
-    stdout_file = ""
+    inputs = copy_files_to_bin_actions(ctx, inputs)
 
-    if use_tsc_noemit:
+    transitive_inputs.append(_gather_types_from_js_infos(srcs_tsconfig_deps))
+    transitive_inputs_depset = depset(
+        inputs,
+        transitive = transitive_inputs,
+    )
+
+    # tsc action for type-checking
+    if use_isolated_typecheck:
         # The type-checking action still need to produce some output, so we output the stdout
         # to a .typecheck file that ends up in the typecheck output group.
         typecheck_output = ctx.actions.declare_file(ctx.attr.name + ".typecheck")
         typecheck_outs.append(typecheck_output)
 
-        outputs.append(typecheck_output)
-        stdout_file = typecheck_output.path
-
+        typecheck_arguments = ctx.actions.args()
         if supports_workers:
-            arguments.add("--bazelValidationFile", typecheck_output.short_path)
+            typecheck_arguments.add("--bazelValidationFile", typecheck_output.short_path)
 
-        arguments.add("--noEmit")
+        typecheck_arguments.add("--noEmit")
+
+        ctx.actions.run(
+            executable = executable,
+            inputs = transitive_inputs_depset,
+            arguments = [arguments, typecheck_arguments],
+            outputs = [typecheck_output],
+            mnemonic = "TsProjectCheck",
+            execution_requirements = execution_requirements,
+            resource_set = resource_set(ctx.attr),
+            progress_message = "Type-checking TypeScript project %s [tsc -p %s]" % (
+                ctx.label,
+                tsconfig_path,
+            ),
+            env = {
+                "BAZEL_BINDIR": ctx.bin_dir.path,
+                "JS_BINARY__STDOUT_OUTPUT_FILE": typecheck_output.path,
+            },
+        )
     else:
         typecheck_outs.extend(output_types)
 
-    inputs_depset = depset()
-    if len(outputs) > 0:
-        transitive_inputs.append(_gather_types_from_js_infos(srcs_tsconfig_deps))
+    if use_tsc_for_js or use_tsc_for_dts:
+        tsc_emit_arguments = ctx.actions.args()
 
-        inputs_depset = depset(
-            copy_files_to_bin_actions(ctx, inputs),
-            transitive = transitive_inputs,
-        )
+        # Type-checking is done async as a separate action and can be skipped.
+        if ctx.attr.isolated_typecheck:
+            tsc_emit_arguments.add("--noCheck")
+            tsc_emit_arguments.add("--skipLibCheck")
+            tsc_emit_arguments.add("--noResolve")
 
-        if ctx.attr.transpile != 0 and not ctx.attr.emit_declaration_only and not ctx.attr.no_emit:
-            if ctx.attr.declaration:
-                verb = "Transpiling & type-checking"
-            else:
-                verb = "Transpiling"
-        else:
-            verb = "Type-checking"
+        if not use_tsc_for_js:
+            # Not emitting js
+            tsc_emit_arguments.add("--emitDeclarationOnly")
 
-        env = {
-            "BAZEL_BINDIR": ctx.bin_dir.path,
-        }
+        elif not use_tsc_for_dts:
+            # Not emitting declarations
+            # TODO: why doesn't this work with workers?
+            if not supports_workers:
+                tsc_emit_arguments.add("--declaration", "false")
 
-        if stdout_file != "":
-            env["JS_BINARY__STDOUT_OUTPUT_FILE"] = stdout_file
+        verb = "Transpiling" if ctx.attr.isolated_typecheck else "Transpiling & type-checking"
+
+        inputs_depset = inputs if ctx.attr.isolated_typecheck else transitive_inputs_depset
 
         ctx.actions.run(
             executable = executable,
             inputs = inputs_depset,
-            arguments = [arguments],
+            arguments = [arguments, tsc_emit_arguments],
             outputs = outputs,
-            mnemonic = "TsProject",
+            mnemonic = "TsProjectEmit" if ctx.attr.isolated_typecheck else "TsProject",
             execution_requirements = execution_requirements,
             resource_set = resource_set(ctx.attr),
             progress_message = "%s TypeScript project %s [tsc -p %s]" % (
@@ -258,7 +284,9 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
                 ctx.label,
                 tsconfig_path,
             ),
-            env = env,
+            env = {
+                "BAZEL_BINDIR": ctx.bin_dir.path,
+            },
         )
 
     transitive_sources = js_lib_helpers.gather_transitive_sources(output_sources, srcs_tsconfig_deps)
@@ -303,7 +331,7 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             types = output_types_depset,
             typecheck = depset(typecheck_outs),
             # make the inputs to the tsc action available for analysis testing
-            _action_inputs = inputs_depset,
+            _action_inputs = transitive_inputs_depset,
             # https://bazel.build/extending/rules#validations_output_group
             # "hold the otherwise unused outputs of validation actions"
             _validation = validation_outs,
