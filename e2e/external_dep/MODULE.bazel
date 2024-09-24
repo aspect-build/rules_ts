@@ -4,6 +4,12 @@ local_path_override(
     path = "../..",
 )
 
+# Override the version declared by rules_ts for windows fix
+single_version_override(
+    module_name = "aspect_bazel_lib",
+    version = "2.9.0",
+)
+
 # TODO: rules_js shouldn't be required in this module, as we don't reference it anywhere.
 # However, on RBE only (!) we get an error:
 # ERROR: /home/runner/work/rules_ts/rules_ts/e2e/external_dep/app/BUILD:4:11:
