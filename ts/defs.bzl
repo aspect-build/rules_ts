@@ -217,7 +217,7 @@ def ts_project(
         incremental: Whether the `incremental` bit is set in the tsconfig.
             Instructs Bazel to expect a `.tsbuildinfo` output.
         no_emit: Whether the `noEmit` bit is set in the tsconfig.
-            Instructs Bazel *not* to expect any outputs. Only a validation action is used.
+            Instructs Bazel *not* to expect any outputs.
         emit_declaration_only: Whether the `emitDeclarationOnly` bit is set in the tsconfig.
             Instructs Bazel *not* to expect `.js` or `.js.map` outputs for `.ts` sources.
         ts_build_info_file: The user-specified value of `tsBuildInfoFile` from the tsconfig.
