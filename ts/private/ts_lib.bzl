@@ -54,10 +54,6 @@ https://docs.aspect.build/rulesets/aspect_rules_js/docs/js_library#deps for more
         default = 0,
         values = [-1, 0, 1],
     ),
-    "is_typescript_5_or_greater": attr.bool(
-        doc = "Whether TypeScript version is >= 5.0.0",
-        default = False,
-    ),
     "transpile": attr.int(
         doc = """\
         Whether tsc should be used to produce .js outputs
@@ -70,17 +66,10 @@ https://docs.aspect.build/rulesets/aspect_rules_js/docs/js_library#deps for more
         default = -1,
         values = [-1, 0, 1],
     ),
-    "tsc": attr.label(
-        doc = "TypeScript compiler binary",
+    "tsc_tools": attr.label(
         mandatory = True,
-        executable = True,
         cfg = "exec",
-    ),
-    "tsc_worker": attr.label(
-        doc = "TypeScript compiler worker binary",
-        mandatory = True,
-        executable = True,
-        cfg = "exec",
+        #providers = [TscInfo],
     ),
     "tsconfig": attr.label(
         doc = "tsconfig.json file, see https://www.typescriptlang.org/tsconfig",
@@ -106,7 +95,6 @@ https://docs.aspect.build/rulesets/aspect_rules_js/docs/js_library#deps for more
             settings in the tsconfig.json file""",
         default = True,
     ),
-    "validator": attr.label(mandatory = True, executable = True, cfg = "exec"),
     "_options": attr.label(
         default = "@aspect_rules_ts//ts:options",
     ),
