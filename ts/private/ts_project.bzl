@@ -263,9 +263,7 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
 
         elif not use_tsc_for_dts:
             # Not emitting declarations
-            # TODO: why doesn't this work with workers?
-            if not supports_workers:
-                tsc_emit_arguments.add("--declaration", "false")
+            tsc_emit_arguments.add("--declaration", "false")
 
         verb = "Transpiling" if ctx.attr.isolated_typecheck else "Transpiling & type-checking"
 
