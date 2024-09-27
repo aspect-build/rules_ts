@@ -331,60 +331,42 @@ def ts_project(
     typings_out_dir = declaration_dir if declaration_dir else out_dir
     tsbuildinfo_path = ts_build_info_file if ts_build_info_file else name + ".tsbuildinfo"
 
+    # Flags for what is emitted and which tool is emitting them
+    emit_js = not no_emit and not emit_declaration_only
+    emit_dts = not no_emit and (declaration or emit_declaration_only)
+    emit_transpiler_js = emit_js and transpiler and transpiler != "tsc"
+    emit_transpiler_dts = emit_dts and declaration_transpiler
+    emit_tsc_js = emit_js and not emit_transpiler_js
+    emit_tsc_dts = emit_dts and not emit_transpiler_dts
+
     # Target names for tsc, dts+js transpilers
     tsc_target_name = name
     declarations_target_name = None
     transpile_target_name = None
 
-    # typing outputs
+    # typing predeclared outputs
     tsc_typings_outs = []
     tsc_typing_maps_outs = []
-    if no_emit or not declaration_transpiler:
-        tsc_typings_outs = _lib.calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, composite, allow_js, no_emit)
-        tsc_typing_maps_outs = _lib.calculate_typing_maps_outs(srcs, typings_out_dir, root_dir, declaration_map, allow_js, no_emit)
-    elif declaration or emit_declaration_only:
-        declarations_target_name = "%s_declarations" % name
+    if emit_tsc_dts:
+        tsc_typings_outs = _lib.calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, composite, allow_js)
+        tsc_typing_maps_outs = _lib.calculate_typing_maps_outs(srcs, typings_out_dir, root_dir, declaration_map, allow_js)
 
-        if type(declaration_transpiler) == "function" or type(declaration_transpiler) == "rule":
-            declaration_transpiler(
-                name = declarations_target_name,
-                srcs = srcs,
-                **common_kwargs
-            )
-        elif partial.is_instance(declaration_transpiler):
-            partial.call(
-                declaration_transpiler,
-                name = declarations_target_name,
-                srcs = srcs,
-                **common_kwargs
-            )
-        else:
-            fail("declaration_transpiler attribute should be a rule/macro or a skylib partial. Got " + type(declaration_transpiler))
-
-    # js outputs
+    # js predeclared outputs
     tsc_js_outs = []
     tsc_map_outs = []
-    if no_emit or not transpiler or transpiler == "tsc":
-        tsc_js_outs = _lib.calculate_js_outs(srcs, out_dir, root_dir, allow_js, resolve_json_module, preserve_jsx, no_emit, emit_declaration_only)
-        tsc_map_outs = _lib.calculate_map_outs(srcs, out_dir, root_dir, source_map, preserve_jsx, no_emit, emit_declaration_only)
-    elif not emit_declaration_only:
-        transpile_target_name = "%s_transpile" % name
+    if emit_tsc_js:
+        tsc_js_outs = _lib.calculate_js_outs(srcs, out_dir, root_dir, allow_js, resolve_json_module, preserve_jsx, emit_declaration_only)
+        tsc_map_outs = _lib.calculate_map_outs(srcs, out_dir, root_dir, source_map, preserve_jsx, emit_declaration_only)
 
-        if type(transpiler) == "function" or type(transpiler) == "rule":
-            transpiler(
-                name = transpile_target_name,
-                srcs = srcs,
-                **common_kwargs
-            )
-        elif partial.is_instance(transpiler):
-            partial.call(
-                transpiler,
-                name = transpile_target_name,
-                srcs = srcs,
-                **common_kwargs
-            )
-        else:
-            fail("transpiler attribute should be a rule/macro or a skylib partial. Got " + type(transpiler))
+    # Custom typing transpiler
+    if emit_transpiler_dts:
+        declarations_target_name = "%s_declarations" % name
+        _invoke_custom_transpiler("declaration_transpiler", declaration_transpiler, declarations_target_name, srcs, common_kwargs)
+
+    # Custom js transpiler
+    if emit_transpiler_js:
+        transpile_target_name = "%s_transpile" % name
+        _invoke_custom_transpiler("transpiler", transpiler, transpile_target_name, srcs, common_kwargs)
 
     # Default target produced by the macro gives the js, dts and map outs,
     # with the transitive dependencies.
@@ -414,7 +396,7 @@ def ts_project(
         )
 
     # If the primary target does not output dts files then type-checking has a separate target.
-    if no_emit or (transpiler and transpiler != "tsc") or declaration_transpiler:
+    if not emit_tsc_js or not emit_tsc_dts:
         types_target_name = "%s_types" % name
         typecheck_target_name = "%s_typecheck" % name
         test_target_name = "%s_typecheck_test" % name
@@ -507,3 +489,20 @@ def ts_project(
         validator = validator,
         **kwargs
     )
+
+def _invoke_custom_transpiler(type_str, transpiler, transpile_target_name, srcs, common_kwargs):
+    if type(transpiler) == "function" or type(transpiler) == "rule":
+        transpiler(
+            name = transpile_target_name,
+            srcs = srcs,
+            **common_kwargs
+        )
+    elif partial.is_instance(transpiler):
+        partial.call(
+            transpiler,
+            name = transpile_target_name,
+            srcs = srcs,
+            **common_kwargs
+        )
+    else:
+        fail("%s attribute should be a rule/macro or a skylib partial. Got %s" % (type_str, type(transpiler)))
