@@ -51,6 +51,7 @@ def ts_project(
         no_emit = False,
         emit_declaration_only = False,
         transpiler = None,
+        declaration_transpiler = None,
         ts_build_info_file = None,
         tsc = _tsc,
         tsc_worker = _tsc_worker,
@@ -169,6 +170,18 @@ def ts_project(
             This may be the string `"tsc"` to explicitly choose `tsc`, just like the default above.
 
             It may also be any rule or macro with this signature: `(name, srcs, **kwargs)`
+
+            If JavaScript outputs are configured to not be emitted the custom transpiler will not be used, such as
+            when `no_emit = True` or `emit_declaration_only = True`.
+
+            See [docs/transpiler.md](/docs/transpiler.md) for more details.
+
+        declaration_transpiler: A custom transpiler tool to run that produces the TypeScript declaration outputs instead of `tsc`.
+
+            It may be any rule or macro with this signature: `(name, srcs, **kwargs)`
+
+            If TypeScript declaration outputs are configured to not be emitted the custom declaration transpiler will
+            not be used, such as when `no_emit = True` or `declaration = False`.
 
             See [docs/transpiler.md](/docs/transpiler.md) for more details.
 
@@ -318,19 +331,43 @@ def ts_project(
     typings_out_dir = declaration_dir if declaration_dir else out_dir
     tsbuildinfo_path = ts_build_info_file if ts_build_info_file else name + ".tsbuildinfo"
 
-    tsc_typings_outs = _lib.calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, composite, allow_js, no_emit)
-    tsc_typing_maps_outs = _lib.calculate_typing_maps_outs(srcs, typings_out_dir, root_dir, declaration_map, allow_js, no_emit)
+    # Target names for tsc, dts+js transpilers
+    tsc_target_name = name
+    declarations_target_name = None
+    transpile_target_name = None
 
+    # typing outputs
+    tsc_typings_outs = []
+    tsc_typing_maps_outs = []
+    if no_emit or not declaration_transpiler:
+        tsc_typings_outs = _lib.calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, composite, allow_js, no_emit)
+        tsc_typing_maps_outs = _lib.calculate_typing_maps_outs(srcs, typings_out_dir, root_dir, declaration_map, allow_js, no_emit)
+    elif declaration or emit_declaration_only:
+        declarations_target_name = "%s_declarations" % name
+
+        if type(declaration_transpiler) == "function" or type(declaration_transpiler) == "rule":
+            declaration_transpiler(
+                name = declarations_target_name,
+                srcs = srcs,
+                **common_kwargs
+            )
+        elif partial.is_instance(declaration_transpiler):
+            partial.call(
+                declaration_transpiler,
+                name = declarations_target_name,
+                srcs = srcs,
+                **common_kwargs
+            )
+        else:
+            fail("declaration_transpiler attribute should be a rule/macro or a skylib partial. Got " + type(declaration_transpiler))
+
+    # js outputs
     tsc_js_outs = []
     tsc_map_outs = []
     if no_emit or not transpiler or transpiler == "tsc":
         tsc_js_outs = _lib.calculate_js_outs(srcs, out_dir, root_dir, allow_js, resolve_json_module, preserve_jsx, no_emit, emit_declaration_only)
         tsc_map_outs = _lib.calculate_map_outs(srcs, out_dir, root_dir, source_map, preserve_jsx, no_emit, emit_declaration_only)
-        tsc_target_name = name
-    else:
-        # To stitch together a tree of ts_project where transpiler is a separate rule,
-        # we have to produce a few targets
-        tsc_target_name = "%s_typings" % name
+    elif not emit_declaration_only:
         transpile_target_name = "%s_transpile" % name
 
         if type(transpiler) == "function" or type(transpiler) == "rule":
@@ -349,31 +386,55 @@ def ts_project(
         else:
             fail("transpiler attribute should be a rule/macro or a skylib partial. Got " + type(transpiler))
 
-        # Default target produced by the macro gives the js and map outs, with the transitive dependencies.
+    # Default target produced by the macro gives the js, dts and map outs,
+    # with the transitive dependencies.
+    if transpile_target_name or declarations_target_name:
+        tsc_target_name = "%s_tsc" % name
+
+        lib_srcs = []
+
+        # Include the transpiler targets for both js+dts if they exist.
+        if transpile_target_name:
+            lib_srcs.append(transpile_target_name)
+        if declarations_target_name:
+            lib_srcs.append(declarations_target_name)
+
+        # If tsc outputs anything (js or dts) then it should be included in the srcs.
+        if not (transpile_target_name and declarations_target_name):
+            lib_srcs.append(tsc_target_name)
+
+        # Include direct & transitive deps in addition to transpiled sources so
+        # that this js_library can be a valid dep for downstream ts_project or other rules_js derivative rules.
         js_library(
             name = name,
-            # Include the tsc target in srcs to pick-up both the direct & transitive declaration outputs so
-            # that this js_library can be a valid dep for downstream ts_project or other rules_js derivative rules.
-            srcs = [transpile_target_name, tsc_target_name] + assets,
+            srcs = lib_srcs + assets,
             deps = deps,
             data = data,
             **common_kwargs
         )
 
     # If the primary target does not output dts files then type-checking has a separate target.
-    if no_emit or (transpiler and transpiler != "tsc"):
+    if no_emit or (transpiler and transpiler != "tsc") or declaration_transpiler:
         types_target_name = "%s_types" % name
         typecheck_target_name = "%s_typecheck" % name
         test_target_name = "%s_typecheck_test" % name
 
         # Users should build this target to get typing files
         if not no_emit:
-            native.filegroup(
-                name = types_target_name,
-                srcs = [tsc_target_name],
-                output_group = "types",
-                **common_kwargs
-            )
+            if declarations_target_name:
+                # A standalone target outputs the types
+                native.alias(
+                    name = types_target_name,
+                    actual = declarations_target_name,
+                )
+            else:
+                # tsc outputs the types and must be extracted via output_group
+                native.filegroup(
+                    name = types_target_name,
+                    srcs = [tsc_target_name],
+                    output_group = "types",
+                    **common_kwargs
+                )
 
         # Users should build this target to get a failed build when typechecking fails
         native.filegroup(
@@ -439,6 +500,7 @@ def ts_project(
         tsc = tsc,
         tsc_worker = tsc_worker,
         transpile = -1 if not transpiler else int(transpiler == "tsc"),
+        declaration_transpile = declaration_transpiler != None,
         supports_workers = supports_workers,
         is_typescript_5_or_greater = is_typescript_5_or_greater,
         validate = validate,

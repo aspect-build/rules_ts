@@ -70,6 +70,9 @@ https://docs.aspect.build/rulesets/aspect_rules_js/docs/js_library#deps for more
         default = -1,
         values = [-1, 0, 1],
     ),
+    "declaration_transpile": attr.bool(
+        doc = "Whether tsc should be used to produce .d.ts outputs",
+    ),
     "tsc": attr.label(
         doc = "TypeScript compiler binary",
         mandatory = True,
