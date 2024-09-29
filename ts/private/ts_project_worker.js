@@ -467,11 +467,6 @@ function createFilesystemTree(root, inputs) {
 
 
 /** Program and Caching */
-function isExternalLib(path) {
-    return path.includes('external') &&
-        path.includes('typescript@') &&
-        path.includes('node_modules/typescript/lib')
-}
 
 const libCache = new Map();
 
@@ -532,12 +527,13 @@ function createEmitAndLibCacheAndDiagnosticsProgram(
 
     /** Lib Cache */
     const getSourceFile = host.getSourceFile;
+
     host.getSourceFile = (fileName) => {
         if (libCache.has(fileName)) {
             return libCache.get(fileName);
         }
         const sf = getSourceFile(fileName);
-        if (sf && isExternalLib(fileName)) {
+        if (sf && path.relative(host.getDefaultLibLocation(), fileName).startsWith('..')) {
             debug(`createEmitAndLibCacheAndDiagnosticsProgram: putting default lib ${fileName} into cache.`)
             libCache.set(fileName, sf);
         }
@@ -553,7 +549,8 @@ function createProgram(args, inputs, output, exit) {
     const execroot = path.resolve(bin, '..', '..', '..'); // execroot
     const tsconfig = path.relative(execroot, path.resolve(bin, cmd.options.project)); // bazel-bin/<cfg>/bin/<pkg>/<options.project>
     const cfg = path.relative(execroot, bin) // /bazel-bin/<cfg>/bin
-    const executingfilepath = path.relative(execroot, require.resolve("typescript")); // /bazel-bin/<opt-cfg>/bin/node_modules/tsc/...
+    const executingFilePath = path.relative(execroot, require.resolve("typescript")); // /bazel-bin/<opt-cfg>/bin/node_modules/tsc/...
+    const executingDirectoryPath = path.dirname(executingFilePath);
 
     const filesystem = createFilesystemTree(execroot, inputs);
     const outputs = new Set();
@@ -565,7 +562,7 @@ function createProgram(args, inputs, output, exit) {
         write: write,
         writeOutputIsTTY: () => false,
         getCurrentDirectory: () => "/" + cfg,
-        getExecutingFilePath: () => "/" + executingfilepath,
+        getExecutingFilePath: () => "/" + executingFilePath,
         exit: exit,
         resolvePath: notImplemented("sys.resolvePath", true, 0),
         // handled by fstree.
@@ -605,7 +602,7 @@ function createProgram(args, inputs, output, exit) {
     debug(`execroot: ${execroot}`);
     debug(`bin: ${bin}`);
     debug(`cfg: ${cfg}`);
-    debug(`executingfilepath: ${executingfilepath}`);
+    debug(`executingFilePath: ${executingFilePath}`);
 
     let compilerOptions = readCompilerOptions();
 
@@ -757,8 +754,12 @@ function createProgram(args, inputs, output, exit) {
     function readFile(filePath, encoding) {
         filePath = path.resolve(sys.getCurrentDirectory(), filePath)
 
-        //external lib are transitive sources thus not listed in the inputs map reported by bazel.
-        if (!filesystem.fileExists(filePath) && !isExternalLib(filePath) && !outputs.has(filePath)) {
+        // external lib are transitive sources thus not listed in the inputs map reported by bazel.
+        if (
+            !filesystem.fileExists(filePath) &&
+            path.relative("/" + executingDirectoryPath, filePath).startsWith('..') &&
+            !outputs.has(filePath)
+        ) {
             output.write(`tsc tried to read file (${filePath}) that wasn't an input to it.` + "\n");
             throw new Error(`tsc tried to read file (${filePath}) that wasn't an input to it.`);
         }

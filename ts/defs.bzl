@@ -442,7 +442,7 @@ def ts_project(
     # Disable typescript version detection if tsc is not the default:
     # - it would be wrong anyways
     # - it is only used to warn if worker support is configured incorrectly.
-    if tsc != _tsc:
+    if tsc != _tsc or tsc_worker != _tsc_worker:
         is_typescript_5_or_greater = None
     else:
         is_typescript_5_or_greater = select({
