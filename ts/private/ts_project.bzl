@@ -234,12 +234,18 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         args = ctx.actions.args()
         args.add_all(common_args)
 
+        args.add("--noEmit")
+
+        env = {
+            "BAZEL_BINDIR": ctx.bin_dir.path,
+        }
+
         if supports_workers:
             args.use_param_file("@%s", use_always = True)
             args.set_param_file_format("multiline")
             args.add("--bazelValidationFile", typecheck_output.short_path)
-
-        args.add("--noEmit")
+        else:
+            env["JS_BINARY__STDOUT_OUTPUT_FILE"] = typecheck_output.path
 
         ctx.actions.run(
             executable = executable,
@@ -253,10 +259,7 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
                 ctx.label,
                 tsconfig_path,
             ),
-            env = {
-                "BAZEL_BINDIR": ctx.bin_dir.path,
-                "JS_BINARY__STDOUT_OUTPUT_FILE": typecheck_output.path,
-            },
+            env = env,
         )
     else:
         typecheck_outs.extend(output_types)

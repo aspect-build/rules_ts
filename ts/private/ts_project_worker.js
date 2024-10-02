@@ -310,7 +310,7 @@ function createFilesystemTree(root, inputs) {
         if (typeof node == "object" && node[Type] == TYPE.SYMLINK) {
            return parents.join(path.sep);
         }
-        
+
         return undefined;
     }
 
@@ -527,7 +527,6 @@ function createEmitAndLibCacheAndDiagnosticsProgram(
 
     /** Lib Cache */
     const getSourceFile = host.getSourceFile;
-
     host.getSourceFile = (fileName) => {
         if (libCache.has(fileName)) {
             return libCache.get(fileName);
@@ -881,9 +880,11 @@ async function emit(request) {
     debug(`# Beginning new work`);
     debug(`arguments: ${request.arguments.join(' ')}`)
 
-    const validationPath = request.arguments[request.arguments.indexOf('--bazelValidationFile') + 1]
-    fs.writeFileSync(path.resolve(process.cwd(), validationPath), '');
-    
+    if (request.arguments.includes('--bazelValidationFile')) {
+        const [, validationPath] = request.arguments.splice(request.arguments.indexOf('--bazelValidationFile'), 2);
+        fs.writeFileSync(path.resolve(process.cwd(), validationPath), '');
+    }
+
     const inputs = Object.fromEntries(
         request.inputs.map(input => [
             input.path,
@@ -946,9 +947,9 @@ async function emit(request) {
     const diagnostics = ts.getPreEmitDiagnostics(program, undefined, cancellationToken).concat(result?.diagnostics);
     timingEnd('diagnostics');
 
-    const succeded = diagnostics.length === 0;
+    const succeeded = diagnostics.length === 0;
 
-    if (!succeded) {
+    if (!succeeded) {
         request.output.write(worker.formatDiagnostics(diagnostics));
         VERBOSE && worker.printFSTree()
     }
@@ -956,12 +957,12 @@ async function emit(request) {
     if (ts.performance && ts.performance.isEnabled()) {
         ts.performance.forEachMeasure((name, duration) => request.output.write(`${name} time: ${duration}\n`));
     }
- 
+
     worker.previousInputs = inputs;
     worker.postRun();
 
     debug(`# Finished the work`);
-    return succeded ? 0 : 1;
+    return succeeded ? 0 : 1;
 }
 
 
@@ -998,7 +999,7 @@ if (require.main === module && worker_protocol.isPersistentWorker(process.argv))
     const args = fs.readFileSync(p).toString().trim().split('\n');
 
     if (args.includes('--bazelValidationFile')) {
-        const [, validationPath] = args.splice(args.indexOf('--bazelValidationFile'), 2);    
+        const [, validationPath] = args.splice(args.indexOf('--bazelValidationFile'), 2);
         fs.writeFileSync(path.resolve(process.cwd(), validationPath), '');
     }
 
