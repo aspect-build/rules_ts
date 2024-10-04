@@ -231,26 +231,31 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         typecheck_output = ctx.actions.declare_file(ctx.attr.name + ".typecheck")
         typecheck_outs.append(typecheck_output)
 
-        args = ctx.actions.args()
-        args.add_all(common_args)
+        typecheck_arguments = ctx.actions.args()
+        typecheck_arguments.add_all(common_args)
 
-        args.add("--noEmit")
+        typecheck_arguments.add("--noEmit")
 
         env = {
             "BAZEL_BINDIR": ctx.bin_dir.path,
         }
 
+        # In non-worker mode, we create the marker file by capturing stdout of the action
+        # via the JS_BINARY__STDOUT_OUTPUT_FILE environment variable, but in worker mode, the
+        # persistent worker protocol communicates with the worker process via stdin/stdout, so
+        # the output cannot just be captured. Instead, we tell the worker where to write the
+        # marker file by passing the path via the --bazelValidationFile flag.
         if supports_workers:
-            args.use_param_file("@%s", use_always = True)
-            args.set_param_file_format("multiline")
-            args.add("--bazelValidationFile", typecheck_output.short_path)
+            typecheck_arguments.use_param_file("@%s", use_always = True)
+            typecheck_arguments.set_param_file_format("multiline")
+            typecheck_arguments.add("--bazelValidationFile", typecheck_output.short_path)
         else:
             env["JS_BINARY__STDOUT_OUTPUT_FILE"] = typecheck_output.path
 
         ctx.actions.run(
             executable = executable,
             inputs = transitive_inputs_depset,
-            arguments = [args],
+            arguments = [typecheck_arguments],
             outputs = [typecheck_output],
             mnemonic = "TsProjectCheck",
             execution_requirements = execution_requirements,
@@ -265,35 +270,35 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         typecheck_outs.extend(output_types)
 
     if use_tsc_for_js or use_tsc_for_dts:
-        args = ctx.actions.args()
-        args.add_all(common_args)
+        tsc_emit_arguments = ctx.actions.args()
+        tsc_emit_arguments.add_all(common_args)
 
         # Type-checking is done async as a separate action and can be skipped.
         if ctx.attr.isolated_typecheck:
-            args.add("--noCheck")
-            args.add("--skipLibCheck")
-            args.add("--noResolve")
+            tsc_emit_arguments.add("--noCheck")
+            tsc_emit_arguments.add("--skipLibCheck")
+            tsc_emit_arguments.add("--noResolve")
 
         if not use_tsc_for_js:
             # Not emitting js
-            args.add("--emitDeclarationOnly")
+            tsc_emit_arguments.add("--emitDeclarationOnly")
 
         elif not use_tsc_for_dts:
             # Not emitting declarations
-            args.add("--declaration", "false")
+            tsc_emit_arguments.add("--declaration", "false")
 
         verb = "Transpiling" if ctx.attr.isolated_typecheck else "Transpiling & type-checking"
 
         inputs_depset = inputs if ctx.attr.isolated_typecheck else transitive_inputs_depset
 
         if supports_workers:
-            args.use_param_file("@%s", use_always = True)
-            args.set_param_file_format("multiline")
+            tsc_emit_arguments.use_param_file("@%s", use_always = True)
+            tsc_emit_arguments.set_param_file_format("multiline")
 
         ctx.actions.run(
             executable = executable,
             inputs = inputs_depset,
-            arguments = [args],
+            arguments = [tsc_emit_arguments],
             outputs = outputs,
             mnemonic = "TsProjectEmit" if ctx.attr.isolated_typecheck else "TsProject",
             execution_requirements = execution_requirements,
