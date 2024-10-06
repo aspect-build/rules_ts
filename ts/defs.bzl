@@ -373,17 +373,19 @@ def ts_project(
     if transpile_target_name or declarations_target_name:
         tsc_target_name = "%s_tsc" % name
 
-        lib_srcs = []
+        # Always include tsc target since even if it doesn't output js+dts, it may
+        # still be needed for JSON files to be included in the sources. Downstream
+        # dependencies of the js_library won't inadvertently cause this target to be
+        # typechecked when both transpiler targets for js+dts are present because
+        # the js_library doesn't include the ".typecheck" file which is only in the
+        # "typecheck" output group.
+        lib_srcs = [tsc_target_name]
 
         # Include the transpiler targets for both js+dts if they exist.
         if transpile_target_name:
             lib_srcs.append(transpile_target_name)
         if declarations_target_name:
             lib_srcs.append(declarations_target_name)
-
-        # If tsc outputs anything (js or dts) then it should be included in the srcs.
-        if not (transpile_target_name and declarations_target_name):
-            lib_srcs.append(tsc_target_name)
 
         # Include direct & transitive deps in addition to transpiled sources so
         # that this js_library can be a valid dep for downstream ts_project or other rules_js derivative rules.
