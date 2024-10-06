@@ -1,7 +1,8 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("//ts:defs.bzl", "ts_project")
 load(":flags_test.bzl", "ts_project_flags_test_suite")
-load(":mock_transpiler.bzl", "mock")
+load(":mock_declaration_transpiler.bzl", mock_declaration_transpiler = "mock")
+load(":mock_transpiler.bzl", mock_transpiler = "mock")
 load(":transpiler_tests.bzl", "transpiler_test_suite")
 load(":ts_project_test.bzl", "ts_project_test_suite")
 
@@ -15,8 +16,9 @@ ts_project_flags_test_suite(name = "ts_project_flags_test")
 ts_project(
     name = "rootdir_works_with_repeated_directory",
     srcs = ["root/deep/root/deep_src.ts"],
+    declaration_transpiler = mock_declaration_transpiler,
     root_dir = "root",
-    transpiler = mock,
+    transpiler = mock_transpiler,
     tsconfig = {
         "compilerOptions": {
             "declaration": True,
@@ -30,4 +32,10 @@ bzl_library(
     srcs = ["mock_transpiler.bzl"],
     visibility = ["//visibility:public"],
     deps = ["@aspect_rules_ts//ts/private:ts_lib"],
+)
+
+bzl_library(
+    name = "mock_declaration_transpiler",
+    srcs = ["mock_declaration_transpiler.bzl"],
+    visibility = ["//visibility:public"],
 )
