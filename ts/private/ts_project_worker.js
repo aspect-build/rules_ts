@@ -310,7 +310,7 @@ function createFilesystemTree(root, inputs) {
         if (typeof node == "object" && node[Type] == TYPE.SYMLINK) {
            return parents.join(path.sep);
         }
-        
+
         return undefined;
     }
 
@@ -467,11 +467,6 @@ function createFilesystemTree(root, inputs) {
 
 
 /** Program and Caching */
-function isExternalLib(path) {
-    return path.includes('external') &&
-        path.includes('typescript@') &&
-        path.includes('node_modules/typescript/lib')
-}
 
 const libCache = new Map();
 
@@ -537,7 +532,7 @@ function createEmitAndLibCacheAndDiagnosticsProgram(
             return libCache.get(fileName);
         }
         const sf = getSourceFile(fileName);
-        if (sf && isExternalLib(fileName)) {
+        if (sf && path.relative(host.getDefaultLibLocation(), fileName).startsWith('..')) {
             debug(`createEmitAndLibCacheAndDiagnosticsProgram: putting default lib ${fileName} into cache.`)
             libCache.set(fileName, sf);
         }
@@ -553,7 +548,8 @@ function createProgram(args, inputs, output, exit) {
     const execroot = path.resolve(bin, '..', '..', '..'); // execroot
     const tsconfig = path.relative(execroot, path.resolve(bin, cmd.options.project)); // bazel-bin/<cfg>/bin/<pkg>/<options.project>
     const cfg = path.relative(execroot, bin) // /bazel-bin/<cfg>/bin
-    const executingfilepath = path.relative(execroot, require.resolve("typescript")); // /bazel-bin/<opt-cfg>/bin/node_modules/tsc/...
+    const executingFilePath = path.relative(execroot, require.resolve("typescript")); // /bazel-bin/<opt-cfg>/bin/node_modules/tsc/...
+    const executingDirectoryPath = path.dirname(executingFilePath);
 
     const filesystem = createFilesystemTree(execroot, inputs);
     const outputs = new Set();
@@ -565,7 +561,7 @@ function createProgram(args, inputs, output, exit) {
         write: write,
         writeOutputIsTTY: () => false,
         getCurrentDirectory: () => "/" + cfg,
-        getExecutingFilePath: () => "/" + executingfilepath,
+        getExecutingFilePath: () => "/" + executingFilePath,
         exit: exit,
         resolvePath: notImplemented("sys.resolvePath", true, 0),
         // handled by fstree.
@@ -605,7 +601,7 @@ function createProgram(args, inputs, output, exit) {
     debug(`execroot: ${execroot}`);
     debug(`bin: ${bin}`);
     debug(`cfg: ${cfg}`);
-    debug(`executingfilepath: ${executingfilepath}`);
+    debug(`executingFilePath: ${executingFilePath}`);
 
     let compilerOptions = readCompilerOptions();
 
@@ -757,8 +753,12 @@ function createProgram(args, inputs, output, exit) {
     function readFile(filePath, encoding) {
         filePath = path.resolve(sys.getCurrentDirectory(), filePath)
 
-        //external lib are transitive sources thus not listed in the inputs map reported by bazel.
-        if (!filesystem.fileExists(filePath) && !isExternalLib(filePath) && !outputs.has(filePath)) {
+        // external lib are transitive sources thus not listed in the inputs map reported by bazel.
+        if (
+            !filesystem.fileExists(filePath) &&
+            path.relative("/" + executingDirectoryPath, filePath).startsWith('..') &&
+            !outputs.has(filePath)
+        ) {
             output.write(`tsc tried to read file (${filePath}) that wasn't an input to it.` + "\n");
             throw new Error(`tsc tried to read file (${filePath}) that wasn't an input to it.`);
         }
@@ -880,9 +880,11 @@ async function emit(request) {
     debug(`# Beginning new work`);
     debug(`arguments: ${request.arguments.join(' ')}`)
 
-    const validationPath = request.arguments[request.arguments.indexOf('--bazelValidationFile') + 1]
-    fs.writeFileSync(path.resolve(process.cwd(), validationPath), '');
-    
+    if (request.arguments.includes('--bazelValidationFile')) {
+        const [, validationPath] = request.arguments.splice(request.arguments.indexOf('--bazelValidationFile'), 2);
+        fs.writeFileSync(path.resolve(process.cwd(), validationPath), '');
+    }
+
     const inputs = Object.fromEntries(
         request.inputs.map(input => [
             input.path,
@@ -945,9 +947,9 @@ async function emit(request) {
     const diagnostics = ts.getPreEmitDiagnostics(program, undefined, cancellationToken).concat(result?.diagnostics);
     timingEnd('diagnostics');
 
-    const succeded = diagnostics.length === 0;
+    const succeeded = diagnostics.length === 0;
 
-    if (!succeded) {
+    if (!succeeded) {
         request.output.write(worker.formatDiagnostics(diagnostics));
         VERBOSE && worker.printFSTree()
     }
@@ -955,12 +957,12 @@ async function emit(request) {
     if (ts.performance && ts.performance.isEnabled()) {
         ts.performance.forEachMeasure((name, duration) => request.output.write(`${name} time: ${duration}\n`));
     }
- 
+
     worker.previousInputs = inputs;
     worker.postRun();
 
     debug(`# Finished the work`);
-    return succeded ? 0 : 1;
+    return succeeded ? 0 : 1;
 }
 
 
@@ -997,7 +999,7 @@ if (require.main === module && worker_protocol.isPersistentWorker(process.argv))
     const args = fs.readFileSync(p).toString().trim().split('\n');
 
     if (args.includes('--bazelValidationFile')) {
-        const [, validationPath] = args.splice(args.indexOf('--bazelValidationFile'), 2);    
+        const [, validationPath] = args.splice(args.indexOf('--bazelValidationFile'), 2);
         fs.writeFileSync(path.resolve(process.cwd(), validationPath), '');
     }
 

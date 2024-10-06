@@ -84,7 +84,6 @@ def _ts_project_impl(ctx):
 
     typecheck_outs = []
 
-    arguments = ctx.actions.args()
     execution_requirements = {}
     executable = ctx.executable.tsc
 
@@ -114,25 +113,24 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
 """)
 
     if supports_workers:
-        # Set to use a multiline param-file for worker mode
-        arguments.use_param_file("@%s", use_always = True)
-        arguments.set_param_file_format("multiline")
         execution_requirements["supports-workers"] = "1"
         execution_requirements["worker-key-mnemonic"] = "TsProject"
         executable = ctx.executable.tsc_worker
 
+    common_args = []
+
     # Add all arguments from options first to allow users override them via args.
-    arguments.add_all(options.args)
+    common_args.extend(options.args)
 
     # Add user specified arguments *before* rule supplied arguments
-    arguments.add_all(ctx.attr.args)
+    common_args.extend(ctx.attr.args)
 
     outdir = _lib.join(
         ctx.label.workspace_root,
         _lib.join(ctx.label.package, ctx.attr.out_dir) if ctx.attr.out_dir else ctx.label.package,
     )
     tsconfig_path = to_output_relative_path(tsconfig)
-    arguments.add_all([
+    common_args.extend([
         "--project",
         tsconfig_path,
         "--outDir",
@@ -140,9 +138,10 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         "--rootDir",
         _lib.calculate_root_dir(ctx),
     ])
+
     if len(typings_outs) > 0:
         declaration_dir = _lib.join(ctx.label.workspace_root, ctx.label.package, typings_out_dir)
-        arguments.add("--declarationDir", declaration_dir)
+        common_args.extend(["--declarationDir", declaration_dir])
 
     inputs = srcs_inputs + tsconfig_inputs
 
@@ -166,7 +165,7 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
 
     outputs = js_outs + map_outs + typings_outs + typing_maps_outs
     if ctx.outputs.buildinfo_out:
-        arguments.add("--tsBuildInfoFile", to_output_relative_path(ctx.outputs.buildinfo_out))
+        common_args.extend(["--tsBuildInfoFile", to_output_relative_path(ctx.outputs.buildinfo_out)])
         outputs.append(ctx.outputs.buildinfo_out)
 
     output_sources = js_outs + map_outs + assets_outs
@@ -233,15 +232,30 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         typecheck_outs.append(typecheck_output)
 
         typecheck_arguments = ctx.actions.args()
-        if supports_workers:
-            typecheck_arguments.add("--bazelValidationFile", typecheck_output.short_path)
+        typecheck_arguments.add_all(common_args)
 
         typecheck_arguments.add("--noEmit")
+
+        env = {
+            "BAZEL_BINDIR": ctx.bin_dir.path,
+        }
+
+        # In non-worker mode, we create the marker file by capturing stdout of the action
+        # via the JS_BINARY__STDOUT_OUTPUT_FILE environment variable, but in worker mode, the
+        # persistent worker protocol communicates with the worker process via stdin/stdout, so
+        # the output cannot just be captured. Instead, we tell the worker where to write the
+        # marker file by passing the path via the --bazelValidationFile flag.
+        if supports_workers:
+            typecheck_arguments.use_param_file("@%s", use_always = True)
+            typecheck_arguments.set_param_file_format("multiline")
+            typecheck_arguments.add("--bazelValidationFile", typecheck_output.short_path)
+        else:
+            env["JS_BINARY__STDOUT_OUTPUT_FILE"] = typecheck_output.path
 
         ctx.actions.run(
             executable = executable,
             inputs = transitive_inputs_depset,
-            arguments = [arguments, typecheck_arguments],
+            arguments = [typecheck_arguments],
             outputs = [typecheck_output],
             mnemonic = "TsProjectCheck",
             execution_requirements = execution_requirements,
@@ -250,16 +264,14 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
                 ctx.label,
                 tsconfig_path,
             ),
-            env = {
-                "BAZEL_BINDIR": ctx.bin_dir.path,
-                "JS_BINARY__STDOUT_OUTPUT_FILE": typecheck_output.path,
-            },
+            env = env,
         )
     else:
         typecheck_outs.extend(output_types)
 
     if use_tsc_for_js or use_tsc_for_dts:
         tsc_emit_arguments = ctx.actions.args()
+        tsc_emit_arguments.add_all(common_args)
 
         # Type-checking is done async as a separate action and can be skipped.
         if ctx.attr.isolated_typecheck:
@@ -273,18 +285,20 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
 
         elif not use_tsc_for_dts:
             # Not emitting declarations
-            # TODO: why doesn't this work with workers?
-            if not supports_workers:
-                tsc_emit_arguments.add("--declaration", "false")
+            tsc_emit_arguments.add("--declaration", "false")
 
         verb = "Transpiling" if ctx.attr.isolated_typecheck else "Transpiling & type-checking"
 
         inputs_depset = inputs if ctx.attr.isolated_typecheck else transitive_inputs_depset
 
+        if supports_workers:
+            tsc_emit_arguments.use_param_file("@%s", use_always = True)
+            tsc_emit_arguments.set_param_file_format("multiline")
+
         ctx.actions.run(
             executable = executable,
             inputs = inputs_depset,
-            arguments = [arguments, tsc_emit_arguments],
+            arguments = [tsc_emit_arguments],
             outputs = outputs,
             mnemonic = "TsProjectEmit" if ctx.attr.isolated_typecheck else "TsProject",
             execution_requirements = execution_requirements,
