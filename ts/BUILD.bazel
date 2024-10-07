@@ -66,6 +66,7 @@ string_flag(
         "honor_tsconfig",
         "unspecified",
     ],
+    visibility = ["//visibility:public"],
 )
 
 bool_flag(
