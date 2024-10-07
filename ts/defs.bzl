@@ -5,7 +5,6 @@ inputs and produces JavaScript or declaration (.d.ts) outputs.
 """
 
 load("@aspect_bazel_lib//lib:utils.bzl", "to_label")
-load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@bazel_skylib//lib:partial.bzl", "partial")
 load("//ts/private:build_test.bzl", "build_test")
 load("//ts/private:ts_config.bzl", "write_tsconfig", _TsConfigInfo = "TsConfigInfo", _ts_config = "ts_config")
@@ -340,7 +339,6 @@ def ts_project(
     emit_tsc_dts = emit_dts and not emit_transpiler_dts
 
     # Target names for tsc, dts+js transpilers
-    tsc_target_name = name
     declarations_target_name = None
     transpile_target_name = None
 
@@ -368,35 +366,6 @@ def ts_project(
         transpile_target_name = "%s_transpile" % name
         _invoke_custom_transpiler("transpiler", transpiler, transpile_target_name, srcs, common_kwargs)
 
-    # Default target produced by the macro gives the js, dts and map outs,
-    # with the transitive dependencies.
-    if transpile_target_name or declarations_target_name:
-        tsc_target_name = "%s_tsc" % name
-
-        # Always include tsc target since even if it doesn't output js+dts, it may
-        # still be needed for JSON files to be included in the sources. Downstream
-        # dependencies of the js_library won't inadvertently cause this target to be
-        # typechecked when both transpiler targets for js+dts are present because
-        # the js_library doesn't include the ".typecheck" file which is only in the
-        # "typecheck" output group.
-        lib_srcs = [tsc_target_name]
-
-        # Include the transpiler targets for both js+dts if they exist.
-        if transpile_target_name:
-            lib_srcs.append(transpile_target_name)
-        if declarations_target_name:
-            lib_srcs.append(declarations_target_name)
-
-        # Include direct & transitive deps in addition to transpiled sources so
-        # that this js_library can be a valid dep for downstream ts_project or other rules_js derivative rules.
-        js_library(
-            name = name,
-            srcs = lib_srcs + assets,
-            deps = deps,
-            data = data,
-            **common_kwargs
-        )
-
     # If the primary target does not output dts files then type-checking has a separate target.
     if not emit_tsc_js or not emit_tsc_dts:
         types_target_name = "%s_types" % name
@@ -415,7 +384,7 @@ def ts_project(
                 # tsc outputs the types and must be extracted via output_group
                 native.filegroup(
                     name = types_target_name,
-                    srcs = [tsc_target_name],
+                    srcs = [name],
                     output_group = "types",
                     **common_kwargs
                 )
@@ -423,7 +392,7 @@ def ts_project(
         # Users should build this target to get a failed build when typechecking fails
         native.filegroup(
             name = typecheck_target_name,
-            srcs = [tsc_target_name],
+            srcs = [name],
             output_group = "typecheck",
             **common_kwargs
         )
@@ -453,7 +422,7 @@ def ts_project(
         })
 
     ts_project_rule(
-        name = tsc_target_name,
+        name = name,
         srcs = srcs,
         args = args,
         assets = assets,
@@ -485,6 +454,8 @@ def ts_project(
         tsc_worker = tsc_worker,
         transpile = -1 if not transpiler else int(transpiler == "tsc"),
         declaration_transpile = declaration_transpiler != None,
+        pretranspiled_js = transpile_target_name,
+        pretranspiled_dts = declarations_target_name,
         supports_workers = supports_workers,
         is_typescript_5_or_greater = is_typescript_5_or_greater,
         validate = validate,

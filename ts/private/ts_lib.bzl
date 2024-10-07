@@ -70,6 +70,12 @@ https://docs.aspect.build/rulesets/aspect_rules_js/docs/js_library#deps for more
         default = -1,
         values = [-1, 0, 1],
     ),
+    "pretranspiled_js": attr.label(
+        doc = "Externally transpiled .js to be included in output providers",
+    ),
+    "pretranspiled_dts": attr.label(
+        doc = "Externally transpiled .d.ts to be included in output providers",
+    ),
     "declaration_transpile": attr.bool(
         doc = "Whether tsc should be used to produce .d.ts outputs",
     ),
