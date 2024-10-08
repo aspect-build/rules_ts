@@ -1,0 +1,25 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@aspect_rules_swc//swc:defs.bzl", "swc")
+load("@bazel_skylib//lib:partial.bzl", "partial")
+
+ts_project(
+    name = "src",
+    srcs = [
+        "a.js",
+        "b.ts",
+    ],
+    allow_js = True,
+    declaration = True,
+    emit_declaration_only = True,
+    resolve_json_module = True,
+    transpiler = partial.make(
+        swc,
+        swcrc = ":.swcrc",
+    ),
+    tsconfig = ":tsconfig.json",
+)
+
+filegroup(
+    name = "transpiled_srcs",
+    srcs = ["b.js"],
+)
