@@ -168,7 +168,7 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         common_args.extend(["--tsBuildInfoFile", to_output_relative_path(ctx.outputs.buildinfo_out)])
         outputs.append(ctx.outputs.buildinfo_out)
 
-    output_sources = js_outs + map_outs + assets_outs
+    output_sources = js_outs + map_outs + assets_outs + ctx.files.pretranspiled_js
 
     # Add JS inputs that collide with outputs (see #250).
     #
@@ -190,7 +190,7 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
     if len(outputs) > 0 and ctx.attr.transpile == -1 and not ctx.attr.emit_declaration_only and not options.default_to_tsc_transpiler:
         fail(transpiler_selection_required)
 
-    output_types = typings_outs + typing_maps_outs + typings_srcs
+    output_types = typings_outs + typing_maps_outs + typings_srcs + ctx.files.pretranspiled_dts
 
     # What tsc will be emitting
     use_tsc_for_js = len(js_outs) > 0
@@ -202,17 +202,8 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
     #  - not invoking tsc for output files at all
     use_isolated_typecheck = ctx.attr.isolated_typecheck or not (use_tsc_for_js or use_tsc_for_dts)
 
-    # We don't produce any DefaultInfo outputs in this case, because we avoid running the tsc action
-    # unless the output_types are requested.
-    default_outputs = []
-
-    # Default outputs (DefaultInfo files) is what you see on the command-line for a built
-    # library, and determines what files are used by a simple non-provider-aware downstream
-    # library. Only the JavaScript outputs are intended for use in non-TS-aware dependents.
-    if use_tsc_for_js:
-        # Special case case where there are no source outputs and we don't have a custom
-        # transpiler so we add output_types to the default outputs
-        default_outputs = output_sources if len(output_sources) else output_types
+    # Special case where there are no source outputs so we add output_types to the default outputs.
+    default_outputs = output_sources if len(output_sources) else output_types
 
     srcs_tsconfig_deps = ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps
 
