@@ -1,0 +1,47 @@
+{
+  "compilerOptions": {
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "jsx": "react",
+    "moduleResolution": "node",
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitReturns": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "experimentalDecorators": true,
+    "lib": ["dom", "es2022", "dom.iterable"],
+    "baseUrl": "./",
+    "paths": {
+      "wkspc/*": ["*", "bazel-out/k8-opt/bin/*"]
+    },
+    "esModuleInterop": true,
+    "downlevelIteration": true,
+    "module": "esnext",
+    "target": "es2020",
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "rootDirs": [
+      ".",
+      // Add all possible bazel-out directories
+      // See https://github.com/microsoft/TypeScript/issues/37257
+      "./bazel-out/darwin-dbg/bin",
+      "./bazel-out/darwin-fastbuild/bin",
+      "./bazel-out/k8-dbg/bin",
+      "./bazel-out/k8-fastbuild/bin",
+      "./bazel-out/k8-opt/bin",
+      "./bazel-out/k8-opt-arm64/bin",
+      "./bazel-out/x64_windows-dbg/bin",
+      "./bazel-out/x64_windows-fastbuild/bin"
+    ],
+    "allowJs": true,
+    "useUnknownInCatchVariables": false,
+    "isolatedModules": true
+  },
+  "exclude": [
+    // Some typescript dependencies that get pulled in
+    // when you set allowJs to true.
+    "bazel-out/host/bin/external/npm/typescript/*",
+    "bazel-out/*exec*/bin/external/npm/typescript/*"
+  ]
+}
