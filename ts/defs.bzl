@@ -387,7 +387,9 @@ def ts_project(
     # If the primary target does not output dts files then type-checking has a separate target.
     if not emit_tsc_js or not emit_tsc_dts:
         typecheck_target_name = "%s_typecheck" % name
+        transitive_typecheck_target_name = "%s_transitive_typecheck" % name
         test_target_name = "%s_typecheck_test" % name
+        transitive_typecheck_test_target_name = "%s_transitive_typecheck_test" % name
 
         # Users should build this target to get a failed build when typechecking fails
         native.filegroup(
@@ -397,10 +399,26 @@ def ts_project(
             **common_kwargs
         )
 
+        # Users should build this target to get a failed build when typechecking fails
+        native.filegroup(
+            name = transitive_typecheck_target_name,
+            srcs = [name],
+            output_group = "transitive_typecheck",
+            **common_kwargs
+        )
+
         # Ensures the typecheck target gets built under `bazel test --build_tests_only`
         build_test(
             name = test_target_name,
             targets = [typecheck_target_name],
+            tags = common_kwargs.get("tags"),
+            size = "small",
+            visibility = common_kwargs.get("visibility"),
+        )
+
+        build_test(
+            name = transitive_typecheck_test_target_name,
+            targets = [transitive_typecheck_target_name],
             tags = common_kwargs.get("tags"),
             size = "small",
             visibility = common_kwargs.get("visibility"),
