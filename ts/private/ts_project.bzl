@@ -29,6 +29,14 @@ def _gather_types_from_js_infos(targets):
     ])
     return depset([], transitive = files_depsets)
 
+def _gather_transitive_typecheck_from_output_group_infos(typecheck_outs, targets):
+    files_depsets = [
+        target[OutputGroupInfo].transitive_typecheck
+        for target in targets
+        if OutputGroupInfo in target and "transitive_typecheck" in target[OutputGroupInfo]
+    ]
+    return depset(typecheck_outs, transitive = files_depsets)
+
 def _ts_project_impl(ctx):
     """Creates the action which spawns `tsc`.
 
@@ -308,6 +316,8 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
 
     transitive_types = js_lib_helpers.gather_transitive_types(output_types, srcs_tsconfig_deps)
 
+    transitive_typecheck = _gather_transitive_typecheck_from_output_group_infos(typecheck_outs, ctx.attr.deps)
+
     npm_sources = js_lib_helpers.gather_npm_sources(
         srcs = ctx.attr.srcs + [ctx.attr.tsconfig],
         deps = ctx.attr.deps,
@@ -345,6 +355,7 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         OutputGroupInfo(
             types = output_types_depset,
             typecheck = depset(typecheck_outs),
+            transitive_typecheck = transitive_typecheck,
             # make the inputs to the tsc action available for analysis testing
             _action_inputs = transitive_inputs_depset,
             # https://bazel.build/extending/rules#validations_output_group
