@@ -35,17 +35,37 @@ ts_project(
         # Label to a rule
         ":gen-a-ts",
     ],
+    declaration = True,
     out_dir = "out",
+    source_map = True,
+    tsconfig = "tsconfig.json",
 )
 
-# Ensure all the outputs are pre-declared
+# Ensure all the outputs are pre-declared and in the correct locations including
+# dts and .map files
 build_test(
-    name = "test",
+    name = "src_targets_test",
     targets = [
         "out/a.js",
+        "out/a.js.map",
+        "out/a.d.ts",
         "out/b.js",
+        "out/b.js.map",
+        "out/b.d.ts",
         "out/c.js",
+        "out/c.js.map",
+        "out/c.d.ts",
         "out/d.js",
-        "out/e.js",
+        "out/d.js.map",
+        "out/d.d.ts",
+        "out/e.d.ts",
+    ],
+)
+
+build_test(
+    name = "types_targets_test",
+    targets = [
+        ":out-refs",
+        ":out-refs_types",
     ],
 )

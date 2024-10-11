@@ -366,28 +366,28 @@ def ts_project(
         transpile_target_name = "%s_transpile" % name
         _invoke_custom_transpiler("transpiler", transpiler, transpile_target_name, srcs, common_kwargs)
 
+    # Users should build this target to get typing files
+    types_target_name = "%s_types" % name
+    if not no_emit:
+        if declarations_target_name:
+            # A standalone target outputs the types
+            native.alias(
+                name = types_target_name,
+                actual = declarations_target_name,
+            )
+        else:
+            # tsc outputs the types and must be extracted via output_group
+            native.filegroup(
+                name = types_target_name,
+                srcs = [name],
+                output_group = "types",
+                **common_kwargs
+            )
+
     # If the primary target does not output dts files then type-checking has a separate target.
     if not emit_tsc_js or not emit_tsc_dts:
-        types_target_name = "%s_types" % name
         typecheck_target_name = "%s_typecheck" % name
         test_target_name = "%s_typecheck_test" % name
-
-        # Users should build this target to get typing files
-        if not no_emit:
-            if declarations_target_name:
-                # A standalone target outputs the types
-                native.alias(
-                    name = types_target_name,
-                    actual = declarations_target_name,
-                )
-            else:
-                # tsc outputs the types and must be extracted via output_group
-                native.filegroup(
-                    name = types_target_name,
-                    srcs = [name],
-                    output_group = "types",
-                    **common_kwargs
-                )
 
         # Users should build this target to get a failed build when typechecking fails
         native.filegroup(
