@@ -30,6 +30,14 @@ write_file(
     ],
 )
 
+write_file(
+    name = "gen_typecheck_fail",
+    out = "typecheck_fail.ts",
+    content = [
+        "export const c: string = 43",
+    ],
+)
+
 # Runs babel to transpile ts -> js
 # and tsc to type-check
 ts_project(
@@ -90,6 +98,27 @@ build_test(
         ":no-declarations",
         ":no-declarations_typecheck",
         "a.js",  # NOTE: does not implement out_dir in this test
+    ],
+)
+
+# Runs babel to transpile ts -> js while tsc would fail with typecheck errors
+# Tagging as manual should prevent the typecheck from running even when requesting
+# transpiler output files.
+ts_project(
+    name = "typecheck_fail",
+    srcs = ["typecheck_fail.ts"],
+    declaration = True,
+    source_map = True,
+    tags = ["manual"],
+    transpiler = babel,
+)
+
+build_test(
+    name = "targets_manual_test",
+    targets = [
+        ":typecheck_fail",
+        "typecheck_fail.js",
+        "typecheck_fail.js.map",
     ],
 )
 
