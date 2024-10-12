@@ -404,7 +404,9 @@ def ts_project(
             name = transitive_typecheck_target_name,
             srcs = [name],
             output_group = "transitive_typecheck",
-            **common_kwargs
+            tags = ["manual"] + common_kwargs.get("tags", []),
+            visibility = common_kwargs.get("visibility"),
+            testonly = common_kwargs.get("testonly"),
         )
 
         # Ensures the typecheck target gets built under `bazel test --build_tests_only`
@@ -419,7 +421,7 @@ def ts_project(
         build_test(
             name = transitive_typecheck_test_target_name,
             targets = [transitive_typecheck_target_name],
-            tags = common_kwargs.get("tags"),
+            tags = ["manual"] + common_kwargs.get("tags", []),
             size = "small",
             visibility = common_kwargs.get("visibility"),
         )
