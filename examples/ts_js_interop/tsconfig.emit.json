@@ -1,6 +1,5 @@
 {
     "compilerOptions": {
-        "emitDeclarationOnly": true,
         "declaration": true,
         "moduleResolution": "node",
         "baseUrl": "./",
