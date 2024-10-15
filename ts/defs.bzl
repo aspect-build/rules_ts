@@ -59,6 +59,7 @@ def ts_project(
         declaration_dir = None,
         out_dir = None,
         root_dir = None,
+        copy_data_to_bin = None,
         supports_workers = -1,
         **kwargs):
     """Compiles one TypeScript project using `tsc --project`.
@@ -239,6 +240,9 @@ def ts_project(
             Instructs Bazel *not* to expect `.js` or `.js.map` outputs for `.ts` sources.
         ts_build_info_file: The user-specified value of `tsBuildInfoFile` from the tsconfig.
             Helps Bazel to predict the path where the .tsbuildinfo output is written.
+
+        copy_data_to_bin: When True, `data` files are copied to the Bazel output tree before being passed as inputs to runfiles.
+            Defaults to `transpiler != None` due to backwards compatiblity (see #716/ #411).
 
         supports_workers: Whether the "Persistent Worker" protocol is enabled.
             This uses a custom `tsc` compiler to make rebuilds faster.
@@ -421,6 +425,9 @@ def ts_project(
             "//conditions:default": False,
         })
 
+    if copy_data_to_bin == None:
+        copy_data_to_bin = transpiler != None
+
     ts_project_rule(
         name = name,
         srcs = srcs,
@@ -460,6 +467,7 @@ def ts_project(
         is_typescript_5_or_greater = is_typescript_5_or_greater,
         validate = validate,
         validator = validator,
+        copy_data_to_bin = copy_data_to_bin,
         **kwargs
     )
 

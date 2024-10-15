@@ -325,6 +325,8 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         sources = output_sources_depset,
         data = ctx.attr.data,
         deps = srcs_tsconfig_deps,
+        data_files = ctx.files.data,
+        copy_data_files_to_bin = ctx.attr.copy_data_to_bin,
     )
 
     providers = [
