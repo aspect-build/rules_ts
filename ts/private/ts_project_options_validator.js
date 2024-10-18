@@ -142,6 +142,14 @@ function main(_a) {
             }
         }
     }
+    if (attrs.out_dir && !('exclude' in config)) {
+        // console.error(`ERROR: ts_project rule ${target} specifies out_dir = '${attrs.out_dir}', but does not set 'exclude' in ${tsconfigPath}.
+        // As a result, TypeScript will set the exclude property to Bazel's binDir by default, which will cause all sources to be excluded.
+        // See https://github.com/microsoft/TypeScript/issues/59036.
+        // To fix this, set 'exclude = []' explicitly in your tsconfig.json.
+        // `)
+        //return 1
+    }
     if (options.preserveSymlinks) {
         console.error(
             'ERROR: ts_project rule ' +
@@ -213,6 +221,8 @@ function main(_a) {
             attrs.ts_build_info_file +
             '\n// preserve_jsx:          ' +
             attrs.preserve_jsx +
+            '\n// out_dir:               ' +
+            attrs.out_dir +
             '\n',
         'utf-8'
     )

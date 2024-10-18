@@ -37,6 +37,7 @@ def _validate_action(ctx, tsconfig_inputs):
         incremental = ctx.attr.incremental,
         ts_build_info_file = ctx.attr.ts_build_info_file,
         isolated_typecheck = ctx.attr.isolated_typecheck,
+        out_dir = ctx.attr.out_dir,
     )
     arguments.add_all([
         to_output_relative_path(tsconfig),

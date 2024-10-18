@@ -6,7 +6,7 @@
         "module": "commonjs",
         "target": "ES2015",
         "composite": true
-    },
+    }
     // Workaround https://github.com/microsoft/TypeScript/issues/59036
-    "exclude": []
+    // "exclude": []
 }
