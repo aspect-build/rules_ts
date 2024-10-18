@@ -84,7 +84,7 @@ build_test(
     targets = [
         # babel ts_project
         ":babel",
-        ":babel_typecheck",
+        ":babel_types",
         # babel outputted js
         "big.js",  # NOTE: does not implement out_dir in this test
         # tsc outputted dts
@@ -119,6 +119,36 @@ build_test(
         ":typecheck_fail",
         "typecheck_fail.js",
         "typecheck_fail.js.map",
+    ],
+)
+
+# custom js & dts transpilers, tsc will not run for typechecking when only requesting transpiled files.
+# Tagging as manual should prevent the typecheck from running even when requesting
+# transpiler output files.
+ts_project(
+    name = "typecheck_fail-custom_transpilers",
+    srcs = ["typecheck_fail.ts"],
+    declaration = True,
+    declaration_transpiler = partial.make(
+        tsc_dts,
+        args = ["--noCheck"],
+        out_dir = "build-typecheck_fail-custom_transpilers",
+    ),
+    out_dir = "build-typecheck_fail-custom_transpilers",
+    source_map = True,
+    tags = ["manual"],
+    transpiler = partial.make(
+        tsc_js,
+        args = ["--noCheck"],
+        out_dir = "build-typecheck_fail-custom_transpilers",
+    ),
+)
+
+build_test(
+    name = "typecheck_fail-custom_transpilers_test",
+    targets = [
+        ":typecheck_fail-custom_transpilers",
+        ":typecheck_fail-custom_transpilers_types",
     ],
 )
 
@@ -214,7 +244,6 @@ build_test(
     targets = [
         ":custom_dts_transpiler",
         ":custom_dts_transpiler_types",
-        ":custom_dts_transpiler_typecheck",
         "build-custom_dts_transpiler/a.js",
         "build-custom_dts_transpiler/a.d.ts",
     ],
@@ -243,7 +272,6 @@ build_test(
     name = "custom_dts_transpiler-no_declarations-test",
     targets = [
         ":custom_dts_transpiler-no_declarations",
-        ":custom_dts_transpiler-no_declarations_typecheck",
         "build-custom_dts_transpiler-no_declarations/a.js",
     ],
 )
