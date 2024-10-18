@@ -6,6 +6,4 @@
         // TODO: enable lib check here: repair broken type-check
         "skipLibCheck": true
     }
-    // Workaround https://github.com/microsoft/TypeScript/issues/59036
-    // "exclude": []
 }
