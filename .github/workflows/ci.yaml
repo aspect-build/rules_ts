@@ -107,10 +107,14 @@ jobs:
             - name: Mount bazel caches
               uses: actions/cache@v4
               with:
+                  # Cache the --dist_cache and --repository_cache directories (see ci.bazelrc)
+                  # and the default bazel output (https://bazel.build/remote/output-directories#layout)
+                  # and bazelisk cache.
                   path: |
                       ~/.cache/bazel-disk-cache
                       ~/.cache/bazel-repository-cache
-                      ~/.cache/xdg-cache
+                      ~/.cache/bazel
+                      ~/.cache/bazelisk
                   key: >-
                       bazel-cache-${{ matrix.bazel-version.version }}-${{ matrix.bzlmod }}-${{ matrix.os }}-${{ matrix.folder }}-
                       ${{ hashFiles('.bazelrc', '.bazelversion', '.bazeliskrc', '**/BUILD', '**/BUILD.bazel', '**/*.bzl', 'WORKSPACE', 'WORKSPACE.bazel', 'WORKSPACE.bzlmod', 'MODULE.bazel', '**/*.js', '!e2e') }}-
@@ -152,10 +156,8 @@ jobs:
                     --build_tag_filters=-skip-on-bazel${{ matrix.bazel-version.major }},-skip-on-bzlmod-${{ matrix.bzlmod }} \
                     --enable_bzlmod=${{ matrix.bzlmod }} \
                     //...
-              env:
-                  XDG_CACHE_HOME: ~/.cache/xdg-cache # bazelisk will download bazel to here
 
-    test-worker:
+    bats-tests:
         runs-on: ubuntu-latest
         needs:
             - matrix-prep
