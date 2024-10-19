@@ -125,23 +125,28 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
     # Add user specified arguments *before* rule supplied arguments
     common_args.extend(ctx.attr.args)
 
-    outdir = _lib.join(
-        ctx.label.workspace_root,
-        _lib.join(ctx.label.package, ctx.attr.out_dir) if ctx.attr.out_dir else ctx.label.package,
-    )
+    if (ctx.attr.out_dir and ctx.attr.out_dir != ".") or ctx.attr.root_dir:
+        # TODO: add validation that excludes is non-empty in this case, as passing the --outDir or --declarationDir flag
+        # to TypeScript causes it to set a default for excludes such that it won't find our sources that were copied-to-bin.
+        # See https://github.com/microsoft/TypeScript/issues/59036 and https://github.com/aspect-build/rules_ts/issues/644
+        common_args.extend([
+            "--outDir",
+            _lib.join(ctx.label.workspace_root, ctx.label.package, ctx.attr.out_dir),
+        ])
+
+        if len(typings_outs) > 0:
+            common_args.extend([
+                "--declarationDir",
+                _lib.join(ctx.label.workspace_root, ctx.label.package, typings_out_dir),
+            ])
+
     tsconfig_path = to_output_relative_path(tsconfig)
     common_args.extend([
         "--project",
         tsconfig_path,
-        "--outDir",
-        outdir,
         "--rootDir",
         _lib.calculate_root_dir(ctx),
     ])
-
-    if len(typings_outs) > 0:
-        declaration_dir = _lib.join(ctx.label.workspace_root, ctx.label.package, typings_out_dir)
-        common_args.extend(["--declarationDir", declaration_dir])
 
     inputs = srcs_inputs + tsconfig_inputs
 
