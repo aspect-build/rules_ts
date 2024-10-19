@@ -116,6 +116,10 @@ https://docs.aspect.build/rulesets/aspect_rules_js/docs/js_library#deps for more
         default = True,
     ),
     "validator": attr.label(mandatory = True, executable = True, cfg = "exec"),
+    "copy_data_to_bin": attr.bool(
+        doc = """When True, data files are copied to the Bazel output tree before being passed as inputs to runfiles.""",
+        default = False,
+    ),
     "_options": attr.label(
         default = "@aspect_rules_ts//ts:options",
     ),

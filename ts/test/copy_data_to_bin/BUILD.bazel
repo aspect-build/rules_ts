@@ -1,0 +1,78 @@
+# Test data file copying behavior. See
+#
+# https://github.com/aspect-build/rules_ts/issues/411
+# https://github.com/aspect-build/rules_ts/issues/716
+#
+# Ideally, the behaviors with and without `transpiler` would align, but that is
+# backwards incompatible.
+
+load("@aspect_bazel_lib//lib:copy_file.bzl", "copy_file")
+load("@aspect_bazel_lib//lib:testing.bzl", "assert_contains")
+load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_run_binary")
+load("//ts:defs.bzl", "ts_project")
+load("//ts/test:mock_transpiler.bzl", "mock")
+
+copy_file(
+    name = "no_transpiler_src",
+    src = "check_has_data.ts",
+    out = "no_transpiler.ts",
+)
+
+ts_project(
+    name = "no_transpiler",
+    srcs = ["no_transpiler.ts"],
+    data = ["data.txt"],
+    tsconfig = {},
+)
+
+js_binary(
+    name = "no_transpiler_bin",
+    data = [":no_transpiler"],
+    entry_point = "no_transpiler.ts",
+)
+
+js_run_binary(
+    name = "no_transpiler_gen",
+    chdir = package_name(),
+    stdout = "no_transpiler_out.txt",
+    tool = ":no_transpiler_bin",
+)
+
+assert_contains(
+    name = "no_transpiler_test",
+    actual = "no_transpiler_out.txt",
+    expected = "false",
+)
+
+copy_file(
+    name = "with_transpiler_src",
+    src = "check_has_data.ts",
+    out = "with_transpiler.ts",
+)
+
+ts_project(
+    name = "with_transpiler",
+    srcs = ["with_transpiler.ts"],
+    data = ["data.txt"],
+    transpiler = mock,
+    tsconfig = {},
+)
+
+js_binary(
+    name = "with_transpiler_bin",
+    data = [":with_transpiler"],
+    entry_point = "with_transpiler.js",
+)
+
+js_run_binary(
+    name = "with_transpiler_gen",
+    chdir = package_name(),
+    stdout = "with_transpiler_out.txt",
+    tool = ":with_transpiler_bin",
+)
+
+assert_contains(
+    name = "with_transpiler_test",
+    actual = "with_transpiler_out.txt",
+    expected = "true",
+)
