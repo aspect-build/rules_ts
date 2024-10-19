@@ -8,7 +8,7 @@ def tsc_dts(name, srcs, out_dir, **kwargs):
         name = name,
         srcs = srcs + ["tsconfig.json"],
         outs = ["%s/%s" % (out_dir, src.replace(".ts", ".d.ts")) for src in srcs],
-        args = [
+        args = kwargs.pop("args", []) + [
             "-p %s/tsconfig.json" % native.package_name(),
             "--emitDeclarationOnly",
             "--outDir %s/%s" % (native.package_name(), out_dir),
@@ -22,7 +22,7 @@ def tsc_js(name, srcs, out_dir, **kwargs):
         name = name,
         srcs = srcs + ["tsconfig.json"],
         outs = ["%s/%s" % (out_dir, src.replace(".ts", ".js")) for src in srcs],
-        args = [
+        args = kwargs.pop("args", []) + [
             "-p %s/tsconfig.json" % native.package_name(),
             "--declaration",
             "false",
