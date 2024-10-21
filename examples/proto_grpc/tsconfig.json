@@ -3,5 +3,7 @@
         "module": "ES2022",
         "moduleResolution": "node",
         "lib": ["ES2022", "dom"]
-    }
+    },
+    // Workaround https://github.com/microsoft/TypeScript/issues/59036
+    "exclude": []
 }

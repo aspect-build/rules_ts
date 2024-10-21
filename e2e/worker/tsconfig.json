@@ -3,5 +3,7 @@
         "module": "ES2020",
         "moduleResolution": "node",
         "lib": ["ES2015", "DOM"]
-    }
+    },
+    // Workaround https://github.com/microsoft/TypeScript/issues/59036
+    "exclude": []
 }
