@@ -1,0 +1,55 @@
+load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_run_binary")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+
+ts_project(
+    name = "tsc",
+    srcs = [
+        "src/index.ts",
+        "src/src.json",
+    ],
+    assets = [
+        "src/asset.txt",
+    ],
+    data = [
+        "src/tsdata.json",
+        "src/tsdata.txt",
+        ":fg",
+    ],
+    resolve_json_module = True,
+    tsconfig = {
+        "compilerOptions": {
+            "resolveJsonModule": True,
+        },
+    },
+    deps = [
+        "//examples:node_modules/@types/node",
+    ],
+)
+
+filegroup(
+    name = "fg",
+    srcs = [
+        "src/fg.json",
+        "src/fg.txt",
+    ],
+)
+
+js_binary(
+    name = "bin1",
+    data = [":tsc"],
+    entry_point = "src/index.js",
+)
+
+js_run_binary(
+    name = "run1",
+    srcs = [],
+    outs = ["src/all.txt"],
+    args = ["%s/src" % package_name()],
+    tool = ":bin1",
+)
+
+build_test(
+    name = "test",
+    targets = ["src/all.txt"],
+)

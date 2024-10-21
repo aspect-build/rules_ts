@@ -50,6 +50,9 @@ ts_proto_library(
 ts_project(
     name = "proto_grpc",
     srcs = ["main.ts"],
+    data = [
+        "package.json",  # for type=module
+    ],
     deps = [
         ":logger_ts_proto",
         ":status_ts_proto",
@@ -59,7 +62,6 @@ ts_project(
 js_test(
     name = "main",
     data = [
-        "package.json",  # for type=module
         "proto_grpc",
     ],
     entry_point = "main.js",
