@@ -283,8 +283,6 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             # Not emitting declarations
             tsc_emit_arguments.add("--declaration", "false")
 
-        verb = "Transpiling" if ctx.attr.isolated_typecheck else "Transpiling & type-checking"
-
         inputs_depset = inputs if ctx.attr.isolated_typecheck else transitive_inputs_depset
 
         if supports_workers:
@@ -299,8 +297,11 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             mnemonic = "TsProjectEmit" if ctx.attr.isolated_typecheck else "TsProject",
             execution_requirements = execution_requirements,
             resource_set = resource_set(ctx.attr),
-            progress_message = "%s TypeScript project %s [tsc -p %s]" % (
-                verb,
+            progress_message = "Transpiling%s%s TypeScript project %s [tsc -p %s]" % (
+                # Mention what is being emitted if not both
+                "" if use_tsc_for_dts and use_tsc_for_js else " (dts)" if use_tsc_for_dts else " (js)",
+                # Mention type-checking if done in this action
+                " & type-checking" if not ctx.attr.isolated_typecheck else "",
                 ctx.label,
                 tsconfig_path,
             ),
