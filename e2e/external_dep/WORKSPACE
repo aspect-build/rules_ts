@@ -48,3 +48,8 @@ npm_translate_lock(
 load("@npm//:repositories.bzl", "npm_repositories")
 
 npm_repositories()
+
+local_repository(
+    name = "sub_external",
+    path = "./sub_external",
+)

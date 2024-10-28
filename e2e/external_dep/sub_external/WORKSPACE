@@ -1,0 +1,13 @@
+local_repository(
+    name = "aspect_rules_ts",
+    path = "../../..",
+)
+
+load("@aspect_rules_ts//ts:repositories.bzl", "LATEST_TYPESCRIPT_VERSION", "rules_ts_dependencies")
+
+rules_ts_dependencies(ts_version = LATEST_TYPESCRIPT_VERSION)
+
+rules_ts_dependencies(
+    name = "npm_typescript2",
+    ts_version = "latest",
+)
