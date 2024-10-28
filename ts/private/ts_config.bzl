@@ -140,6 +140,11 @@ def _write_tsconfig_rule(ctx):
     # Update file paths to be relative to the tsconfig file, including a ./ prefix
     # to ensure paths are all relative to the config file.
     package_prefix = ctx.label.package + "/"
+
+    # If the target is inside another workspace, we will need to also add the workspace
+    # root to the prefix.
+    if (len(ctx.label.repo_name) > 0):
+        package_prefix = "../{}/{}".format(ctx.label.repo_name, package_prefix)
     filtered_files = [
         "./" + f.short_path.removeprefix(package_prefix)
         for f in filtered_files
