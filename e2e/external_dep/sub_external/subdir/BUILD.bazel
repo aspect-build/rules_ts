@@ -1,31 +1,23 @@
 """Tests a `ts_project()` in one workspace being used in another."""
 
-load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
-
-# NOTE using an alternate npm_typescript name to workaround https://github.com/aspect-build/rules_ts/issues/483
+load("//:ts.bzl", "ts_project")
 
 ts_project(
     name = "lib1",
     srcs = ["sub-lib.ts"],
     declaration = True,
     out_dir = "out1",
-    tsc = "@npm_typescript2//:tsc",
-    tsc_worker = "@npm_typescript2//:tsc_worker",
-    validator = "@npm_typescript2//:validator",
     visibility = ["//visibility:public"],
 )
 
 ts_project(
     name = "tsconfig-dict",
     srcs = ["sub-lib.ts"],
-    tsc = "@npm_typescript2//:tsc",
-    tsc_worker = "@npm_typescript2//:tsc_worker",
     tsconfig = {
         "compilerOptions": {
             "declaration": True,
             "outDir": "tsconfig-dict",
         },
     },
-    validator = "@npm_typescript2//:validator",
     visibility = ["//visibility:public"],
 )
