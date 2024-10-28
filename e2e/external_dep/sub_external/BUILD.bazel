@@ -2,6 +2,8 @@
 
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 
+# NOTE using an alternate npm_typescript name to workaround https://github.com/aspect-build/rules_ts/issues/483
+
 ts_project(
     name = "lib1",
     srcs = ["sub-lib.ts"],
