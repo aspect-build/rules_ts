@@ -36,3 +36,9 @@ rules_ts_ext.deps(
     ts_version = "5.6.1-rc",
 )
 use_repo(rules_ts_ext, "npm_typescript", "npm_typescript-56rc", "npm_typescript3")
+
+bazel_dep(name = "sub_external", version = "0.0.0", dev_dependency = True)
+local_path_override(
+    module_name = "sub_external",
+    path = "./sub_external",
+)

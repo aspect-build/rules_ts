@@ -28,6 +28,12 @@ rules_ts_dependencies(
     ts_version = "5.6.1-rc",
 )
 
+# NOTE: only required on non-bzlmod where the sub_external/WORKSPACE is not loaded to declare npm_typescript2
+rules_ts_dependencies(
+    name = "npm_typescript2",
+    ts_version = LATEST_TYPESCRIPT_VERSION,
+)
+
 load("@aspect_rules_js//js:repositories.bzl", "rules_js_dependencies")
 
 rules_js_dependencies()
@@ -48,3 +54,8 @@ npm_translate_lock(
 load("@npm//:repositories.bzl", "npm_repositories")
 
 npm_repositories()
+
+local_repository(
+    name = "sub_external",
+    path = "./sub_external",
+)
