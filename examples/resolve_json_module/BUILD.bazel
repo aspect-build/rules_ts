@@ -13,6 +13,36 @@ ts_project(
     resolve_json_module = True,
 )
 
+ts_project(
+    name = "ts-dict-override",
+    srcs = [
+        "data.json",
+        "index.ts",
+    ],
+    extends = "tsconfig.json",
+    tsconfig = {
+        "compilerOptions": {
+            "outDir": "ts-dict-override",
+            "resolveJsonModule": True,
+        },
+    },
+)
+
+ts_project(
+    name = "ts-dict-unspecified",
+    srcs = [
+        "data.json",
+        "index.ts",
+    ],
+    extends = "tsconfig.json",
+    resolve_json_module = True,
+    tsconfig = {
+        "compilerOptions": {
+            "outDir": "ts-dict-unspecified",
+        },
+    },
+)
+
 assert_contains(
     name = "test",
     actual = "index.js",
@@ -25,3 +55,17 @@ js_test(
     data = [":ts"],
     entry_point = "index.js",
 )
+
+# Test that the json is available at runtime with various ways of
+# specifying resolveJsonModule in tsconfig.json.
+[
+    js_test(
+        name = "ts-with-json-%s" % t,
+        data = [":ts-%s" % t],
+        entry_point = "ts-%s/index.js" % t,
+    )
+    for t in [
+        "dict-override",
+        "dict-unspecified",
+    ]
+]
