@@ -260,15 +260,6 @@ def ts_project(
         **kwargs: passed through to underlying [`ts_project_rule`](#ts_project_rule), eg. `visibility`, `tags`
     """
 
-    if srcs == None:
-        include = ["**/*.ts", "**/*.tsx"]
-        exclude = []
-        if allow_js == True:
-            include.extend(["**/*.js", "**/*.jsx"])
-        if resolve_json_module == True:
-            include.append("**/*.json")
-            exclude.extend(["**/package.json", "**/package-lock.json", "**/tsconfig*.json"])
-        srcs = native.glob(include, exclude)
     tsc_deps = deps
 
     common_kwargs = {
@@ -299,17 +290,20 @@ def ts_project(
         no_emit = compiler_options.setdefault("noEmit", no_emit)
         emit_declaration_only = compiler_options.setdefault("emitDeclarationOnly", emit_declaration_only)
         allow_js = compiler_options.setdefault("allowJs", allow_js)
-        if resolve_json_module != None:
-            resolve_json_module = compiler_options.setdefault("resolveJsonModule", resolve_json_module)
+        resolve_json_module = compiler_options.setdefault("resolveJsonModule", resolve_json_module)
 
         # These options are always passed on the tsc command line so don't include them
         # in the tsconfig. At best they're redundant, but at worst we'll have a conflict
-        if "outDir" in compiler_options.keys():
-            out_dir = compiler_options.pop("outDir")
-        if "declarationDir" in compiler_options.keys():
-            declaration_dir = compiler_options.pop("declarationDir")
-        if "rootDir" in compiler_options.keys():
-            root_dir = compiler_options.pop("rootDir")
+        out_dir = compiler_options.pop("outDir", out_dir)
+        declaration_dir = compiler_options.pop("declarationDir", declaration_dir)
+        root_dir = compiler_options.pop("rootDir", root_dir)
+
+        if srcs == None:
+            # Default sources based on macro attributes after applying tsconfig properties
+            srcs = _default_srcs(
+                allow_js = allow_js,
+                resolve_json_module = resolve_json_module,
+            )
 
         # FIXME: need to remove keys that have a None value?
         write_tsconfig(
@@ -326,6 +320,12 @@ def ts_project(
         # From here, tsconfig becomes a file, the same as if the
         # user supplied a tsconfig.json InputArtifact
         tsconfig = "tsconfig_%s.json" % name
+    elif srcs == None:
+        # Default sources based on macro attributes
+        srcs = _default_srcs(
+            allow_js = allow_js,
+            resolve_json_module = resolve_json_module,
+        )
 
     typings_out_dir = declaration_dir if declaration_dir else out_dir
     tsbuildinfo_path = ts_build_info_file if ts_build_info_file else name + ".tsbuildinfo"
@@ -462,6 +462,20 @@ def ts_project(
         validator = validator,
         **kwargs
     )
+
+def _default_srcs(allow_js, resolve_json_module):
+    """Returns a list of srcs for ts_project when srcs is not provided."""
+    include = ["**/*.ts", "**/*.tsx"]
+    exclude = []
+
+    if allow_js == True:
+        include.extend(["**/*.js", "**/*.jsx"])
+
+    if resolve_json_module == True:
+        include.append("**/*.json")
+        exclude.extend(["**/package.json", "**/package-lock.json", "**/tsconfig*.json"])
+
+    return native.glob(include, exclude)
 
 def _invoke_custom_transpiler(type_str, transpiler, transpile_target_name, srcs, common_kwargs):
     if type(transpiler) == "function" or type(transpiler) == "rule":

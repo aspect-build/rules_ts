@@ -16,7 +16,6 @@ ts_project(
         "src/tsdata.txt",
         ":fg",
     ],
-    resolve_json_module = True,
     tsconfig = {
         "compilerOptions": {
             "resolveJsonModule": True,
