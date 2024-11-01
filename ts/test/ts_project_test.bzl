@@ -99,6 +99,15 @@ def _use_dir_test_impl(ctx):
 
 _use_dir_test = analysistest.make(_use_dir_test_impl)
 
+def _validate_tsconfig_exclude_test_impl(ctx):
+    env = analysistest.begin(ctx)
+
+    asserts.expect_failure(env, "tsconfig validation failed: when out_dir is set, exclude must also be set. See: https://github.com/aspect-build/rules_ts/issues/644 for more details.")
+
+    return analysistest.end(env)
+
+_validate_tsconfig_exclude_test = analysistest.make(_validate_tsconfig_exclude_test_impl, expect_failure = True)
+
 # Use a dict() defined at the top level so it gets analyzed as part of .bzl file loading
 # and is therefore immutable. See https://bazel.build/rules/language#mutability
 _TSCONFIG = {
@@ -150,6 +159,21 @@ def ts_project_test_suite(name):
         target_under_test = "use_dir",
     )
 
+    ts_project(
+        name = "validate_tsconfig_exclude",
+        srcs = [],
+        tsconfig = {
+            "compilerOptions": {
+                "outDir": ".",
+            },
+        },
+        tags = ["manual"],
+    )
+    _validate_tsconfig_exclude_test(
+        name = "validate_tsconfig_exclude_test",
+        target_under_test = "validate_tsconfig_exclude",
+    )
+
     write_file(
         name = "wrapper_ts",
         out = "wrapper.ts",
@@ -175,6 +199,7 @@ def ts_project_test_suite(name):
             ":dir_test",
             ":use_dir_test",
             ":wrapper_test",
+            ":validate_tsconfig_exclude_test",
         ],
     )
 
