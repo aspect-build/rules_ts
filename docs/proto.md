@@ -47,6 +47,8 @@ Future work
 ## ts_proto_library
 
 <pre>
+load("@aspect_rules_ts//ts:proto.bzl", "ts_proto_library")
+
 ts_proto_library(<a href="#ts_proto_library-name">name</a>, <a href="#ts_proto_library-node_modules">node_modules</a>, <a href="#ts_proto_library-proto">proto</a>, <a href="#ts_proto_library-protoc_gen_options">protoc_gen_options</a>, <a href="#ts_proto_library-gen_connect_es">gen_connect_es</a>, <a href="#ts_proto_library-gen_connect_query">gen_connect_query</a>,
                  <a href="#ts_proto_library-gen_connect_query_service_mapping">gen_connect_query_service_mapping</a>, <a href="#ts_proto_library-copy_files">copy_files</a>, <a href="#ts_proto_library-proto_srcs">proto_srcs</a>, <a href="#ts_proto_library-files_to_copy">files_to_copy</a>, <a href="#ts_proto_library-kwargs">kwargs</a>)
 </pre>
