@@ -23,7 +23,7 @@ def _is_file_missing(label):
     """
     file_abs = "%s/%s" % (label.package, label.name)
     file_rel = file_abs[len(native.package_name()) + 1:]
-    file_glob = native.glob([file_rel])
+    file_glob = native.glob([file_rel], allow_empty = True)
     return len(file_glob) == 0
 
 _tsc = "@npm_typescript//:tsc"
