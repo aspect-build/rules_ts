@@ -10,6 +10,8 @@ See https://docs.bazel.build/versions/main/skylark/deploying.html#dependencies
 ## rules_ts_dependencies
 
 <pre>
+load("@aspect_rules_ts//ts:repositories.bzl", "rules_ts_dependencies")
+
 rules_ts_dependencies(<a href="#rules_ts_dependencies-name">name</a>, <a href="#rules_ts_dependencies-ts_version_from">ts_version_from</a>, <a href="#rules_ts_dependencies-ts_version">ts_version</a>, <a href="#rules_ts_dependencies-ts_integrity">ts_integrity</a>)
 </pre>
 

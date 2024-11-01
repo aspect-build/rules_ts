@@ -10,6 +10,8 @@ inputs and produces JavaScript or declaration (.d.ts) outputs.
 ## ts_config
 
 <pre>
+load("@aspect_rules_ts//ts:defs.bzl", "ts_config")
+
 ts_config(<a href="#ts_config-name">name</a>, <a href="#ts_config-deps">deps</a>, <a href="#ts_config-src">src</a>)
 </pre>
 
@@ -35,6 +37,8 @@ extended configuration file as well, to pass them both to the TypeScript compile
 ## ts_project_rule
 
 <pre>
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project_rule")
+
 ts_project_rule(<a href="#ts_project_rule-name">name</a>, <a href="#ts_project_rule-deps">deps</a>, <a href="#ts_project_rule-srcs">srcs</a>, <a href="#ts_project_rule-data">data</a>, <a href="#ts_project_rule-allow_js">allow_js</a>, <a href="#ts_project_rule-args">args</a>, <a href="#ts_project_rule-assets">assets</a>, <a href="#ts_project_rule-buildinfo_out">buildinfo_out</a>, <a href="#ts_project_rule-composite">composite</a>,
                 <a href="#ts_project_rule-declaration">declaration</a>, <a href="#ts_project_rule-declaration_dir">declaration_dir</a>, <a href="#ts_project_rule-declaration_map">declaration_map</a>, <a href="#ts_project_rule-declaration_transpile">declaration_transpile</a>,
                 <a href="#ts_project_rule-emit_declaration_only">emit_declaration_only</a>, <a href="#ts_project_rule-extends">extends</a>, <a href="#ts_project_rule-incremental">incremental</a>, <a href="#ts_project_rule-is_typescript_5_or_greater">is_typescript_5_or_greater</a>,
@@ -101,6 +105,8 @@ for srcs and tsconfig, and pre-declaring output files.
 ## TsConfigInfo
 
 <pre>
+load("@aspect_rules_ts//ts:defs.bzl", "TsConfigInfo")
+
 TsConfigInfo(<a href="#TsConfigInfo-deps">deps</a>)
 </pre>
 
@@ -109,7 +115,6 @@ along with any transitively referenced tsconfig.json files chained by the
 "extends" feature
 
 **FIELDS**
-
 
 | Name  | Description |
 | :------------- | :------------- |
@@ -121,6 +126,8 @@ along with any transitively referenced tsconfig.json files chained by the
 ## ts_project
 
 <pre>
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
 ts_project(<a href="#ts_project-name">name</a>, <a href="#ts_project-tsconfig">tsconfig</a>, <a href="#ts_project-srcs">srcs</a>, <a href="#ts_project-args">args</a>, <a href="#ts_project-data">data</a>, <a href="#ts_project-deps">deps</a>, <a href="#ts_project-assets">assets</a>, <a href="#ts_project-extends">extends</a>, <a href="#ts_project-allow_js">allow_js</a>, <a href="#ts_project-isolated_typecheck">isolated_typecheck</a>,
            <a href="#ts_project-declaration">declaration</a>, <a href="#ts_project-source_map">source_map</a>, <a href="#ts_project-declaration_map">declaration_map</a>, <a href="#ts_project-resolve_json_module">resolve_json_module</a>, <a href="#ts_project-preserve_jsx">preserve_jsx</a>, <a href="#ts_project-composite">composite</a>,
            <a href="#ts_project-incremental">incremental</a>, <a href="#ts_project-no_emit">no_emit</a>, <a href="#ts_project-emit_declaration_only">emit_declaration_only</a>, <a href="#ts_project-transpiler">transpiler</a>, <a href="#ts_project-declaration_transpiler">declaration_transpiler</a>,

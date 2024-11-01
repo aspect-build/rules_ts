@@ -23,7 +23,7 @@ def _is_file_missing(label):
     """
     file_abs = "%s/%s" % (label.package, label.name)
     file_rel = file_abs[len(native.package_name()) + 1:]
-    file_glob = native.glob([file_rel])
+    file_glob = native.glob([file_rel], allow_empty = True)
     return len(file_glob) == 0
 
 _tsc = "@npm_typescript//:tsc"
@@ -475,7 +475,7 @@ def _default_srcs(allow_js, resolve_json_module):
         include.append("**/*.json")
         exclude.extend(["**/package.json", "**/package-lock.json", "**/tsconfig*.json"])
 
-    return native.glob(include, exclude)
+    return native.glob(include, exclude, allow_empty = True)
 
 def _invoke_custom_transpiler(type_str, transpiler, transpile_target_name, srcs, common_kwargs):
     if type(transpiler) == "function" or type(transpiler) == "rule":
