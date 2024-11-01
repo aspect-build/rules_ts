@@ -33,8 +33,11 @@ def rules_ts_internal_deps():
 
     http_archive(
         name = "io_bazel_stardoc",
-        sha256 = "62bd2e60216b7a6fec3ac79341aa201e0956477e7c8f6ccc286f279ad1d96432",
-        urls = ["https://github.com/bazelbuild/stardoc/releases/download/0.6.2/stardoc-0.6.2.tar.gz"],
+        sha256 = "fabb280f6c92a3b55eed89a918ca91e39fb733373c81e87a18ae9e32e75023ec",
+        urls = [
+            "https://mirror.bazel.build/github.com/bazelbuild/stardoc/releases/download/0.7.1/stardoc-0.7.1.tar.gz",
+            "https://github.com/bazelbuild/stardoc/releases/download/0.7.1/stardoc-0.7.1.tar.gz",
+        ],
     )
 
     http_archive(
