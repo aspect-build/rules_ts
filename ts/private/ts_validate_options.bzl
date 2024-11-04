@@ -44,6 +44,7 @@ def _validate_action(ctx, tsconfig_inputs):
         str(ctx.label),
         ctx.label.package,
         json.encode(config),
+        ctx.attr.out_dir,
     ])
 
     ctx.actions.run(
