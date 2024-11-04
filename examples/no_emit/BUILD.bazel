@@ -39,6 +39,7 @@ ts_project(
             "allowJs": True,
             "noEmit": True,
         },
+        "exclude": [],
     },
 )
 

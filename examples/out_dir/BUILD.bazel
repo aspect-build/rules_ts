@@ -10,6 +10,7 @@ ts_project(
             "declaration": True,
             "declarationMap": True,
         },
+        "exclude": [],
     },
 )
 
@@ -19,7 +20,9 @@ ts_project(
     declaration = True,
     declaration_map = True,
     out_dir = "param",
-    tsconfig = {},
+    tsconfig = {
+        "exclude": [],
+    },
 )
 
 ts_project(
@@ -29,7 +32,9 @@ ts_project(
     declaration_dir = "decl_map",
     declaration_map = True,
     out_dir = "declaration_dir",
-    tsconfig = {},
+    tsconfig = {
+        "exclude": [],
+    },
 )
 
 build_test(

@@ -12,7 +12,9 @@ ts_project(
     srcs = ["src/lib.ts"],
     declaration = True,
     out_dir = "dist",
-    tsconfig = {},
+    tsconfig = {
+        "exclude": [],
+    },
 )
 
 ts_project(
@@ -26,6 +28,7 @@ ts_project(
                 "dist",
             ],
         },
+        "exclude": [],
     },
     deps = [":lib"],
 )

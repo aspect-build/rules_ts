@@ -145,7 +145,7 @@ function main(_a) {
     }
 
     function check_exclude_and_outDir() {
-        if (attrs.exclude === undefined && out_dir !== undefined && out_dir !== '.' && out_dir !== '') {
+        if (config.exclude === undefined && out_dir !== undefined && out_dir !== '.' && out_dir !== '') {
             console.error('tsconfig validation failed: when out_dir is set, exclude must also be set. See: https://github.com/aspect-build/rules_ts/issues/644 for more details.')
 
             throw new Error('tsconfig validation failed: when out_dir is set, exclude must also be set.')

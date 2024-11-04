@@ -2,5 +2,6 @@
     "compilerOptions": {
         "declaration": true,
         "sourceMap": true
-    }
+    },
+    "exclude": []
 }

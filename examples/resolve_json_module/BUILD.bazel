@@ -25,6 +25,7 @@ ts_project(
             "outDir": "ts-dict-override",
             "resolveJsonModule": True,
         },
+        "exclude": [],
     },
 )
 
@@ -40,6 +41,7 @@ ts_project(
         "compilerOptions": {
             "outDir": "ts-dict-unspecified",
         },
+        "exclude": [],
     },
 )
 

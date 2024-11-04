@@ -14,6 +14,16 @@ ts_project(
     out_dir = "out",
     preserve_jsx = True,
     source_map = True,
+    tsconfig = {
+        "exclude": [],
+        "compilerOptions": {
+            "allowJs": True,
+            "sourceMap": True,
+            "declaration": True,
+            "declarationMap": True,
+            "jsx": "preserve",
+        },
+    },
 )
 
 filegroup(

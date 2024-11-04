@@ -51,6 +51,9 @@ ts_project(
     name = "replace",
     out_dir = "otherdir",
     root_dir = "subdir",
+    tsconfig = {
+        "exclude": [],
+    },
 )
 
 assert_outputs(

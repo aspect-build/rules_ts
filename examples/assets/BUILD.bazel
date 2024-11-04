@@ -41,7 +41,10 @@ ts_project(
     ],
     extends = ":config",
     out_dir = "out",
-    tsconfig = {"compilerOptions": {"outDir": "out"}},
+    tsconfig = {
+        "compilerOptions": {"outDir": "out"},
+        "exclude": [],
+    },
 )
 
 filegroup(

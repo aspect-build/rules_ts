@@ -47,6 +47,9 @@ ts_project(
     out_dir = "build-babel",
     source_map = True,
     transpiler = babel,
+    tsconfig = {
+        "exclude": [],
+    },
 )
 
 # Runs babel to transpile ts -> js
@@ -76,6 +79,7 @@ ts_project(
         "compilerOptions": {
             "declaration": False,
         },
+        "exclude": [],
     },
 )
 
@@ -137,6 +141,9 @@ ts_project(
         tsc_js,
         out_dir = "build-custom_transpilers",
     ),
+    tsconfig = {
+        "exclude": [],
+    },
 )
 
 build_test(
@@ -207,6 +214,9 @@ ts_project(
     out_dir = "build-custom_dts_transpiler",
     source_map = True,
     transpiler = "tsc",
+    tsconfig = {
+        "exclude": [],
+    },
 )
 
 build_test(
@@ -236,6 +246,7 @@ ts_project(
         "compilerOptions": {
             "declaration": False,
         },
+        "exclude": [],
     },
 )
 
@@ -263,6 +274,7 @@ ts_project(
             "declaration": True,
             "emitDeclarationOnly": True,
         },
+        "exclude": [],
     },
 )
 
