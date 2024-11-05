@@ -114,14 +114,6 @@ extended configuration file as well, to pass them both to the TypeScript compile
     toolchains = COPY_FILE_TO_BIN_TOOLCHAINS,
 )
 
-def _filter_input_files(files, allow_js, resolve_json_module):
-    return [
-        f
-        for f in files
-        # include typescript, json & declaration sources
-        if _lib.is_ts_src(f.basename, allow_js, resolve_json_module) or _lib.is_typings_src(f.basename)
-    ]
-
 def _write_tsconfig_rule(ctx):
     # TODO: is it useful to expand Make variables in the content?
     content = ctx.attr.content
@@ -135,22 +127,30 @@ def _write_tsconfig_rule(ctx):
             extends_path = "./" + extends_path
         content = content.replace("__extends__", extends_path)
 
-    filtered_files = _filter_input_files(ctx.files.files, ctx.attr.allow_js, ctx.attr.resolve_json_module)
-
-    # Update file paths to be relative to the tsconfig file, including a ./ prefix
-    # to ensure paths are all relative to the config file.
-    package_prefix = ctx.label.package + "/"
-
-    # If the target is inside another workspace, we will need to also add the workspace
-    # root to the prefix.
+    # The prefix of source files that are within the same package as the tsconfig file.
+    local_package_prefix = "%s/" % ctx.label.package if ctx.label.package else ""
     if (len(ctx.label.repo_name) > 0):
-        package_prefix = "../{}/{}".format(ctx.label.repo_name, package_prefix)
-    filtered_files = [
-        "./" + f.short_path.removeprefix(package_prefix)
-        for f in filtered_files
-    ]
+        # If the target is inside another workspace the prefix also contains the navigation to that workspace.
+        local_package_prefix = "../{}/{}".format(ctx.label.repo_name, local_package_prefix)
 
-    content = content.replace("\"__files__\"", str(filtered_files))
+    # The path to navigate to the root of the workspace
+    path_to_root = "/".join([".."] * (ctx.label.package.count("/") + 1))
+
+    # Compute the list of source files with paths relative to the generated tsconfig file.
+    src_files = []
+    for f in ctx.files.files:
+        # Only include typescript source files
+        if not (_lib.is_ts_src(f.basename, ctx.attr.allow_js, ctx.attr.resolve_json_module) or _lib.is_typings_src(f.basename)):
+            continue
+
+        if f.short_path.startswith(local_package_prefix):
+            # Files within this project or subdirs can avoid the ugly ../ prefix
+            src_files.append("./{}".format(f.short_path.removeprefix(local_package_prefix)))
+        else:
+            # Files from parent/sibling projects must navigate up to the workspace root
+            src_files.append("./{}/{}".format(path_to_root, f.short_path))
+
+    content = content.replace("\"__files__\"", str(src_files))
     ctx.actions.write(
         output = ctx.outputs.out,
         content = content,

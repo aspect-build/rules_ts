@@ -5,13 +5,10 @@ load("@bazel_skylib//rules:build_test.bzl", "build_test")
 ts_project(
     name = "lib",
     srcs = [
-        "global.d.ts",
         "index.ts",
+        "//examples/global_dts_generated_tsconfig:lib_types",
     ],
-    # Intentionally a generated config to catch regressions of
-    # https://github.com/aspect-build/rules_ts/issues/204
-    tsconfig = {"compilerOptions": {"declaration": True}},
-    visibility = ["//examples:__subpackages__"],
+    tsconfig = {},
 )
 
 build_test(

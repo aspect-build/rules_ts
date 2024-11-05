@@ -1,0 +1,1 @@
+{"compilerOptions":{"allowJs":false,"declaration":true,"declarationMap":false,"emitDeclarationOnly":false,"noEmit":false,"resolveJsonModule":null,"sourceMap":false},"files":["./global.d.ts", "./index.ts"]}
