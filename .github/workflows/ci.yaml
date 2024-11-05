@@ -107,8 +107,6 @@ jobs:
                       folder: .
                     - os: windows
                       folder: e2e/worker
-                    - os: windows
-                      folder: e2e/bzlmod
                     # TODO: combine bzlmod and workspace into a single 'smoke' e2e
                     - folder: e2e/bzlmod
                       bzlmod: 0
