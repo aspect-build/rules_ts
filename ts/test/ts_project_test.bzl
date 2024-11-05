@@ -189,6 +189,93 @@ def ts_project_test_suite(name):
         targets = [":dirty_out_dir"],
     )
 
+    # Path-normalization tests: verify that ./path, path/, and ./path/ are all
+    # accepted as equivalent for outDir, declarationDir, and rootDir together.
+    # Each variant uses a distinct directory tree so outputs never conflict.
+
+    # Leading ./: tsconfig uses ./out1, ./types1, ./nrm1
+    write_file(
+        name = "path_norm1_ts",
+        out = "nrm1/src1.ts",
+        content = ["export const x = 1"],
+        tags = ["manual"],
+    )
+    ts_project_wrapper(
+        name = "path_norm_dotslash",
+        srcs = [":path_norm1_ts"],
+        declaration = True,
+        tsconfig = {
+            "compilerOptions": {
+                "outDir": "./out1",
+                "declaration": True,
+                "declarationDir": "./types1",
+                "rootDir": "./nrm1",
+            },
+            "exclude": [],
+        },
+        tags = ["manual"],
+    )
+    build_test(
+        name = "path_norm_dotslash_test",
+        targets = [":path_norm_dotslash"],
+    )
+
+    # Trailing /: tsconfig uses out2/, types2/, nrm2/
+    write_file(
+        name = "path_norm2_ts",
+        out = "nrm2/src2.ts",
+        content = ["export const x = 1"],
+        tags = ["manual"],
+    )
+    write_file(
+        name = "tsconfig_path_norm_trailing_slash",
+        out = "tsconfig_path_norm_trailing_slash.json",
+        content = ['{"compilerOptions": {"outDir": "out2/", "declaration": true, "declarationDir": "types2/", "rootDir": "nrm2/"}, "exclude": []}'],
+        tags = ["manual"],
+    )
+    ts_project_wrapper(
+        name = "path_norm_trailing_slash",
+        srcs = [":path_norm2_ts"],
+        declaration = True,
+        out_dir = "out2",
+        declaration_dir = "types2",
+        root_dir = "nrm2",
+        tsconfig = ":tsconfig_path_norm_trailing_slash",
+        tags = ["manual"],
+    )
+    build_test(
+        name = "path_norm_trailing_slash_test",
+        targets = [":path_norm_trailing_slash"],
+    )
+
+    # Both ./ and /: tsconfig uses ./out3/, ./types3/, ./nrm3/
+    write_file(
+        name = "path_norm3_ts",
+        out = "nrm3/src3.ts",
+        content = ["export const x = 1"],
+        tags = ["manual"],
+    )
+    write_file(
+        name = "tsconfig_path_norm_both_slash",
+        out = "tsconfig_path_norm_both_slash.json",
+        content = ['{"compilerOptions": {"outDir": "./out3/", "declaration": true, "declarationDir": "./types3/", "rootDir": "./nrm3/"}, "exclude": []}'],
+        tags = ["manual"],
+    )
+    ts_project_wrapper(
+        name = "path_norm_both_slash",
+        srcs = [":path_norm3_ts"],
+        declaration = True,
+        out_dir = "out3",
+        declaration_dir = "types3",
+        root_dir = "nrm3",
+        tsconfig = ":tsconfig_path_norm_both_slash",
+        tags = ["manual"],
+    )
+    build_test(
+        name = "path_norm_both_slash_test",
+        targets = [":path_norm_both_slash"],
+    )
+
     native.test_suite(
         name = name,
         tests = [
@@ -196,6 +283,9 @@ def ts_project_test_suite(name):
             ":use_dir_test",
             ":wrapper_test",
             ":dirty_out_dir_test",
+            ":path_norm_dotslash_test",
+            ":path_norm_trailing_slash_test",
+            ":path_norm_both_slash_test",
         ],
     )
 

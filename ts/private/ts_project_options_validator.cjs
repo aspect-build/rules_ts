@@ -102,16 +102,25 @@ function main(_a) {
             }
         }
     }
-    function check_out_dir() {
-        var attr = 'out_dir'
-        var optionVal = getTsOption('outDir')
-        var attrIsFalsyOrUndefined = attrs[attr] === false || attrs[attr] === '' || attrs[attr] === undefined
-        if (attrIsFalsyOrUndefined && optionVal !== undefined && optionVal != attrs[attr]) {
+    function normalizeDirPath(p) {
+        return p.replace(/\/+$/, '').replace(/^\.\//, '') || '.'
+    }
+    function check_out_dir(tsOption, attr) {
+        var optionVal = getTsOption(tsOption)
+        var attrVal = attrs[attr]
+        var attrIsFalsyOrUndefined = attrVal === false || attrVal === '' || attrVal === undefined
+        // When attr is set, use the raw tsconfig value (avoids path resolution/symlink issues).
+        // When attr is empty, use the TypeScript-resolved value to catch tsconfig extends.
+        var tsOptionValue = attrIsFalsyOrUndefined ? optionVal : (config.compilerOptions || {})[tsOption]
+        var match = tsOptionValue === undefined || (attrIsFalsyOrUndefined
+            ? tsOptionValue === attrVal
+            : normalizeDirPath(String(tsOptionValue)) === normalizeDirPath(attrVal))
+        if (!match) {
             throw new Error(
-                'When outDir is set in the tsconfig it must also be set in the ts_project' +
-                ' rule, so that the output directory is known to Bazel.\n\n' +
-                'tsconfig:   ' + JSON.stringify(optionVal) + '\n' +
-                'ts_project: ' + JSON.stringify(attrs[attr])
+                `When ${tsOption} is set in the tsconfig it must also be set in the ts_project` +
+                ` rule using ${attr}, so that the output directory is known to Bazel.\n\n` +
+                'tsconfig:   ' + JSON.stringify(tsOptionValue) + '\n' +
+                'ts_project: ' + JSON.stringify(attrVal)
             )
         }
     }
@@ -196,7 +205,9 @@ function main(_a) {
     check('declaration')
     check('incremental')
     check('tsBuildInfoFile', 'ts_build_info_file')
-    check_out_dir()
+    check_out_dir('outDir', 'out_dir')
+    check_out_dir('declarationDir', 'declaration_dir')
+    check_out_dir('rootDir', 'root_dir')
     checkRootDirExclude()
     check_nocheck()
     check_preserve_jsx()
@@ -238,6 +249,8 @@ function main(_a) {
             attrs.declaration_map +
             '\n// out_dir:               ' +
             attrs.out_dir +
+            '\n// declaration_dir:       ' +
+            attrs.declaration_dir +
             '\n// incremental:           ' +
             attrs.incremental +
             '\n// source_map:            ' +
@@ -250,6 +263,8 @@ function main(_a) {
             attrs.ts_build_info_file +
             '\n// preserve_jsx:          ' +
             attrs.preserve_jsx +
+            '\n// root_dir:              ' +
+            attrs.root_dir +
             '\n',
         'utf-8'
     )

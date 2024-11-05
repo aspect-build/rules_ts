@@ -86,6 +86,8 @@ function tsconfig() {
 	local no_emit="false"
 	local trace_resolution="false"
 	local extended_diagnostics="false"
+	local declaration_dir=""
+	local exclude_empty="false"
 	while (($# > 0)); do
 		case "$1" in
 		--path)
@@ -135,9 +137,36 @@ function tsconfig() {
 			extended_diagnostics="true"
 			shift
 			;;
+		--declaration-dir)
+			shift
+			declaration_dir="$1"
+			shift
+			;;
+		--out-dir)
+			shift
+			out_dir="$1"
+			shift
+			;;
+		--root-dir)
+			shift
+			root_dir="$1"
+			shift
+			;;
+		--exclude-empty)
+			exclude_empty="true"
+			shift
+			;;
 		*) break ;;
 		esac
 	done
+	local declaration_dir_field=""
+	[[ -n "$declaration_dir" ]] && declaration_dir_field=", \"declarationDir\": \"$declaration_dir\""
+	local out_dir_field=""
+	[[ -n "$out_dir" ]] && out_dir_field=", \"outDir\": \"$out_dir\""
+	local root_dir_field=""
+	[[ -n "$root_dir" ]] && root_dir_field=", \"rootDir\": \"$root_dir\""
+	local exclude_field=""
+	[[ "$exclude_empty" == "true" ]] && exclude_field=', "exclude": []'
 	cat >"$path/tsconfig.json" <<EOF
 {
     "compilerOptions": {
@@ -150,8 +179,8 @@ function tsconfig() {
         "moduleResolution": "$module_resolution",
         "traceResolution": $trace_resolution,
         "extendedDiagnostics": $extended_diagnostics,
-        "composite": $composite
-    }
+        "composite": $composite$declaration_dir_field$out_dir_field$root_dir_field
+    }$exclude_field
 }
 EOF
 }
@@ -171,6 +200,8 @@ function ts_project() {
 	local transpiler=""
 	local mock_transpiler_disabled="#"
 	local no_emit=""
+	local declaration_dir=""
+	local root_dir=""
 	while (($# > 0)); do
 		case "$1" in
 		--path)
@@ -234,6 +265,16 @@ function ts_project() {
 			shift
 			no_emit="no_emit = True,"
 			;;
+		--declaration-dir)
+			shift
+			declaration_dir="declaration_dir = \"$1\","
+			shift
+			;;
+		--root_dir)
+			shift
+			root_dir="root_dir = \"$1\","
+			shift
+			;;
 		--)
 			shift
 			break
@@ -269,6 +310,8 @@ ts_project(
     args = [${args_joined}],
     $source_map
     $declaration
+    $declaration_dir
+    $root_dir
     $composite
     $transpiler
     $no_emit

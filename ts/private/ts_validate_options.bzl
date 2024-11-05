@@ -15,6 +15,7 @@ Assumes all tsconfig file deps are already copied to the bin directory.
     config = struct(
         allow_js = ctx.attr.allow_js,
         declaration = ctx.attr.declaration,
+        declaration_dir = ctx.attr.declaration_dir,
         declaration_map = ctx.attr.declaration_map,
         out_dir = ctx.attr.out_dir,
         preserve_jsx = ctx.attr.preserve_jsx,
