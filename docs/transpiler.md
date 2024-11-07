@@ -128,27 +128,3 @@ When `no_emit`, `transpiler` or `declaration_transpiler` is set, then the `ts_pr
 
 [`build_test`]: https://github.com/bazelbuild/bazel-skylib/blob/main/rules/build_test.bzl
 [`--build_tests_only`]: https://docs.bazel.build/versions/main/user-manual.html#flag--build_tests_only
-
-## Avoid eager type-checks via `npm_package`
-
-A common pattern to link monorepo packages is to use the [`npm_package`](https://docs.aspect.build/rules/aspect_rules_js/docs/npm_package) rule.
-
-When typings files (`*.d.ts`) are included in the `npm_package`, this can cause the type-checker to run, even for a development round-trip that shouldn't need it.
-
-For example,
-
-```
-ts_project(name = a) --foo.d.ts--> npm_package ---> npm_link_package ---> ts_project(name = b) ---> js_test
-```
-
-In this diagram, we'd like to be able to change the TypeScript sources of `a` and then re-run the test target, without waiting for type-checking.
-However, since `foo.d.ts` is declared as an input to the `npm_package` rule, Bazel needs to produce it.
-
-To solve this, you can add the flag `--@aspect_rules_js//npm:exclude_types_from_npm_packages` to your `bazel` command.
-
-Use this flag only for local development! You can add a line to your `.bazelrc` to make this easier to type, for example:
-
-```
-# Run bazel --config=dev to choose these options:
-build:dev --@aspect_rules_js//npm:exclude_types_from_npm_packages
-```
