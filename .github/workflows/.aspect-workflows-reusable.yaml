@@ -1,7 +1,7 @@
 # ==================================================================================================
-# Aspect Workflows Reusable Workflow for GitHub Actions (v5.11.0)
+# Aspect Workflows Reusable Workflow for GitHub Actions (v5.11.17)
 #
-# https://github.com/marketplace/actions/aspect-workflows?version=5.11.0
+# https://github.com/marketplace/actions/aspect-workflows?version=5.11.17
 #
 # At this time, GitHub Actions does not allow referencing reusable workflows from public
 # repositories in other organizations. See
@@ -37,10 +37,10 @@
 #    jobs:
 #      aspect-workflows:
 #        name: Aspect Workflows
-#        uses: my-github-org/workflows-action/.github/workflows/.aspect-workflows-reusable.yaml@5.11.0
+#        uses: my-github-org/workflows-action/.github/workflows/.aspect-workflows-reusable.yaml@5.11.17
 #    ```
 # ==================================================================================================
-name: Aspect Workflows Reusable Workflow (v5.11.0)
+name: Aspect Workflows Reusable Workflow (v5.11.17)
 on:
   # Makes this workflow reusable, see
   # https://github.blog/2022-02-10-using-reusable-workflows-github-actions
@@ -94,7 +94,10 @@ jobs:
       - name: Clone repo
         uses: actions/checkout@v4
       - name: Agent health check
-        run: ${{ fromJson(needs.setup.outputs.cfg).platform.directories.WORKFLOWS_BIN_DIR }}/agent_health_check
+        # Set RUNNER_TRACKER_ID="" to prevent GitHub Actions from killing the Bazel server started
+        # during health check when "Cleaning up orphan processes" in the "Complete job" step.
+        # See https://github.com/actions/runner/issues/598.
+        run: RUNNER_TRACKING_ID="" && ${{ fromJson(needs.setup.outputs.cfg).platform.directories.WORKFLOWS_BIN_DIR }}/agent_health_check
         timeout-minutes: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].health_check_timeout }}
       - name: Process secrets
         id: process_secrets
@@ -113,14 +116,14 @@ jobs:
           write_output_files: true
           output_dir: ${{ fromJson(needs.setup.outputs.cfg).platform.directories.ARTIFACTS_DIR }}
       - name: Checkout health
-        uses: aspect-build/workflows-action@5.11.0
+        uses: aspect-build/workflows-action@5.11.17
         timeout-minutes: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].checkout_task_timeout }}
         if: fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].has_checkout_task
         with:
           workspace: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].workspace }}
           task: checkout
       - name: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].name }}
-        uses: aspect-build/workflows-action@5.11.0
+        uses: aspect-build/workflows-action@5.11.17
         env: ${{ inputs.inherited_secrets != '' && fromJson(steps.process_secrets.outputs.filtered_secrets) || fromJson('{}') }}
         timeout-minutes: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].timeout_in_minutes }}
         with:
@@ -140,7 +143,7 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets[inputs.slack_webhook_url] }}
       - name: Delivery manifest
         if: fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].generate_manifest
-        uses: aspect-build/workflows-action@5.11.0
+        uses: aspect-build/workflows-action@5.11.17
         timeout-minutes: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].delivery_manifest_timout }}
         with:
           workspace: ${{ fromJson(needs.setup.outputs.cfg).workflows_config[matrix.job].workspace }}

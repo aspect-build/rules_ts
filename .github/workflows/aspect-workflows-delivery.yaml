@@ -36,9 +36,12 @@ jobs:
                   # See https://github.com/actions/checkout#Fetch-all-history-for-all-tags-and-branches
                   fetch-depth: 0
             - name: Agent health check
-              run: ${ASPECT_WORKFLOWS_BIN_DIR}/agent_health_check
+              # Set RUNNER_TRACKER_ID="" to prevent GitHub Actions from killing the Bazel server started
+              # during health check when "Cleaning up orphan processes" in the "Complete job" step.
+              # See https://github.com/actions/runner/issues/598.
+              run: RUNNER_TRACKER_ID="" && ${ASPECT_WORKFLOWS_BIN_DIR}/agent_health_check
             - name: Run delivery
-              uses: aspect-build/workflows-action@5.10.12
+              uses: aspect-build/workflows-action@5.11.17
               with:
                   task: delivery
                   workspace: ${{ inputs.workspace }}
