@@ -3,8 +3,6 @@
 # since protoc would otherwise not find the proto files in the descriptor
 # database.
 
-load("//ts:proto.bzl", "ts_proto_library")
-
 proto_library(
     name = "bar_proto",
     srcs = [

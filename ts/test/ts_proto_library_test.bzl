@@ -1,9 +1,6 @@
 "UnitTest for ts_proto_library"
 
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
-load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("@npm//:defs.bzl", "npm_link_all_packages")
-load("@rules_proto//proto:defs.bzl", "proto_library")
 load("//ts:proto.bzl", "ts_proto_library")
 
 def ts_proto_library_test_suite(name):
