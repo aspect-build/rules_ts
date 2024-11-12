@@ -47,7 +47,7 @@ def _protoc_action(ctx, proto_info, outputs):
         args.add_joined(["--connect-query_out", ctx.bin_dir.path], join_with = "=")
 
     args.add("--descriptor_set_in")
-    args.add_joined(proto_info.transitive_descriptor_sets, join_with = ":")
+    args.add_joined(proto_info.transitive_descriptor_sets, join_with = ctx.configuration.host_path_separator)
 
     args.add_all(proto_info.direct_sources)
 
