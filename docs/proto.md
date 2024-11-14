@@ -1,11 +1,6 @@
 <!-- Generated with Stardoc: http://skydoc.bazel.build -->
 
-# Protocol Buffers and gRPC (UNSTABLE)
-
-**UNSTABLE API**: contents of this page are not subject to our usual semver guarantees.
-We may make breaking changes in any release.
-Please try this API and provide feedback.
-We intend to promote it to a stable API in a minor release, possibly as soon as v2.1.0.
+# Protocol Buffers and gRPC
 
 `ts_proto_library` uses the Connect library from bufbuild, and supports both Web and Node.js:
 
