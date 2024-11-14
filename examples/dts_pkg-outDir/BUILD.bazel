@@ -1,0 +1,37 @@
+load("@aspect_rules_js//npm:defs.bzl", "npm_package")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+
+ts_project(
+    name = "lib",
+    srcs = [
+        "index.ts",
+        "lib_types.d.ts",
+        "lib_types_2.d.mts",
+    ],
+    declaration = True,
+    out_dir = "dist",
+    visibility = ["//examples:__subpackages__"],
+)
+
+npm_package(
+    name = "pkg",
+    srcs = [":lib"],
+    package = "@myorg/dts_pkg",
+    visibility = ["//examples:__subpackages__"],
+)
+
+ts_project(
+    name = "importer_linked_ts",
+    srcs = ["importer_linked.ts"],
+    declaration = True,
+    out_dir = "dist",
+    deps = [
+        "//examples:node_modules/@myorg/dts_pkg",
+    ],
+)
+
+build_test(
+    name = "importer_linked_test",
+    targets = [":importer_linked_ts"],
+)
