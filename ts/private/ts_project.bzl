@@ -167,6 +167,8 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             asset = ctx.actions.declare_file(a_out)
             copy_file_action(ctx, a, asset)
             assets_outs.append(asset)
+        else:
+            assets_outs.append(a)
 
     outputs = js_outs + map_outs + typings_outs + typing_maps_outs
     if ctx.outputs.buildinfo_out:
