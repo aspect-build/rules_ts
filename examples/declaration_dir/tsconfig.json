@@ -2,6 +2,8 @@
     "compilerOptions": {
         "sourceMap": true,
         "declaration": true,
-        "declarationMap": true
-    }
+        "declarationMap": true,
+        "declarationDir": "out/types"
+    },
+    "exclude": []
 }

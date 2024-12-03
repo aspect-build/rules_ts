@@ -29,7 +29,6 @@ ts_project(
     declaration_dir = "decl_map",
     declaration_map = True,
     out_dir = "declaration_dir",
-    tsconfig = {},
 )
 
 build_test(

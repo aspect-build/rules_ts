@@ -25,6 +25,7 @@ ts_project(
             "declaration": True,
             "sourceMap": True,
         },
+        "exclude": [],
     },
 )
 

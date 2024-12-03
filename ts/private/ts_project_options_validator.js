@@ -21,8 +21,7 @@ function main(_a) {
         output = _a[1],
         target = _a[2],
         packageDir = _a[3],
-        attrsStr = _a[4],
-        out_dir = _a[5]
+        attrsStr = _a[4]
     // The Bazel ts_project attributes were json-encoded
     // (on Windows the quotes seem to be quoted wrong, so replace backslash with quotes :shrug:)
     var attrs = JSON.parse(attrsStr.replace(/\\/g, '"'))
@@ -144,11 +143,11 @@ function main(_a) {
         }
     }
 
-    function check_exclude_and_outDir() {
-        if (config.exclude === undefined && out_dir !== undefined && out_dir !== '.' && out_dir !== '') {
-            console.error('tsconfig validation failed: when out_dir is set, exclude must also be set. See: https://github.com/aspect-build/rules_ts/issues/644 for more details.')
+    function check_exclude_and_rootDir() {
+        if (config.exclude === undefined && attrs['root_dir'] !== undefined && attrs['root_dir'] !== '') {
+            console.error('tsconfig validation failed: when root_dir is set, exclude must also be set. See: https://github.com/aspect-build/rules_ts/issues/644 for more details.')
 
-            throw new Error('tsconfig validation failed: when out_dir is set, exclude must also be set.')
+            throw new Error('tsconfig validation failed: when root_dir is set, exclude must also be set.')
         }
     }
 
@@ -173,9 +172,10 @@ function main(_a) {
     check('declaration')
     check('incremental')
     check('tsBuildInfoFile', 'ts_build_info_file')
+    check('declarationDir', 'declaration_dir')
     check_nocheck()
     check_preserve_jsx()
-    check_exclude_and_outDir()
+    check_exclude_and_rootDir()
     if (failures.length > 0) {
         console.error(
             'ERROR: ts_project rule ' +
@@ -212,6 +212,8 @@ function main(_a) {
             attrs.declaration +
             '\n// declaration_map:       ' +
             attrs.declaration_map +
+            '\n// declaration_dir:       ' +
+            attrs.declaration_dir +
             '\n// incremental:           ' +
             attrs.incremental +
             '\n// source_map:            ' +
