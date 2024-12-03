@@ -11,8 +11,8 @@ import %workspace%/.aspect/bazelrc/performance.bazelrc
 common --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
 common --@aspect_rules_ts//ts:default_to_tsc_transpiler
 
-# We have some empty globs in this repo
-common --noincompatible_disallow_empty_glob
+# opt-in to flag that is on by default in Bazel 8
+common --incompatible_disallow_empty_glob
 
 # Never Compile protoc Again
 common --incompatible_enable_proto_toolchain_resolution

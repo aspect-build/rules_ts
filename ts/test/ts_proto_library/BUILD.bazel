@@ -1,0 +1,25 @@
+"Proto libraries for ts_proto_library tests."
+# These are a concrete package rather than using `write_file` in the test file,
+# since protoc would otherwise not find the proto files in the descriptor
+# database.
+
+proto_library(
+    name = "bar_proto",
+    srcs = [
+        ":bar.proto",
+    ],
+    tags = ["manual"],
+    visibility = ["//ts/test:__subpackages__"],
+)
+
+proto_library(
+    name = "foo_proto",
+    srcs = [
+        ":foo.proto",
+    ],
+    tags = ["manual"],
+    visibility = ["//ts/test:__subpackages__"],
+    deps = [
+        ":bar_proto",
+    ],
+)
