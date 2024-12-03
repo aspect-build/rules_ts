@@ -10,9 +10,6 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
 ts_project(
     name = "srcs-auto",
     out_dir = "auto",
-    tsconfig = {
-        "exclude": [],
-    },
 )
 
 # The sources can come from the default output of some other target.
@@ -27,9 +24,6 @@ ts_project(
     name = "srcs-filegroup",
     srcs = [":srcs"],
     out_dir = "filegroup",
-    tsconfig = {
-        "exclude": [],
-    },
 )
 
 # Tools can also generate .ts source files, so the sources are actually in the bazel-out tree.
@@ -51,9 +45,6 @@ ts_project(
         "generated.ts",
     ],
     out_dir = "generated",
-    tsconfig = {
-        "exclude": [],
-    },
 )
 
 # Testing what outputs are actually produced

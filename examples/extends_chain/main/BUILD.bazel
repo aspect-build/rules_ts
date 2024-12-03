@@ -17,6 +17,5 @@ ts_project(
         "compilerOptions": {
             "declaration": False,
         },
-        "exclude": [],
     },
 )

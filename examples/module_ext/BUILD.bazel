@@ -22,9 +22,6 @@ ts_project(
     declaration_map = True,
     out_dir = "out",
     source_map = True,
-    tsconfig = {
-        "exclude": [],
-    },
 )
 
 # You can also produce different module syntaxt outputs from a .ts file.
@@ -47,9 +44,6 @@ ts_project(
         # Write the output files to an extra nested directory
         out_dir = format,
         source_map = True,
-        tsconfig = {
-            "exclude": [],
-        },
     )
     for format in [
         "commonjs",

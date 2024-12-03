@@ -42,10 +42,7 @@ ts_project(
     ],
     extends = ":config",
     out_dir = "out",
-    tsconfig = {
-        "compilerOptions": {"outDir": "out"},
-        "exclude": [],
-    },
+    tsconfig = {"compilerOptions": {"outDir": "out"}},
 )
 
 ts_project(

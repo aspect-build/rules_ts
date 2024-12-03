@@ -13,9 +13,6 @@ ts_project(
     out_dir = "out/code",
     root_dir = "dir",
     source_map = True,
-    tsconfig = {
-        "exclude": [],
-    },
 )
 
 # Assert that the output locations we wrote to match expectations
