@@ -211,9 +211,9 @@ def _is_js_src(src, allow_js, resolve_json_module):
 
     return False
 
-def _is_ts_src(src, allow_js, resolve_json_module):
-    if (src.endswith(".ts") or src.endswith(".tsx") or src.endswith(".mts") or src.endswith(".cts")):
-        return not _is_typings_src(src)
+def _is_ts_src(src, allow_js, resolve_json_module, include_typings):
+    if src.endswith(".ts") or src.endswith(".tsx") or src.endswith(".mts") or src.endswith(".cts"):
+        return include_typings or not _is_typings_src(src)
 
     return _is_js_src(src, allow_js, resolve_json_module)
 
@@ -228,7 +228,7 @@ def _to_out_path(f, out_dir, root_dir):
 def _to_js_out_paths(srcs, out_dir, root_dir, allow_js, resolve_json_module, ext_map, default_ext):
     outs = []
     for f in srcs:
-        if _is_ts_src(f, allow_js, resolve_json_module):
+        if _is_ts_src(f, allow_js, resolve_json_module, False):
             out = _to_out_path(f, out_dir, root_dir)
             ext_idx = out.rindex(".")
             out = out[:ext_idx] + ext_map.get(out[ext_idx:], default_ext)
