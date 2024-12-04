@@ -34,6 +34,7 @@ ts_project(
         "compilerOptions": {
             "rootDir": "subdir",
         },
+        "exclude": [],
     },
 )
 
