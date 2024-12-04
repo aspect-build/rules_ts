@@ -176,12 +176,13 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         outputs.append(ctx.outputs.buildinfo_out)
 
     output_sources = js_outs + map_outs + assets_outs + ctx.files.pretranspiled_js
+    output_types = typings_outs + typing_maps_outs + ctx.files.pretranspiled_dts
 
     # Add JS inputs that collide with outputs (see #250).
     #
     # Unfortunately this duplicates logic in ts_lib._to_js_out_paths:
     # files collide iff the following conditions are met:
-    # - They are JS files (ext in [js, json])
+    # - They are files not renamed when transpiled (ext in [.d.ts, js, json])
     # - out_dir == root_dir
     #
     # The duplication is hard to avoid, since out_paths works on path strings
@@ -190,14 +191,12 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         for s in srcs_inputs:
             if _lib.is_js_src(s.path, ctx.attr.allow_js, ctx.attr.resolve_json_module):
                 output_sources.append(s)
-
-    typings_srcs = [s for s in srcs_inputs if _lib.is_typings_src(s.path)]
+            if _lib.is_typings_src(s.path):
+                output_types.append(s)
 
     # Make sure the user has acknowledged that transpiling is slow
     if len(outputs) > 0 and ctx.attr.transpile == -1 and not ctx.attr.emit_declaration_only and not options.default_to_tsc_transpiler:
         fail(transpiler_selection_required)
-
-    output_types = typings_outs + typing_maps_outs + typings_srcs + ctx.files.pretranspiled_dts
 
     # What tsc will be emitting
     use_tsc_for_js = len(js_outs) > 0
