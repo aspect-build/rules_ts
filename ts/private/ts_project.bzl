@@ -67,7 +67,7 @@ def _ts_project_impl(ctx):
     js_outs = []
     map_outs = []
     if not ctx.attr.no_emit and ctx.attr.transpile != 0:
-        js_outs = _lib.declare_outputs(ctx, _lib.calculate_js_outs(srcs, ctx.attr.out_dir, ctx.attr.root_dir, ctx.attr.allow_js, ctx.attr.resolve_json_module, ctx.attr.preserve_jsx, ctx.attr.emit_declaration_only))
+        js_outs = _lib.declare_outputs(ctx, _lib.calculate_js_outs(srcs, ctx.attr.out_dir, ctx.attr.root_dir, ctx.attr.allow_js, ctx.attr.preserve_jsx, ctx.attr.emit_declaration_only))
         map_outs = _lib.declare_outputs(ctx, _lib.calculate_map_outs(srcs, ctx.attr.out_dir, ctx.attr.root_dir, ctx.attr.source_map, ctx.attr.preserve_jsx, ctx.attr.emit_declaration_only))
 
     # dts+map file outputs
@@ -160,15 +160,26 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         transitive_inputs.extend(tsconfig_transitive_deps)
 
     assets_outs = []
-    for a in ctx.files.assets:
+    typing_assets_outs = []
+    for a in ctx.files.srcs:
         a_path = _lib.relative_to_package(a.short_path, ctx)
-        a_out = _lib.to_out_path(a_path, ctx.attr.out_dir, ctx.attr.root_dir)
-        if a.is_source or a_path != a_out:
-            asset = ctx.actions.declare_file(a_out)
-            copy_file_action(ctx, a, asset)
-            assets_outs.append(asset)
-        else:
-            assets_outs.append(a)
+        if not _lib.is_ts_src(a_path, ctx.attr.allow_js, False):
+            if _lib.is_typings_src(a_path):
+                a_out = _lib.to_out_path(a_path, typings_out_dir, ctx.attr.root_dir)
+                if a.is_source or a_path != a_out:
+                    asset = ctx.actions.declare_file(a_out)
+                    copy_file_action(ctx, a, asset)
+                    typing_assets_outs.append(asset)
+                else:
+                    typing_assets_outs.append(a)
+            else:
+                a_out = _lib.to_out_path(a_path, ctx.attr.out_dir, ctx.attr.root_dir)
+                if a.is_source or a_path != a_out:
+                    asset = ctx.actions.declare_file(a_out)
+                    copy_file_action(ctx, a, asset)
+                    assets_outs.append(asset)
+                else:
+                    assets_outs.append(a)
 
     outputs = js_outs + map_outs + typings_outs + typing_maps_outs
     if ctx.outputs.buildinfo_out:
@@ -176,7 +187,7 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         outputs.append(ctx.outputs.buildinfo_out)
 
     output_sources = js_outs + map_outs + assets_outs + ctx.files.pretranspiled_js
-    output_types = typings_outs + typing_maps_outs + ctx.files.pretranspiled_dts
+    output_types = typings_outs + typing_maps_outs + typing_assets_outs + ctx.files.pretranspiled_dts
 
     # Add JS inputs that collide with outputs (see #250).
     #
@@ -189,7 +200,7 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
     # (so it also works in the macro), but we need Files here.
     if ctx.attr.out_dir == ctx.attr.root_dir:
         for s in srcs_inputs:
-            if _lib.is_js_src(s.path, ctx.attr.allow_js, ctx.attr.resolve_json_module):
+            if _lib.is_js_src(s.path, ctx.attr.allow_js):
                 output_sources.append(s)
             if _lib.is_typings_src(s.path):
                 output_types.append(s)

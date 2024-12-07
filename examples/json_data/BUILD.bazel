@@ -7,8 +7,6 @@ ts_project(
     srcs = [
         "src/index.ts",
         "src/src.json",
-    ],
-    assets = [
         "src/asset.txt",
     ],
     data = [

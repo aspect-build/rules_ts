@@ -22,11 +22,9 @@ ts_config(
 ts_project(
     name = "ts",
     srcs = [
-        "src/index.ts",
-    ],
-    assets = [
-        "src/styles.css",
         "src/generated.json",
+        "src/index.ts",
+        "src/styles.css",
     ],
     tsconfig = ":config",
 )
@@ -34,11 +32,9 @@ ts_project(
 ts_project(
     name = "ts-out",
     srcs = [
-        "src/index.ts",
-    ],
-    assets = [
-        "src/styles.css",
         "src/generated.json",
+        "src/index.ts",
+        "src/styles.css",
     ],
     extends = ":config",
     out_dir = "out",
@@ -47,8 +43,10 @@ ts_project(
 
 ts_project(
     name = "ts-runtime-assets",
-    srcs = ["src/index-runtime.ts"],
-    assets = ["src/generated.json"],
+    srcs = [
+        "src/generated.json",
+        "src/index-runtime.ts",
+    ],
     tsconfig = ":config",
 )
 
@@ -60,17 +58,19 @@ js_test(
 
 ts_project(
     name = "ts-runtime-outdir-assets",
-    srcs = ["src/index-runtime.ts"],
-    assets = ["src/generated.json"],
+    srcs = [
+        "src/generated.json",
+        "src/index-runtime.ts",
+    ],
     extends = ":config",
-    out_dir = "out",
-    tsconfig = {"compilerOptions": {"outDir": "out"}},
+    out_dir = "runtime-out",
+    tsconfig = {"compilerOptions": {"outDir": "runtime-out"}},
 )
 
 js_test(
     name = "ts-runtime-outdir-assets_test",
     data = [":ts-runtime-outdir-assets"],
-    entry_point = "out/src/index-runtime.js",
+    entry_point = "runtime-out/src/index-runtime.js",
 )
 
 filegroup(
@@ -85,8 +85,8 @@ ts_project(
     name = "ts-out-target",
     srcs = [
         "src/index.ts",
+        ":assets-filegroup",
     ],
-    assets = [":assets-filegroup"],
     out_dir = "out-target",
     tsconfig = ":config",
 )
@@ -113,8 +113,8 @@ ts_project(
     name = "ts-out-copy-target",
     srcs = [
         "src/index.ts",
+        ":assets-filegroup",
     ],
-    assets = [":assets-filegroup"],
     out_dir = "out-copy-target",
     tsconfig = ":config",
 )
@@ -133,8 +133,6 @@ ts_project(
     name = "ts-out-copy-target-abs",
     srcs = [
         "src/index.ts",
-    ],
-    assets = [
         "//%s:assets-filegroup" % package_name(),
     ],
     out_dir = "out-copy-target-abs",
@@ -152,13 +150,38 @@ assert_outputs(
 )
 
 ts_project(
-    name = "ts-root",
+    name = "ts-typings-out",
     srcs = [
         "src/index.ts",
+        "types/typings.d.ts",
     ],
-    assets = [
-        "src/styles.css",
+    out_dir = "typings-out",
+    declaration_dir = "typings-out-declarations",
+    tsconfig = ":config",
+)
+
+assert_outputs(
+    name = "ts-typings-out_outputs_test",
+    actual = ":ts-typings-out",
+    expected = [
+        "examples/assets/typings-out/src/index.js",
+    ],
+)
+
+assert_outputs(
+    name = "ts-typings-out-typings_outputs_test",
+    actual = ":ts-typings-out_types",
+    expected = [
+        "examples/assets/typings-out-declarations/types/typings.d.ts",
+    ],
+)
+
+ts_project(
+    name = "ts-root",
+    srcs = [
         "src/generated.json",
+        "src/index.ts",
+        "src/styles.css",
     ],
     root_dir = "src",
     tsconfig = ":config",
@@ -167,11 +190,9 @@ ts_project(
 ts_project(
     name = "ts-root-out",
     srcs = [
-        "src/index.ts",
-    ],
-    assets = [
-        "src/styles.css",
         "src/generated.json",
+        "src/index.ts",
+        "src/styles.css",
     ],
     out_dir = "root-out",
     root_dir = "src",

@@ -140,7 +140,7 @@ def _write_tsconfig_rule(ctx):
     src_files = []
     for f in ctx.files.files:
         # Only include typescript source files
-        if not _lib.is_ts_src(f.basename, ctx.attr.allow_js, ctx.attr.resolve_json_module, True):
+        if not _lib.is_ts_src(f.basename, ctx.attr.allow_js, True):
             continue
 
         if f.short_path.startswith(local_package_prefix):

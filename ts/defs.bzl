@@ -36,7 +36,6 @@ def ts_project(
         args = [],
         data = [],
         deps = [],
-        assets = [],
         extends = None,
         allow_js = False,
         isolated_typecheck = False,
@@ -94,14 +93,10 @@ def ts_project(
             - If `resolve_json_module` is set, include all JSON files in the package,
               but exclude `package.json`, `package-lock.json`, and `tsconfig*.json`.
 
-        assets: Files which are needed by a downstream build step such as a bundler.
-
-            These files are **not** included as inputs to any actions spawned by `ts_project`.
-            They are not transpiled, and are not visible to the type-checker.
-            Instead, these files appear among the *outputs* of this target.
-
-            A typical use is when your TypeScript code has an import that TS itself doesn't understand
-            such as
+            Non-TypeScript and JavaScript assets may be included; they will be copied directly
+            to the outputs. As with transpiled outputs, the `out_dir` and `root_dir` attributes
+            determine where such assets are written. A typical use is when your TypeScript code
+            has an import that TS itself doesn't understand, such as
 
             `import './my.scss'`
 
@@ -115,7 +110,7 @@ def ts_project(
 
             Note that `data` is used for files that are resolved by some binary, including a test
             target. Behind the scenes, `data` populates Bazel's Runfiles object in `DefaultInfo`,
-            while this attribute populates the `transitive_sources` of the `JsInfo`.
+            while assets populate the `transitive_sources` of the `JsInfo`.
 
         data: Files needed at runtime by binaries or tests that transitively depend on this target.
             See https://bazel.build/reference/be/common-definitions#typical-attributes
@@ -353,8 +348,10 @@ def ts_project(
     tsc_js_outs = []
     tsc_map_outs = []
     if emit_tsc_js:
-        tsc_js_outs = _lib.calculate_js_outs(srcs, out_dir, root_dir, allow_js, resolve_json_module, preserve_jsx, emit_declaration_only)
+        tsc_js_outs = _lib.calculate_js_outs(srcs, out_dir, root_dir, allow_js, preserve_jsx, emit_declaration_only)
         tsc_map_outs = _lib.calculate_map_outs(srcs, out_dir, root_dir, source_map, preserve_jsx, emit_declaration_only)
+
+    asset_outs = _lib.calculate_asset_outs(srcs, out_dir, typings_out_dir, root_dir, allow_js)
 
     # Custom typing transpiler
     if emit_transpiler_dts:
@@ -425,7 +422,6 @@ def ts_project(
         name = name,
         srcs = srcs,
         args = args,
-        assets = assets,
         data = data,
         deps = tsc_deps,
         tsconfig = tsconfig,
@@ -447,6 +443,7 @@ def ts_project(
         map_outs = tsc_map_outs,
         typings_outs = tsc_typings_outs,
         typing_maps_outs = tsc_typing_maps_outs,
+        asset_outs = asset_outs,
         buildinfo_out = tsbuildinfo_path if composite or incremental else None,
         no_emit = no_emit,
         emit_declaration_only = emit_declaration_only,

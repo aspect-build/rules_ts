@@ -2,13 +2,6 @@
 
 # Attributes common to all TypeScript rules
 STD_ATTRS = {
-    "assets": attr.label_list(
-        doc = """Files which are needed by a downstream build step such as a bundler.
-
-See more details on the `assets` parameter of the `ts_project` macro.
-""",
-        allow_files = True,
-    ),
     "args": attr.string_list(
         doc = "https://www.typescriptlang.org/docs/handbook/compiler-options.html",
     ),
@@ -36,12 +29,8 @@ https://docs.aspect.build/rulesets/aspect_rules_js/docs/js_library#deps for more
     "root_dir": attr.string(
         doc = "https://www.typescriptlang.org/tsconfig#rootDir",
     ),
-    # NB: no restriction on extensions here, because tsc sometimes adds type-check support
-    # for more file kinds (like require('some.json')) and also
-    # if you swap out the `compiler` attribute (like with ngtsc)
-    # that compiler might allow more sources than tsc does.
     "srcs": attr.label_list(
-        doc = "TypeScript source files",
+        doc = "TypeScript source files and assets",
         allow_files = True,
         mandatory = True,
     ),
@@ -183,6 +172,9 @@ OUTPUT_ATTRS = {
     "typings_outs": attr.output_list(
         doc = "Locations in bazel-out where tsc will write `.d.ts` files",
     ),
+    "asset_outs": attr.output_list(
+        doc = "Locations in bazel-out where ts_project will write asset files",
+    ),
 }
 
 def _join(*elements):
@@ -202,20 +194,16 @@ def _relative_to_package(path, ctx):
 def _is_typings_src(src):
     return src.endswith(".d.ts") or src.endswith(".d.mts") or src.endswith(".d.cts")
 
-def _is_js_src(src, allow_js, resolve_json_module):
+def _is_js_src(src, allow_js):
     if allow_js and (src.endswith(".js") or src.endswith(".jsx") or src.endswith(".mjs") or src.endswith(".cjs")):
         return True
-
-    if resolve_json_module and src.endswith(".json"):
-        return True
-
     return False
 
-def _is_ts_src(src, allow_js, resolve_json_module, include_typings):
+def _is_ts_src(src, allow_js, include_typings):
     if src.endswith(".ts") or src.endswith(".tsx") or src.endswith(".mts") or src.endswith(".cts"):
         return include_typings or not _is_typings_src(src)
 
-    return _is_js_src(src, allow_js, resolve_json_module)
+    return _is_js_src(src, allow_js)
 
 def _to_out_path(f, out_dir, root_dir):
     f = f[f.find(":") + 1:]
@@ -225,16 +213,32 @@ def _to_out_path(f, out_dir, root_dir):
         f = out_dir + "/" + f
     return f
 
-def _to_js_out_paths(srcs, out_dir, root_dir, allow_js, resolve_json_module, ext_map, default_ext):
+def _to_js_out_paths(srcs, out_dir, root_dir, allow_js, ext_map, default_ext):
     outs = []
     for f in srcs:
-        if _is_ts_src(f, allow_js, resolve_json_module, False):
+        if _is_ts_src(f, allow_js, False):
             out = _to_out_path(f, out_dir, root_dir)
             ext_idx = out.rindex(".")
             out = out[:ext_idx] + ext_map.get(out[ext_idx:], default_ext)
 
             # Don't declare outputs that collide with inputs
             # for example, a.js -> a.js
+            if out != f:
+                outs.append(out)
+    return outs
+
+# Macros can't reliably distinguish between labels and paths, but we can make a guess.
+def _is_likely_label(f):
+    return f.find(":") != -1 or f.startswith("//") or f.startswith("@")
+
+def _calculate_asset_outs(srcs, out_dir, typings_out_dir, root_dir, allow_js):
+    outs = []
+    for f in srcs:
+        # We must avoid predeclaring asset outputs for labels, because the label name is
+        # not guaranteed to bear any relation to the actual names of the output assets.
+        if not _is_ts_src(f, allow_js, False) and not _is_likely_label(f):
+            out = _to_out_path(f, typings_out_dir if _is_typings_src(f) else out_dir, root_dir)
+            # Don't declare outputs that collide with inputs
             if out != f:
                 outs.append(out)
     return outs
@@ -251,7 +255,7 @@ def _validate_tsconfig_dirs(root_dir, out_dir, typings_out_dir):
     if typings_out_dir and typings_out_dir.find("../") != -1:
         fail("typings_out_dir cannot output to parent directory")
 
-def _calculate_js_outs(srcs, out_dir, root_dir, allow_js, resolve_json_module, preserve_jsx, emit_declaration_only):
+def _calculate_js_outs(srcs, out_dir, root_dir, allow_js, preserve_jsx, emit_declaration_only):
     if emit_declaration_only:
         return []
 
@@ -260,14 +264,13 @@ def _calculate_js_outs(srcs, out_dir, root_dir, allow_js, resolve_json_module, p
         ".mjs": ".mjs",
         ".cjs": ".cjs",
         ".cts": ".cjs",
-        ".json": ".json",
     }
 
     if preserve_jsx:
         exts[".jsx"] = ".jsx"
         exts[".tsx"] = ".jsx"
 
-    return _to_js_out_paths(srcs, out_dir, root_dir, allow_js, resolve_json_module, exts, ".js")
+    return _to_js_out_paths(srcs, out_dir, root_dir, allow_js, exts, ".js")
 
 def _calculate_map_outs(srcs, out_dir, root_dir, source_map, preserve_jsx, emit_declaration_only):
     if not source_map or emit_declaration_only:
@@ -282,7 +285,7 @@ def _calculate_map_outs(srcs, out_dir, root_dir, source_map, preserve_jsx, emit_
     if preserve_jsx:
         exts[".tsx"] = ".jsx.map"
 
-    return _to_js_out_paths(srcs, out_dir, root_dir, False, False, exts, ".js.map")
+    return _to_js_out_paths(srcs, out_dir, root_dir, False, exts, ".js.map")
 
 def _calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, composite, allow_js):
     if not (declaration or composite):
@@ -295,7 +298,7 @@ def _calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, compos
         ".cjs": ".d.cts",
     }
 
-    return _to_js_out_paths(srcs, typings_out_dir, root_dir, allow_js, False, exts, ".d.ts")
+    return _to_js_out_paths(srcs, typings_out_dir, root_dir, allow_js, exts, ".d.ts")
 
 def _calculate_typing_maps_outs(srcs, typings_out_dir, root_dir, declaration_map, allow_js):
     if not declaration_map:
@@ -308,7 +311,7 @@ def _calculate_typing_maps_outs(srcs, typings_out_dir, root_dir, declaration_map
         ".cjs": ".d.cts.map",
     }
 
-    return _to_js_out_paths(srcs, typings_out_dir, root_dir, allow_js, False, exts, ".d.ts.map")
+    return _to_js_out_paths(srcs, typings_out_dir, root_dir, allow_js, exts, ".d.ts.map")
 
 def _calculate_root_dir(ctx):
     return _join(
@@ -337,5 +340,6 @@ lib = struct(
     calculate_map_outs = _calculate_map_outs,
     calculate_typings_outs = _calculate_typings_outs,
     calculate_typing_maps_outs = _calculate_typing_maps_outs,
+    calculate_asset_outs = _calculate_asset_outs,
     calculate_root_dir = _calculate_root_dir,
 )
