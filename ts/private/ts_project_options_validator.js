@@ -145,7 +145,7 @@ function main(_a) {
 
     function check_exclude_and_rootDir() {
         if (config.exclude === undefined && attrs['root_dir'] !== undefined && attrs['root_dir'] !== '') {
-            console.error('tsconfig validation failed: when root_dir is set, exclude must also be set. See: https://github.com/aspect-build/rules_ts/issues/644 for more details.')
+            console.error('tsconfig exclude validation failed: when attribute root_dir is set, exclude must also be set. See: https://github.com/aspect-build/rules_ts/issues/644 for more details.')
 
             throw new Error('tsconfig validation failed: when root_dir is set, exclude must also be set.')
         }
