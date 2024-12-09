@@ -44,9 +44,15 @@ ts_project(
     name = "babel",
     srcs = ["big.ts"],
     declaration = True,
+    extends = "tsconfig.json",
     out_dir = "build-babel",
     source_map = True,
     transpiler = babel,
+    tsconfig = {
+        "compilerOptions": {
+            "outDir": "build-babel",
+        },
+    },
 )
 
 # Runs babel to transpile ts -> js
@@ -75,6 +81,7 @@ ts_project(
     tsconfig = {
         "compilerOptions": {
             "declaration": False,
+            "outDir": "build-nodecls",
         },
     },
 )
@@ -131,12 +138,18 @@ ts_project(
         tsc_dts,
         out_dir = "build-custom_transpilers",
     ),
+    extends = "tsconfig.json",
     out_dir = "build-custom_transpilers",
     source_map = True,
     transpiler = partial.make(
         tsc_js,
         out_dir = "build-custom_transpilers",
     ),
+    tsconfig = {
+        "compilerOptions": {
+            "outDir": "build-custom_transpilers",
+        },
+    },
 )
 
 build_test(
@@ -204,9 +217,15 @@ ts_project(
         tsc_dts,
         out_dir = "build-custom_dts_transpiler",
     ),
+    extends = "tsconfig.json",
     out_dir = "build-custom_dts_transpiler",
     source_map = True,
     transpiler = "tsc",
+    tsconfig = {
+        "compilerOptions": {
+            "outDir": "build-custom_dts_transpiler",
+        },
+    },
 )
 
 build_test(
@@ -235,6 +254,7 @@ ts_project(
     tsconfig = {
         "compilerOptions": {
             "declaration": False,
+            "outDir": "build-custom_dts_transpiler-no_declarations",
         },
     },
 )
@@ -262,6 +282,7 @@ ts_project(
         "compilerOptions": {
             "declaration": True,
             "emitDeclarationOnly": True,
+            "outDir": "build-custom_dts_transpiler-no_declarations",
         },
     },
 )

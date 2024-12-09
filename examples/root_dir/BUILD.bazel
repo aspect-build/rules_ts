@@ -51,8 +51,14 @@ assert_outputs(
 # You can use it in combination with out_dir to replace "subdir" with "otherdir"
 ts_project(
     name = "replace",
+    extends = "tsconfig.json",
     out_dir = "otherdir",
     root_dir = "subdir",
+    tsconfig = {
+        "compilerOptions": {
+            "outDir": "otherdir",
+        },
+    },
 )
 
 assert_outputs(

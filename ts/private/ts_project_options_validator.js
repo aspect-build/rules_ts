@@ -72,7 +72,9 @@ function main(_a) {
         var match =
             optionVal === attrs[attr] ||
             (optionVal === undefined &&
-                (attrs[attr] === false || attrs[attr] === ''))
+                (attrs[attr] === false || attrs[attr] === '')) ||
+            // optionVal is a resolved path, so "." is the same as ""
+            (attrs[attr] === "." && optionVal === "")
         if (!match) {
             failures.push(
                 'attribute ' +
@@ -173,6 +175,7 @@ function main(_a) {
     check('incremental')
     check('tsBuildInfoFile', 'ts_build_info_file')
     check('declarationDir', 'declaration_dir')
+    check('outDir', 'out_dir')
     check_nocheck()
     check_preserve_jsx()
     check_exclude_and_rootDir()
@@ -224,6 +227,8 @@ function main(_a) {
             attrs.emit_declaration_only +
             '\n// ts_build_info_file:    ' +
             attrs.ts_build_info_file +
+            '\n// out_dir:               ' +
+            attrs.out_dir +
             '\n// preserve_jsx:          ' +
             attrs.preserve_jsx +
             '\n',

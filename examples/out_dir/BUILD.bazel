@@ -4,6 +4,7 @@ load("@bazel_skylib//rules:build_test.bzl", "build_test")
 ts_project(
     name = "out_dir-tsconfig",
     srcs = ["main.ts"],
+    out_dir = "tsconfig",
     tsconfig = {
         "compilerOptions": {
             "outDir": "tsconfig",
@@ -19,7 +20,11 @@ ts_project(
     declaration = True,
     declaration_map = True,
     out_dir = "param",
-    tsconfig = {},
+    tsconfig = {
+        "compilerOptions": {
+            "outDir": "param",
+        },
+    },
 )
 
 ts_project(
@@ -28,7 +33,13 @@ ts_project(
     declaration = True,
     declaration_dir = "decl_map",
     declaration_map = True,
+    extends = "tsconfig.json",
     out_dir = "declaration_dir",
+    tsconfig = {
+        "compilerOptions": {
+            "outDir": "declaration_dir",
+        },
+    },
 )
 
 build_test(
