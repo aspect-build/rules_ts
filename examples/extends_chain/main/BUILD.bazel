@@ -16,6 +16,7 @@ ts_project(
     tsconfig = {
         "compilerOptions": {
             "declaration": False,
+            "outDir": "config_dict",
         },
     },
 )

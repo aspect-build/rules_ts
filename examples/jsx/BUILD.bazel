@@ -11,9 +11,15 @@ ts_project(
     allow_js = True,
     declaration = True,
     declaration_map = True,
+    extends = "tsconfig.json",
     out_dir = "out",
     preserve_jsx = True,
     source_map = True,
+    tsconfig = {
+        "compilerOptions": {
+            "outDir": "out",
+        },
+    },
 )
 
 filegroup(
