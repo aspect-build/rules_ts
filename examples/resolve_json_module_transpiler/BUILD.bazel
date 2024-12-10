@@ -3,69 +3,78 @@
 load("@aspect_bazel_lib//lib:testing.bzl", "assert_contains")
 load("@aspect_rules_js//js:defs.bzl", "js_test")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
-load("@npm//:defs.bzl", "npm_link_all_packages")
-
-npm_link_all_packages(name = "node_modules")
+load("@bazel_skylib//lib:partial.bzl", "partial")
+load("//examples/transpiler:babel.bzl", "babel")
 
 ts_project(
     name = "ts",
     srcs = [
-        "index.mts",
-        "package.json",
+        "data.json",
+        "index.ts",
     ],
     resolve_json_module = True,
-    deps = [
-        ":node_modules/@aspect-test/e",
-    ],
+    transpiler = partial.make(
+        babel,
+        commonjs = True,
+        resolve_json = True,
+    ),
 )
 
 ts_project(
     name = "ts-dict-override",
     srcs = [
-        "index.mts",
-        "package.json",
+        "data.json",
+        "index.ts",
     ],
     extends = "tsconfig.json",
+    transpiler = partial.make(
+        babel,
+        commonjs = True,
+        out_dir = "ts-dict-override",
+        resolve_json = True,
+    ),
     tsconfig = {
         "compilerOptions": {
             "outDir": "ts-dict-override",
             "resolveJsonModule": True,
         },
     },
-    deps = [
-        ":node_modules/@aspect-test/e",
-    ],
 )
 
 ts_project(
     name = "ts-dict-unspecified",
     srcs = [
-        "index.mts",
-        "package.json",
+        "data.json",
+        "index.ts",
     ],
     extends = "tsconfig.json",
     resolve_json_module = True,
+    transpiler = partial.make(
+        babel,
+        commonjs = True,
+        out_dir = "ts-dict-unspecified",
+        resolve_json = True,
+    ),
     tsconfig = {
         "compilerOptions": {
             "outDir": "ts-dict-unspecified",
         },
     },
-    deps = [
-        ":node_modules/@aspect-test/e",
-    ],
 )
 
 assert_contains(
     name = "test",
-    actual = "index.mjs",
-    expected = """Hello from """,
+    actual = "index.js",
+    expected = """exports.a = 'hello' + JSON.stringify""",
 )
 
 js_test(
     # Test that the json is available at runtime.
     name = "ts-with-json",
-    data = [":ts"],
-    entry_point = "index.mjs",
+    data = [
+        ":ts",
+    ],
+    entry_point = "index.js",
 )
 
 # Test that the json is available at runtime with various ways of
@@ -73,8 +82,10 @@ js_test(
 [
     js_test(
         name = "ts-with-json-%s" % t,
-        data = [":ts-%s" % t],
-        entry_point = "ts-%s/index.mjs" % t,
+        data = [
+            ":ts-%s" % t,
+        ],
+        entry_point = "ts-%s/index.js" % t,
     )
     for t in [
         "dict-override",
