@@ -5,3 +5,4 @@ examples/jsx/out/b.d.ts.map
 examples/jsx/out/a.jsx
 examples/jsx/out/a.jsx.map
 examples/jsx/out/b.jsx
+examples/jsx/out/b.jsx.map
