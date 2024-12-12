@@ -54,6 +54,6 @@ def mock(name, srcs, source_map = False, **kwargs):
         # Calculate pre-declared outputs so they can be referenced as targets.
         # This is an optional transpiler feature aligning with the default tsc transpiler.
         js_outs = lib.calculate_js_outs(srcs, ".", ".", False, False, False, False),
-        map_outs = lib.calculate_map_outs(srcs, ".", ".", True, False, False) if source_map else [],
+        map_outs = lib.calculate_map_outs(srcs, ".", ".", True, False, False, False) if source_map else [],
         **kwargs
     )

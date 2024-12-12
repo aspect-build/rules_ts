@@ -269,7 +269,7 @@ def _calculate_js_outs(srcs, out_dir, root_dir, allow_js, resolve_json_module, p
 
     return _to_js_out_paths(srcs, out_dir, root_dir, allow_js, resolve_json_module, exts, ".js")
 
-def _calculate_map_outs(srcs, out_dir, root_dir, source_map, preserve_jsx, emit_declaration_only):
+def _calculate_map_outs(srcs, out_dir, root_dir, source_map, allow_js, preserve_jsx, emit_declaration_only):
     if not source_map or emit_declaration_only:
         return []
 
@@ -281,8 +281,10 @@ def _calculate_map_outs(srcs, out_dir, root_dir, source_map, preserve_jsx, emit_
     }
     if preserve_jsx:
         exts[".tsx"] = ".jsx.map"
+        if allow_js:
+            exts[".jsx"] = ".jsx.map"
 
-    return _to_js_out_paths(srcs, out_dir, root_dir, False, False, exts, ".js.map")
+    return _to_js_out_paths(srcs, out_dir, root_dir, allow_js, False, exts, ".js.map")
 
 def _calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, composite, allow_js):
     if not (declaration or composite):

@@ -354,7 +354,7 @@ def ts_project(
     tsc_map_outs = []
     if emit_tsc_js:
         tsc_js_outs = _lib.calculate_js_outs(srcs, out_dir, root_dir, allow_js, resolve_json_module, preserve_jsx, emit_declaration_only)
-        tsc_map_outs = _lib.calculate_map_outs(srcs, out_dir, root_dir, source_map, preserve_jsx, emit_declaration_only)
+        tsc_map_outs = _lib.calculate_map_outs(srcs, out_dir, root_dir, source_map, allow_js, preserve_jsx, emit_declaration_only)
 
     # Custom typing transpiler
     if emit_transpiler_dts:
