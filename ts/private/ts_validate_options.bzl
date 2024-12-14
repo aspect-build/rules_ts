@@ -55,6 +55,7 @@ def _validate_action(ctx, tsconfig_inputs):
         env = {
             "BAZEL_BINDIR": ctx.bin_dir.path,
         },
+        use_default_shell_env = True,
     )
 
     return [marker]
