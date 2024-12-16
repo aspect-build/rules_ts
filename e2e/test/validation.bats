@@ -36,3 +36,11 @@ teardown() {
     assert_failure
     assert_output -p "error TS2322: Type 'number' is not assignable to type 'string'"
 }
+
+@test 'When tsc rule is using out_dir attribute, but tsconfig is not set, an error is thrown' {
+    workspace
+
+    run bazel build :ts-out-dir
+    assert_failure
+    assert_output -p "attribute out_dir=out does not match compilerOptions.outDir=undefined"
+}

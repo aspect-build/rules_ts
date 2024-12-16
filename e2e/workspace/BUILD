@@ -6,6 +6,12 @@ ts_project(
     srcs = ["foo.ts"],
 )
 
+ts_project(
+    name = "ts-out-dir",
+    srcs = ["foo.ts"],
+    out_dir = "out",
+)
+
 build_test(
     name = "test",
     targets = [":ts"],
