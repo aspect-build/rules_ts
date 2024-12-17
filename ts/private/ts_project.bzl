@@ -202,12 +202,6 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
     use_tsc_for_js = len(js_outs) > 0
     use_tsc_for_dts = len(typings_outs) > 0
 
-    # Use a separate non-emitting action for type-checking when:
-    #  - a isolated typechecking action was explicitly requested
-    #  or
-    #  - not invoking tsc for output files at all
-    use_isolated_typecheck = ctx.attr.isolated_typecheck or not (use_tsc_for_js or use_tsc_for_dts)
-
     # Special case where there are no source outputs so we add output_types to the default outputs.
     default_outputs = output_sources if len(output_sources) else output_types
 
@@ -221,8 +215,11 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         transitive = transitive_inputs,
     )
 
-    # tsc action for type-checking
-    if use_isolated_typecheck:
+    # Use a separate non-emitting action for type-checking when:
+    #  - a isolated typechecking action was explicitly requested
+    #  or
+    #  - not invoking tsc for output files at all
+    if ctx.attr.isolated_typecheck or not (use_tsc_for_js or use_tsc_for_dts):
         # The type-checking action still need to produce some output, so we output the stdout
         # to a .typecheck file that ends up in the typecheck output group.
         typecheck_output = ctx.actions.declare_file(ctx.attr.name + ".typecheck")
