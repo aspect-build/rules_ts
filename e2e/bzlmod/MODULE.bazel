@@ -9,6 +9,14 @@ bazel_dep(name = "bazel_skylib", version = "1.5.0", dev_dependency = True)
 bazel_dep(name = "rules_proto", version = "5.3.0-21.7", dev_dependency = True)
 bazel_dep(name = "toolchains_protoc", version = "0.2.4", dev_dependency = True)
 
+# TODO: upgrade and remove override to include d042d563c6a91f7e11f66c42c83429199bd3d5d9
+archive_override(
+    module_name = "aspect_bazel_lib",
+    integrity = "sha256-iboa/H1J/MVDaY1OC/Ev0FUbu6SovyimC1cTkVmBC/c=",
+    strip_prefix = "bazel-lib-d042d563c6a91f7e11f66c42c83429199bd3d5d9",
+    urls = ["https://github.com/bazel-contrib/bazel-lib/archive/d042d563c6a91f7e11f66c42c83429199bd3d5d9.tar.gz"],
+)
+
 npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm", dev_dependency = True)
 npm.npm_translate_lock(
     name = "npm",
