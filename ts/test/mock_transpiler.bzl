@@ -1,5 +1,7 @@
 "Fixture to demonstrate a custom transpiler for ts_project"
 
+load("@aspect_rules_js//js:libs.bzl", "js_lib_helpers")
+load("@aspect_rules_js//js:providers.bzl", "JsInfo")
 load("@aspect_rules_ts//ts/private:ts_lib.bzl", "lib")
 
 _DUMMY_SOURCEMAP = """{"version":3,"sources":["%s"],"mappings":"AAAO,KAAK,CAAC","file":"in.js","sourcesContent":["fake"]}"""
@@ -21,7 +23,7 @@ def _mock_impl(ctx):
             inputs = [src],
             outputs = [js_file],
             command = "cp $@",
-            arguments = [src.path, js_file.path.replace(".ts", ".js")],
+            arguments = [src.path, js_file.path],
         )
 
         ctx.actions.write(
@@ -29,7 +31,30 @@ def _mock_impl(ctx):
             content = _DUMMY_SOURCEMAP % src.short_path,
         )
 
-    return DefaultInfo(files = depset(out_files))
+    output_sources_depset = depset(out_files)
+
+    runfiles = js_lib_helpers.gather_runfiles(
+        ctx = ctx,
+        sources = output_sources_depset,
+        data = [],
+        deps = ctx.attr.srcs,
+    )
+
+    return [
+        JsInfo(
+            target = ctx.label,
+            sources = output_sources_depset,
+            types = depset(),
+            transitive_sources = depset(),
+            transitive_types = depset(),
+            npm_sources = depset(),
+            npm_package_store_infos = depset(),
+        ),
+        DefaultInfo(
+            files = output_sources_depset,
+            runfiles = runfiles,
+        ),
+    ]
 
 mock_impl = rule(
     attrs = {
