@@ -38,6 +38,7 @@ ts_project(
         "compilerOptions": {
             "allowJs": True,
             "noEmit": True,
+            "outDir": "typecheck_nodeclarations_js",
         },
     },
 )
