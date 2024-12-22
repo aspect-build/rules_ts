@@ -29,6 +29,14 @@ def _gather_types_from_js_infos(targets):
     ])
     return depset([], transitive = files_depsets)
 
+def _gather_transitive_typecheck_from_output_group_infos(typecheck_outs, targets):
+    files_depsets = [
+        target[OutputGroupInfo].transitive_typecheck
+        for target in targets
+        if OutputGroupInfo in target and "transitive_typecheck" in target[OutputGroupInfo]
+    ]
+    return depset(typecheck_outs, transitive = files_depsets)
+
 def _ts_project_impl(ctx):
     """Creates the action which spawns `tsc`.
 
@@ -68,7 +76,7 @@ def _ts_project_impl(ctx):
     map_outs = []
     if not ctx.attr.no_emit and ctx.attr.transpile != 0:
         js_outs = _lib.declare_outputs(ctx, _lib.calculate_js_outs(srcs, ctx.attr.out_dir, ctx.attr.root_dir, ctx.attr.allow_js, ctx.attr.resolve_json_module, ctx.attr.preserve_jsx, ctx.attr.emit_declaration_only))
-        map_outs = _lib.declare_outputs(ctx, _lib.calculate_map_outs(srcs, ctx.attr.out_dir, ctx.attr.root_dir, ctx.attr.source_map, ctx.attr.preserve_jsx, ctx.attr.emit_declaration_only))
+        map_outs = _lib.declare_outputs(ctx, _lib.calculate_map_outs(srcs, ctx.attr.out_dir, ctx.attr.root_dir, ctx.attr.source_map, ctx.attr.allow_js, ctx.attr.preserve_jsx, ctx.attr.emit_declaration_only))
 
     # dts+map file outputs
     typings_outs = []
@@ -199,12 +207,6 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
     use_tsc_for_js = len(js_outs) > 0
     use_tsc_for_dts = len(typings_outs) > 0
 
-    # Use a separate non-emitting action for type-checking when:
-    #  - a isolated typechecking action was explicitly requested
-    #  or
-    #  - not invoking tsc for output files at all
-    use_isolated_typecheck = ctx.attr.isolated_typecheck or not (use_tsc_for_js or use_tsc_for_dts)
-
     # Special case where there are no source outputs so we add output_types to the default outputs.
     default_outputs = output_sources if len(output_sources) else output_types
 
@@ -218,8 +220,11 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         transitive = transitive_inputs,
     )
 
-    # tsc action for type-checking
-    if use_isolated_typecheck:
+    # Use a separate non-emitting action for type-checking when:
+    #  - a isolated typechecking action was explicitly requested
+    #  or
+    #  - not invoking tsc for output files at all
+    if ctx.attr.isolated_typecheck or not (use_tsc_for_js or use_tsc_for_dts):
         # The type-checking action still need to produce some output, so we output the stdout
         # to a .typecheck file that ends up in the typecheck output group.
         typecheck_output = ctx.actions.declare_file(ctx.attr.name + ".typecheck")
@@ -312,6 +317,8 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
 
     transitive_types = js_lib_helpers.gather_transitive_types(output_types, srcs_tsconfig_deps)
 
+    transitive_typecheck = _gather_transitive_typecheck_from_output_group_infos(typecheck_outs, ctx.attr.deps)
+
     npm_sources = js_lib_helpers.gather_npm_sources(
         srcs = ctx.attr.srcs + [ctx.attr.tsconfig],
         deps = ctx.attr.deps,
@@ -359,6 +366,7 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         OutputGroupInfo(
             types = output_types_depset,
             typecheck = depset(typecheck_outs),
+            transitive_typecheck = transitive_typecheck,
             # make the inputs to the tsc action available for analysis testing
             _action_inputs = transitive_inputs_depset,
             # https://bazel.build/extending/rules#validations_output_group
