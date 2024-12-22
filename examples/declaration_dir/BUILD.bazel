@@ -10,9 +10,15 @@ ts_project(
     declaration = True,
     declaration_dir = "out/types",
     declaration_map = True,
+    extends = "tsconfig.json",
     out_dir = "out/code",
     root_dir = "dir",
     source_map = True,
+    tsconfig = {
+        "compilerOptions": {
+            "outDir": "out/code",
+        },
+    },
 )
 
 # Assert that the output locations we wrote to match expectations

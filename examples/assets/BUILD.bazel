@@ -87,8 +87,13 @@ ts_project(
         "src/index.ts",
     ],
     assets = [":assets-filegroup"],
+    extends = ":config",
     out_dir = "out-target",
-    tsconfig = ":config",
+    tsconfig = {
+        "compilerOptions": {
+            "outDir": "out-target",
+        },
+    },
 )
 
 assert_outputs(
@@ -115,8 +120,13 @@ ts_project(
         "src/index.ts",
     ],
     assets = [":assets-filegroup"],
+    extends = ":config",
     out_dir = "out-copy-target",
-    tsconfig = ":config",
+    tsconfig = {
+        "compilerOptions": {
+            "outDir": "out-copy-target",
+        },
+    },
 )
 
 assert_outputs(
@@ -137,8 +147,13 @@ ts_project(
     assets = [
         "//%s:assets-filegroup" % package_name(),
     ],
+    extends = ":config",
     out_dir = "out-copy-target-abs",
-    tsconfig = ":config",
+    tsconfig = {
+        "compilerOptions": {
+            "outDir": "out-copy-target-abs",
+        },
+    },
 )
 
 assert_outputs(
@@ -173,9 +188,14 @@ ts_project(
         "src/styles.css",
         "src/generated.json",
     ],
+    extends = ":config",
     out_dir = "root-out",
     root_dir = "src",
-    tsconfig = ":config",
+    tsconfig = {
+        "compilerOptions": {
+            "outDir": "root-out",
+        },
+    },
 )
 
 build_test(

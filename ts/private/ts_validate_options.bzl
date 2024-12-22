@@ -27,7 +27,10 @@ def _validate_action(ctx, tsconfig_inputs):
     config = struct(
         allow_js = ctx.attr.allow_js,
         declaration = ctx.attr.declaration,
+        declaration_dir = ctx.attr.declaration_dir,
         declaration_map = ctx.attr.declaration_map,
+        root_dir = ctx.attr.root_dir,
+        out_dir = ctx.attr.out_dir,
         preserve_jsx = ctx.attr.preserve_jsx,
         composite = ctx.attr.composite,
         no_emit = ctx.attr.no_emit,
