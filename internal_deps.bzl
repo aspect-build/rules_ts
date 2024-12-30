@@ -6,31 +6,12 @@ statement from these, that's a bug in our distribution.
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_jar", _http_archive = "http_archive")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
-load("//.github/workflows:deps.bzl", "aspect_workflows_github_actions_deps")
 
 def http_archive(**kwargs):
     maybe(_http_archive, **kwargs)
 
 def rules_ts_internal_deps():
     "Fetch deps needed for local development"
-    http_archive(
-        name = "io_bazel_rules_go",
-        sha256 = "80a98277ad1311dacd837f9b16db62887702e9f1d1c4c9f796d0121a46c8e184",
-        urls = ["https://github.com/bazelbuild/rules_go/releases/download/v0.46.0/rules_go-v0.46.0.zip"],
-    )
-
-    http_archive(
-        name = "bazel_gazelle",
-        integrity = "sha256-dd8ojEsxyB61D1Hi4U9HY8t1SNquEmgXJHBkY3/Z6mI=",
-        urls = ["https://github.com/bazelbuild/bazel-gazelle/releases/download/v0.36.0/bazel-gazelle-v0.36.0.tar.gz"],
-    )
-
-    http_archive(
-        name = "bazel_skylib_gazelle_plugin",
-        sha256 = "747addf3f508186234f6232674dd7786743efb8c68619aece5fb0cac97b8f415",
-        urls = ["https://github.com/bazelbuild/bazel-skylib/releases/download/1.5.0/bazel-skylib-gazelle-plugin-1.5.0.tar.gz"],
-    )
-
     http_archive(
         name = "io_bazel_stardoc",
         sha256 = "fabb280f6c92a3b55eed89a918ca91e39fb733373c81e87a18ae9e33e75023ec",
@@ -89,5 +70,3 @@ def rules_ts_internal_deps():
         integrity = "sha256-kHLmD+Zs/11sDxGh3yHY8+Sym17ngrRcP8dfWfviuDk=",
         urls = ["https://repo1.maven.org/maven2/com/google/protobuf/protobuf-java/4.27.0/protobuf-java-4.27.0.jar"],
     )
-
-    aspect_workflows_github_actions_deps()
