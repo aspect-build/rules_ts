@@ -1,30 +1,13 @@
-# See https://docs.aspect.build/workflows/config
----
+# See https://docs.aspect.build/workflows/configuration
 tasks:
     - format:
-          queue: aspect-small
+          queue: aspect-medium
     - buildifier:
-          queue: aspect-small
+          queue: aspect-medium
     - configure:
-          queue: aspect-small-graviton
+          queue: aspect-medium
     - test:
-          hooks:
-              - type: before_task
-                command: mkdir -p /workflows/artifacts && vmstat -a -S M -t 1 2>&1 > /workflows/artifacts/vmstat.out &
-              - type: after_task
-                command: cat /workflows/artifacts/vmstat.out
-    - delivery:
-          auto_deliver: true
-          rules:
-              - deliverable: 'attr("tags", "\bdeliverable\b", //...)'
-                condition:
-                    branches:
-                        - main
-              - deliverable:
-                    - //docs:docs_delivery
-                condition:
-                    only_on_change: false
-                    branches:
-                        - main
+    - finalization:
+          queue: aspect-small
 notifications:
     github: {}
