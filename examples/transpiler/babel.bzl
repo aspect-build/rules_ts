@@ -7,6 +7,7 @@ def babel(name, srcs, **kwargs):
     # rules_js runs under the output tree in bazel-out/[arch]/bin
     # and we additionally chdir to the examples/ folder beneath that.
     execroot = "../../../.."
+    out_dir = kwargs.pop("out_dir", None)
 
     outs = []
 
@@ -20,12 +21,19 @@ def babel(name, srcs, **kwargs):
     # - make sure the input directory only contains files listed in srcs
     # - make sure the js_outs are actually created in the expected path
     for idx, src in enumerate(srcs):
+        if src.endswith(".d.ts"):
+            continue
+
         if not src.endswith(".ts"):
             fail("babel example transpiler only supports source .ts files")
 
         # Predict the output paths where babel will write
         js_out = src.replace(".ts", ".js")
         map_out = src.replace(".ts", ".js.map")
+
+        if out_dir != None:
+            js_out = "{}/{}".format(out_dir, js_out)
+            map_out = "{}/{}".format(out_dir, map_out)
 
         # see https://babeljs.io/docs/en/babel-cli
         args = [
