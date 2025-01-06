@@ -65,14 +65,14 @@ function main(_a) {
         }
         return options[option]
     }
-    function check(option, attr) {
+    function check(option, attr, allowOptionToBeUndefined = false) {
         attr = attr || option
         // treat compilerOptions undefined as false
         var optionVal = getTsOption(option)
+        var attributeIsFalsy = attrs[attr] === false || attrs[attr] === '';
         var match =
             optionVal === attrs[attr] ||
-            (optionVal === undefined &&
-                (attrs[attr] === false || attrs[attr] === ''))
+            (optionVal === undefined && (attributeIsFalsy || allowOptionToBeUndefined))
         if (!match) {
             failures.push(
                 'attribute ' +
@@ -143,14 +143,6 @@ function main(_a) {
         }
     }
 
-    function check_exclude_and_rootDir() {
-        if (config.exclude === undefined && attrs['root_dir'] !== undefined && attrs['root_dir'] !== '') {
-            console.error('tsconfig exclude validation failed: when attribute root_dir is set, exclude must also be set. See: https://github.com/aspect-build/rules_ts/issues/644 for more details.')
-
-            throw new Error('tsconfig validation failed: when root_dir is set, exclude must also be set.')
-        }
-    }
-
     if (options.preserveSymlinks) {
         console.error(
             'ERROR: ts_project rule ' +
@@ -172,10 +164,9 @@ function main(_a) {
     check('declaration')
     check('incremental')
     check('tsBuildInfoFile', 'ts_build_info_file')
-    check('declarationDir', 'declaration_dir')
+    check('outDir', 'out_dir', true)
     check_nocheck()
     check_preserve_jsx()
-    check_exclude_and_rootDir()
     if (failures.length > 0) {
         console.error(
             'ERROR: ts_project rule ' +
@@ -212,8 +203,8 @@ function main(_a) {
             attrs.declaration +
             '\n// declaration_map:       ' +
             attrs.declaration_map +
-            '\n// declaration_dir:       ' +
-            attrs.declaration_dir +
+            '\n// out_dir:               ' +
+            attrs.out_dir +
             '\n// incremental:           ' +
             attrs.incremental +
             '\n// source_map:            ' +

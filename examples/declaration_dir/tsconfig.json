@@ -2,9 +2,6 @@
     "compilerOptions": {
         "sourceMap": true,
         "declaration": true,
-        "declarationMap": true,
-        "declarationDir": "out/types"
-    },
-    // Workaround https://github.com/microsoft/TypeScript/issues/59036
-    "exclude": []
+        "declarationMap": true
+    }
 }

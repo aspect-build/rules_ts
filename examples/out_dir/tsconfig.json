@@ -1,7 +1,0 @@
-{
-    "compilerOptions": {
-        "declaration": true,
-        "declarationMap": true,
-        "declarationDir": "decl_map"
-    }
-}
