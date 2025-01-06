@@ -65,15 +65,22 @@ function main(_a) {
         }
         return options[option]
     }
-    function check(option, attr, allowOptionToBeUndefined = false) {
+    function check(option, attr, failOnlyIfAttrIsUndefined = false) {
         attr = attr || option
         // treat compilerOptions undefined as false
         var optionVal = getTsOption(option)
         var attributeIsFalsy = attrs[attr] === false || attrs[attr] === '';
-        var match =
-            optionVal === attrs[attr] ||
-            (optionVal === undefined && (attributeIsFalsy || allowOptionToBeUndefined))
-        if (!match) {
+        var attributeIsFalsyOrUndefined = attributeIsFalsy || attrs[attr] === undefined
+        var shouldFailBecauseAttributeIsFalsyAndOptionIsDefined =
+            failOnlyIfAttrIsUndefined && attributeIsFalsyOrUndefined && optionVal !== undefined
+        var parametersMatch = optionVal === attrs[attr] ||
+            (optionVal === undefined && attributeIsFalsy);
+        var validationOfUndefinedAttrPassed = !(failOnlyIfAttrIsUndefined &&
+            shouldFailBecauseAttributeIsFalsyAndOptionIsDefined);
+        var checkPassed =
+            parametersMatch ||
+            validationOfUndefinedAttrPassed
+        if (!checkPassed) {
             failures.push(
                 'attribute ' +
                     attr +
