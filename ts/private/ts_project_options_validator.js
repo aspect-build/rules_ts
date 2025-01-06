@@ -65,19 +65,13 @@ function main(_a) {
         }
         return options[option]
     }
-    function check(option, attr, failOnlyIfAttrIsUndefined = false) {
+    function check(option, attr) {
         attr = attr || option
         // treat compilerOptions undefined as false
         var optionVal = getTsOption(option)
-        var attributeIsFalsy = attrs[attr] === false || attrs[attr] === '';
-        var attributeIsFalsyOrUndefined = attributeIsFalsy || attrs[attr] === undefined
-        var shouldFailBecauseAttributeIsFalsyAndOptionIsDefined =
-            failOnlyIfAttrIsUndefined && attributeIsFalsyOrUndefined && optionVal !== undefined
-        var parametersMatch = optionVal === attrs[attr] ||
-            (optionVal === undefined && attributeIsFalsy);
         var checkPassed =
-            parametersMatch ||
-            !shouldFailBecauseAttributeIsFalsyAndOptionIsDefined
+            optionVal === attrs[attr] ||
+            (optionVal === undefined && (attrs[attr] === false || attrs[attr] === ''))
         if (!checkPassed) {
             failures.push(
                 'attribute ' +
@@ -105,6 +99,17 @@ function main(_a) {
                         typeof option
                 )
             }
+        }
+    }
+    function check_out_dir() {
+        var attr = 'out_dir'
+        var optionVal = getTsOption('outDir')
+        var attrIsFalsyOrUndefined = attrs[attr] === false || attrs[attr] === '' || attrs[attr] === undefined
+        if (attrIsFalsyOrUndefined && optionVal !== undefined) {
+            throw new Error(
+                'When outDir is set in the tsconfig it must also be set in the ts_project' +
+                ' rule, so that the output directory is known to Bazel.'
+            )
         }
     }
     var jsxEmit =
@@ -169,7 +174,7 @@ function main(_a) {
     check('declaration')
     check('incremental')
     check('tsBuildInfoFile', 'ts_build_info_file')
-    check('outDir', 'out_dir', true)
+    check_out_dir()
     check_nocheck()
     check_preserve_jsx()
     if (failures.length > 0) {
