@@ -69,10 +69,11 @@ function main(_a) {
         attr = attr || option
         // treat compilerOptions undefined as false
         var optionVal = getTsOption(option)
-        var checkPassed =
+        var match =
             optionVal === attrs[attr] ||
-            (optionVal === undefined && (attrs[attr] === false || attrs[attr] === ''))
-        if (!checkPassed) {
+            (optionVal === undefined &&
+                (attrs[attr] === false || attrs[attr] === ''))
+        if (!match) {
             failures.push(
                 'attribute ' +
                     attr +
@@ -152,7 +153,6 @@ function main(_a) {
             }
         }
     }
-
     if (options.preserveSymlinks) {
         console.error(
             'ERROR: ts_project rule ' +
