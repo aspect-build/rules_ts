@@ -20,14 +20,8 @@ ts_project(
     allow_js = True,
     declaration = True,
     declaration_map = True,
-    extends = "tsconfig.json",
     out_dir = "out",
     source_map = True,
-    tsconfig = {
-        "compilerOptions": {
-            "outDir": "out",
-        },
-    },
 )
 
 # You can also produce different module syntaxt outputs from a .ts file.
@@ -47,15 +41,9 @@ ts_project(
         ],
         declaration = True,
         declaration_map = True,
-        extends = "tsconfig.json",
         # Write the output files to an extra nested directory
         out_dir = format,
         source_map = True,
-        tsconfig = {
-            "compilerOptions": {
-                "outDir": format,
-            },
-        },
     )
     for format in [
         "commonjs",

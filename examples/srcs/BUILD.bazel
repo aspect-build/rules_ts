@@ -9,13 +9,7 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
 # See the docs on srcs for exactly which files are included.
 ts_project(
     name = "srcs-auto",
-    extends = "tsconfig.json",
     out_dir = "auto",
-    tsconfig = {
-        "compilerOptions": {
-            "outDir": "auto",
-        },
-    },
 )
 
 # The sources can come from the default output of some other target.
@@ -29,13 +23,7 @@ filegroup(
 ts_project(
     name = "srcs-filegroup",
     srcs = [":srcs"],
-    extends = "tsconfig.json",
     out_dir = "filegroup",
-    tsconfig = {
-        "compilerOptions": {
-            "outDir": "filegroup",
-        },
-    },
 )
 
 # Tools can also generate .ts source files, so the sources are actually in the bazel-out tree.
@@ -56,13 +44,7 @@ ts_project(
         "a.ts",
         "generated.ts",
     ],
-    extends = "tsconfig.json",
     out_dir = "generated",
-    tsconfig = {
-        "compilerOptions": {
-            "outDir": "generated",
-        },
-    },
 )
 
 # Testing what outputs are actually produced

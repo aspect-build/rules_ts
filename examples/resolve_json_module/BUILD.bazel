@@ -20,7 +20,6 @@ ts_project(
         "index.ts",
     ],
     extends = "tsconfig.json",
-    out_dir = "ts-dict-override",
     tsconfig = {
         "compilerOptions": {
             "outDir": "ts-dict-override",
@@ -36,7 +35,6 @@ ts_project(
         "index.ts",
     ],
     extends = "tsconfig.json",
-    out_dir = "ts-dict-unspecified",
     resolve_json_module = True,
     tsconfig = {
         "compilerOptions": {

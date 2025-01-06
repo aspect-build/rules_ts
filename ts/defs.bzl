@@ -294,6 +294,7 @@ def ts_project(
 
         # These options are always passed on the tsc command line so don't include them
         # in the tsconfig. At best they're redundant, but at worst we'll have a conflict
+        out_dir = compiler_options.pop("outDir", out_dir)
         declaration_dir = compiler_options.pop("declarationDir", declaration_dir)
         root_dir = compiler_options.pop("rootDir", root_dir)
 

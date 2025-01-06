@@ -36,14 +36,9 @@ ts_project(
         ":gen-a-ts",
     ],
     declaration = True,
-    extends = "tsconfig.json",
     out_dir = "out",
     source_map = True,
-    tsconfig = {
-        "compilerOptions": {
-            "outDir": "out",
-        },
-    },
+    tsconfig = "tsconfig.json",
 )
 
 # Ensure all the outputs are pre-declared and in the correct locations including

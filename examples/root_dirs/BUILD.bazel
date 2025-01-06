@@ -12,11 +12,7 @@ ts_project(
     srcs = ["src/lib.ts"],
     declaration = True,
     out_dir = "dist",
-    tsconfig = {
-        "compilerOptions": {
-            "outDir": "dist",
-        },
-    },
+    tsconfig = {},
 )
 
 ts_project(
@@ -29,7 +25,6 @@ ts_project(
                 ".",
                 "dist",
             ],
-            "outDir": "test",
         },
     },
     deps = [":lib"],
