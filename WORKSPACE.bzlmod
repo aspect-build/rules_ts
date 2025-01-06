@@ -1,8 +1,3 @@
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_jar")
-load("//.github/workflows:deps.bzl", "aspect_workflows_github_actions_deps")
-
-aspect_workflows_github_actions_deps()
-
 # TODO: rules_lint doesn't have a way to bring deps in under bzlmod
 load(
     "@aspect_rules_lint//format:repositories.bzl",
@@ -10,6 +5,8 @@ load(
 )
 
 fetch_shfmt()
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_jar")
 
 # Needed for stardoc to compile from Java sources
 http_jar(
