@@ -75,11 +75,9 @@ function main(_a) {
             failOnlyIfAttrIsUndefined && attributeIsFalsyOrUndefined && optionVal !== undefined
         var parametersMatch = optionVal === attrs[attr] ||
             (optionVal === undefined && attributeIsFalsy);
-        var validationOfUndefinedAttrPassed = !(failOnlyIfAttrIsUndefined &&
-            shouldFailBecauseAttributeIsFalsyAndOptionIsDefined);
         var checkPassed =
             parametersMatch ||
-            validationOfUndefinedAttrPassed
+            !shouldFailBecauseAttributeIsFalsyAndOptionIsDefined
         if (!checkPassed) {
             failures.push(
                 'attribute ' +
