@@ -134,6 +134,9 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
     common_args.extend(ctx.attr.args)
 
     if (ctx.attr.out_dir and ctx.attr.out_dir != ".") or ctx.attr.root_dir:
+        # TODO: add validation that excludes is non-empty in this case, as passing the --outDir or --declarationDir flag
+        # to TypeScript causes it to set a default for excludes such that it won't find our sources that were copied-to-bin.
+        # See https://github.com/microsoft/TypeScript/issues/59036 and https://github.com/aspect-build/rules_ts/issues/644
         common_args.extend([
             "--outDir",
             _lib.join(ctx.label.workspace_root, ctx.label.package, ctx.attr.out_dir),
