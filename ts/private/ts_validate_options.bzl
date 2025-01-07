@@ -28,6 +28,7 @@ def _validate_action(ctx, tsconfig_inputs):
         allow_js = ctx.attr.allow_js,
         declaration = ctx.attr.declaration,
         declaration_map = ctx.attr.declaration_map,
+        out_dir = ctx.attr.out_dir,
         preserve_jsx = ctx.attr.preserve_jsx,
         composite = ctx.attr.composite,
         no_emit = ctx.attr.no_emit,
