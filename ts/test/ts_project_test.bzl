@@ -13,6 +13,7 @@ def _dir_test_impl(ctx):
 
     # assert the inputs to the tsc action are what we expect
     action_inputs = target_under_test[OutputGroupInfo]._action_inputs.to_list()
+    action_inputs = sorted(action_inputs)
     asserts.equals(env, 2, len(action_inputs))
     asserts.true(env, action_inputs[0].path.find("/dir.ts") != -1)
     asserts.true(env, action_inputs[1].path.find("/tsconfig_dir.json") != -1)
