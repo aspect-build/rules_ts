@@ -51,8 +51,7 @@ def _ts_config_impl(ctx):
             transitive_deps.append(dep[TsConfigInfo].deps)
 
     transitive_sources = js_lib_helpers.gather_transitive_sources([], ctx.attr.deps)
-
-    transitive_types = js_lib_helpers.gather_transitive_types(files, ctx.attr.deps)
+    transitive_types = js_lib_helpers.gather_transitive_types([], ctx.attr.deps)
 
     npm_sources = js_lib_helpers.gather_npm_sources(
         srcs = [],
