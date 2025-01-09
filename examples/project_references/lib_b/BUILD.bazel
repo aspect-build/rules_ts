@@ -8,6 +8,7 @@ ts_project(
     srcs = ["index.ts"],
     composite = True,
     declaration = True,
+    isolated_typecheck = True,
     extends = "//examples/project_references:tsconfig-base",
     deps = ["//examples/project_references/lib_a"],
 )
