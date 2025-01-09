@@ -14,6 +14,42 @@ def _windows_path_normalize(path):
         return path.replace("/", "\\")
     return path
 
+# Vendored: https://github.com/protocolbuffers/protobuf/blob/v31.1/bazel/common/proto_common.bzl#L15-L23
+def _import_virtual_proto_path(path):
+    """Imports all paths for virtual imports.
+
+      They're of the form:
+      'bazel-out/k8-fastbuild/bin/external/foo/e/_virtual_imports/e' or
+      'bazel-out/foo/k8-fastbuild/bin/e/_virtual_imports/e'"""
+    if path.count("/") > 4:
+        return "-I%s" % path
+    return None
+
+# Vendored: https://github.com/protocolbuffers/protobuf/blob/v31.1/bazel/common/proto_common.bzl#L25-L34
+def _import_repo_proto_path(path):
+    """Imports all paths for generated files in external repositories.
+
+      They are of the form:
+      'bazel-out/k8-fastbuild/bin/external/foo' or
+      'bazel-out/foo/k8-fastbuild/bin'"""
+    path_count = path.count("/")
+    if path_count > 2 and path_count <= 4:
+        return "-I%s" % path
+    return None
+
+# Vendored: https://github.com/protocolbuffers/protobuf/blob/v31.1/bazel/common/proto_common.bzl#L36-L46
+def _import_main_output_proto_path(path):
+    """Imports all paths for generated files or source files in external repositories.
+
+      They're of the form:
+      'bazel-out/k8-fastbuild/bin'
+      'external/foo'
+      '../foo'
+    """
+    if path.count("/") <= 2 and path != ".":
+        return "-I%s" % path
+    return None
+
 # buildifier: disable=function-docstring-header
 def _protoc_action(ctx, proto_info, outputs):
     """Create an action like
@@ -25,6 +61,13 @@ def _protoc_action(ctx, proto_info, outputs):
       example/person/person.proto
     """
     inputs = depset(proto_info.direct_sources, transitive = [proto_info.transitive_descriptor_sets])
+
+    # ensure that bin_dir doesn't get duplicated in the path
+    # e.g. by proto_library(strip_import_prefix=...)
+    proto_root = proto_info.proto_source_root
+    if proto_root.startswith(ctx.bin_dir.path):
+        proto_root = proto_root[len(ctx.bin_dir.path) + 1:]
+    plugin_output = ctx.bin_dir.path + "/" + proto_root
 
     options = dict({
         "keep_empty_files": True,
@@ -40,22 +83,36 @@ def _protoc_action(ctx, proto_info, outputs):
     args.add_joined(["--plugin", "protoc-gen-es", _windows_path_normalize(ctx.executable.protoc_gen_es.path)], join_with = "=")
     for (key, value) in options.items():
         args.add_joined(["--es_opt", key, value], join_with = "=")
-    args.add_joined(["--es_out", ctx.bin_dir.path], join_with = "=")
+    args.add_joined(["--es_out", plugin_output], join_with = "=")
 
     if ctx.attr.gen_connect_es:
         args.add_joined(["--plugin", "protoc-gen-connect-es", _windows_path_normalize(ctx.executable.protoc_gen_connect_es.path)], join_with = "=")
         for (key, value) in options.items():
             args.add_joined(["--connect-es_opt", key, value], join_with = "=")
-        args.add_joined(["--connect-es_out", ctx.bin_dir.path], join_with = "=")
+        args.add_joined(["--connect-es_out", plugin_output], join_with = "=")
 
     if ctx.attr.gen_connect_query:
         args.add_joined(["--plugin", "protoc-gen-connect-query", _windows_path_normalize(ctx.executable.protoc_gen_connect_query.path)], join_with = "=")
         for (key, value) in options.items():
             args.add_joined(["--connect-query_opt", key, value], join_with = "=")
-        args.add_joined(["--connect-query_out", ctx.bin_dir.path], join_with = "=")
+        args.add_joined(["--connect-query_out", plugin_output], join_with = "=")
 
     args.add("--descriptor_set_in")
     args.add_joined(proto_info.transitive_descriptor_sets, join_with = ctx.configuration.host_path_separator)
+
+    # Vendored: https://github.com/protocolbuffers/protobuf/blob/v31.1/bazel/common/proto_common.bzl#L193-L204
+    # Protoc searches for .protos -I paths in order they are given and then
+    # uses the path within the directory as the package.
+    # This requires ordering the paths from most specific (longest) to least
+    # specific ones, so that no path in the list is a prefix of any of the
+    # following paths in the list.
+    # For example: 'bazel-out/k8-fastbuild/bin/external/foo' needs to be listed
+    # before 'bazel-out/k8-fastbuild/bin'. If not, protoc will discover file under
+    # the shorter path and use 'external/foo/...' as its package path.
+    args.add_all(proto_info.transitive_proto_path, map_each = _import_virtual_proto_path)
+    args.add_all(proto_info.transitive_proto_path, map_each = _import_repo_proto_path)
+    args.add_all(proto_info.transitive_proto_path, map_each = _import_main_output_proto_path)
+    args.add("-I.")  # Needs to come last
 
     args.add_all(proto_info.direct_sources)
 
@@ -81,10 +138,17 @@ def _declare_outs(ctx, info, ext):
     if ctx.attr.gen_connect_es:
         outs.extend(proto_common.declare_generated_files(ctx.actions, info, "_connect" + ext))
     if ctx.attr.gen_connect_query:
+        proto_sources = info.direct_sources
+        proto_source_map = {src.basename: src for src in proto_sources}
+
+        # FIXME: we should refer to source files via labels instead of filenames
         for proto, services in ctx.attr.gen_connect_query_service_mapping.items():
+            if not proto in proto_source_map:
+                fail("{} is not provided by proto_srcs".format(proto))
+            src = proto_source_map.get(proto)
+            prefix = proto.replace(".proto", "")
             for service in services:
-                prefix = proto.replace(".proto", "")
-                outs.append(ctx.actions.declare_file("{}-{}_connectquery{}".format(prefix, service, ext)))
+                outs.append(ctx.actions.declare_file("{}-{}_connectquery{}".format(prefix, service, ext), sibling = src))
 
     return outs
 
