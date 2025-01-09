@@ -8,19 +8,19 @@ proto_library(
     # When set, the .proto source files in the srcs attribute of this rule are accessible at
     # is the value of this attribute prepended to their repository-relative path.
     # The prefix in the strip_import_prefix attribute is removed before this prefix is added.
-    #import_prefix = "a",
+    import_prefix = "post-stripped",
     # The prefix to strip from the paths of the .proto files in this rule.
     # When set, .proto source files in the srcs attribute of this rule are accessible at their path with this prefix cut off.
     # If it's a relative path (not starting with a slash), it's taken as a package-relative one.
     # If it's an absolute one, it's understood as a repository-relative path.
-    #strip_import_prefix = "stripping",
+    strip_import_prefix = "/examples",
     visibility = ["//visibility:public"],
 )
 
 ts_proto_library(
     name = "s_ts_proto",
-    copy_files = False,
     node_modules = "//examples/proto_grpc:node_modules",
     proto = ":s_proto",
+    proto_srcs = ["s.proto"],
     visibility = ["//visibility:public"],
 )
