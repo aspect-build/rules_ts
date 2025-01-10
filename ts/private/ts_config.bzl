@@ -50,9 +50,9 @@ def _ts_config_impl(ctx):
         if TsConfigInfo in dep:
             transitive_deps.append(dep[TsConfigInfo].deps)
 
-    transitive_sources = js_lib_helpers.gather_transitive_sources([], ctx.attr.deps)
+    transitive_sources = js_lib_helpers.gather_transitive_sources(files, ctx.attr.deps)
 
-    transitive_types = js_lib_helpers.gather_transitive_types(files, ctx.attr.deps)
+    transitive_types = js_lib_helpers.gather_transitive_types([], ctx.attr.deps)
 
     npm_sources = js_lib_helpers.gather_npm_sources(
         srcs = [],
@@ -81,8 +81,8 @@ def _ts_config_impl(ctx):
             # provide tsconfig.json file via `types` and not `sources` since they are only needed
             # for downstream ts_project rules and not in downstream runtime binary rules
             target = ctx.label,
-            sources = depset(),
-            types = files_depset,
+            sources = files_depset,
+            types = depset(),
             transitive_sources = transitive_sources,
             transitive_types = transitive_types,
             npm_sources = npm_sources,
