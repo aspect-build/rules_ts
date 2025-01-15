@@ -327,7 +327,8 @@ def ts_project(
             resolve_json_module = resolve_json_module,
         )
 
-    typings_out_dir = declaration_dir if declaration_dir else out_dir
+    sanitized_declaration_dir = remove_leading_dot_slash(declaration_dir)
+    typings_out_dir = sanitized_declaration_dir if sanitized_declaration_dir else out_dir
     tsbuildinfo_path = ts_build_info_file if ts_build_info_file else name + ".tsbuildinfo"
 
     # Flags for what is emitted and which tool is emitting them
@@ -457,7 +458,7 @@ def ts_project(
         composite = composite,
         isolated_typecheck = isolated_typecheck,
         declaration = declaration,
-        declaration_dir = declaration_dir,
+        declaration_dir = sanitized_declaration_dir,
         source_map = source_map,
         declaration_map = declaration_map,
         ts_build_info_file = ts_build_info_file,
@@ -513,3 +514,8 @@ def _invoke_custom_transpiler(type_str, transpiler, transpile_target_name, srcs,
         )
     else:
         fail("%s attribute should be a rule/macro or a skylib partial. Got %s" % (type_str, type(transpiler)))
+
+def remove_leading_dot_slash(string_path):
+    if string_path and string_path.startswith("./"):
+        return string_path[2:]
+    return string_path
