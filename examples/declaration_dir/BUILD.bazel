@@ -25,6 +25,27 @@ assert_outputs(
     ],
 )
 
+ts_project(
+    name = "transpile_dirty_path",
+    srcs = ["dir/lib.ts"],
+    declaration = True,
+    declaration_dir = "./out_dirty/types",
+    declaration_map = True,
+    out_dir = "out_dirty/code",
+    root_dir = "dir",
+    source_map = True,
+)
+
+# Assert that the output locations we wrote to match expectations, even when path starts with ./
+assert_outputs(
+    name = "check_transpile_dirty_path",
+    actual = ":transpile_dirty_path",
+    expected = [
+        "examples/declaration_dir/out_dirty/code/lib.js",
+        "examples/declaration_dir/out_dirty/code/lib.js.map",
+    ],
+)
+
 # Convert the types output group to the default output
 filegroup(
     name = "types",
