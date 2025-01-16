@@ -298,6 +298,13 @@ def ts_project(
         declaration_dir = compiler_options.pop("declarationDir", declaration_dir)
         root_dir = compiler_options.pop("rootDir", root_dir)
 
+        # When generating a tsconfig.json and we set rootDir we need to add the exclude field,
+        # because of these tickets (validation for not generated tsconfig is also present elsewhere):
+        # https://github.com/microsoft/TypeScript/issues/59036 and
+        # 'https://github.com/aspect-build/rules_ts/issues/644
+        if root_dir != None and "exclude" not in tsconfig:
+            tsconfig["exclude"] = []
+
         if srcs == None:
             # Default sources based on macro attributes after applying tsconfig properties
             srcs = _default_srcs(

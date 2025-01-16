@@ -26,6 +26,7 @@ Assumes all tsconfig file deps are already copied to the bin directory.
         incremental = ctx.attr.incremental,
         ts_build_info_file = ctx.attr.ts_build_info_file,
         isolated_typecheck = ctx.attr.isolated_typecheck,
+        root_dir = ctx.attr.root_dir,
     )
     arguments.add_all([
         to_output_relative_path(tsconfig),
