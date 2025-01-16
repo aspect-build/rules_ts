@@ -170,12 +170,32 @@ def ts_project_test_suite(name):
         targets = [":wrapper.d.ts.map"],
     )
 
+    write_file(
+        name = "dirty_out_dir_ts",
+        out = "dirty_out_dir.ts",
+        content = ["console.log(1)"],
+        tags = ["manual"],
+    )
+    ts_project_wrapper(
+        name = "dirty_out_dir",
+        srcs = ["dirty_out_dir.ts"],
+        out_dir = "./out-dir",
+        tsconfig = _TSCONFIG,
+        tags = ["manual"],
+    )
+
+    build_test(
+        name = "dirty_out_dir_test",
+        targets = [":dirty_out_dir"],
+    )
+
     native.test_suite(
         name = name,
         tests = [
             ":dir_test",
             ":use_dir_test",
             ":wrapper_test",
+            ":dirty_out_dir_test",
         ],
     )
 

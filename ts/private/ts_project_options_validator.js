@@ -113,6 +113,26 @@ function main(_a) {
             )
         }
     }
+    function checkRootDirExclude() {
+        var rootDirAttrValue = attrs["root_dir"];
+        var outDirAttrValue = attrs["out_dir"];
+        var excludeOptionValue = config["exclude"];
+
+        let rootDirNotEmpty = rootDirAttrValue !== undefined && rootDirAttrValue !== "";
+        let outDirEmpty = outDirAttrValue === undefined || outDirAttrValue === "";
+
+        if (rootDirNotEmpty && outDirEmpty && excludeOptionValue === undefined) {
+            throw new Error(
+                '\n\nWhen root dir is set, exclude must also be set to empty array in the tsconfig file.\n\n' +
+                'For example, tsconfig.json:\n' +
+                '{\n' +
+                '   "exclude": []\n' +
+                '}\n\n' +
+                'See tickets: https://github.com/microsoft/TypeScript/issues/59036 and ' +
+                'https://github.com/aspect-build/rules_ts/issues/644\n'
+            )
+        }
+    }
     var jsxEmit =
         ((_b = {}),
         (_b[ts.JsxEmit.None] = 'none'),
@@ -175,6 +195,7 @@ function main(_a) {
     check('incremental')
     check('tsBuildInfoFile', 'ts_build_info_file')
     check_out_dir()
+    checkRootDirExclude()
     check_nocheck()
     check_preserve_jsx()
     if (failures.length > 0) {

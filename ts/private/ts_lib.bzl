@@ -227,6 +227,8 @@ def _to_out_path(f, out_dir, root_dir):
 
 def _to_js_out_paths(srcs, out_dir, root_dir, allow_js, resolve_json_module, ext_map, default_ext):
     outs = []
+    out_dir = _remove_leading_dot_slash(out_dir)
+    root_dir = _remove_leading_dot_slash(root_dir)
     for f in srcs:
         if _is_ts_src(f, allow_js, resolve_json_module, False):
             out = _to_out_path(f, out_dir, root_dir)
@@ -324,6 +326,9 @@ def _declare_outputs(ctx, paths):
         ctx.actions.declare_file(path)
         for path in paths
     ]
+
+def _remove_leading_dot_slash(string_path):
+    return string_path.removeprefix("./") if string_path else string_path
 
 lib = struct(
     declare_outputs = _declare_outputs,
