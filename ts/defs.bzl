@@ -240,10 +240,9 @@ def ts_project(
             Instructs Bazel *not* to expect `.js` or `.js.map` outputs for `.ts` sources.
         ts_build_info_file: The user-specified value of `tsBuildInfoFile` from the tsconfig.
             Helps Bazel to predict the path where the .tsbuildinfo output is written.
-
-        generate_trace: Whether to generate a Chrome trace file for TypeScript compiler performance analysis.
+        generate_trace: Whether to generate a trace file for TypeScript compiler performance analysis.
             When enabled, creates a trace directory containing performance tracing information that can be 
-            loaded in chrome://tracing.
+            loaded in chrome://tracing. Use the `--@aspect_rules_ts//ts:generate_tsc_trace` flag to enable this by default.
 
         supports_workers: Whether the "Persistent Worker" protocol is enabled.
             This uses a custom `tsc` compiler to make rebuilds faster.
