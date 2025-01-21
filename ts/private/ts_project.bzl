@@ -196,6 +196,11 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         common_args.extend(["--tsBuildInfoFile", to_output_relative_path(ctx.outputs.buildinfo_out)])
         outputs.append(ctx.outputs.buildinfo_out)
 
+    tsc_trace_dir = None
+    if options.generate_tsc_trace or ctx.attr.generate_trace:
+        tsc_trace_dir = ctx.actions.declare_directory(ctx.attr.name + "_trace")
+        common_args.extend(["--generateTrace", to_output_relative_path(tsc_trace_dir)])
+
     output_sources = js_outs + map_outs + assets_outs + ctx.files.pretranspiled_js
     output_types = typings_outs + typing_maps_outs + ctx.files.pretranspiled_dts
 
@@ -241,10 +246,15 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
     #  or
     #  - not invoking tsc for output files at all
     if ctx.attr.isolated_typecheck or not (use_tsc_for_js or use_tsc_for_dts):
+        typecheck_outputs = []
         # The type-checking action still need to produce some output, so we output the stdout
         # to a .typecheck file that ends up in the typecheck output group.
         typecheck_output = ctx.actions.declare_file(ctx.attr.name + ".typecheck")
         typecheck_outs.append(typecheck_output)
+        typecheck_outputs.append(typecheck_output)
+
+        if tsc_trace_dir:
+            typecheck_outputs.append(tsc_trace_dir)
 
         typecheck_arguments = ctx.actions.args()
         typecheck_arguments.add_all(common_args)
@@ -271,7 +281,7 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             executable = executable,
             inputs = transitive_inputs_depset,
             arguments = [typecheck_arguments],
-            outputs = [typecheck_output],
+            outputs = typecheck_outputs,
             mnemonic = "TsProjectCheck",
             execution_requirements = execution_requirements,
             resource_set = resource_set(ctx.attr),
@@ -301,6 +311,9 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         elif not use_tsc_for_dts:
             # Not emitting declarations
             tsc_emit_arguments.add("--declaration", "false")
+
+        if tsc_trace_dir:
+            outputs.append(tsc_trace_dir)
 
         inputs_depset = inputs if ctx.attr.isolated_typecheck else transitive_inputs_depset
 
