@@ -196,10 +196,7 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         common_args.extend(["--tsBuildInfoFile", to_output_relative_path(ctx.outputs.buildinfo_out)])
         outputs.append(ctx.outputs.buildinfo_out)
 
-    tsc_trace_dir = None
-    if options.generate_tsc_trace or ctx.attr.generate_trace:
-        tsc_trace_dir = ctx.actions.declare_directory(ctx.attr.name + "_trace")
-        common_args.extend(["--generateTrace", to_output_relative_path(tsc_trace_dir)])
+    should_generate_tsc_trace = options.generate_tsc_trace or ctx.attr.generate_trace
 
     output_sources = js_outs + map_outs + assets_outs + ctx.files.pretranspiled_js
     output_types = typings_outs + typing_maps_outs + ctx.files.pretranspiled_dts
@@ -253,13 +250,15 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         typecheck_outs.append(typecheck_output)
         typecheck_outputs.append(typecheck_output)
 
-        if tsc_trace_dir:
-            typecheck_outputs.append(tsc_trace_dir)
-
         typecheck_arguments = ctx.actions.args()
         typecheck_arguments.add_all(common_args)
 
         typecheck_arguments.add("--noEmit")
+
+        if should_generate_tsc_trace:
+            tsc_trace_dir = ctx.actions.declare_directory(ctx.attr.name + "_typecheck_trace")
+            typecheck_outputs.append(tsc_trace_dir)
+            typecheck_arguments.add_all(["--generateTrace", to_output_relative_path(tsc_trace_dir)])
 
         env = {
             "BAZEL_BINDIR": ctx.bin_dir.path,
@@ -312,8 +311,10 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             # Not emitting declarations
             tsc_emit_arguments.add("--declaration", "false")
 
-        if tsc_trace_dir:
+        if should_generate_tsc_trace:
+            tsc_trace_dir = ctx.actions.declare_directory(ctx.attr.name + "_trace")
             outputs.append(tsc_trace_dir)
+            tsc_emit_arguments.add_all(["--generateTrace", to_output_relative_path(tsc_trace_dir)])
 
         inputs_depset = inputs if ctx.attr.isolated_typecheck else transitive_inputs_depset
 
