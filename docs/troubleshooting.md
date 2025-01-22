@@ -177,3 +177,7 @@ Possible solutions:
 ```
 
 * Use pnpm workspaces and `npm_package`/`npm_link_package` in between the `ts_project` rule and the `webpack` rule, so that the loader finds files under the `node_modules` tree like it would with third-party npm packages.
+
+
+# Troubleshooting performance issues 
+Running your build with `--@aspect_rules_ts//ts:generate_tsc_trace` causes the `ts_project` rule to run with the `generate_trace` option enabled. This generates a profile that can be analyzed to understand TypeScript compilation performance. The trace files will be written in `bazel-bin/<package>/<target>_trace/`. To analyze it use ChromeDevTools or [@typescript/analyze-trace](https://www.npmjs.com/package/@typescript/analyze-trace). See the [TypeScript documentation](https://github.com/microsoft/TypeScript-wiki/blob/main/Performance-Tracing.md) for more information.

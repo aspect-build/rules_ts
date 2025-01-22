@@ -52,6 +52,7 @@ def ts_project(
         transpiler = None,
         declaration_transpiler = None,
         ts_build_info_file = None,
+        generate_trace = None,
         tsc = _tsc,
         tsc_worker = _tsc_worker,
         validate = True,
@@ -239,6 +240,9 @@ def ts_project(
             Instructs Bazel *not* to expect `.js` or `.js.map` outputs for `.ts` sources.
         ts_build_info_file: The user-specified value of `tsBuildInfoFile` from the tsconfig.
             Helps Bazel to predict the path where the .tsbuildinfo output is written.
+        generate_trace: Whether to generate a trace file for TypeScript compiler performance analysis.
+            When enabled, creates a trace directory containing performance tracing information that can be
+            loaded in chrome://tracing. Use the `--@aspect_rules_ts//ts:generate_tsc_trace` flag to enable this by default.
 
         supports_workers: Whether the "Persistent Worker" protocol is enabled.
             This uses a custom `tsc` compiler to make rebuilds faster.
@@ -468,6 +472,7 @@ def ts_project(
         source_map = source_map,
         declaration_map = declaration_map,
         ts_build_info_file = ts_build_info_file,
+        generate_trace = generate_trace,
         out_dir = out_dir,
         root_dir = root_dir,
         js_outs = tsc_js_outs,
