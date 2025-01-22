@@ -138,6 +138,10 @@ options(
         ":default_to_tsc_transpiler_flag": True,
         "//conditions:default": False,
     }),
+    generate_tsc_trace = select({
+        ":generate_tsc_trace_flag": True,
+        "//conditions:default": False,
+    }),
     skip_lib_check = select(
         {
             "@aspect_rules_ts//ts:skip_lib_check.always": True,
@@ -151,10 +155,6 @@ options(
     }),
     verbose = select({
         ":verbose_flag": True,
-        "//conditions:default": False,
-    }),
-    generate_tsc_trace = select({
-        ":generate_tsc_trace_flag": True,
         "//conditions:default": False,
     }),
     visibility = ["//visibility:public"],
