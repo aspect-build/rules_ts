@@ -385,6 +385,7 @@ def ts_project(
             native.alias(
                 name = types_target_name,
                 actual = declarations_target_name,
+                visibility = common_kwargs.get("visibility"),
             )
         else:
             # tsc outputs the types and must be extracted via output_group
