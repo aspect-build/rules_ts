@@ -257,7 +257,7 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         typecheck_arguments.add("--noEmit")
 
         if should_generate_tsc_trace:
-            tsc_trace_dir = ctx.actions.declare_directory(ctx.attr.name + "_typecheck_trace")
+            tsc_trace_dir = ctx.actions.declare_directory(ctx.attr.name + "_trace")
             typecheck_outputs.append(tsc_trace_dir)
             typecheck_arguments.add_all(["--generateTrace", to_output_relative_path(tsc_trace_dir)])
 
@@ -312,7 +312,7 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             # Not emitting declarations
             tsc_emit_arguments.add("--declaration", "false")
 
-        if should_generate_tsc_trace:
+        if should_generate_tsc_trace and not ctx.attr.isolated_typecheck:
             tsc_trace_dir = ctx.actions.declare_directory(ctx.attr.name + "_trace")
             outputs.append(tsc_trace_dir)
             tsc_emit_arguments.add_all(["--generateTrace", to_output_relative_path(tsc_trace_dir)])
