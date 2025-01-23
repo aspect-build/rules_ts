@@ -178,6 +178,12 @@ jobs:
               # then use .bazelversion to determine which Bazel version to use
               run: echo "${{ matrix.bazel-version.version }}" > .bazelversion
 
+            - name: Install Node.js
+              uses: actions/setup-node@v3
+              with:
+                  # pnpm 7 does not work with latest node 20
+                  node-version: 19
+
             - uses: pnpm/action-setup@v2
               with:
                   version: '7.14.2'

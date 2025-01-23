@@ -19,6 +19,7 @@ function workspace() {
 		esac
 	done
 
+	touch MODULE.bazel
 	cat >WORKSPACE <<EOF
 local_repository(
     name = "aspect_rules_ts",

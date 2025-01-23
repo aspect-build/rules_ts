@@ -2,12 +2,15 @@ load("//ts:defs.bzl", "ts_project")
 load(":flags_test.bzl", "ts_project_flags_test_suite")
 load(":mock_transpiler.bzl", "mock")
 load(":transpiler_tests.bzl", "transpiler_test_suite")
+load(":ts_config_test.bzl", "ts_config_test_suite")
 load(":ts_project_test.bzl", "ts_project_test_suite")
 load(":ts_proto_library_test.bzl", "ts_proto_library_test_suite")
 
 transpiler_test_suite()
 
 ts_project_test_suite(name = "ts_project_test")
+
+ts_config_test_suite(name = "ts_config_test")
 
 ts_project_flags_test_suite(name = "ts_project_flags_test")
 

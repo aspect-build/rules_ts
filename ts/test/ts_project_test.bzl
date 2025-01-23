@@ -13,6 +13,7 @@ def _dir_test_impl(ctx):
 
     # assert the inputs to the tsc action are what we expect
     action_inputs = target_under_test[OutputGroupInfo]._action_inputs.to_list()
+    action_inputs = sorted(action_inputs)
     asserts.equals(env, 2, len(action_inputs))
     asserts.true(env, action_inputs[0].path.find("/dir.ts") != -1)
     asserts.true(env, action_inputs[1].path.find("/tsconfig_dir.json") != -1)
@@ -169,12 +170,32 @@ def ts_project_test_suite(name):
         targets = [":wrapper.d.ts.map"],
     )
 
+    write_file(
+        name = "dirty_out_dir_ts",
+        out = "dirty_out_dir.ts",
+        content = ["console.log(1)"],
+        tags = ["manual"],
+    )
+    ts_project_wrapper(
+        name = "dirty_out_dir",
+        srcs = ["dirty_out_dir.ts"],
+        out_dir = "./out-dir",
+        tsconfig = _TSCONFIG,
+        tags = ["manual"],
+    )
+
+    build_test(
+        name = "dirty_out_dir_test",
+        targets = [":dirty_out_dir"],
+    )
+
     native.test_suite(
         name = name,
         tests = [
             ":dir_test",
             ":use_dir_test",
             ":wrapper_test",
+            ":dirty_out_dir_test",
         ],
     )
 
