@@ -15,7 +15,7 @@ Since rules_js always runs tools from the bazel-out tree, rules_ts naturally fix
 
 rules_ts is just a part of what Aspect provides:
 
--   _Need help?_ This ruleset has support provided by https://www.aspect.dev/bazel-open-source-support.
+-   _Need help?_ This ruleset has support provided by https://aspect.build/services.
 -   See our other Bazel rules, especially those built for rules_js, linked from <https://github.com/aspect-build>
 
 Known issues:
