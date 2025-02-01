@@ -1,3 +1,4 @@
+load("@aspect_bazel_lib//lib:testing.bzl", "assert_outputs")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@bazel_skylib//lib:partial.bzl", "partial")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
@@ -27,6 +28,22 @@ write_file(
     out = "a.ts",
     content = [
         "export const b: number = 43",
+    ],
+)
+
+write_file(
+    name = "gen_c_js",
+    out = "c.js",
+    content = [
+        "export const c = 44",
+    ],
+)
+
+write_file(
+    name = "gen_c_dts",
+    out = "c.d.ts",
+    content = [
+        "export const c: number",
     ],
 )
 
@@ -272,5 +289,56 @@ build_test(
         ":custom_dts_transpiler-declarations_only",
         ":custom_dts_transpiler-declarations_only_typecheck",
         "build-custom_dts_transpiler-no_declarations/a.d.ts",
+    ],
+)
+
+ts_project(
+    name = "declarations_tsc",
+    srcs = [
+        "a.ts",
+        "c.d.ts",
+    ],
+    out_dir = "build-declarations_tsc",
+    transpiler = "tsc",
+    tsconfig = {
+        "compilerOptions": {
+            "sourceMap": True,
+        },
+    },
+)
+
+assert_outputs(
+    name = "declarations_tsc_test",
+    actual = ":declarations_tsc",
+    expected = [
+        "examples/transpiler/build-declarations_tsc/a.js",
+        "examples/transpiler/build-declarations_tsc/a.js.map",
+    ],
+)
+
+ts_project(
+    name = "declarations_custom",
+    srcs = [
+        "a.ts",
+        "c.d.ts",
+    ],
+    out_dir = "build-declarations_custom",
+    transpiler = partial.make(
+        babel,
+        out_dir = "build-declarations_custom",
+    ),
+    tsconfig = {
+        "compilerOptions": {
+            "sourceMap": True,
+        },
+    },
+)
+
+assert_outputs(
+    name = "declarations_custom_test",
+    actual = ":declarations_custom",
+    expected = [
+        "examples/transpiler/build-declarations_custom/a.js",
+        "examples/transpiler/build-declarations_custom/a.js.map",
     ],
 )
