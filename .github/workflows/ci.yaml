@@ -78,14 +78,17 @@ jobs:
                     - os: windows
                       bazel-version:
                           major: 6
-                    # Dont' test root workspace with Bazel 6 to reduce the size of the test matrix
+                    # Don't test root workspace with Bazel 6 to reduce the size of the test matrix
                     - bazel-version:
                           major: 6
                       folder: .
-                    # Don't run bzlmod tests with Bazel 6 to reduce the size of the test matrix
+                    # Don't test non-bzlmod with Bazel 6 to reduce the size of the test matrix
                     - bazel-version:
                           major: 6
-                      bzlmod: 1
+                      bzlmod: 0
+                    # Don't test root workspace with non-bzlmod
+                    - bzlmod: 0
+                      folder: .
                     # Disable some broken tests on Windows
                     - os: windows
                       folder: .

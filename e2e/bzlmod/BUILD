@@ -24,11 +24,8 @@ ts_proto_library(
 ts_project(
     name = "ts",
     srcs = ["foo.ts"],
-    extends = "tsconfig.json",
     transpiler = "tsc",
-    tsconfig = {
-        "extends": "tsconfig.json",
-    },
+    tsconfig = "tsconfig.json",
 )
 
 build_test(
