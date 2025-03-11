@@ -48,8 +48,31 @@ rules_ts_ext.deps(ts_version_from = "//examples:package.json")
 use_repo(rules_ts_ext, "npm_typescript")
 
 go_sdk = use_extension("@io_bazel_rules_go//go:extensions.bzl", "go_sdk", dev_dependency = True)
-go_sdk.download(version = "1.19.3")
+go_sdk.download(version = "1.24.1")
 use_repo(
     go_sdk,
     go_sdk = "go_default_sdk",
+)
+
+bazel_dep(name = "gazelle", version = "0.42.0")
+bazel_dep(name = "rules_license", version = "1.0.0")
+
+go_repository = use_repo_rule("@gazelle//:deps.bzl", "go_repository")
+
+go_repository(
+    name = "com_github_go_json_experiment_json",
+    commit = "d3c622f1b874",
+    importpath = "github.com/go-json-experiment/json",
+)
+
+go_repository(
+    name = "com_github_dlclark_regexp2",
+    commit = "v1.11.5",
+    importpath = "github.com/dlclark/regexp2",
+)
+
+go_repository(
+    name = "typescript_go",
+    commit = "5a6d4ee7c645d81897e85be0613ba71460edd6dd",
+    importpath = "github.com/microsoft/typescript-go",
 )
