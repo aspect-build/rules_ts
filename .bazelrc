@@ -10,6 +10,9 @@ common --@aspect_rules_ts//ts:default_to_tsc_transpiler
 # verbose
 common:verbose --@aspect_rules_ts//ts:verbose --worker_verbose
 
+# See https://github.com/bazel-contrib/rules_go/blob/master/docs/go/core/bzlmod.md#depending-on-tools
+common --experimental_isolated_extension_usages
+
 # Load any settings & overrides specific to the current user.
 # This file should appear in `.gitignore` so that settings are not shared with team members. This
 # should be last statement in this config so the user configuration is able to overwrite flags from
