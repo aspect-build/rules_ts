@@ -142,6 +142,9 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
 
     if supports_workers:
         execution_requirements["supports-workers"] = "1"
+
+        # Workers may not be fully hermetic so we don't want to potentially poison the remote cache.
+        execution_requirements["no-remote-cache-upload"] = "1"
         execution_requirements["worker-key-mnemonic"] = "TsProject"
         executable = ctx.executable.tsc_worker
 
