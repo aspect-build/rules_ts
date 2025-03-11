@@ -183,12 +183,18 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             ])
 
     tsconfig_path = to_output_relative_path(tsconfig)
+    if tsconfig_path.endswith("/tsconfig.json"):
+        tsconfig_path = tsconfig_path[:-14]
     common_args.extend([
         "--project",
         tsconfig_path,
         "--rootDir",
         _lib.calculate_root_dir(ctx),
     ])
+
+    inputs = srcs_inputs + tsconfig_inputs
+
+    transitive_inputs = [tsconfig_transitive_deps]
 
     assets_outs = []
     for a in ctx.files.assets:
