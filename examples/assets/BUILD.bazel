@@ -164,18 +164,36 @@ ts_project(
     tsconfig = ":config",
 )
 
+genrule(
+    name = "generated_root_output_file",
+    outs = ["root-out/metadata/generated_metadata.json"],
+    cmd = "echo 1 > $@",
+)
+
 ts_project(
     name = "ts-root-out",
     srcs = [
         "src/index.ts",
     ],
     assets = [
+        "root-out/metadata/generated_metadata.json",
         "src/styles.css",
         "src/generated.json",
     ],
     out_dir = "root-out",
     root_dir = "src",
     tsconfig = ":config",
+)
+
+assert_outputs(
+    name = "ts-root-out_outputs_test",
+    actual = ":ts-root-out",
+    expected = [
+        "examples/assets/root-out/generated.json",
+        "examples/assets/root-out/index.js",
+        "examples/assets/root-out/metadata/generated_metadata.json",
+        "examples/assets/root-out/styles.css",
+    ],
 )
 
 build_test(
