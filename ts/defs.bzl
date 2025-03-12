@@ -386,6 +386,7 @@ def ts_project(
                 name = types_target_name,
                 actual = declarations_target_name,
                 visibility = common_kwargs.get("visibility"),
+                tags = common_kwargs.get("tags", []),
             )
         else:
             # tsc outputs the types and must be extracted via output_group
