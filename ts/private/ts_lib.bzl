@@ -222,9 +222,14 @@ def _is_ts_src(src, allow_js, resolve_json_module, include_typings):
 
 def _to_out_path(f, out_dir, root_dir):
     f = f[f.find(":") + 1:]
+    out_dir = out_dir if out_dir != "." else None
+
+    if out_dir and f.startswith(out_dir + "/"):
+        return f
+
     if root_dir:
         f = f.removeprefix(root_dir + "/")
-    if out_dir and out_dir != ".":
+    if out_dir:
         f = out_dir + "/" + f
     return f
 
