@@ -18,7 +18,27 @@ ts_project(
     tsconfig = ":config",
 )
 
+# Also test isolated typechecking where the deps to tsc are reduced
+ts_project(
+    name = "ts-isolated",
+    srcs = [
+        "index.ts",
+    ],
+    extends = ":config",
+    isolated_typecheck = True,
+    tsconfig = {
+        "compilerOptions": {
+            "declaration": True,
+            "outDir": "isolated",
+            "isolatedDeclarations": True,
+        },
+    },
+)
+
 build_test(
     name = "test",
-    targets = [":ts"],
+    targets = [
+        ":ts",
+        ":ts-isolated",
+    ],
 )

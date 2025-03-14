@@ -51,6 +51,8 @@ def _gather_tsconfig_deps(ctx):
     if ctx.attr.extends and TsConfigInfo in ctx.attr.extends:
         deps.append(ctx.attr.extends[TsConfigInfo].deps)
 
+    deps.append(_gather_types_from_js_infos([ctx.attr.tsconfig]))
+
     # When TypeScript builds a composite project, our compilation will want to read the tsconfig.json of
     # composite projects we reference.
     # Otherwise we'd get an error like
@@ -83,6 +85,15 @@ def _ts_project_impl(ctx):
     tsconfig, tsconfig_inputs, tsconfig_transitive_deps = _gather_tsconfig_deps(ctx)
 
     srcs = [_lib.relative_to_package(src.path, ctx) for src in srcs_inputs]
+
+    srcs_deps = ctx.attr.srcs + ctx.attr.deps
+
+    tsc_inputs = copy_files_to_bin_actions(ctx, srcs_inputs + tsconfig_inputs)
+    tsc_inputs_depset = depset(tsc_inputs, transitive = [tsconfig_transitive_deps])
+    tsc_transitive_inputs_depset = depset(tsc_inputs, transitive = [
+        _gather_types_from_js_infos(srcs_deps),
+        tsconfig_transitive_deps,
+    ])
 
     # Recalculate outputs inside the rule implementation.
     # The outs are first calculated in the macro in order to try to predetermine outputs so they can be declared as
@@ -179,10 +190,6 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         _lib.calculate_root_dir(ctx),
     ])
 
-    inputs = srcs_inputs + tsconfig_inputs
-
-    transitive_inputs = [tsconfig_transitive_deps]
-
     assets_outs = []
     for a in ctx.files.assets:
         a_path = _lib.relative_to_package(a.short_path, ctx)
@@ -231,16 +238,6 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
     # Special case where there are no source outputs so we add output_types to the default outputs.
     default_outputs = output_sources if len(output_sources) else output_types
 
-    srcs_deps = ctx.attr.srcs + ctx.attr.deps
-
-    inputs = copy_files_to_bin_actions(ctx, inputs)
-
-    transitive_inputs.append(_gather_types_from_js_infos(srcs_deps + [ctx.attr.tsconfig]))
-    transitive_inputs_depset = depset(
-        inputs,
-        transitive = transitive_inputs,
-    )
-
     # Use a separate non-emitting action for type-checking when:
     #  - a isolated typechecking action was explicitly requested
     #  or
@@ -282,7 +279,7 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
 
         ctx.actions.run(
             executable = executable,
-            inputs = transitive_inputs_depset,
+            inputs = tsc_transitive_inputs_depset,
             arguments = [typecheck_arguments],
             outputs = typecheck_outputs,
             mnemonic = "TsProjectCheck",
@@ -320,7 +317,7 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             outputs.append(tsc_trace_dir)
             tsc_emit_arguments.add_all(["--generateTrace", to_output_relative_path(tsc_trace_dir)])
 
-        inputs_depset = inputs if ctx.attr.isolated_typecheck else transitive_inputs_depset
+        inputs_depset = tsc_inputs_depset if ctx.attr.isolated_typecheck else tsc_transitive_inputs_depset
 
         if supports_workers:
             tsc_emit_arguments.use_param_file("@%s", use_always = True)
@@ -402,7 +399,7 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             typecheck = depset(typecheck_outs),
             transitive_typecheck = transitive_typecheck,
             # make the inputs to the tsc action available for analysis testing
-            _action_inputs = transitive_inputs_depset,
+            _action_inputs = tsc_transitive_inputs_depset,
             # https://bazel.build/extending/rules#validations_output_group
             # "hold the otherwise unused outputs of validation actions"
             _validation = validation_outs,
