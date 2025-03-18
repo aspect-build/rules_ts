@@ -196,7 +196,7 @@ def _join(*elements):
 
 def _relative_to_package(path, ctx):
     path = path.removeprefix(ctx.bin_dir.path + "/")
-    path = path.removeprefix("../").removeprefix("external/")
+    path = path.removeprefix("external/")
     path = path.removeprefix(ctx.label.workspace_name + "/")
     if ctx.label.package:
         path = path.removeprefix(ctx.label.package + "/")
