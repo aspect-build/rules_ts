@@ -47,8 +47,10 @@ ts_project(
     visibility = ["//visibility:public"],
     deps = [
         "@sub_external//:lib1",
+        "@sub_external//:lib-with-asset",
         "@sub_external//:tsconfig-dict",
         "@sub_external//subdir:lib1",
+        "@sub_external//subdir:lib-with-asset",
         "@sub_external//subdir:tsconfig-dict",
     ],
 )
@@ -58,8 +60,10 @@ build_test(
     targets = [
         ":external-deps",
         "@sub_external//:lib1",
+        "@sub_external//:lib-with-asset",
         "@sub_external//:tsconfig-dict",
         "@sub_external//subdir:lib1",
+        "@sub_external//subdir:lib-with-asset",
         "@sub_external//subdir:tsconfig-dict",
     ],
 )

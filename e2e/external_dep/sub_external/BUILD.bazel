@@ -11,6 +11,19 @@ ts_project(
 )
 
 ts_project(
+    name = "lib-with-asset",
+    srcs = ["sub-lib.ts"],
+    assets = ["asset.json"],
+    declaration = True,
+    visibility = ["//visibility:public"],
+    tsconfig = {
+        "compilerOptions": {
+            "declaration": True,
+        },
+    },
+)
+
+ts_project(
     name = "tsconfig-dict",
     srcs = ["sub-lib.ts"],
     tsconfig = {
