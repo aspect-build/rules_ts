@@ -35,6 +35,8 @@ ts_proto_library(
     node_modules = ":node_modules",
     proto = ":logger_proto",
     proto_srcs = logger_srcs,
+    # See https://github.com/connectrpc/connect-es/blob/main/MIGRATING.md#update-plugin-options
+    protoc_gen_options = {"import_extension": "js"},
     visibility = ["//visibility:public"],
     deps = ["//examples/connect_node/proto"],
 )

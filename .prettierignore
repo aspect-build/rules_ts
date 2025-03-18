@@ -1,6 +1,6 @@
 docs/*.md
 **/pnpm-lock.yaml
 **/*_pb.d.ts
-**/*_connect.d.ts
+**/*_connectquery.d.ts
 .github/workflows/.aspect-workflows-reusable.yaml
 examples/resolve_json_module_esm/index.mts
