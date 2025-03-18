@@ -7,7 +7,7 @@ Automatically mirrored using mirror_versions.sh and automated on GitHub Actions.
 # Note: this requires a newer git version, 2.25.1 is too old, but GHA runs with 2.41.0 as of Sep 2023
 RULES_TS_VERSION = "$Format:%(describe:tags=true)$"
 
-# Note: Versions should be ascending order so TOOL_VERSIONS.keys()[-1] is the latest version
+# Note: Versions should be ascending order so TOOL_VERSIONS.keys()[-1] is the latest version.
 TOOL_VERSIONS = {
     "0.8.0": "sha512-t4DYxzL6Gt3+TRuJXtmh+3KfcY5iSM8J4lzUgfQkTOr78xFbmor79x/dQEGMaiqO2HJBbFGO3RlIaxPzpP5JMA==",
     "0.8.1": "sha512-/cfem275IES0o4/zVD1UmXfE3k5j2OAianSI2Oa1gYzWhAJ44OjNlXv3LVIj5EZ0fgks/XBtzp8aXVsaYILTVg==",
