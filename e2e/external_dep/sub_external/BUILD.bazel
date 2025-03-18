@@ -15,12 +15,12 @@ ts_project(
     srcs = ["sub-lib.ts"],
     assets = ["asset.json"],
     declaration = True,
-    visibility = ["//visibility:public"],
     tsconfig = {
         "compilerOptions": {
             "declaration": True,
         },
     },
+    visibility = ["//visibility:public"],
 )
 
 ts_project(

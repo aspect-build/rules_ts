@@ -46,11 +46,11 @@ ts_project(
     out_dir = "external-deps",
     visibility = ["//visibility:public"],
     deps = [
-        "@sub_external//:lib1",
         "@sub_external//:lib-with-asset",
+        "@sub_external//:lib1",
         "@sub_external//:tsconfig-dict",
-        "@sub_external//subdir:lib1",
         "@sub_external//subdir:lib-with-asset",
+        "@sub_external//subdir:lib1",
         "@sub_external//subdir:tsconfig-dict",
     ],
 )
