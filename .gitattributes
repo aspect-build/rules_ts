@@ -1,6 +1,7 @@
 # In code review, collapse generated files
-docs/rules.md linguist-generated=true
-docs/repositories.md linguist-generated=true
+docs/rules.md         linguist-generated
+docs/repositories.md  linguist-generated
+examples/**/*_pb.d.ts linguist-generated
 
 ####################################
 # Configuration for 'git archive'

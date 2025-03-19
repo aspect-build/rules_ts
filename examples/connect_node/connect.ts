@@ -1,5 +1,5 @@
 import { ConnectRouter } from '@connectrpc/connect'
-import { ElizaService } from './proto/eliza_connect.js'
+import { ElizaService } from './proto/eliza_pb.js'
 
 export default (router: ConnectRouter) =>
     // registers connectrpc.eliza.v1.ElizaService

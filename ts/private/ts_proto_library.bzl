@@ -96,8 +96,9 @@ ts_proto_library = rule(
     implementation = _ts_proto_library_impl,
     attrs = dict({
         "gen_connect_es": attr.bool(
-            doc = "whether to generate service stubs with gen-connect-es",
-            default = True,
+            doc = """whether to generate service stubs with gen-connect-es
+            Deprecated: no longer needed, see https://github.com/connectrpc/connect-es/blob/main/MIGRATING.md""",
+            default = False,
         ),
         "gen_connect_query": attr.bool(
             doc = "whether to generate TanStack Query clients with gen-connect-query",
@@ -123,7 +124,8 @@ ts_proto_library = rule(
             cfg = "exec",
         ),
         "protoc_gen_connect_es": attr.label(
-            doc = "protoc plugin to generate services",
+            doc = """protoc plugin to generate services
+            deprecated: no longer needed now that @bufbuild/protoc-gen-es v2 generates service definitions""",
             executable = True,
             cfg = "exec",
         ),
