@@ -125,7 +125,7 @@ ts_proto_library = rule(
         ),
         "protoc_gen_connect_es": attr.label(
             doc = """protoc plugin to generate services
-            deprecated: no longer used now that @bufbuild/protoc-gen-es generates service definitions""",
+            deprecated: no longer needed now that @bufbuild/protoc-gen-es v2 generates service definitions""",
             executable = True,
             cfg = "exec",
         ),
