@@ -26,8 +26,8 @@ def _is_file_missing(label):
     file_glob = native.glob([file_rel], allow_empty = True)
     return len(file_glob) == 0
 
-_tsc = "@npm_typescript//:tsc"
-_tsc_worker = "@npm_typescript//:tsc_worker"
+_tsc = Label("@npm_typescript//:tsc")
+_tsc_worker = Label("@npm_typescript//:tsc_worker")
 
 def ts_project(
         name,
@@ -56,7 +56,7 @@ def ts_project(
         tsc = _tsc,
         tsc_worker = _tsc_worker,
         validate = True,
-        validator = "@npm_typescript//:validator",
+        validator = Label("@npm_typescript//:validator"),
         declaration_dir = None,
         out_dir = None,
         root_dir = None,
@@ -449,7 +449,7 @@ def ts_project(
         is_typescript_5_or_greater = None
     else:
         is_typescript_5_or_greater = select({
-            "@npm_typescript//:is_typescript_5_or_greater": True,
+            Label("@npm_typescript//:is_typescript_5_or_greater"): True,
             "//conditions:default": False,
         })
 
