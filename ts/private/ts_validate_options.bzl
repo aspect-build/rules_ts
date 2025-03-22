@@ -45,6 +45,7 @@ Assumes all tsconfig file deps are already copied to the bin directory.
         env = {
             "BAZEL_BINDIR": ctx.bin_dir.path,
         },
+        use_default_shell_env = True,
     )
 
     return [marker]
