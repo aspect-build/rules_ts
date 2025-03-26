@@ -342,6 +342,7 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             env = {
                 "BAZEL_BINDIR": ctx.bin_dir.path,
             },
+            use_default_shell_env = True,
         )
 
     transitive_sources = js_lib_helpers.gather_transitive_sources(output_sources, srcs_deps)

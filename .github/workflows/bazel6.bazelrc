@@ -33,3 +33,6 @@ query --noexperimental_check_output_files
 # NB: This flag is in bazel6.bazelrc because it became a no-op in Bazel 7 and has been removed
 # in Bazel 8.
 build --incompatible_remote_results_ignore_disk
+
+# Added in 6.4.0, see https://github.com/bazelbuild/bazel/pull/19319
+build --incompatible_merge_fixed_and_default_shell_env
