@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "declaration": true,
+        "moduleResolution": "node",
+        "baseUrl": "./",
+        "esModuleInterop": true,
+        "rootDirs": ["."],
+        "allowJs": true,
+        "resolveJsonModule": true
+    },
+    "exclude": []
+}
