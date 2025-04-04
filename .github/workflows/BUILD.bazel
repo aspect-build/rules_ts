@@ -6,5 +6,6 @@ write_aspect_bazelrc_presets(
         # Modified from upstream
         # "bazel6",
         "bazel7",
+        "bazel8",
     ],
 )

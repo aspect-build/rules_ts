@@ -30,9 +30,9 @@ def rules_ts_bazel_dependencies():
 
     http_archive(
         name = "aspect_bazel_lib",
-        sha256 = "a272d79bb0ac6b6965aa199b1f84333413452e87f043b53eca7f347a23a478e8",
-        strip_prefix = "bazel-lib-2.9.3",
-        url = "https://github.com/bazel-contrib/bazel-lib/releases/download/v2.9.3/bazel-lib-v2.9.3.tar.gz",
+        sha256 = "40ba9d0f62deac87195723f0f891a9803a7b720d7b89206981ca5570ef9df15b",
+        strip_prefix = "bazel-lib-2.14.0",
+        url = "https://github.com/bazel-contrib/bazel-lib/releases/download/v2.14.0/bazel-lib-v2.14.0.tar.gz",
     )
 
     http_archive(
