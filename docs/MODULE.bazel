@@ -6,3 +6,11 @@ local_path_override(
     module_name = "aspect_rules_ts",
     path = "..",
 )
+
+http_jar = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_jar")
+
+http_jar(
+    name = "stardoc-prebuilt",
+    integrity = "sha256-jDi5ITmziwwiHCsfd8v0UOoraWXIAfICIll+wbpg/vE=",
+    urls = ["https://github.com/alexeagle/stardoc-prebuilt/releases/download/v0.7.1/renderer_deploy.jar"],
+)
