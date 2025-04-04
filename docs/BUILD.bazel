@@ -4,40 +4,18 @@ load("@aspect_bazel_lib//lib:docs.bzl", "stardoc_with_diff_test", "update_docs")
 
 stardoc_with_diff_test(
     name = "rules",
-    bzl_library_target = "//ts:defs",
-    tags = [
-        "skip-on-bazel6",
-        "skip-on-bzlmod-0",
-        "skip-on-rbe",
-    ],
+    bzl_library_target = "@aspect_rules_ts//ts:defs",
 )
 
 stardoc_with_diff_test(
     name = "proto",
-    bzl_library_target = "//ts:proto",
-    tags = [
-        "skip-on-bazel6",
-        "skip-on-bzlmod-0",
-        "skip-on-rbe",
-    ],
+    bzl_library_target = "@aspect_rules_ts//ts:proto",
 )
 
 stardoc_with_diff_test(
     name = "repositories",
-    bzl_library_target = "//ts:repositories",
+    bzl_library_target = "@aspect_rules_ts//ts:repositories",
     symbol_names = ["rules_ts_dependencies"],
-    tags = [
-        "skip-on-bazel6",
-        "skip-on-bzlmod-0",
-        "skip-on-rbe",
-    ],
 )
 
-update_docs(
-    name = "update",
-    tags = [
-        "skip-on-bazel6",
-        "skip-on-bzlmod-0",
-        "skip-on-rbe",
-    ],
-)
+update_docs(name = "update")

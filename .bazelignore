@@ -1,4 +1,8 @@
+# Nested modules
+docs/
 e2e/
+
+# TODO(bazel 8): move to REPO.bazel
 examples/connect_node/node_modules
 examples/node_modules
 examples/proto_grpc/node_modules
