@@ -38,6 +38,9 @@ def babel(name, srcs, out_dir = None, resolve_json = False, commonjs = False, **
             outs.append(":{}_{}".format(name, idx))
             continue
 
+        if src.endswith(".d.ts") or src.endswith(".d.mts"):
+            continue
+
         if not (src.endswith(".ts") or src.endswith(".mts")):
             fail("babel example transpiler only supports source .[m]ts or .json files, found: %s" % src)
 
