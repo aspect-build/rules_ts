@@ -16,6 +16,8 @@ common --incompatible_disallow_empty_glob
 
 # Never Compile protoc Again
 common --incompatible_enable_proto_toolchain_resolution
+common --per_file_copt=external/.*protobuf.*@--PROTOBUF_WAS_NOT_SUPPOSED_TO_BE_BUILT
+common --host_per_file_copt=external/.*protobuf.*@--PROTOBUF_WAS_NOT_SUPPOSED_TO_BE_BUILT
 
 # Ugh, stardoc needs to compile Java sources.
 # Don't depend on a JAVA_HOME pointing at a system JDK
