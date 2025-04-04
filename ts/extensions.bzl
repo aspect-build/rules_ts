@@ -8,6 +8,9 @@ load("//ts/private:npm_repositories.bzl", "npm_dependencies")
 def _extension_impl(module_ctx):
     for mod in module_ctx.modules:
         for attr in mod.tags.deps:
+            if attr.ts_version_from and hasattr(module_ctx, "watch"):
+                module_ctx.watch(attr.ts_version_from)
+
             ts_version = attr.ts_version
             if not ts_version and not attr.ts_version_from:
                 ts_version = LATEST_TYPESCRIPT_VERSION
