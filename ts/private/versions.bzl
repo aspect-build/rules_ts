@@ -1,6 +1,6 @@
 """Mirror npm registry metadata for the typescript package
 
-Automatically mirrored using mirror_versions.sh and automated on GitHub Actions.
+Automatically mirrored using mirror_versions.sh and automated on GitHub Actions
 """
 
 # Replaced during publishing, see .gitattributes
