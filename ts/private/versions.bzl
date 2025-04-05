@@ -1,6 +1,6 @@
 """Mirror npm registry metadata for the typescript package
 
-Automatically mirrored using mirror_versions.sh and automated on GitHub Actions.
+Automatically mirrored using mirror_versions.sh and automated on GitHub Actions
 """
 
 # Replaced during publishing, see .gitattributes
@@ -172,4 +172,5 @@ TOOL_VERSIONS = {
     "5.7.2": "sha512-i5t66RHxDvVN40HfDd1PsEThGNnlMCMT3jMUuoh9/0TaqWevNontacunWyN02LA9/fIbEWlcHZcgTKb9QoaLfg==",
     "5.7.3": "sha512-84MVSjMEHP+FQRPy3pX9sTVV/INIex71s9TL2Gm5FG/WG1SqXeKyZ0k7/blY/4FdOzI12CBy1vGc4og/eus0fw==",
     "5.8.2": "sha512-aJn6wq13/afZp/jT9QZmwEjDqqvSGp1VT5GVg+f/t6/oVyrgXM6BY1h9BRh/O5p3PlUPAe+WuiEZOmb/49RqoQ==",
+    "5.8.3": "sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ==",
 }
