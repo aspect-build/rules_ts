@@ -27,6 +27,20 @@ npm_link_package(
 )
 
 npm_link_package(
+    name = "node_modules/@myorg/dts_pkg-outDir",
+    src = "//examples/dts_pkg-outDir:pkg",
+    root_package = "examples",
+    visibility = ["//examples:__subpackages__"],
+)
+
+npm_link_package(
+    name = "node_modules/@myorg/dts_pkg-outDir-rootDir",
+    src = "//examples/dts_pkg-outDir-rootDir:pkg",
+    root_package = "examples",
+    visibility = ["//examples:__subpackages__"],
+)
+
+npm_link_package(
     name = "node_modules/@myorg/lib_nocompile",
     src = "//examples/lib_nocompile:pkg",
     package = "@myorg/lib_nocompile",
