@@ -5,37 +5,35 @@ load("@bazel_skylib//rules:build_test.bzl", "build_test")
 ts_project(
     name = "lib",
     srcs = [
-        "index.ts",
-        "lib_types.d.ts",
-        "lib_types_2.d.mts",
+        "src/index.ts",
+        "src/lib_types.d.ts",
+        "src/lib_types_2.d.mts",
     ],
     declaration = True,
     out_dir = "dist",
+    root_dir = "src",
     visibility = ["//examples:__subpackages__"],
 )
 
 npm_package(
     name = "pkg",
     srcs = [":lib"],
-    package = "@myorg/dts_pkg-outDir",
+    package = "@myorg/dts_pkg-outDir-rootDir",
     visibility = ["//examples:__subpackages__"],
 )
 
 ts_project(
     name = "importer_linked_ts",
-    srcs = ["importer_linked.ts"],
+    srcs = ["src/importer_linked.ts"],
     declaration = True,
     out_dir = "dist",
+    root_dir = "src",
     deps = [
-        "//examples:node_modules/@myorg/dts_pkg-outDir",
+        "//examples:node_modules/@myorg/dts_pkg-outDir-rootDir",
     ],
 )
 
 build_test(
     name = "importer_linked_test",
-    targets = [
-        ":importer_linked_ts",
-        "dist/importer_linked.js",
-        "dist/importer_linked.d.ts",
-    ],
+    targets = [":importer_linked_ts"],
 )
