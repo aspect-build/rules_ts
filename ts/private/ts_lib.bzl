@@ -115,6 +115,20 @@ https://docs.aspect.build/rulesets/aspect_rules_js/docs/js_library#deps for more
             settings in the tsconfig.json file""",
         default = True,
     ),
+    "build_progress_message": attr.string(
+        doc = """\
+            Custom progress message for the build action.
+            You can use {label} and {tsconfig_path} as substitutions.
+        """,
+        default = "Transpiling{emit_part}{type_check_part} TypeScript project {label} [tsc -p {tsconfig_path}]",
+    ),
+    "isolated_typecheck_progress_message": attr.string(
+        doc = """\
+            Custom progress message for the isolated typecheck action.
+            You can use {label} and {tsconfig_path} as substitutions.
+        """,
+        default = "Type-checking TypeScript project {label} [tsc -p {tsconfig_path}]",
+    ),
     "validator": attr.label(mandatory = True, executable = True, cfg = "exec"),
     "_options": attr.label(
         default = "@aspect_rules_ts//ts:options",
