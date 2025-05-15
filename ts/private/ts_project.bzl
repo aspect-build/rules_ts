@@ -277,6 +277,11 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         else:
             env["JS_BINARY__STDOUT_OUTPUT_FILE"] = typecheck_output.path
 
+        progress_message = ctx.attr.isolated_typecheck_progress_message.format(
+            label = ctx.label,
+            tsconfig_path = tsconfig_path,
+        )
+
         ctx.actions.run(
             executable = executable,
             inputs = tsc_transitive_inputs_depset,
@@ -285,10 +290,7 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             mnemonic = "TsProjectCheck",
             execution_requirements = execution_requirements,
             resource_set = resource_set(ctx.attr),
-            progress_message = "Type-checking TypeScript project %s [tsc -p %s]" % (
-                ctx.label,
-                tsconfig_path,
-            ),
+            progress_message = progress_message,
             env = env,
         )
     else:
@@ -323,6 +325,15 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             tsc_emit_arguments.use_param_file("@%s", use_always = True)
             tsc_emit_arguments.set_param_file_format("multiline")
 
+        progress_message = ctx.attr.build_progress_message.format(
+            label = ctx.label,
+            tsconfig_path = tsconfig_path,
+            # Internal replacement for the default message; mentioning what is being emitted if not both
+            emit_part = "" if use_tsc_for_dts and use_tsc_for_js else " (dts)" if use_tsc_for_dts else " (js)",
+            # Internal replacement for the default message; mention type-checking if done in this action
+            type_check_part = " & type-checking" if not ctx.attr.isolated_typecheck else "",
+        )
+
         ctx.actions.run(
             executable = executable,
             inputs = inputs_depset,
@@ -331,14 +342,7 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             mnemonic = "TsProjectEmit" if ctx.attr.isolated_typecheck else "TsProject",
             execution_requirements = execution_requirements,
             resource_set = resource_set(ctx.attr),
-            progress_message = "Transpiling%s%s TypeScript project %s [tsc -p %s]" % (
-                # Mention what is being emitted if not both
-                "" if use_tsc_for_dts and use_tsc_for_js else " (dts)" if use_tsc_for_dts else " (js)",
-                # Mention type-checking if done in this action
-                " & type-checking" if not ctx.attr.isolated_typecheck else "",
-                ctx.label,
-                tsconfig_path,
-            ),
+            progress_message = progress_message,
             env = {
                 "BAZEL_BINDIR": ctx.bin_dir.path,
             },
