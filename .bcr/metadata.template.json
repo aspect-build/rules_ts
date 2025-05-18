@@ -15,6 +15,11 @@
             "name": "Sahin Yort",
             "email": "sahin@aspect.build",
             "github": "thesayyn"
+        },
+        {
+            "name": "Alex Eagle",
+            "email": "alex@aspect.build",
+            "github": "alexeagle"
         }
     ],
     "repository": ["github:aspect-build/rules_ts"],
