@@ -224,8 +224,19 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         for s in srcs_inputs:
             if _lib.is_js_src(s.path, ctx.attr.allow_js, ctx.attr.resolve_json_module):
                 output_sources.append(s)
-            if _lib.is_typings_src(s.path):
+            elif _lib.is_typings_src(s.path):
                 output_types.append(s)
+    else:
+        # Add DTS inputs that are not transpiled by tsc yet should be copied to the out_dir
+        # See https://github.com/microsoft/TypeScript/issues/39231 for tsc request to add this feature
+        for s in srcs_inputs:
+            if _lib.is_typings_src(s.path):
+                dts_path = _lib.relative_to_package(s.path, ctx)
+                dts_out_path = _lib.to_out_path(dts_path, ctx.attr.out_dir, ctx.attr.root_dir)
+                if s.is_source or dts_path != dts_out_path:
+                    dts_out = ctx.actions.declare_file(dts_out_path)
+                    copy_file_action(ctx, s, dts_out)
+                    output_types.append(dts_out)
 
     # Make sure the user has acknowledged that transpiling is slow
     if len(outputs) > 0 and ctx.attr.transpile == -1 and not ctx.attr.emit_declaration_only and not options.default_to_tsc_transpiler:
