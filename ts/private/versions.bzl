@@ -1,13 +1,13 @@
 """Mirror npm registry metadata for the typescript package
 
-Automatically mirrored using mirror_versions.sh and automated on GitHub Actions.
+Automatically mirrored using mirror_versions.sh and automated on GitHub Actions
 """
 
 # Replaced during publishing, see .gitattributes
 # Note: this requires a newer git version, 2.25.1 is too old, but GHA runs with 2.41.0 as of Sep 2023
 RULES_TS_VERSION = "$Format:%(describe:tags=true)$"
 
-# NB: Versions should be ascending order so TOOL_VERSIONS.keys()[-1] is the latest version.
+# Note: Versions should be ascending order so TOOL_VERSIONS.keys()[-1] is the latest version.
 TOOL_VERSIONS = {
     "0.8.0": "sha512-t4DYxzL6Gt3+TRuJXtmh+3KfcY5iSM8J4lzUgfQkTOr78xFbmor79x/dQEGMaiqO2HJBbFGO3RlIaxPzpP5JMA==",
     "0.8.1": "sha512-/cfem275IES0o4/zVD1UmXfE3k5j2OAianSI2Oa1gYzWhAJ44OjNlXv3LVIj5EZ0fgks/XBtzp8aXVsaYILTVg==",
@@ -168,4 +168,9 @@ TOOL_VERSIONS = {
     "5.5.3": "sha512-/hreyEujaB0w76zKo6717l3L0o/qEUtRgdvUBvlkhoWeOVMjMuHNHk0BRBzikzuGDqNmPQbg5ifMEqsHLiIUcQ==",
     "5.5.4": "sha512-Mtq29sKDAEYP7aljRgtPOpTvOfbwRWlS6dPRzwjdE+C0R4brX/GUyhHSecbHMFLNBLcJIPt9nl9yG5TZ1weH+Q==",
     "5.6.2": "sha512-NW8ByodCSNCwZeghjN3o+JX5OFH0Ojg6sadjEKY4huZ52TqbJTJnDo5+Tw98lSy63NZvi4n+ez5m2u5d4PkZyw==",
+    "5.6.3": "sha512-hjcS1mhfuyi4WW8IWtjP7brDrG2cuDZukyrYrSauoXGNgx0S7zceP07adYkJycEr56BOUTNPzbInooiN3fn1qw==",
+    "5.7.2": "sha512-i5t66RHxDvVN40HfDd1PsEThGNnlMCMT3jMUuoh9/0TaqWevNontacunWyN02LA9/fIbEWlcHZcgTKb9QoaLfg==",
+    "5.7.3": "sha512-84MVSjMEHP+FQRPy3pX9sTVV/INIex71s9TL2Gm5FG/WG1SqXeKyZ0k7/blY/4FdOzI12CBy1vGc4og/eus0fw==",
+    "5.8.2": "sha512-aJn6wq13/afZp/jT9QZmwEjDqqvSGp1VT5GVg+f/t6/oVyrgXM6BY1h9BRh/O5p3PlUPAe+WuiEZOmb/49RqoQ==",
+    "5.8.3": "sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ==",
 }

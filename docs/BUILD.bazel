@@ -2,59 +2,29 @@
 # so that the dependency on stardoc doesn't leak to them.
 load("@aspect_bazel_lib//lib:docs.bzl", "stardoc_with_diff_test", "update_docs")
 
+java_binary(
+    name = "renderer",
+    main_class = "com/google/devtools/build/stardoc/renderer/RendererMain",
+    runtime_deps = ["@stardoc-prebuilt//jar"],
+)
+
 stardoc_with_diff_test(
     name = "rules",
-    bzl_library_target = "//ts:defs",
-    tags = [
-        "skip-on-bazel6",
-        "skip-on-bzlmod-0",
-        "skip-on-rbe",
-    ],
+    bzl_library_target = "@aspect_rules_ts//ts:defs",
+    renderer = "renderer",
 )
 
 stardoc_with_diff_test(
     name = "proto",
-    bzl_library_target = "//ts:proto",
-    tags = [
-        "skip-on-bazel6",
-        "skip-on-bzlmod-0",
-        "skip-on-rbe",
-    ],
+    bzl_library_target = "@aspect_rules_ts//ts:proto",
+    renderer = "renderer",
 )
 
 stardoc_with_diff_test(
     name = "repositories",
-    bzl_library_target = "//ts:repositories",
+    bzl_library_target = "@aspect_rules_ts//ts:repositories",
+    renderer = "renderer",
     symbol_names = ["rules_ts_dependencies"],
-    tags = [
-        "skip-on-bazel6",
-        "skip-on-bzlmod-0",
-        "skip-on-rbe",
-    ],
 )
 
-update_docs(
-    name = "update",
-    tags = [
-        "skip-on-bazel6",
-        "skip-on-bzlmod-0",
-        "skip-on-rbe",
-    ],
-)
-
-# Demonstration delivery target for Aspect Workflows.
-# In the future this could be wired up to push to a demonstration S3 bucket.
-sh_binary(
-    name = "docs_delivery_only_on_change",
-    srcs = ["delivery.sh"],
-    data = glob(["*.md"]),
-    tags = ["deliverable"],
-)
-
-# Demonstration delivery target for Aspect Workflows.
-# In the future this could be wired up to push to a demonstration S3 bucket.
-sh_binary(
-    name = "docs_delivery",
-    srcs = ["delivery.sh"],
-    data = glob(["*.md"]),
-)
+update_docs(name = "update")

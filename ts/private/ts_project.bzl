@@ -29,6 +29,44 @@ def _gather_types_from_js_infos(targets):
     ])
     return depset([], transitive = files_depsets)
 
+def _gather_transitive_typecheck_from_output_group_infos(typecheck_outs, targets):
+    files_depsets = [
+        target[OutputGroupInfo].transitive_typecheck
+        for target in targets
+        if OutputGroupInfo in target and "transitive_typecheck" in target[OutputGroupInfo]
+    ]
+    return depset(typecheck_outs, transitive = files_depsets)
+
+def _gather_tsconfig_deps(ctx):
+    tsconfig = copy_file_to_bin_action(ctx, ctx.file.tsconfig)
+
+    # Gather TsConfig info from both the direct (tsconfig) and indirect (extends) attribute
+    tsconfig_inputs = [tsconfig] + copy_files_to_bin_actions(ctx, ctx.files.extends)
+
+    deps = []
+
+    # Direct TsConfigInfo deps
+    if TsConfigInfo in ctx.attr.tsconfig:
+        deps.append(ctx.attr.tsconfig[TsConfigInfo].deps)
+    if ctx.attr.extends and TsConfigInfo in ctx.attr.extends:
+        deps.append(ctx.attr.extends[TsConfigInfo].deps)
+
+    deps.append(_gather_types_from_js_infos([ctx.attr.tsconfig]))
+
+    # When TypeScript builds a composite project, our compilation will want to read the tsconfig.json of
+    # composite projects we reference.
+    # Otherwise we'd get an error like
+    # examples/project_references/lib_b/tsconfig.json(5,9): error TS6053:
+    # File 'execroot/aspect_rules_ts/bazel-out/k8-fastbuild/bin/examples/project_references/lib_a/tsconfig.json' not found.
+    if ctx.attr.composite:
+        deps.extend([
+            dep[TsConfigInfo].deps
+            for dep in ctx.attr.deps
+            if TsConfigInfo in dep
+        ])
+
+    return tsconfig, tsconfig_inputs, depset(tsconfig_inputs, transitive = deps)
+
 def _ts_project_impl(ctx):
     """Creates the action which spawns `tsc`.
 
@@ -44,17 +82,18 @@ def _ts_project_impl(ctx):
     """
     options = ctx.attr._options[OptionsInfo]
     srcs_inputs = copy_files_to_bin_actions(ctx, ctx.files.srcs)
-    tsconfig = copy_file_to_bin_action(ctx, ctx.file.tsconfig)
-
-    # Gather TsConfig info from both the direct (tsconfig) and indirect (extends) attribute
-    tsconfig_inputs = copy_files_to_bin_actions(ctx, _validate_lib.tsconfig_inputs(ctx).to_list())
-    tsconfig_transitive_deps = [
-        dep[TsConfigInfo].deps
-        for dep in ctx.attr.deps
-        if TsConfigInfo in dep
-    ]
+    tsconfig, tsconfig_inputs, tsconfig_transitive_deps = _gather_tsconfig_deps(ctx)
 
     srcs = [_lib.relative_to_package(src.path, ctx) for src in srcs_inputs]
+
+    srcs_deps = ctx.attr.srcs + ctx.attr.deps
+
+    tsc_inputs = srcs_inputs + copy_files_to_bin_actions(ctx, tsconfig_inputs)
+    tsc_inputs_depset = depset(tsc_inputs, transitive = [tsconfig_transitive_deps])
+    tsc_transitive_inputs_depset = depset(tsc_inputs, transitive = [
+        _gather_types_from_js_infos(srcs_deps),
+        tsconfig_transitive_deps,
+    ])
 
     # Recalculate outputs inside the rule implementation.
     # The outs are first calculated in the macro in order to try to predetermine outputs so they can be declared as
@@ -68,7 +107,7 @@ def _ts_project_impl(ctx):
     map_outs = []
     if not ctx.attr.no_emit and ctx.attr.transpile != 0:
         js_outs = _lib.declare_outputs(ctx, _lib.calculate_js_outs(srcs, ctx.attr.out_dir, ctx.attr.root_dir, ctx.attr.allow_js, ctx.attr.resolve_json_module, ctx.attr.preserve_jsx, ctx.attr.emit_declaration_only))
-        map_outs = _lib.declare_outputs(ctx, _lib.calculate_map_outs(srcs, ctx.attr.out_dir, ctx.attr.root_dir, ctx.attr.source_map, ctx.attr.preserve_jsx, ctx.attr.emit_declaration_only))
+        map_outs = _lib.declare_outputs(ctx, _lib.calculate_map_outs(srcs, ctx.attr.out_dir, ctx.attr.root_dir, ctx.attr.source_map, ctx.attr.allow_js, ctx.attr.preserve_jsx, ctx.attr.emit_declaration_only))
 
     # dts+map file outputs
     typings_outs = []
@@ -79,7 +118,7 @@ def _ts_project_impl(ctx):
 
     validation_outs = []
     if ctx.attr.validate:
-        validation_outs.extend(_validate_lib.validation_action(ctx, tsconfig_inputs))
+        validation_outs.extend(_validate_lib.validation_action(ctx, tsconfig, tsconfig_transitive_deps))
         _lib.validate_tsconfig_dirs(ctx.attr.root_dir, ctx.attr.out_dir, typings_out_dir)
 
     typecheck_outs = []
@@ -114,6 +153,9 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
 
     if supports_workers:
         execution_requirements["supports-workers"] = "1"
+
+        # Workers may not be fully hermetic so we don't want to potentially poison the remote cache.
+        execution_requirements["no-remote-cache-upload"] = "1"
         execution_requirements["worker-key-mnemonic"] = "TsProject"
         executable = ctx.executable.tsc_worker
 
@@ -148,38 +190,32 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         _lib.calculate_root_dir(ctx),
     ])
 
-    inputs = srcs_inputs + tsconfig_inputs
-
-    transitive_inputs = []
-    if ctx.attr.composite:
-        # When TypeScript builds a composite project, our compilation will want to read the tsconfig.json of
-        # composite projects we reference.
-        # Otherwise we'd get an error like
-        # examples/project_references/lib_b/tsconfig.json(5,9): error TS6053:
-        # File 'execroot/aspect_rules_ts/bazel-out/k8-fastbuild/bin/examples/project_references/lib_a/tsconfig.json' not found.
-        transitive_inputs.extend(tsconfig_transitive_deps)
-
     assets_outs = []
     for a in ctx.files.assets:
-        a_path = _lib.relative_to_package(a.short_path, ctx)
+        a_path = _lib.relative_to_package(a.path, ctx)
         a_out = _lib.to_out_path(a_path, ctx.attr.out_dir, ctx.attr.root_dir)
         if a.is_source or a_path != a_out:
             asset = ctx.actions.declare_file(a_out)
             copy_file_action(ctx, a, asset)
             assets_outs.append(asset)
+        else:
+            assets_outs.append(a)
 
     outputs = js_outs + map_outs + typings_outs + typing_maps_outs
     if ctx.outputs.buildinfo_out:
         common_args.extend(["--tsBuildInfoFile", to_output_relative_path(ctx.outputs.buildinfo_out)])
         outputs.append(ctx.outputs.buildinfo_out)
 
+    should_generate_tsc_trace = options.generate_tsc_trace or ctx.attr.generate_trace
+
     output_sources = js_outs + map_outs + assets_outs + ctx.files.pretranspiled_js
+    output_types = typings_outs + typing_maps_outs + ctx.files.pretranspiled_dts
 
     # Add JS inputs that collide with outputs (see #250).
     #
     # Unfortunately this duplicates logic in ts_lib._to_js_out_paths:
     # files collide iff the following conditions are met:
-    # - They are JS files (ext in [js, json])
+    # - They are files not renamed when transpiled (ext in [.d.ts, js, json])
     # - out_dir == root_dir
     #
     # The duplication is hard to avoid, since out_paths works on path strings
@@ -188,49 +224,42 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         for s in srcs_inputs:
             if _lib.is_js_src(s.path, ctx.attr.allow_js, ctx.attr.resolve_json_module):
                 output_sources.append(s)
-
-    typings_srcs = [s for s in srcs_inputs if _lib.is_typings_src(s.path)]
+            if _lib.is_typings_src(s.path):
+                output_types.append(s)
 
     # Make sure the user has acknowledged that transpiling is slow
     if len(outputs) > 0 and ctx.attr.transpile == -1 and not ctx.attr.emit_declaration_only and not options.default_to_tsc_transpiler:
         fail(transpiler_selection_required)
 
-    output_types = typings_outs + typing_maps_outs + typings_srcs + ctx.files.pretranspiled_dts
-
     # What tsc will be emitting
     use_tsc_for_js = len(js_outs) > 0
     use_tsc_for_dts = len(typings_outs) > 0
+
+    # Special case where there are no source outputs so we add output_types to the default outputs.
+    default_outputs = output_sources if len(output_sources) else output_types
 
     # Use a separate non-emitting action for type-checking when:
     #  - a isolated typechecking action was explicitly requested
     #  or
     #  - not invoking tsc for output files at all
-    use_isolated_typecheck = ctx.attr.isolated_typecheck or not (use_tsc_for_js or use_tsc_for_dts)
+    if ctx.attr.isolated_typecheck or not (use_tsc_for_js or use_tsc_for_dts):
+        typecheck_outputs = []
 
-    # Special case where there are no source outputs so we add output_types to the default outputs.
-    default_outputs = output_sources if len(output_sources) else output_types
-
-    srcs_tsconfig_deps = ctx.attr.srcs + [ctx.attr.tsconfig] + ctx.attr.deps
-
-    inputs = copy_files_to_bin_actions(ctx, inputs)
-
-    transitive_inputs.append(_gather_types_from_js_infos(srcs_tsconfig_deps))
-    transitive_inputs_depset = depset(
-        inputs,
-        transitive = transitive_inputs,
-    )
-
-    # tsc action for type-checking
-    if use_isolated_typecheck:
         # The type-checking action still need to produce some output, so we output the stdout
         # to a .typecheck file that ends up in the typecheck output group.
         typecheck_output = ctx.actions.declare_file(ctx.attr.name + ".typecheck")
         typecheck_outs.append(typecheck_output)
+        typecheck_outputs.append(typecheck_output)
 
         typecheck_arguments = ctx.actions.args()
         typecheck_arguments.add_all(common_args)
 
         typecheck_arguments.add("--noEmit")
+
+        if should_generate_tsc_trace:
+            tsc_trace_dir = ctx.actions.declare_directory(ctx.attr.name + "_trace")
+            typecheck_outputs.append(tsc_trace_dir)
+            typecheck_arguments.add_all(["--generateTrace", to_output_relative_path(tsc_trace_dir)])
 
         env = {
             "BAZEL_BINDIR": ctx.bin_dir.path,
@@ -248,18 +277,20 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         else:
             env["JS_BINARY__STDOUT_OUTPUT_FILE"] = typecheck_output.path
 
+        progress_message = ctx.attr.isolated_typecheck_progress_message.format(
+            label = ctx.label,
+            tsconfig_path = tsconfig_path,
+        )
+
         ctx.actions.run(
             executable = executable,
-            inputs = transitive_inputs_depset,
+            inputs = tsc_transitive_inputs_depset,
             arguments = [typecheck_arguments],
-            outputs = [typecheck_output],
+            outputs = typecheck_outputs,
             mnemonic = "TsProjectCheck",
             execution_requirements = execution_requirements,
             resource_set = resource_set(ctx.attr),
-            progress_message = "Type-checking TypeScript project %s [tsc -p %s]" % (
-                ctx.label,
-                tsconfig_path,
-            ),
+            progress_message = progress_message,
             env = env,
         )
     else:
@@ -283,11 +314,25 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             # Not emitting declarations
             tsc_emit_arguments.add("--declaration", "false")
 
-        inputs_depset = inputs if ctx.attr.isolated_typecheck else transitive_inputs_depset
+        if should_generate_tsc_trace and not ctx.attr.isolated_typecheck:
+            tsc_trace_dir = ctx.actions.declare_directory(ctx.attr.name + "_trace")
+            outputs.append(tsc_trace_dir)
+            tsc_emit_arguments.add_all(["--generateTrace", to_output_relative_path(tsc_trace_dir)])
+
+        inputs_depset = tsc_inputs_depset if ctx.attr.isolated_typecheck else tsc_transitive_inputs_depset
 
         if supports_workers:
             tsc_emit_arguments.use_param_file("@%s", use_always = True)
             tsc_emit_arguments.set_param_file_format("multiline")
+
+        progress_message = ctx.attr.build_progress_message.format(
+            label = ctx.label,
+            tsconfig_path = tsconfig_path,
+            # Internal replacement for the default message; mentioning what is being emitted if not both
+            emit_part = "" if use_tsc_for_dts and use_tsc_for_js else " (dts)" if use_tsc_for_dts else " (js)",
+            # Internal replacement for the default message; mention type-checking if done in this action
+            type_check_part = " & type-checking" if not ctx.attr.isolated_typecheck else "",
+        )
 
         ctx.actions.run(
             executable = executable,
@@ -297,22 +342,18 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             mnemonic = "TsProjectEmit" if ctx.attr.isolated_typecheck else "TsProject",
             execution_requirements = execution_requirements,
             resource_set = resource_set(ctx.attr),
-            progress_message = "Transpiling%s%s TypeScript project %s [tsc -p %s]" % (
-                # Mention what is being emitted if not both
-                "" if use_tsc_for_dts and use_tsc_for_js else " (dts)" if use_tsc_for_dts else " (js)",
-                # Mention type-checking if done in this action
-                " & type-checking" if not ctx.attr.isolated_typecheck else "",
-                ctx.label,
-                tsconfig_path,
-            ),
+            progress_message = progress_message,
             env = {
                 "BAZEL_BINDIR": ctx.bin_dir.path,
             },
+            use_default_shell_env = True,
         )
 
-    transitive_sources = js_lib_helpers.gather_transitive_sources(output_sources, srcs_tsconfig_deps)
+    transitive_sources = js_lib_helpers.gather_transitive_sources(output_sources, srcs_deps)
 
-    transitive_types = js_lib_helpers.gather_transitive_types(output_types, srcs_tsconfig_deps)
+    transitive_types = js_lib_helpers.gather_transitive_types(output_types, srcs_deps)
+
+    transitive_typecheck = _gather_transitive_typecheck_from_output_group_infos(typecheck_outs, ctx.attr.deps)
 
     npm_sources = js_lib_helpers.gather_npm_sources(
         srcs = ctx.attr.srcs + [ctx.attr.tsconfig],
@@ -332,7 +373,7 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
         ctx = ctx,
         sources = output_sources_depset,
         data = ctx.attr.data,
-        deps = srcs_tsconfig_deps,
+        deps = srcs_deps,
         data_files = ctx.files.data,
         copy_data_files_to_bin = True,  # NOTE: configurable (default true) in js_library()
         no_copy_to_bin = [],  # NOTE: configurable (default []) in js_library()
@@ -357,12 +398,13 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             npm_sources = npm_sources,
             npm_package_store_infos = npm_package_store_infos,
         ),
-        TsConfigInfo(deps = depset(tsconfig_inputs, transitive = tsconfig_transitive_deps)),
+        TsConfigInfo(deps = tsconfig_transitive_deps),
         OutputGroupInfo(
             types = output_types_depset,
             typecheck = depset(typecheck_outs),
+            transitive_typecheck = transitive_typecheck,
             # make the inputs to the tsc action available for analysis testing
-            _action_inputs = transitive_inputs_depset,
+            _action_inputs = tsc_transitive_inputs_depset,
             # https://bazel.build/extending/rules#validations_output_group
             # "hold the otherwise unused outputs of validation actions"
             _validation = validation_outs,

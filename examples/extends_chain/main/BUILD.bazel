@@ -1,4 +1,4 @@
-load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
 
 # Uses tsconfig.json in this source folder by default
 ts_project(
@@ -16,6 +16,37 @@ ts_project(
     tsconfig = {
         "compilerOptions": {
             "declaration": False,
+        },
+    },
+)
+
+# Using a ts_config rule
+ts_config(
+    name = "tsconfig_node_extension",
+    src = "tsconfig.json",
+    deps = [
+        "//examples/extends_chain:tsconfig_node",
+    ],
+)
+
+ts_project(
+    name = "tsconfig_target",
+    srcs = ["main.ts"],
+    out_dir = "config_target",
+    tsconfig = ":tsconfig_node_extension",
+)
+
+# Further extending the tsconfig while also using isolated_typecheck
+ts_project(
+    name = "tsconfig_isolated_target",
+    srcs = ["main.ts"],
+    extends = ":tsconfig_node_extension",
+    isolated_typecheck = True,
+    tsconfig = {
+        "compilerOptions": {
+            "declaration": True,
+            "outDir": "isolated",
+            "isolatedDeclarations": True,
         },
     },
 )

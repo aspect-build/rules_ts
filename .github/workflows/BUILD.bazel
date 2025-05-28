@@ -1,24 +1,10 @@
 load("@aspect_bazel_lib//lib:bazelrc_presets.bzl", "write_aspect_bazelrc_presets")
-load("@aspect_bazel_lib//lib:write_source_files.bzl", "write_source_file")
-load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
 write_aspect_bazelrc_presets(
     name = "update_aspect_bazelrc_presets",
     presets = [
-        "bazel6",
+        # Modified from upstream
+        # "bazel6",
         "bazel7",
     ],
-)
-
-write_source_file(
-    name = "aspect_workflows_reusable",
-    in_file = "@aspect_workflows_action//:.github/workflows/.aspect-workflows-reusable.yaml",
-    out_file = ".aspect-workflows-reusable.yaml",
-)
-
-bzl_library(
-    name = "deps",
-    srcs = ["deps.bzl"],
-    visibility = ["//visibility:public"],
-    deps = ["@bazel_tools//tools/build_defs/repo:http.bzl"],
 )

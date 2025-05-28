@@ -14,7 +14,7 @@ git archive --format=tar --prefix=${PREFIX}/ ${TAG} | gzip >$ARCHIVE
 SHA=$(shasum -a 256 $ARCHIVE | awk '{print $1}')
 
 cat <<EOF
-## Using [Bzlmod] with Bazel 6:
+## Using [Bzlmod]:
 
 Add to your \`MODULE.bazel\` file:
 
@@ -32,7 +32,7 @@ use_repo(rules_ts_ext, "npm_typescript")
 
 [Bzlmod]: https://bazel.build/build/bzlmod
 
-## Using WORKSPACE
+## Using legacy WORKSPACE
 
 Paste this snippet into your \`WORKSPACE\` file:
 

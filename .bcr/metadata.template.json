@@ -2,19 +2,29 @@
     "homepage": "https://docs.aspect.build/rules/aspect_rules_ts",
     "maintainers": [
         {
+            "name": "Alex Eagle",
+            "email": "alex@aspect.build",
+            "github": "alexeagle"
+        },
+        {
             "name": "Greg Magolan",
-            "email": "greg@aspect.dev",
+            "email": "greg@aspect.build",
             "github": "gregmagolan"
         },
         {
             "name": "Jason Bedard",
-            "email": "jason@aspect.dev",
+            "email": "jason@aspect.build",
             "github": "jbedard"
         },
         {
             "name": "Sahin Yort",
-            "email": "sahin@aspect.dev",
+            "email": "sahin@aspect.build",
             "github": "thesayyn"
+        },
+        {
+            "name": "Alex Eagle",
+            "email": "alex@aspect.build",
+            "github": "alexeagle"
         }
     ],
     "repository": ["github:aspect-build/rules_ts"],

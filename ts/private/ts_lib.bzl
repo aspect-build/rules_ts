@@ -115,6 +115,20 @@ https://docs.aspect.build/rulesets/aspect_rules_js/docs/js_library#deps for more
             settings in the tsconfig.json file""",
         default = True,
     ),
+    "build_progress_message": attr.string(
+        doc = """\
+            Custom progress message for the build action.
+            You can use {label} and {tsconfig_path} as substitutions.
+        """,
+        default = "Transpiling{emit_part}{type_check_part} TypeScript project {label} [tsc -p {tsconfig_path}]",
+    ),
+    "isolated_typecheck_progress_message": attr.string(
+        doc = """\
+            Custom progress message for the isolated typecheck action.
+            You can use {label} and {tsconfig_path} as substitutions.
+        """,
+        default = "Type-checking TypeScript project {label} [tsc -p {tsconfig_path}]",
+    ),
     "validator": attr.label(mandatory = True, executable = True, cfg = "exec"),
     "_options": attr.label(
         default = "@aspect_rules_ts//ts:options",
@@ -161,6 +175,9 @@ COMPILER_OPTION_ATTRS = {
     ),
     "ts_build_info_file": attr.string(
         doc = "https://www.typescriptlang.org/tsconfig#tsBuildInfoFile",
+    ),
+    "generate_trace": attr.bool(
+        doc = "https://www.typescriptlang.org/tsconfig/#generateTrace",
     ),
 }
 
@@ -211,24 +228,31 @@ def _is_js_src(src, allow_js, resolve_json_module):
 
     return False
 
-def _is_ts_src(src, allow_js, resolve_json_module):
-    if (src.endswith(".ts") or src.endswith(".tsx") or src.endswith(".mts") or src.endswith(".cts")):
-        return not _is_typings_src(src)
+def _is_ts_src(src, allow_js, resolve_json_module, include_typings):
+    if src.endswith(".ts") or src.endswith(".tsx") or src.endswith(".mts") or src.endswith(".cts"):
+        return include_typings or not _is_typings_src(src)
 
     return _is_js_src(src, allow_js, resolve_json_module)
 
 def _to_out_path(f, out_dir, root_dir):
     f = f[f.find(":") + 1:]
+    out_dir = out_dir if out_dir != "." else None
+
+    if out_dir and f.startswith(out_dir + "/"):
+        return f
+
     if root_dir:
         f = f.removeprefix(root_dir + "/")
-    if out_dir and out_dir != ".":
+    if out_dir:
         f = out_dir + "/" + f
     return f
 
 def _to_js_out_paths(srcs, out_dir, root_dir, allow_js, resolve_json_module, ext_map, default_ext):
     outs = []
+    out_dir = _remove_leading_dot_slash(out_dir)
+    root_dir = _remove_leading_dot_slash(root_dir)
     for f in srcs:
-        if _is_ts_src(f, allow_js, resolve_json_module):
+        if _is_ts_src(f, allow_js, resolve_json_module, False):
             out = _to_out_path(f, out_dir, root_dir)
             ext_idx = out.rindex(".")
             out = out[:ext_idx] + ext_map.get(out[ext_idx:], default_ext)
@@ -269,7 +293,7 @@ def _calculate_js_outs(srcs, out_dir, root_dir, allow_js, resolve_json_module, p
 
     return _to_js_out_paths(srcs, out_dir, root_dir, allow_js, resolve_json_module, exts, ".js")
 
-def _calculate_map_outs(srcs, out_dir, root_dir, source_map, preserve_jsx, emit_declaration_only):
+def _calculate_map_outs(srcs, out_dir, root_dir, source_map, allow_js, preserve_jsx, emit_declaration_only):
     if not source_map or emit_declaration_only:
         return []
 
@@ -281,8 +305,10 @@ def _calculate_map_outs(srcs, out_dir, root_dir, source_map, preserve_jsx, emit_
     }
     if preserve_jsx:
         exts[".tsx"] = ".jsx.map"
+        if allow_js:
+            exts[".jsx"] = ".jsx.map"
 
-    return _to_js_out_paths(srcs, out_dir, root_dir, False, False, exts, ".js.map")
+    return _to_js_out_paths(srcs, out_dir, root_dir, allow_js, False, exts, ".js.map")
 
 def _calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, composite, allow_js):
     if not (declaration or composite):
@@ -322,6 +348,9 @@ def _declare_outputs(ctx, paths):
         ctx.actions.declare_file(path)
         for path in paths
     ]
+
+def _remove_leading_dot_slash(string_path):
+    return string_path.removeprefix("./") if string_path else string_path
 
 lib = struct(
     declare_outputs = _declare_outputs,

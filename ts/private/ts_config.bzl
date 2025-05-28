@@ -50,9 +50,9 @@ def _ts_config_impl(ctx):
         if TsConfigInfo in dep:
             transitive_deps.append(dep[TsConfigInfo].deps)
 
-    transitive_sources = js_lib_helpers.gather_transitive_sources([], ctx.attr.deps)
+    transitive_sources = js_lib_helpers.gather_transitive_sources(files, ctx.attr.deps)
 
-    transitive_types = js_lib_helpers.gather_transitive_types(files, ctx.attr.deps)
+    transitive_types = js_lib_helpers.gather_transitive_types([], ctx.attr.deps)
 
     npm_sources = js_lib_helpers.gather_npm_sources(
         srcs = [],
@@ -81,8 +81,8 @@ def _ts_config_impl(ctx):
             # provide tsconfig.json file via `types` and not `sources` since they are only needed
             # for downstream ts_project rules and not in downstream runtime binary rules
             target = ctx.label,
-            sources = depset(),
-            types = files_depset,
+            sources = files_depset,
+            types = depset(),
             transitive_sources = transitive_sources,
             transitive_types = transitive_types,
             npm_sources = npm_sources,
@@ -140,7 +140,7 @@ def _write_tsconfig_rule(ctx):
     src_files = []
     for f in ctx.files.files:
         # Only include typescript source files
-        if not (_lib.is_ts_src(f.basename, ctx.attr.allow_js, ctx.attr.resolve_json_module) or _lib.is_typings_src(f.basename)):
+        if not _lib.is_ts_src(f.basename, ctx.attr.allow_js, ctx.attr.resolve_json_module, True):
             continue
 
         if f.short_path.startswith(local_package_prefix):

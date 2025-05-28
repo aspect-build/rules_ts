@@ -1,4 +1,8 @@
+# Nested modules
+docs/
 e2e/
+
+# TODO(bazel 8): move to REPO.bazel
 examples/connect_node/node_modules
 examples/node_modules
 examples/proto_grpc/node_modules
@@ -10,3 +14,4 @@ examples/linked_empty_node_modules/node_modules
 examples/linked_tsconfig/node_modules
 examples/linked_tsconfig_consumer/node_modules
 examples/resolve_json_module_esm/node_modules
+examples/resolve_json_module_transpiler/node_modules

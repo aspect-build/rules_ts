@@ -52,6 +52,7 @@ def ts_project(
         transpiler = None,
         declaration_transpiler = None,
         ts_build_info_file = None,
+        generate_trace = None,
         tsc = _tsc,
         tsc_worker = _tsc_worker,
         validate = True,
@@ -239,6 +240,9 @@ def ts_project(
             Instructs Bazel *not* to expect `.js` or `.js.map` outputs for `.ts` sources.
         ts_build_info_file: The user-specified value of `tsBuildInfoFile` from the tsconfig.
             Helps Bazel to predict the path where the .tsbuildinfo output is written.
+        generate_trace: Whether to generate a trace file for TypeScript compiler performance analysis.
+            When enabled, creates a trace directory containing performance tracing information that can be
+            loaded in chrome://tracing. Use the `--@aspect_rules_ts//ts:generate_tsc_trace` flag to enable this by default.
 
         supports_workers: Whether the "Persistent Worker" protocol is enabled.
             This uses a custom `tsc` compiler to make rebuilds faster.
@@ -298,6 +302,13 @@ def ts_project(
         declaration_dir = compiler_options.pop("declarationDir", declaration_dir)
         root_dir = compiler_options.pop("rootDir", root_dir)
 
+        # When generating a tsconfig.json and we set rootDir we need to add the exclude field,
+        # because of these tickets (validation for not generated tsconfig is also present elsewhere):
+        # https://github.com/microsoft/TypeScript/issues/59036 and
+        # 'https://github.com/aspect-build/rules_ts/issues/644
+        if root_dir != None and "exclude" not in tsconfig:
+            tsconfig["exclude"] = []
+
         if srcs == None:
             # Default sources based on macro attributes after applying tsconfig properties
             srcs = _default_srcs(
@@ -354,7 +365,7 @@ def ts_project(
     tsc_map_outs = []
     if emit_tsc_js:
         tsc_js_outs = _lib.calculate_js_outs(srcs, out_dir, root_dir, allow_js, resolve_json_module, preserve_jsx, emit_declaration_only)
-        tsc_map_outs = _lib.calculate_map_outs(srcs, out_dir, root_dir, source_map, preserve_jsx, emit_declaration_only)
+        tsc_map_outs = _lib.calculate_map_outs(srcs, out_dir, root_dir, source_map, allow_js, preserve_jsx, emit_declaration_only)
 
     # Custom typing transpiler
     if emit_transpiler_dts:
@@ -374,6 +385,8 @@ def ts_project(
             native.alias(
                 name = types_target_name,
                 actual = declarations_target_name,
+                visibility = common_kwargs.get("visibility"),
+                tags = common_kwargs.get("tags", []),
             )
         else:
             # tsc outputs the types and must be extracted via output_group
@@ -387,7 +400,9 @@ def ts_project(
     # If the primary target does not output dts files then type-checking has a separate target.
     if not emit_tsc_js or not emit_tsc_dts:
         typecheck_target_name = "%s_typecheck" % name
+        transitive_typecheck_target_name = "%s_transitive_typecheck" % name
         test_target_name = "%s_typecheck_test" % name
+        transitive_typecheck_test_target_name = "%s_transitive_typecheck_test" % name
 
         # Users should build this target to get a failed build when typechecking fails
         native.filegroup(
@@ -397,11 +412,29 @@ def ts_project(
             **common_kwargs
         )
 
+        # Users should build this target to get a failed build when typechecking fails
+        native.filegroup(
+            name = transitive_typecheck_target_name,
+            srcs = [name],
+            output_group = "transitive_typecheck",
+            tags = ["manual"] + common_kwargs.get("tags", []),
+            visibility = common_kwargs.get("visibility"),
+            testonly = common_kwargs.get("testonly"),
+        )
+
         # Ensures the typecheck target gets built under `bazel test --build_tests_only`
         build_test(
             name = test_target_name,
             targets = [typecheck_target_name],
             tags = common_kwargs.get("tags"),
+            size = "small",
+            visibility = common_kwargs.get("visibility"),
+        )
+
+        build_test(
+            name = transitive_typecheck_test_target_name,
+            targets = [transitive_typecheck_target_name],
+            tags = ["manual"] + common_kwargs.get("tags", []),
             size = "small",
             visibility = common_kwargs.get("visibility"),
         )
@@ -441,6 +474,7 @@ def ts_project(
         source_map = source_map,
         declaration_map = declaration_map,
         ts_build_info_file = ts_build_info_file,
+        generate_trace = generate_trace,
         out_dir = out_dir,
         root_dir = root_dir,
         js_outs = tsc_js_outs,

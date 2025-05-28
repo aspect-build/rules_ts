@@ -1,5 +1,6 @@
 load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
 load("@aspect_bazel_lib//lib:testing.bzl", "assert_outputs")
+load("@aspect_rules_js//js:defs.bzl", "js_test")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 
@@ -42,6 +43,34 @@ ts_project(
     extends = ":config",
     out_dir = "out",
     tsconfig = {"compilerOptions": {"outDir": "out"}},
+)
+
+ts_project(
+    name = "ts-runtime-assets",
+    srcs = ["src/index-runtime.ts"],
+    assets = ["src/generated.json"],
+    tsconfig = ":config",
+)
+
+js_test(
+    name = "ts-runtime-assets_test",
+    data = [":ts-runtime-assets"],
+    entry_point = "src/index-runtime.js",
+)
+
+ts_project(
+    name = "ts-runtime-outdir-assets",
+    srcs = ["src/index-runtime.ts"],
+    assets = ["src/generated.json"],
+    extends = ":config",
+    out_dir = "out",
+    tsconfig = {"compilerOptions": {"outDir": "out"}},
+)
+
+js_test(
+    name = "ts-runtime-outdir-assets_test",
+    data = [":ts-runtime-outdir-assets"],
+    entry_point = "out/src/index-runtime.js",
 )
 
 filegroup(
@@ -135,18 +164,36 @@ ts_project(
     tsconfig = ":config",
 )
 
+genrule(
+    name = "generated_root_output_file",
+    outs = ["root-out/metadata/generated_metadata.json"],
+    cmd = "echo 1 > $@",
+)
+
 ts_project(
     name = "ts-root-out",
     srcs = [
         "src/index.ts",
     ],
     assets = [
+        "root-out/metadata/generated_metadata.json",
         "src/styles.css",
         "src/generated.json",
     ],
     out_dir = "root-out",
     root_dir = "src",
     tsconfig = ":config",
+)
+
+assert_outputs(
+    name = "ts-root-out_outputs_test",
+    actual = ":ts-root-out",
+    expected = [
+        "examples/assets/root-out/generated.json",
+        "examples/assets/root-out/index.js",
+        "examples/assets/root-out/metadata/generated_metadata.json",
+        "examples/assets/root-out/styles.css",
+    ],
 )
 
 build_test(
