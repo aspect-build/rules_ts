@@ -338,6 +338,12 @@ def ts_project(
             resolve_json_module = resolve_json_module,
         )
 
+    # Normalize common directory path shortcuts such as None vs "." vs "./"
+    out_dir = _clean_dir_arg(out_dir)
+    root_dir = _clean_dir_arg(root_dir)
+    declaration_dir = _clean_dir_arg(declaration_dir)
+
+    # Inferred paths
     typings_out_dir = declaration_dir if declaration_dir else out_dir
     tsbuildinfo_path = ts_build_info_file if ts_build_info_file else name + ".tsbuildinfo"
 
@@ -527,3 +533,8 @@ def _invoke_custom_transpiler(type_str, transpiler, transpile_target_name, srcs,
         )
     else:
         fail("%s attribute should be a rule/macro or a skylib partial. Got %s" % (type_str, type(transpiler)))
+
+def _clean_dir_arg(p):
+    if not p or p == "." or p == "./":
+        return None
+    return p.removeprefix("./")
