@@ -1,4 +1,4 @@
-import { A, B } from '@myorg/dts_pkg'
+import { A, B } from '@myorg/dts_pkg-outDir/dist'
 
 export const a: A = 42
 export const b: B = 'Forty Two'
