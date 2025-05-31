@@ -1,5 +1,6 @@
 """Runtime dependencies fetched from npm"""
 
+load("@bazel_tools//tools/build_defs/repo:cache.bzl", "get_default_canonical_id")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 load("//ts/private:versions.bzl", "TOOL_VERSIONS")
 
@@ -42,9 +43,15 @@ def _http_archive_version_impl(rctx):
             If this is a semver range you must specify an exact version instead.
             See documentation on rules_ts_dependencies.""".format(version))
 
+    urls = [u.format(version) for u in rctx.attr.urls]
+
     rctx.download_and_extract(
-        url = [u.format(version) for u in rctx.attr.urls],
+        url = urls,
         integrity = integrity,
+        # Prevents accidental re-use of cached versions that would otherwise
+        # be used purely based on the "integrity" value. E.g. someone forgot
+        # to update the integrity but the `ts_version` is already different.
+        canonical_id = get_default_canonical_id(rctx, urls),
     )
     build_file_substitutions = {
         "ts_version": version,
