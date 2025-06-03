@@ -42,9 +42,15 @@ def _http_archive_version_impl(rctx):
             If this is a semver range you must specify an exact version instead.
             See documentation on rules_ts_dependencies.""".format(version))
 
+    urls = [u.format(version) for u in rctx.attr.urls]
+
     rctx.download_and_extract(
-        url = [u.format(version) for u in rctx.attr.urls],
+        url = urls,
         integrity = integrity,
+        # Prevents accidental re-use of cached versions that would otherwise
+        # be used purely based on the "integrity" value. E.g. someone forgot
+        # to update the integrity but the `ts_version` is already different.
+        canonical_id = get_default_canonical_id(rctx, urls),
     )
     build_file_substitutions = {
         "ts_version": version,
@@ -94,3 +100,10 @@ def npm_dependencies(name = "npm_typescript", ts_version_from = None, ts_version
         },
         urls = ["https://registry.npmjs.org/typescript/-/typescript-{}.tgz"],
     )
+
+# Copy of Bazel's new helper that is not available in Bazel 6
+# https://github.com/bazelbuild/bazel/blob/7a29e3885da88c2b2dd9a07a622b62d7ea81f8a1/tools/build_defs/repo/cache.bzl#L39
+def get_default_canonical_id(rctx, urls):
+    if rctx.os.environ.get("BAZEL_HTTP_RULES_URLS_AS_DEFAULT_CANONICAL_ID") == "0":
+        return ""
+    return " ".join(urls)
