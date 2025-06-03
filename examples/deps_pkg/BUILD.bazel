@@ -1,5 +1,6 @@
 load("@aspect_rules_js//npm:defs.bzl", "npm_package")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 
 ts_config(
     name = "tsconfig",
@@ -46,5 +47,17 @@ ts_project(
     declaration = True,
     deps = [
         "//examples:node_modules/@myorg/deps_pkg",
+    ],
+)
+
+build_test(
+    name = "test",
+    targets = [
+        ":importer_rel_ts",
+        "importer_rel.js",
+        "importer_rel.d.ts",
+        ":importer_linked_ts",
+        "importer_linked.js",
+        "importer_linked.d.ts",
     ],
 )
