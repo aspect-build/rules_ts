@@ -704,7 +704,7 @@ function createProgram(args, inputs, output, exit) {
     }
 
     function applySyntheticOutPaths() {
-        host.optionsToExtend.outDir = `${host.optionsToExtend.outDir}/${SYNTHETIC_OUTDIR}`;
+        host.optionsToExtend.outDir = `${host.optionsToExtend.outDir || host.optionsToExtend.rootDir || '.'}/${SYNTHETIC_OUTDIR}`;
         if (host.optionsToExtend.declarationDir) {
             host.optionsToExtend.declarationDir = `${host.optionsToExtend.declarationDir}/${SYNTHETIC_OUTDIR}`
         }
