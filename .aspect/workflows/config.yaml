@@ -5,7 +5,7 @@ workspaces:
         label: rules_ts
         tasks:
             - test:
-    e2e/bzlmod:
+    e2e/smoke:
         tasks:
             - test:
                   queue: aspect-medium

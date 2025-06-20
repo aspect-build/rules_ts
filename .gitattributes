@@ -8,7 +8,7 @@ examples/**/*_pb.d.ts linguist-generated
 # see https://git-scm.com/docs/git-archive/2.40.0#ATTRIBUTES
 
 # Don't include examples in the distribution artifact, to reduce size
-# Note, we do need to include e2e/bzlmod since BCR runs our test based on distribution artifact.
+# Note, we do need to include e2e/smoke since BCR runs our test based on distribution artifact.
 examples export-ignore
 
 # Stamp the release version into this file
