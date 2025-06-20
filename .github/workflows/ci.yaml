@@ -85,7 +85,6 @@ jobs:
                     - os: ubuntu
                       bazel-version:
                           major: 7
-                      folder: .
                       bzlmod: 1
                     # Don't test root workspace with Bazel 6 to reduce the size of the test matrix
                     - bazel-version:

@@ -1,12 +1,58 @@
 # See https://docs.aspect.build/workflows/configuration
+workspaces:
+    .:
+        icon: ts
+        label: rules_ts
+        tasks:
+            - test:
+    e2e/bzlmod:
+        tasks:
+            - test:
+                  queue: aspect-medium
+            - format:
+                  without: true
+            - configure:
+                  without: true
+            - buildifier:
+                  without: true
+    e2e/external_dep:
+        tasks:
+            - test:
+                  queue: aspect-medium
+            - format:
+                  without: true
+            - configure:
+                  without: true
+            - buildifier:
+                  without: true
+    e2e/worker:
+        tasks:
+            - test:
+                  queue: aspect-medium
+            - format:
+                  without: true
+            - configure:
+                  without: true
+            - buildifier:
+                  without: true
+    e2e/test:
+        tasks:
+            - test:
+                  queue: aspect-medium
+            - format:
+                  without: true
+            - configure:
+                  without: true
+            - buildifier:
+                  without: true
 tasks:
+    - test:
     - format:
-          queue: aspect-medium
-    - buildifier:
           queue: aspect-medium
     - configure:
           queue: aspect-medium
-    - test:
+    - buildifier:
+          queue: aspect-medium
     - finalization:
           queue: aspect-small
 notifications:
