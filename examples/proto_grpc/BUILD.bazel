@@ -31,6 +31,14 @@ proto_library(
 )
 
 ts_proto_library(
+    name = "com_google_protobuf_timestamp",
+    node_modules = ":node_modules",
+    # Usually not accessible.
+    proto_srcs = ["@com_google_protobuf//:timestamp.proto"],
+    proto = "@com_google_protobuf//:timestamp_proto",
+)
+
+ts_proto_library(
     name = "logger_ts_proto",
     node_modules = ":node_modules",
     proto = ":logger_proto",
@@ -38,7 +46,10 @@ ts_proto_library(
     # See https://github.com/connectrpc/connect-es/blob/main/MIGRATING.md#update-plugin-options
     protoc_gen_options = {"import_extension": "js"},
     visibility = ["//visibility:public"],
-    deps = ["//examples/connect_node/proto"],
+    deps = [
+        "//examples/connect_node/proto",
+        ":com_google_protobuf_timestamp",
+    ],
 )
 
 ts_proto_library(
