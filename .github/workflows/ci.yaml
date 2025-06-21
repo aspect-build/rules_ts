@@ -67,11 +67,10 @@ jobs:
                 os: ${{ fromJSON(needs.matrix-prep.outputs.os) }}
                 folder:
                     - '.'
-                    - 'e2e/bzlmod'
+                    - 'e2e/smoke'
                     - 'e2e/external_dep'
                     - 'e2e/external_dep/app'
                     - 'e2e/worker'
-                    - 'e2e/workspace'
                 exclude:
                     # Don't test MacOS and Windows against secondary bazel version to minimize minutes (billed at 10X and 2X respectively)
                     # https://docs.github.com/en/billing/managing-billing-for-github-actions/about-billing-for-github-actions#included-storage-and-minutes
@@ -97,20 +96,16 @@ jobs:
                     # Don't test root workspace with non-bzlmod
                     - bzlmod: 0
                       folder: .
-                    # e2e/bzlmod broken with bazel6
+                    # e2e/smoke broken with bazel6
                     - bazel-version:
                           major: 6
-                      folder: e2e/bzlmod
+                      folder: e2e/smoke
+                      bzlmod: 1
                     # Disable some broken tests on Windows
                     - os: windows
                       folder: .
                     - os: windows
                       folder: e2e/worker
-                    # TODO: combine bzlmod and workspace into a single 'smoke' e2e
-                    - folder: e2e/bzlmod
-                      bzlmod: 0
-                    - folder: e2e/workspace
-                      bzlmod: 1
                 include:
                     - bazel-version:
                           major: 7
