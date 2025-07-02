@@ -102,6 +102,7 @@ build_test(
         # babel ts_project
         ":babel",
         ":babel_typecheck",
+        ":babel_typecheck_test",
         # babel outputted js
         "big.js",  # NOTE: does not implement out_dir in this test
         # tsc outputted dts
@@ -110,10 +111,12 @@ build_test(
         # no-emit for type-checking
         ":no-emit",
         ":no-emit_typecheck",
+        ":no-emit_typecheck_test",
 
         # babel outputted .js with no declarations
         ":no-declarations",
         ":no-declarations_typecheck",
+        ":no-declarations_typecheck_test",
         "a.js",  # NOTE: does not implement out_dir in this test
     ],
 )
@@ -162,6 +165,7 @@ build_test(
         ":custom_transpilers",
         ":custom_transpilers_types",
         ":custom_transpilers_typecheck",
+        ":custom_transpilers_typecheck_test",
         "build-custom_transpilers/a.js",
         "build-custom_transpilers/a.d.ts",
     ],
@@ -232,6 +236,7 @@ build_test(
         ":custom_dts_transpiler",
         ":custom_dts_transpiler_types",
         ":custom_dts_transpiler_typecheck",
+        ":custom_dts_transpiler_typecheck_test",
         "build-custom_dts_transpiler/a.js",
         "build-custom_dts_transpiler/a.d.ts",
     ],
@@ -261,6 +266,7 @@ build_test(
     targets = [
         ":custom_dts_transpiler-no_declarations",
         ":custom_dts_transpiler-no_declarations_typecheck",
+        ":custom_dts_transpiler-no_declarations_typecheck_test",
         "build-custom_dts_transpiler-no_declarations/a.js",
     ],
 )
@@ -288,6 +294,7 @@ build_test(
     targets = [
         ":custom_dts_transpiler-declarations_only",
         ":custom_dts_transpiler-declarations_only_typecheck",
+        ":custom_dts_transpiler-declarations_only_typecheck_test",
         "build-custom_dts_transpiler-no_declarations/a.d.ts",
     ],
 )

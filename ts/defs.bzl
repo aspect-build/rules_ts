@@ -404,7 +404,7 @@ def ts_project(
             )
 
     # If the primary target does not output dts files then type-checking has a separate target.
-    if not emit_tsc_js or not emit_tsc_dts:
+    if not emit_tsc_js or not emit_tsc_dts or isolated_typecheck:
         typecheck_target_name = "%s_typecheck" % name
         transitive_typecheck_target_name = "%s_transitive_typecheck" % name
         test_target_name = "%s_typecheck_test" % name

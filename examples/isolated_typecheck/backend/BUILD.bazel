@@ -1,5 +1,6 @@
 load("@aspect_bazel_lib//lib:testing.bzl", "assert_outputs")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 
 ts_project(
     name = "backend",
@@ -13,4 +14,14 @@ assert_outputs(
     name = "test_backend_default_outputs",
     actual = "backend",
     expected = ["examples/isolated_typecheck/backend/index.js"],
+)
+
+build_test(
+    name = "targets_test",
+    targets = [
+        ":backend",
+        ":backend_types",
+        ":backend_typecheck",
+        ":backend_typecheck_test",
+    ],
 )
