@@ -1,4 +1,5 @@
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 
 ts_project(
     name = "frontend",
@@ -10,4 +11,14 @@ ts_project(
         },
     },
     deps = ["//examples/isolated_typecheck/core"],
+)
+
+build_test(
+    name = "targets_test",
+    targets = [
+        ":frontend",
+        ":frontend_types",
+        ":frontend_typecheck",
+        ":frontend_typecheck_test",
+    ],
 )

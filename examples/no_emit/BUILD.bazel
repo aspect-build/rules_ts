@@ -45,8 +45,10 @@ ts_project(
 build_test(
     name = "targets_test",
     targets = [
-        # Ensure the _typecheck targets are declared despite no outputs.
+        # Ensure the _typecheck and _test targets are declared despite no outputs.
         ":typecheck_only_noemit_typecheck",
+        ":typecheck_only_noemit_typecheck_test",
         ":typecheck_nodeclarations_js_typecheck",
+        ":typecheck_nodeclarations_js_typecheck_test",
     ],
 )
