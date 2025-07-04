@@ -9,9 +9,9 @@ local_repository(
 # Override the version declared by rules_ts for windows fix
 http_archive(
     name = "aspect_bazel_lib",
-    sha256 = "da67c6a785cdc10faf960a22c44501fe6be357a6ebd2bd6101560f9c2a9e06b3",
-    strip_prefix = "bazel-lib-2.9.0",
-    url = "https://github.com/bazel-contrib/bazel-lib/releases/download/v2.9.0/bazel-lib-v2.9.0.tar.gz",
+    sha256 = "9a44f457810ce64ec36a244cc7c807607541ab88f2535e07e0bf2976ef4b73fe",
+    strip_prefix = "bazel-lib-2.19.4",
+    url = "https://github.com/bazel-contrib/bazel-lib/releases/download/v2.19.4/bazel-lib-v2.19.4.tar.gz",
 )
 
 http_archive(
@@ -95,8 +95,6 @@ npm_repositories()
 
 # Register aspect_bazel_lib toolchains;
 # If you use npm_translate_lock or npm_import from aspect_rules_js you can omit this block.
-load("@aspect_bazel_lib//lib:repositories.bzl", "register_copy_directory_toolchains", "register_copy_to_directory_toolchains")
+load("@aspect_bazel_lib//lib:repositories.bzl", "aspect_bazel_lib_dependencies")
 
-register_copy_directory_toolchains()
-
-register_copy_to_directory_toolchains()
+aspect_bazel_lib_dependencies()
