@@ -226,7 +226,7 @@ function ts_project() {
 			composite="composite = True,"
 			;;
 		--transpiler-mock)
-			shift;
+			shift
 			transpiler="transpiler = mock,"
 			mock_transpiler_disabled=""
 			;;
