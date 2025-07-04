@@ -49,6 +49,7 @@ tasks:
     - test:
     - format:
           queue: aspect-medium
+          use_args_file: false
     - configure:
           queue: aspect-medium
     - buildifier:
