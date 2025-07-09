@@ -85,10 +85,6 @@ jobs:
                       bazel-version:
                           major: 7
                       bzlmod: 1
-                    # Don't test root workspace with Bazel 6 to reduce the size of the test matrix
-                    - bazel-version:
-                          major: 6
-                      folder: .
                     # Don't test non-bzlmod with Bazel 6 to reduce the size of the test matrix
                     - bazel-version:
                           major: 6
@@ -96,11 +92,6 @@ jobs:
                     # Don't test root workspace with non-bzlmod
                     - bzlmod: 0
                       folder: .
-                    # e2e/smoke broken with bazel6
-                    - bazel-version:
-                          major: 6
-                      folder: e2e/smoke
-                      bzlmod: 1
                     # Disable some broken tests on Windows
                     - os: windows
                       folder: .
