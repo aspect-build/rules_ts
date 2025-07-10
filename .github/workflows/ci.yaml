@@ -94,35 +94,37 @@ jobs:
                     - bazel-version:
                           major: 6
                       bzlmod: 0
-                    # Don't run tests with Bazel 8 by default
+                    # Don't test non-bzlmod with Bazel 8 where only modern bzlmod should be used
                     - bazel-version:
                           major: 8
+                      bzlmod: 0
                     # Don't test root workspace with non-bzlmod
                     - bzlmod: 0
                       folder: .
-                    # e2e/smoke broken with bazel6
+                    # TODO: e2e/smoke broken with bazel6
                     - bazel-version:
                           major: 6
                       folder: e2e/smoke
-                      bzlmod: 1
+                    # TODO: broken on bazel 8
+                    - bazel-version:
+                          major: 8
+                      folder: e2e/external_dep
+                    # TODO: broken on bazel 8
+                    - bazel-version:
+                          major: 8
+                      folder: e2e/external_dep/app
                     # Disable some broken tests on Windows
                     - os: windows
                       folder: .
                     - os: windows
                       folder: e2e/worker
                 include:
+                    # Additional docs tests
                     - bazel-version:
                           major: 7
                           version: 7.3.2
                       bzlmod: 1
                       folder: docs
-                      os: ubuntu
-
-                    # Include only unit tests with bazel8
-                    - bazel-version:
-                          major: 8
-                      bzlmod: 1
-                      folder: .
                       os: ubuntu
 
         # Steps represent a sequence of tasks that will be executed as part of the job
