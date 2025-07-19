@@ -9,5 +9,4 @@ which this example is based on.
 In this example, both `backend` and `frontend` packages depend on `core`, however they could be type-checked in parallel
 before `core` has produced any declarationEmit.
 
-This doesn't make anything faster yet.
-Follow https://github.com/aspect-build/rules_ts/issues/374 for updates on performance improvements to the Bazel action graph.
+See [/docs/performance.md](/docs/performance.md) for more information on how to use isolated modules to speed up typechecking.
