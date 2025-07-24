@@ -1,12 +1,10 @@
 # See https://docs.aspect.build/workflows/configuration
 workspaces:
     .:
-        icon: ts
+        icon: typescript
         label: rules_ts
     e2e/smoke:
         tasks:
-            - bazel-6:
-                  without: true
             - format:
                   without: true
             - configure:
@@ -38,16 +36,6 @@ workspaces:
             - buildifier:
                   without: true
 tasks:
-    - test:
-          name: 'Test (Bazel 6.x)'
-          id: bazel-6
-          bazel:
-              flags:
-                  - --enable_bzlmod
-                  - --build_tag_filters=-skip-on-bazel6
-                  - --test_tag_filters=-skip-on-bazel6
-          env:
-              USE_BAZEL_VERSION: 6.x
     - test:
           name: 'Test (Bazel 7.x)'
           id: bazel-7
