@@ -171,6 +171,7 @@ jobs:
                     --bazelrc=${GITHUB_WORKSPACE//\\/\/}/.github/workflows/ci.bazelrc \
                     test \
                     --config=ci \
+                    --incompatible_merge_fixed_and_default_shell_env \
                     --test_tag_filters=-skip-on-bazel${{ matrix.bazel-version.major }},-skip-on-bzlmod-${{ matrix.bzlmod }} \
                     --build_tag_filters=-skip-on-bazel${{ matrix.bazel-version.major }},-skip-on-bzlmod-${{ matrix.bzlmod }} \
                     --enable_bzlmod=${{ matrix.bzlmod }} \
