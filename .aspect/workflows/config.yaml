@@ -6,7 +6,7 @@ workspaces:
     e2e/smoke:
         tasks:
             - bazel-6:
-                  queue: aspect-medium
+                  without: true
             - bazel-7:
                   queue: aspect-medium
             - bazel-8:
