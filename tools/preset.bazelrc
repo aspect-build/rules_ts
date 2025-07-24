@@ -15,6 +15,10 @@ common:ci --announce_rc
 common --nobuild_runfile_links
 # Docs: https://registry.build/flag/bazel@7.4.1?filter=build_runfile_links
 
+# See https://github.com/bazelbuild/bazel/issues/20577
+coverage --build_runfile_links
+# Docs: https://registry.build/flag/bazel@7.4.1?filter=build_runfile_links
+
 # Always run tests even if they have cached results.
 # This ensures tests are executed fresh each time, useful for debugging and ensuring test reliability.
 common:debug --nocache_test_results
@@ -193,6 +197,11 @@ common:ci --terminal_columns=143
 # Output test errors to stderr so users don't have to `cat` or open test failure log files when test fail.
 # This makes the log noisier in exchange for reducing the time-to-feedback on test failures for users.
 common --test_output="errors"
+# Docs: https://registry.build/flag/bazel@7.4.1?filter=test_output
+
+# Stream stdout/stderr output from each test in real-time.
+# This provides immediate feedback during test execution, useful for debugging test failures.
+common:debug --test_output="streamed"
 # Docs: https://registry.build/flag/bazel@7.4.1?filter=test_output
 
 # Run one test at a time in exclusive mode.

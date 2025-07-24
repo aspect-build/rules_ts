@@ -170,7 +170,7 @@ jobs:
                   bazel \
                     --bazelrc=${GITHUB_WORKSPACE//\\/\/}/.github/workflows/ci.bazelrc \
                     test \
-                    --config=ci
+                    --config=ci \
                     --test_tag_filters=-skip-on-bazel${{ matrix.bazel-version.major }},-skip-on-bzlmod-${{ matrix.bzlmod }} \
                     --build_tag_filters=-skip-on-bazel${{ matrix.bazel-version.major }},-skip-on-bzlmod-${{ matrix.bzlmod }} \
                     --enable_bzlmod=${{ matrix.bzlmod }} \

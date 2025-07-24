@@ -19,7 +19,4 @@ format_multirun(
     starlark = "@buildifier_prebuilt//:buildifier",
 )
 
-bazelrc_preset(
-    name = "preset",
-    tags = ["manual"],
-)
+bazelrc_preset(name = "preset")
