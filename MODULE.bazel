@@ -22,7 +22,7 @@ bazel_dep(name = "rules_proto", version = "6.0.0")
 ####### Dev dependencies ########
 
 bazel_dep(name = "aspect_rules_lint", version = "1.2.1", dev_dependency = True)
-bazel_dep(name = "bazelrc-preset.bzl", version = "1.0.1", dev_dependency = True)
+bazel_dep(name = "bazelrc-preset.bzl", version = "1.1.0", dev_dependency = True)
 bazel_dep(name = "buildifier_prebuilt", version = "6.4.0", dev_dependency = True)
 bazel_dep(name = "rules_go", version = "0.46.0", dev_dependency = True, repo_name = "io_bazel_rules_go")
 bazel_dep(name = "rules_nodejs", version = "6.2.0", dev_dependency = True)
