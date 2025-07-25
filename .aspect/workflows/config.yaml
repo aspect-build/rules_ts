@@ -1,13 +1,15 @@
 # See https://docs.aspect.build/workflows/configuration
 workspaces:
     .:
-        icon: ts
+        icon: typescript
         label: rules_ts
-        tasks:
-            - test:
     e2e/smoke:
         tasks:
-            - test:
+            - bazel-6:
+                  without: true
+            - bazel-7:
+                  queue: aspect-medium
+            - bazel-8:
                   queue: aspect-medium
             - format:
                   without: true
@@ -17,7 +19,11 @@ workspaces:
                   without: true
     e2e/external_dep:
         tasks:
-            - test:
+            - bazel-6:
+                  queue: aspect-medium
+            - bazel-7:
+                  queue: aspect-medium
+            - bazel-8:
                   queue: aspect-medium
             - format:
                   without: true
@@ -27,7 +33,11 @@ workspaces:
                   without: true
     e2e/worker:
         tasks:
-            - test:
+            - bazel-6:
+                  queue: aspect-medium
+            - bazel-7:
+                  queue: aspect-medium
+            - bazel-8:
                   queue: aspect-medium
             - format:
                   without: true
@@ -37,7 +47,11 @@ workspaces:
                   without: true
     e2e/test:
         tasks:
-            - test:
+            - bazel-6:
+                  queue: aspect-medium
+            - bazel-7:
+                  queue: aspect-medium
+            - bazel-8:
                   queue: aspect-medium
             - format:
                   without: true
@@ -47,6 +61,23 @@ workspaces:
                   without: true
 tasks:
     - test:
+          name: 'Test (Bazel 6.x)'
+          id: bazel-6
+          bazel:
+              flags:
+                  - --incompatible_merge_fixed_and_default_shell_env
+          env:
+              USE_BAZEL_VERSION: 6.x
+    - test:
+          name: 'Test (Bazel 7.x)'
+          id: bazel-7
+          env:
+              USE_BAZEL_VERSION: 7.x
+    - test:
+          name: 'Test (Bazel 8.x)'
+          id: bazel-8
+          env:
+              USE_BAZEL_VERSION: 8.x
     - format:
           queue: aspect-medium
           use_args_file: false
