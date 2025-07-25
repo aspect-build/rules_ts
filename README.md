@@ -18,10 +18,6 @@ rules_ts is just a part of what Aspect provides:
 -   _Need help?_ This ruleset has support provided by https://aspect.build/services.
 -   See our other Bazel rules, especially those built for rules_js, linked from <https://github.com/aspect-build>
 
-Known issues:
-
--   Type-checking can not be performed in parallel, see [--isolatedDeclarations](https://github.com/aspect-build/rules_ts/issues/374)
-
 ## Installation
 
 Follow instructions from the release you wish to use:
