@@ -155,7 +155,11 @@ def ts_project(
             See https://www.typescriptlang.org/docs/handbook/compiler-options.html#compiler-options
             Typically useful arguments for debugging are `--listFiles` and `--listEmittedFiles`.
 
-        isolated_typecheck: Whether to type-check asynchronously as a separate bazel action.
+        isolated_typecheck: Whether to type-check asynchronously as a separate bazel action from transpilation.
+
+            Any transpiling with `tsc` will only contain the `ts_project(tsconfig)` dependencies, while type-checking
+            actions will also include the `ts_project(deps)` dependencies.
+
             Requires https://devblogs.microsoft.com/typescript/announcing-typescript-5-6/#the---nocheck-option6
             Requires https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-5.html#isolated-declarations
 

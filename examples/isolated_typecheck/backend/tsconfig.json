@@ -1,0 +1,11 @@
+{
+    // Dependency on a parent tsconfig
+    "extends": "../tsconfig.json",
+    "compilerOptions": {
+        "isolatedDeclarations": true,
+        "declaration": true,
+
+        // Dependency on the @types/node package
+        "types": ["node"]
+    }
+}
