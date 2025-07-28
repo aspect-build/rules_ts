@@ -24,6 +24,9 @@ transpiling vs type-checking into separate bazel actions. The transpiling of Typ
 can be done without blocking waiting for dependencies, greatly increasing parallelization of declaration file creation.
 Declaration files being created faster then allows the type-checking to start sooner.
 
+Note: while `isolatedDeclarations` should allow TypeScript to transpile without dependencies, dependencies of the `tsconfig`
+file may still be required if `tsc` is used for transpiling. Any dependencies of the `tsconfig` target should be declared in the `ts_config(deps)` target to ensure those dependencies are available for both the transpiling and type-checking actions.
+
 ### When to use `isolated_typecheck`
 
 It is not always possible or convenient to use the TypeScript `isolatedDeclarations` option, especially when it requires
