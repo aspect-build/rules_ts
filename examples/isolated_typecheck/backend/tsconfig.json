@@ -1,0 +1,7 @@
+{
+    "compilerOptions": {
+        "isolatedDeclarations": true,
+        "declaration": true,
+        "types": ["node"]
+    }
+}

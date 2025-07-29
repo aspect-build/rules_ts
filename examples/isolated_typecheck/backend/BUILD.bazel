@@ -6,8 +6,11 @@ ts_project(
     name = "backend",
     declaration = True,
     isolated_typecheck = True,
-    tsconfig = "//examples/isolated_typecheck:tsconfig",
-    deps = ["//examples/isolated_typecheck/core"],
+    tsconfig = "tsconfig.json",
+    deps = [
+        "//examples/isolated_typecheck/core",
+        "//examples:node_modules/@types/node",
+    ],
 )
 
 assert_outputs(
