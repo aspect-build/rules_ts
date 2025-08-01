@@ -93,6 +93,12 @@ bool_flag(
     visibility = ["//visibility:public"],
 )
 
+bool_flag(
+    name = "validation_typecheck",
+    build_setting_default = False,
+    visibility = ["//visibility:public"],
+)
+
 # Note, users could use a Transition to make a subgraph of their depgraph opt-in to skipLibCheck.
 config_setting(
     name = "skip_lib_check.always",
@@ -132,6 +138,13 @@ config_setting(
     },
 )
 
+config_setting(
+    name = "validation_typecheck_flag",
+    flag_values = {
+        ":validation_typecheck": "true",
+    },
+)
+
 options(
     name = "options",
     default_to_tsc_transpiler = select({
@@ -151,6 +164,10 @@ options(
     ),
     supports_workers = select({
         ":supports_workers_flag": True,
+        "//conditions:default": False,
+    }),
+    validation_typecheck = select({
+        ":validation_typecheck_flag": True,
         "//conditions:default": False,
     }),
     verbose = select({
