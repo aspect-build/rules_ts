@@ -367,6 +367,9 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
     output_types_depset = depset(output_types)
     output_sources_depset = depset(output_sources)
 
+    if options.validation_typecheck:
+        validation_outs.extend(typecheck_outs)
+
     # Align runfiles config with rules_js js_library() to align behaviour.
     # See https://github.com/aspect-build/rules_js/blob/v2.1.0/js/private/js_library.bzl#L241-L254
     runfiles = js_lib_helpers.gather_runfiles(

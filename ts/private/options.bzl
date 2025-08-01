@@ -13,7 +13,7 @@ Please read https://docs.aspect.build/rules/aspect_rules_ts/docs/transpiler
 
 OptionsInfo = provider(
     doc = "Internal: Provider that carries verbosity and global worker support information.",
-    fields = ["args", "default_to_tsc_transpiler", "verbose", "supports_workers", "generate_tsc_trace"],
+    fields = ["args", "default_to_tsc_transpiler", "verbose", "supports_workers", "generate_tsc_trace", "validation_typecheck"],
 )
 
 def _options_impl(ctx):
@@ -48,6 +48,7 @@ def _options_impl(ctx):
         supports_workers = ctx.attr.supports_workers,
         default_to_tsc_transpiler = ctx.attr.default_to_tsc_transpiler,
         generate_tsc_trace = ctx.attr.generate_tsc_trace,
+        validation_typecheck = ctx.attr.validation_typecheck,
     )
 
 options = rule(
@@ -58,5 +59,6 @@ options = rule(
         "supports_workers": attr.bool(),
         "skip_lib_check": attr.bool(),
         "generate_tsc_trace": attr.bool(),
+        "validation_typecheck": attr.bool(),
     },
 )
