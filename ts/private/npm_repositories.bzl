@@ -52,10 +52,9 @@ def _http_archive_version_impl(rctx):
         # So we can't use versions.bzl to parse the version
         "is_ts_5": str(int(version.split(".")[0]) >= 5),
     }
-    build_file_substitutions.update(**rctx.attr.build_file_substitutions)
     rctx.template(
         "BUILD.bazel",
-        rctx.path(rctx.attr.build_file),
+        rctx.path(rctx.attr._build_file),
         substitutions = build_file_substitutions,
         executable = False,
     )
@@ -67,8 +66,10 @@ http_archive_version = repository_rule(
         "integrity": attr.string(doc = "Needed only if the ts version isn't mirrored in `versions.bzl`."),
         "version": attr.string(doc = "Explicit version for `urls` placeholder. If provided, the package.json is not read."),
         "urls": attr.string_list(doc = "URLs to fetch from. Each must have one `{}`-style placeholder."),
-        "build_file": attr.label(doc = "The BUILD file to write into the created repository."),
-        "build_file_substitutions": attr.string_dict(doc = "Substitutions to make when expanding the BUILD file."),
+        "_build_file": attr.label(
+            doc = "The BUILD file to write into the created repository.",
+            default = Label("@aspect_rules_ts//ts:BUILD.typescript"),
+        ),
         "version_from": attr.label(doc = "Location of package.json which may have a version for the package."),
     },
 )
@@ -84,7 +85,6 @@ def npm_dependencies(name = "npm_typescript", ts_version_from = None, ts_version
         version = ts_version,
         version_from = ts_version_from,
         integrity = ts_integrity,
-        build_file = "@aspect_rules_ts//ts:BUILD.typescript",
         urls = ["https://registry.npmjs.org/typescript/-/typescript-{}.tgz"],
     )
 
