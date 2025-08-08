@@ -64,7 +64,6 @@ http_archive_version = repository_rule(
     doc = "Re-implementation of http_archive that can read the version from package.json",
     implementation = _http_archive_version_impl,
     attrs = {
-        "bzlmod": attr.bool(doc = "Whether we were called from a bzlmod module extension"),
         "integrity": attr.string(doc = "Needed only if the ts version isn't mirrored in `versions.bzl`."),
         "version": attr.string(doc = "Explicit version for `urls` placeholder. If provided, the package.json is not read."),
         "urls": attr.string_list(doc = "URLs to fetch from. Each must have one `{}`-style placeholder."),
@@ -75,14 +74,13 @@ http_archive_version = repository_rule(
 )
 
 # buildifier: disable=function-docstring
-def npm_dependencies(name = "npm_typescript", ts_version_from = None, ts_version = None, ts_integrity = None, bzlmod = False):
+def npm_dependencies(name = "npm_typescript", ts_version_from = None, ts_version = None, ts_integrity = None):
     if (ts_version and ts_version_from) or (not ts_version_from and not ts_version):
         fail("""Exactly one of 'ts_version' or 'ts_version_from' must be set.""")
 
     maybe(
         http_archive_version,
         name = name,
-        bzlmod = bzlmod,
         version = ts_version,
         version_from = ts_version_from,
         integrity = ts_integrity,
