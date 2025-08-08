@@ -3,13 +3,6 @@
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 load("//ts/private:versions.bzl", "TOOL_VERSIONS")
 
-worker_versions = struct(
-    bazel_worker_version = "5.4.2",
-    bazel_worker_integrity = "sha512-wQZ1ybgiCPkuITaiPfh91zB/lBYqBglf1XYh9hJZCQnWZ+oz9krCnZcywI/i1U9/E9p3A+4Y1ni5akAwTMmfUA==",
-    google_protobuf_version = "3.20.1",
-    google_protobuf_integrity = "sha512-XMf1+O32FjYIV3CYu6Tuh5PNbfNEU5Xu22X+Xkdb/DUexFlCzhvv7d5Iirm4AOwn8lv4al1YvIhzGrg2j9Zfzw==",
-)
-
 def _http_archive_version_impl(rctx):
     integrity = None
     if rctx.attr.version:
@@ -94,10 +87,6 @@ def npm_dependencies(name = "npm_typescript", ts_version_from = None, ts_version
         version_from = ts_version_from,
         integrity = ts_integrity,
         build_file = "@aspect_rules_ts//ts:BUILD.typescript",
-        build_file_substitutions = {
-            "bazel_worker_version": worker_versions.bazel_worker_version,
-            "google_protobuf_version": worker_versions.google_protobuf_version,
-        },
         urls = ["https://registry.npmjs.org/typescript/-/typescript-{}.tgz"],
     )
 
