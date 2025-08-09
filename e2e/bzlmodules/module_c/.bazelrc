@@ -1,0 +1,3 @@
+# Doesn't work because this module does not depend on aspect_rules_ts.
+# common --@aspect_rules_ts//ts:skipLibCheck=always
+# common --@aspect_rules_ts//ts:default_to_tsc_transpiler

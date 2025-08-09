@@ -1,0 +1,27 @@
+# DO NOT DIRECTLY DEPEND ON "aspect_rules_ts". Only override it in the root module
+# so the submodules used under test will use the local version.
+# The root module must do the override despite not directly using the module
+local_path_override(
+    module_name = "aspect_rules_ts",
+    path = "../..",
+)
+
+bazel_dep(name = "bazel_skylib", version = "1.8.1")
+bazel_dep(name = "module_a")
+local_path_override(
+    module_name = "module_a",
+    path = "./module_a",
+)
+
+# TODO https://github.com/aspect-build/rules_ts/issues/843
+# bazel_dep(name = "module_b")
+# local_path_override(
+#     module_name = "module_b",
+#     path = "./module_b",
+# )
+
+bazel_dep(name = "module_c")
+local_path_override(
+    module_name = "module_c",
+    path = "./module_c",
+)

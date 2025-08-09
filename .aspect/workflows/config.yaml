@@ -17,6 +17,20 @@ workspaces:
                   without: true
             - buildifier:
                   without: true
+    e2e/bzlmodules:
+        tasks:
+            - bazel-6:
+                  without: true
+            - bazel-7:
+                  queue: aspect-medium
+            - bazel-8:
+                  queue: aspect-medium
+            - format:
+                  without: true
+            - configure:
+                  without: true
+            - buildifier:
+                  without: true
     e2e/external_dep:
         tasks:
             - bazel-6:
