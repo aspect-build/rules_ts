@@ -1,0 +1,13 @@
+module(name = "module_a")
+
+bazel_dep(name = "aspect_rules_ts", version = "0.0.0")
+local_path_override(
+    module_name = "aspect_rules_ts",
+    path = "../../..",
+)
+
+rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext")
+rules_ts_ext.deps(
+    ts_version_from = "//:package.json",
+)
+use_repo(rules_ts_ext, "npm_typescript")

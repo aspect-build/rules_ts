@@ -227,8 +227,10 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             if _lib.is_typings_src(s.path):
                 output_types.append(s)
 
-    # Make sure the user has acknowledged that transpiling is slow
-    if len(outputs) > 0 and ctx.attr.transpile == -1 and not ctx.attr.emit_declaration_only and not options.default_to_tsc_transpiler:
+    is_root_module = ctx.label.workspace_root == ""
+
+    # Make sure the user has acknowledged that transpiling is slow for ts_project() targets in the root module.
+    if is_root_module and len(outputs) > 0 and ctx.attr.transpile == -1 and not ctx.attr.emit_declaration_only and not options.default_to_tsc_transpiler:
         fail(transpiler_selection_required)
 
     # What tsc will be emitting
