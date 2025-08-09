@@ -3,13 +3,6 @@
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 load("//ts/private:versions.bzl", "TOOL_VERSIONS")
 
-worker_versions = struct(
-    bazel_worker_version = "5.4.2",
-    bazel_worker_integrity = "sha512-wQZ1ybgiCPkuITaiPfh91zB/lBYqBglf1XYh9hJZCQnWZ+oz9krCnZcywI/i1U9/E9p3A+4Y1ni5akAwTMmfUA==",
-    google_protobuf_version = "3.20.1",
-    google_protobuf_integrity = "sha512-XMf1+O32FjYIV3CYu6Tuh5PNbfNEU5Xu22X+Xkdb/DUexFlCzhvv7d5Iirm4AOwn8lv4al1YvIhzGrg2j9Zfzw==",
-)
-
 def _http_archive_version_impl(rctx):
     integrity = None
     if rctx.attr.version:
@@ -59,10 +52,9 @@ def _http_archive_version_impl(rctx):
         # So we can't use versions.bzl to parse the version
         "is_ts_5": str(int(version.split(".")[0]) >= 5),
     }
-    build_file_substitutions.update(**rctx.attr.build_file_substitutions)
     rctx.template(
         "BUILD.bazel",
-        rctx.path(rctx.attr.build_file),
+        rctx.path(rctx.attr._build_file),
         substitutions = build_file_substitutions,
         executable = False,
     )
@@ -71,33 +63,28 @@ http_archive_version = repository_rule(
     doc = "Re-implementation of http_archive that can read the version from package.json",
     implementation = _http_archive_version_impl,
     attrs = {
-        "bzlmod": attr.bool(doc = "Whether we were called from a bzlmod module extension"),
         "integrity": attr.string(doc = "Needed only if the ts version isn't mirrored in `versions.bzl`."),
         "version": attr.string(doc = "Explicit version for `urls` placeholder. If provided, the package.json is not read."),
         "urls": attr.string_list(doc = "URLs to fetch from. Each must have one `{}`-style placeholder."),
-        "build_file": attr.label(doc = "The BUILD file to write into the created repository."),
-        "build_file_substitutions": attr.string_dict(doc = "Substitutions to make when expanding the BUILD file."),
+        "_build_file": attr.label(
+            doc = "The BUILD file to write into the created repository.",
+            default = Label("@aspect_rules_ts//ts:BUILD.typescript"),
+        ),
         "version_from": attr.label(doc = "Location of package.json which may have a version for the package."),
     },
 )
 
 # buildifier: disable=function-docstring
-def npm_dependencies(name = "npm_typescript", ts_version_from = None, ts_version = None, ts_integrity = None, bzlmod = False):
+def npm_dependencies(name = "npm_typescript", ts_version_from = None, ts_version = None, ts_integrity = None):
     if (ts_version and ts_version_from) or (not ts_version_from and not ts_version):
         fail("""Exactly one of 'ts_version' or 'ts_version_from' must be set.""")
 
     maybe(
         http_archive_version,
         name = name,
-        bzlmod = bzlmod,
         version = ts_version,
         version_from = ts_version_from,
         integrity = ts_integrity,
-        build_file = "@aspect_rules_ts//ts:BUILD.typescript",
-        build_file_substitutions = {
-            "bazel_worker_version": worker_versions.bazel_worker_version,
-            "google_protobuf_version": worker_versions.google_protobuf_version,
-        },
         urls = ["https://registry.npmjs.org/typescript/-/typescript-{}.tgz"],
     )
 

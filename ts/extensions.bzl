@@ -20,7 +20,6 @@ def _extension_impl(module_ctx):
                 ts_version = ts_version,
                 ts_version_from = attr.ts_version_from,
                 ts_integrity = attr.ts_integrity,
-                bzlmod = True,
             )
 
 ext = module_extension(
