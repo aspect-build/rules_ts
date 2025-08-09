@@ -1,0 +1,11 @@
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+
+build_test(
+    name = "module-tests",
+    targets = [
+        "@module_a//:content",
+        # TODO https://github.com/aspect-build/rules_ts/issues/843
+        # "@module_b//:consumer",
+        "@module_c//:module_a_content_tar",
+    ],
+)

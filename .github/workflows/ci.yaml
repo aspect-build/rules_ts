@@ -69,6 +69,7 @@ jobs:
                 folder:
                     - '.'
                     - 'e2e/smoke'
+                    - 'e2e/bzlmodules'
                     - 'e2e/external_dep'
                     - 'e2e/external_dep/app'
                     - 'e2e/worker'
@@ -101,6 +102,9 @@ jobs:
                     # Don't test root workspace with non-bzlmod
                     - bzlmod: 0
                       folder: .
+                    # bzlmod only tests
+                    - bzlmod: 0
+                      folder: e2e/bzlmodules
                     # TODO: e2e/smoke broken with bazel6
                     - bazel-version:
                           major: 6
