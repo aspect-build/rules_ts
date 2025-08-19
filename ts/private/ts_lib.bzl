@@ -96,6 +96,14 @@ https://docs.aspect.build/rulesets/aspect_rules_js/docs/js_library#deps for more
         mandatory = True,
         allow_single_file = [".json"],
     ),
+    "eslintconfig": attr.label(
+        doc = """.eslintrc file, or other filenames accepted by ESLint.
+        see https://eslint.org/docs/latest/use/configure/configuration-files
+        Note, this is unused in rules_ts, but exists to allow the information to propagate through the dependency graph.
+        For example, it can be used by the eslint aspect in Aspect's rules_lint.
+        """,
+        allow_single_file = True,
+    ),
     "isolated_typecheck": attr.bool(
         doc = """\
         Whether type-checking should be a separate action.
