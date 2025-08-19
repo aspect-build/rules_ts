@@ -2,7 +2,6 @@
 See https://bazel.build/docs/bzlmod#extension-definition
 """
 
-load("@aspect_tools_telemetry_report//:defs.bzl", "TELEMETRY")  # buildifier: disable=load
 load("//ts:repositories.bzl", "LATEST_TYPESCRIPT_VERSION")
 load("//ts/private:npm_repositories.bzl", "npm_dependencies")
 

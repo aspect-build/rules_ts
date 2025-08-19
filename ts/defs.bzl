@@ -5,6 +5,7 @@ inputs and produces JavaScript or declaration (.d.ts) outputs.
 """
 
 load("@aspect_bazel_lib//lib:utils.bzl", "to_label")
+load("@aspect_tools_telemetry_report//:defs.bzl", "TELEMETRY")  # buildifier: disable=load
 load("@bazel_skylib//lib:partial.bzl", "partial")
 load("//ts/private:build_test.bzl", "build_test")
 load("//ts/private:ts_config.bzl", "write_tsconfig", _TsConfigInfo = "TsConfigInfo", _ts_config = "ts_config")
