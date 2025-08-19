@@ -140,6 +140,7 @@ bzl_library(
         "//ts/private:ts_config",
         "//ts/private:ts_project",
         "@aspect_rules_js//js:defs",
+        "@aspect_tools_telemetry_report//:defs.bzl",
         "@bazel_skylib//lib:partial",
         "@bazel_skylib//rules:build_test",
     ] + (["@bazel_tools//tools/build_defs/repo:cache.bzl"] if bazel_lib_utils.is_bazel_7_or_greater() else []),
