@@ -2,7 +2,6 @@
 
 module(
     name = "aspect_rules_ts",
-    version = "0.0.0",
     compatibility_level = 1,
 )
 
