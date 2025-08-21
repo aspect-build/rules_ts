@@ -73,6 +73,9 @@ workspaces:
                   without: true
             - buildifier:
                   without: true
+bazel:
+  flags:
+    - --config=ci
 tasks:
     - test:
           name: 'Test (Bazel 6.x)'
