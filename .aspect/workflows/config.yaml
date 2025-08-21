@@ -82,6 +82,7 @@ tasks:
           id: bazel-6
           bazel:
               flags:
+                  - --config=ci
                   - --incompatible_merge_fixed_and_default_shell_env
           env:
               USE_BAZEL_VERSION: 6.x
@@ -100,6 +101,7 @@ tasks:
           use_args_file: false
     - configure:
           queue: aspect-medium
+          flags:
     - buildifier:
           queue: aspect-medium
     - finalization:
