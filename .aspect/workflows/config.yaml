@@ -73,16 +73,12 @@ workspaces:
                   without: true
             - buildifier:
                   without: true
-bazel:
-  flags:
-    - --config=ci
 tasks:
     - test:
           name: 'Test (Bazel 6.x)'
           id: bazel-6
           bazel:
               flags:
-                  - --config=ci
                   - --incompatible_merge_fixed_and_default_shell_env
           env:
               USE_BAZEL_VERSION: 6.x
@@ -101,7 +97,6 @@ tasks:
           use_args_file: false
     - configure:
           queue: aspect-medium
-          flags:
     - buildifier:
           queue: aspect-medium
     - finalization:
