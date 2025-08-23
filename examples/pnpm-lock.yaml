@@ -39,8 +39,8 @@ importers:
         specifier: 2.0.5
         version: 2.0.5
       '@types/node':
-        specifier: ^20
-        version: 20.16.2
+        specifier: ^20.19.11
+        version: 20.19.11
       date-fns:
         specifier: 2.29.3
         version: 2.29.3
@@ -86,8 +86,8 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1(@bufbuild/protoc-gen-es@2.2.4)
       '@types/node':
-        specifier: ^20
-        version: 20.16.2
+        specifier: ^20.19.11
+        version: 20.19.11
 
   lib_nocompile_linked: {}
 
@@ -118,8 +118,8 @@ importers:
         specifier: 1.0.0
         version: 1.0.0
       '@types/node':
-        specifier: ^20
-        version: 20.16.2
+        specifier: ^20.19.11
+        version: 20.19.11
 
   linked_pkg:
     dependencies:
@@ -134,8 +134,8 @@ importers:
         specifier: 1.0.0
         version: 1.0.0
       '@types/node':
-        specifier: ^20
-        version: 20.16.2
+        specifier: ^20.19.11
+        version: 20.19.11
 
   linked_tsconfig:
     dependencies:
@@ -149,8 +149,8 @@ importers:
         specifier: workspace:*
         version: link:../linked_tsconfig
       '@types/node':
-        specifier: ^20
-        version: 20.16.2
+        specifier: ^20.19.11
+        version: 20.19.11
 
   proto_grpc:
     dependencies:
@@ -1057,10 +1057,10 @@ packages:
     resolution: {integrity: sha512-ec4tjL2Rr0pkZ5hww65c+EEPYwxOi4Ryv+0MtjeaSQRJyq322Q27eOQiFbuNgw2hpL4hB1/W/HBGk3VKS43osg==}
     dev: false
 
-  /@types/node@20.16.2:
-    resolution: {integrity: sha512-91s/n4qUPV/wg8eE9KHYW1kouTfDk2FPGjXbBMfRWP/2vg1rCXNQL1OCabwGs0XSdukuK+MwCDXE30QpSeMUhQ==}
+  /@types/node@20.19.11:
+    resolution: {integrity: sha512-uug3FEEGv0r+jrecvUUpbY8lLisvIjg6AAic6a2bSP5OEOLeJsDSnvhCDov7ipFFMXS3orMpzlmi0ZcuGkBbow==}
     dependencies:
-      undici-types: 6.19.8
+      undici-types: 6.21.0
 
   /@typescript/vfs@1.6.0(typescript@5.4.5):
     resolution: {integrity: sha512-hvJUjNVeBMp77qPINuUvYXj4FyWeeMMKZkxEATEU3hqBAQ7qdTBCUFT7Sp0Zu0faeEtFf+ldXxMEDr/bk73ISg==}
@@ -1841,8 +1841,8 @@ packages:
     hasBin: true
     dev: false
 
-  /undici-types@6.19.8:
-    resolution: {integrity: sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw==}
+  /undici-types@6.21.0:
+    resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
 
   /update-browserslist-db@1.1.0(browserslist@4.23.2):
     resolution: {integrity: sha512-EdRAaAyk2cUE1wOf2DkEhzxqOQvFOoRJFNS6NeyJ01Gp2beMRpBAINjM2iDXE3KCuKhwnvHIQCJm6ThL2Z+HzQ==}

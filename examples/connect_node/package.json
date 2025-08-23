@@ -1,15 +1,15 @@
 {
     "dependencies": {
+        "@bufbuild/protobuf": "^2.2.4",
         "@connectrpc/connect": "^2.0.2",
         "@connectrpc/connect-fastify": "^2.0.2",
-        "@bufbuild/protobuf": "^2.2.4",
         "fastify": "^5.2.1"
     },
     "devDependencies": {
         "@bufbuild/buf": "^1.50.1",
         "@bufbuild/protoc-gen-es": "~2.2.4",
         "@connectrpc/protoc-gen-connect-query": "^2.0.1",
-        "@types/node": "^20"
+        "@types/node": "^20.19.11"
     },
     "type": "module",
     "scripts": {
