@@ -1,0 +1,7 @@
+filegroup(
+    name = "test_data",
+    srcs = [
+        "tsdata.json",
+    ],
+    visibility = ["//visibility:public"],
+)
