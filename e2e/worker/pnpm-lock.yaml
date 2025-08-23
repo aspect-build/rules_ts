@@ -18,8 +18,8 @@ importers:
         specifier: ^4.1.7
         version: 4.1.7
       '@types/node':
-        specifier: ^20
-        version: 20.16.5
+        specifier: ^20.17.58
+        version: 20.17.58
       debug:
         specifier: ^4.3.4
         version: 4.3.4
@@ -109,8 +109,8 @@ packages:
     resolution: {integrity: sha512-iiUgKzV9AuaEkZqkOLDIvlQiL6ltuZd9tGcW3gwpnX8JbuiuhFlEGmmFXEXkN50Cvq7Os88IY2v0dkDqXYWVgA==}
     dev: false
 
-  /@types/node@20.16.5:
-    resolution: {integrity: sha512-VwYCweNo3ERajwy0IUlqqcyZ8/A7Zwa9ZP3MnENWcB11AejO+tLy3pu850goUW2FC/IJMdZUfKpX/yxL1gymCA==}
+  /@types/node@20.17.58:
+    resolution: {integrity: sha512-UvxetCgGwZ9HmsgGZ2tpStt6CiFU1bu28ftHWpDyfthsCt7OHXas0C7j0VgO3gBq8UHKI785wXmtcQVhLekcRg==}
     dependencies:
       undici-types: 6.19.8
     dev: false
