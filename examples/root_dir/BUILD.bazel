@@ -25,6 +25,40 @@ assert_outputs(
     ],
 )
 
+# . should be a noop
+ts_project(
+    name = "dot",
+    out_dir = "dot",
+    root_dir = ".",
+    tsconfig = "tsconfig-dot.json",
+)
+
+assert_outputs(
+    name = "dot_test",
+    actual = "dot",
+    expected = [
+        "examples/root_dir/dot/subdir/a.js",
+        "examples/root_dir/dot/subdir/deep/subdir/b.js",
+    ],
+)
+
+# ./ should be a noop
+ts_project(
+    name = "dot-slash",
+    out_dir = "dot-slash",
+    root_dir = ".",
+    tsconfig = "tsconfig-dotslash.json",
+)
+
+assert_outputs(
+    name = "dot-slash_test",
+    actual = "dot-slash",
+    expected = [
+        "examples/root_dir/dot-slash/subdir/a.js",
+        "examples/root_dir/dot-slash/subdir/deep/subdir/b.js",
+    ],
+)
+
 # You can use the root_dir setting to strip a prefix
 ts_project(
     name = "strip",
