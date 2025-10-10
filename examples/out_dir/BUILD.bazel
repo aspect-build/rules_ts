@@ -32,6 +32,41 @@ ts_project(
 )
 
 ts_project(
+    name = "out_dir-tsconfig-foo",
+    srcs = ["main.ts"],
+    declaration = True,
+    declaration_map = True,
+    out_dir = "tsconfig-foo",
+    tsconfig = "tsconfig-outdir-foo.json",
+)
+
+ts_project(
+    name = "out_dir-tsconfig-foo-overriden-to-dot",
+    srcs = ["main2.ts"],
+    declaration = True,
+    declaration_map = True,
+    extends = "tsconfig-outdir-foo.json",
+    tsconfig = {
+        "compilerOptions": {
+            "outDir": ".",
+        },
+    },
+)
+
+ts_project(
+    name = "out_dir-tsconfig-foo-overriden-to-dotslash-bar",
+    srcs = ["main2.ts"],
+    declaration = True,
+    declaration_map = True,
+    extends = "tsconfig-outdir-foo.json",
+    tsconfig = {
+        "compilerOptions": {
+            "outDir": "./bar",
+        },
+    },
+)
+
+ts_project(
     name = "out_dir-declaration_dir",
     srcs = ["main.ts"],
     declaration = True,
@@ -44,13 +79,31 @@ ts_project(
 build_test(
     name = "test",
     targets = [
-        # outputs specified by the tsconfig attr
+        # outputs specified by the tsconfig attr dict
         ":out_dir-params-dot",
         "main.js",
         "main.d.ts",
         "main.d.ts.map",
 
-        # outputs specified by the tsconfig attr
+        # outputs specified by the tsconfig attr dict
+        ":out_dir-tsconfig-foo",
+        "tsconfig-foo/main.js",
+        "tsconfig-foo/main.d.ts",
+        "tsconfig-foo/main.d.ts.map",
+
+        # outputs specified by the tsconfig attr file but overriden to '.' by tsconfig attr dict
+        ":out_dir-tsconfig-foo-overriden-to-dot",
+        "main2.js",
+        "main2.d.ts",
+        "main2.d.ts.map",
+
+        # outputs specified by the tsconfig attr file but overriden to 'bar' by tsconfig attr dict
+        ":out_dir-tsconfig-foo-overriden-to-dotslash-bar",
+        "bar/main2.js",
+        "bar/main2.d.ts",
+        "bar/main2.d.ts.map",
+
+        # outputs specified by the tsconfig attr file
         ":out_dir-tsconfig",
         "tsconfig/main.js",
         "tsconfig/main.d.ts",
