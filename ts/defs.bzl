@@ -302,10 +302,14 @@ def ts_project(
         resolve_json_module = compiler_options.setdefault("resolveJsonModule", resolve_json_module)
 
         # These options are always passed on the tsc command line so don't include them
-        # in the tsconfig. At best they're redundant, but at worst we'll have a conflict
-        out_dir = compiler_options.pop("outDir", out_dir)
-        declaration_dir = compiler_options.pop("declarationDir", declaration_dir)
-        root_dir = compiler_options.pop("rootDir", root_dir)
+        # in the tsconfig if not already present. At best they're redundant, but at worst
+        # they will (minorly) differ from an extended config and we'll have a conflict.
+        #
+        # For example: an extended tsconfig contains `outDir:"foo"`, but within bazel we
+        # want to override to `outDir: "."`.
+        out_dir = compiler_options.get("outDir", out_dir)
+        declaration_dir = compiler_options.get("declarationDir", declaration_dir)
+        root_dir = compiler_options.get("rootDir", root_dir)
 
         # When generating a tsconfig.json and we set rootDir we need to add the exclude field,
         # because of these tickets (validation for not generated tsconfig is also present elsewhere):
