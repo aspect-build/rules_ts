@@ -105,7 +105,7 @@ function main(_a) {
     function check_out_dir() {
         var attr = 'out_dir'
         var optionVal = getTsOption('outDir')
-        var attrIsFalsyOrUndefined = attrs[attr] === false || attrs[attr] === '' || attrs[attr] === undefined
+        var attrIsFalsyOrUndefined = attrs[attr] === false || attrs[attr] === undefined
         if (attrIsFalsyOrUndefined && optionVal !== undefined) {
             throw new Error(
                 'When outDir is set in the tsconfig it must also be set in the ts_project' +
