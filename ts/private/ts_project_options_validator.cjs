@@ -106,10 +106,12 @@ function main(_a) {
         var attr = 'out_dir'
         var optionVal = getTsOption('outDir')
         var attrIsFalsyOrUndefined = attrs[attr] === false || attrs[attr] === '' || attrs[attr] === undefined
-        if (attrIsFalsyOrUndefined && optionVal !== undefined) {
+        if (attrIsFalsyOrUndefined && optionVal !== undefined && optionVal != attrs[attr]) {
             throw new Error(
                 'When outDir is set in the tsconfig it must also be set in the ts_project' +
-                ' rule, so that the output directory is known to Bazel.'
+                ' rule, so that the output directory is known to Bazel.\n\n' +
+                'tsconfig:   ' + JSON.stringify(optionVal) + '\n' +
+                'ts_project: ' + JSON.stringify(attrs[attr])
             )
         }
     }
