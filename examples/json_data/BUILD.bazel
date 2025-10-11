@@ -15,6 +15,7 @@ ts_project(
         "src/tsdata.json",
         "src/tsdata.txt",
         ":fg",
+        "//examples/json_data/src/test_data",
     ],
     tsconfig = {
         "compilerOptions": {
