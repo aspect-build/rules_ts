@@ -41,10 +41,10 @@ Future work
 - Allow users to control the output format. Currently it is hard-coded to `js+dts`, and the JS output uses ES Modules.
 """
 
-load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
-load("@aspect_bazel_lib//lib:directory_path.bzl", "directory_path", "make_directory_path")
-load("@aspect_bazel_lib//lib:write_source_files.bzl", "write_source_files")
 load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library")
+load("@bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
+load("@bazel_lib//lib:directory_path.bzl", "directory_path", "make_directory_path")
+load("@bazel_lib//lib:write_source_files.bzl", "write_source_files")
 load("//ts/private:ts_proto_library.bzl", ts_proto_library_rule = "ts_proto_library")
 
 def ts_proto_library(name, node_modules, proto, protoc_gen_options = {}, gen_connect_es = False, gen_connect_query = False, gen_connect_query_service_mapping = {}, copy_files = True, proto_srcs = None, files_to_copy = None, **kwargs):

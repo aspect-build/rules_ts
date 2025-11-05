@@ -51,10 +51,10 @@ echo "\`\`\`"
 
 cat <<EOF
 
-To use rules_ts with bazel-lib 2.x, you must additionally register the coreutils toolchain.
+To use rules_ts with bazel-lib 2.x or greater, you must additionally register the coreutils toolchain.
 
 \`\`\`starlark
-load("@aspect_bazel_lib//lib:repositories.bzl", "register_coreutils_toolchains")
+load("@bazel_lib//lib:repositories.bzl", "register_coreutils_toolchains")
 
 register_coreutils_toolchains()
 \`\`\`

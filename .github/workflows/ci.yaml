@@ -122,14 +122,6 @@ jobs:
                       folder: .
                     - os: windows
                       folder: e2e/worker
-                include:
-                    # Additional docs tests
-                    - bazel-version:
-                          major: 7
-                          version: 7.3.2
-                      bzlmod: 1
-                      folder: docs
-                      os: ubuntu
 
         # Steps represent a sequence of tasks that will be executed as part of the job
         steps:

@@ -1,4 +1,3 @@
-docs/*.md
 **/pnpm-lock.yaml
 **/*_pb.d.ts
 **/*_connectquery.d.ts

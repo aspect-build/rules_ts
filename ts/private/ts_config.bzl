@@ -14,10 +14,10 @@
 
 "tsconfig.json files using extends"
 
-load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "COPY_FILE_TO_BIN_TOOLCHAINS", "copy_file_to_bin_action", "copy_files_to_bin_actions")
-load("@aspect_bazel_lib//lib:paths.bzl", "relative_file")
 load("@aspect_rules_js//js:libs.bzl", "js_lib_helpers")
 load("@aspect_rules_js//js:providers.bzl", "js_info")
+load("@bazel_lib//lib:copy_to_bin.bzl", "COPY_FILE_TO_BIN_TOOLCHAINS", "copy_file_to_bin_action", "copy_files_to_bin_actions")
+load("@bazel_lib//lib:paths.bzl", "relative_file")
 load(":ts_lib.bzl", _lib = "lib")
 
 TsConfigInfo = provider(
