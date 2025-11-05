@@ -34,11 +34,11 @@ If you'd like an example added, you can fund a [Feature Request](https://github.
 
 ## Usage
 
-See the API documentation in [the docs/ folder](https://github.com/aspect-build/rules_ts/tree/main/docs).
+See the API documentation at https://registry.bazel.build/docs/aspect_rules_ts.
 
 ### From a BUILD file
 
-The most common use is with the [`ts_project` macro](./docs/rules.md#ts_project) which invokes a
+The most common use is with the `ts_project` macro which invokes a
 transpiler you configure to transform source files like `.ts` files into outputs such as `.js` and `.js.map`,
 and the [`tsc` CLI](https://www.typescriptlang.org/docs/handbook/compiler-options.html) to type-check
 the program and produce `.d.ts` files.

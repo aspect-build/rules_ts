@@ -23,10 +23,10 @@ bzl_library(
     visibility = ["//ts:__subpackages__"],
     deps = [
         ":ts_lib",
-        "@aspect_bazel_lib//lib:copy_to_bin",
-        "@aspect_bazel_lib//lib:paths",
         "@aspect_rules_js//js:libs",
         "@aspect_rules_js//js:providers",
+        "@bazel_lib//lib:copy_to_bin",
+        "@bazel_lib//lib:paths",
     ],
 )
 
@@ -49,14 +49,14 @@ bzl_library(
         ":ts_config",
         ":ts_lib",
         ":ts_validate_options",
-        "@aspect_bazel_lib//lib:copy_file",
-        "@aspect_bazel_lib//lib:copy_to_bin",
-        "@aspect_bazel_lib//lib:paths",
-        "@aspect_bazel_lib//lib:platform_utils",
-        "@aspect_bazel_lib//lib:resource_sets",
         "@aspect_rules_js//js:libs",
         "@aspect_rules_js//js:providers",
         "@aspect_rules_js//npm:providers",
+        "@bazel_lib//lib:copy_file",
+        "@bazel_lib//lib:copy_to_bin",
+        "@bazel_lib//lib:paths",
+        "@bazel_lib//lib:platform_utils",
+        "@bazel_lib//lib:resource_sets",
         "@bazel_skylib//lib:dicts",
     ],
 )
@@ -68,9 +68,9 @@ bzl_library(
     deps = [
         ":ts_config",
         ":ts_lib",
-        "@aspect_bazel_lib//lib:copy_to_bin",
-        "@aspect_bazel_lib//lib:paths",
         "@aspect_rules_js//js:providers",
+        "@bazel_lib//lib:copy_to_bin",
+        "@bazel_lib//lib:paths",
     ],
 )
 

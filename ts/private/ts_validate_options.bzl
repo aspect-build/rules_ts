@@ -1,6 +1,6 @@
 "Helper rule to check that ts_project attributes match tsconfig.json properties"
 
-load("@aspect_bazel_lib//lib:paths.bzl", "to_output_relative_path")
+load("@bazel_lib//lib:paths.bzl", "to_output_relative_path")
 
 def _validate_action(ctx, tsconfig, tsconfig_deps):
     """Create an action to validate the ts_project attributes against the tsconfig.json properties.

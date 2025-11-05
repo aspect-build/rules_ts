@@ -92,6 +92,9 @@ tasks:
           id: bazel-8
           env:
               USE_BAZEL_VERSION: 8.x
+          bazel:
+              flags:
+                  - --incompatible_disable_native_repo_rules
     - format:
           queue: aspect-medium
           use_args_file: false
