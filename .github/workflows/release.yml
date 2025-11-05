@@ -4,24 +4,34 @@
 name: Release
 
 on:
-    push:
-        tags:
-            - 'v*.*.*'
+  # Can be triggered from the tag.yaml workflow
+  workflow_call:
+    inputs:
+      tag_name:
+        required: true
+        type: string
+    secrets:
+      BCR_PUBLISH_TOKEN:
+        required: true
+  # Or, developers can manually push a tag from their clone
+  push:
+    tags:
+      - "v*.*.*"
 permissions:
     id-token: write
     attestations: write
     contents: write
 jobs:
     release:
-        uses: bazel-contrib/.github/.github/workflows/release_ruleset.yaml@v7.2.2
+        uses: bazel-contrib/.github/.github/workflows/release_ruleset.yaml@v7.2.3
         with:
             release_files: rules_ts-*.tar.gz
             prerelease: false
-            tag_name: ${{ github.ref_name }}
+            tag_name: ${{ inputs.tag_name || github.ref_name }}
     publish:
         needs: release
         uses: ./.github/workflows/publish.yaml
         with:
-            tag_name: ${{ github.ref_name }}
+            tag_name: ${{ inputs.tag_name || github.ref_name }}
         secrets:
             publish_token: ${{ secrets.BCR_PUBLISH_TOKEN }}
