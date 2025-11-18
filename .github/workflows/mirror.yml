@@ -17,4 +17,4 @@ jobs:
             - name: Create Pull Request
               uses: peter-evans/create-pull-request@v5
               with:
-                  commit-message: 'chore: mirror external releases'
+                  commit-message: 'fix: add latest ts external release hashes'
