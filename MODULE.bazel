@@ -22,6 +22,20 @@ bazel_dep(name = "rules_proto", version = "6.0.0")
 tel = use_extension("@aspect_tools_telemetry//:extension.bzl", "telemetry")
 use_repo(tel, "aspect_tools_telemetry_report")
 
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+    name = "tsgo-darwin-arm64",
+    build_file_content = """\
+load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
+native_binary(name = "tsgo", src = "lib/tsgo", data = glob(["lib/*.d.ts"]), visibility = ["//visibility:public"])""",
+    integrity = "sha512-O7Hhb9m8AZJCAUSBbGmZs7Vm890Kh5Z3xAAASs+L4thtPM0oRckeaoXLvHeE9Qy1p8qG//EmZ3+uSdtUTV4wqg==",
+    strip_prefix = "package",
+    urls = [
+        "https://registry.npmjs.org/@typescript/native-preview-darwin-arm64/-/native-preview-darwin-arm64-7.0.0-dev.20251117.1.tgz",
+    ],
+)
+
 ####### Dev dependencies ########
 
 bazel_dep(name = "aspect_rules_lint", version = "1.2.1", dev_dependency = True)
@@ -48,20 +62,20 @@ rules_ts_ext.deps(ts_version_from = "//examples:package.json")
 use_repo(rules_ts_ext, "npm_typescript")
 
 go_sdk = use_extension("@io_bazel_rules_go//go:extensions.bzl", "go_sdk", dev_dependency = True)
-go_sdk.download(version = "1.24.1")
+go_sdk.download(version = "1.25.4")
 use_repo(
     go_sdk,
     go_sdk = "go_default_sdk",
 )
 
-bazel_dep(name = "gazelle", version = "0.42.0")
+bazel_dep(name = "gazelle", version = "0.47.0")
 bazel_dep(name = "rules_license", version = "1.0.0")
 
 go_repository = use_repo_rule("@gazelle//:deps.bzl", "go_repository")
 
 go_repository(
     name = "com_github_go_json_experiment_json",
-    commit = "d3c622f1b874",
+    commit = "cc2cfa0554c3",
     importpath = "github.com/go-json-experiment/json",
 )
 
@@ -72,7 +86,61 @@ go_repository(
 )
 
 go_repository(
+    name = "com_github_google_go_cmp",
+    commit = "v0.7.0",
+    importpath = "github.com/google/go-cmp",
+)
+
+go_repository(
+    name = "com_github_peter_evans_patience",
+    commit = "v0.3.0",
+    importpath = "github.com/peter-evans/patience",
+)
+
+go_repository(
+    name = "com_github_zeebo_xxh3",
+    commit = "v1.0.2",
+    importpath = "github.com/zeebo/xxh3",
+)
+
+go_repository(
+    name = "org_golang_x_tools",
+    commit = "v0.36.0",
+    importpath = "golang.org/x/tools",
+)
+
+go_repository(
+    name = "org_golang_x_mod",
+    commit = "v0.27.0",
+    importpath = "golang.org/x/mod",
+)
+
+go_repository(
+    name = "org_golang_x_text",
+    commit = "v0.29.0",
+    importpath = "golang.org/x/text",
+)
+
+go_repository(
+    name = "org_golang_x_sync",
+    commit = "v0.17.0",
+    importpath = "golang.org/x/sync",
+)
+
+go_repository(
+    name = "org_golang_x_sys",
+    commit = "v0.36.0",
+    importpath = "golang.org/x/sys",
+)
+
+go_repository(
+    name = "org_golang_x_term",
+    commit = "v0.35.0",
+    importpath = "golang.org/x/term",
+)
+
+go_repository(
     name = "typescript_go",
-    commit = "5a6d4ee7c645d81897e85be0613ba71460edd6dd",
+    commit = "2f16c3cad0d995a4ba593ae68cade9653f486282",
     importpath = "github.com/microsoft/typescript-go",
 )
