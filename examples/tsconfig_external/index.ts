@@ -1,6 +1,2 @@
-
-
 // @ts-expect-error
-function name(params: number) {
-    
-}
+function name(params: number) {}

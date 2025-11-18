@@ -3,11 +3,11 @@
 require('source-map-support/register')
 
 let basePath = process.env.RUNFILES
-  ? `${process.env.RUNFILES}/${process.env.JS_BINARY__WORKSPACE}`
-  : process.cwd()
+    ? `${process.env.RUNFILES}/${process.env.JS_BINARY__WORKSPACE}`
+    : process.cwd()
 
 if (!basePath.endsWith('/')) {
-  basePath = basePath + '/'
+    basePath = basePath + '/'
 }
 
 /*
@@ -25,18 +25,18 @@ After:
 */
 
 const basePathRegex = new RegExp(
-  `(at | \\()${basePath
-    .replace(/\\/g, '/')
-    // Escape regex meta-characters.
-    .replace(/[|\\{}()[\]^$+*?.]/g, '\\$&')
-    .replace(/-/g, '\\x2d')}`,
-  'g',
+    `(at | \\()${basePath
+        .replace(/\\/g, '/')
+        // Escape regex meta-characters.
+        .replace(/[|\\{}()[\]^$+*?.]/g, '\\$&')
+        .replace(/-/g, '\\x2d')}`,
+    'g'
 )
 
 const prepareStackTrace = Error.prepareStackTrace
 Error.prepareStackTrace = function (error, stack) {
-  return prepareStackTrace(error, stack)
-    .split('\n')
-    .map((line) => line.replace(basePathRegex, '$1'))
-    .join('\n')
+    return prepareStackTrace(error, stack)
+        .split('\n')
+        .map((line) => line.replace(basePathRegex, '$1'))
+        .join('\n')
 }

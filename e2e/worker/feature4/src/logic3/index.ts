@@ -1,5 +1,5 @@
-import {little_helpless_helper} from "../../helper"
+import { little_helpless_helper } from '../../helper'
 
-little_helpless_helper();
+little_helpless_helper()
 
-export const name = "feature4/logic3"
+export const name = 'feature4/logic3'

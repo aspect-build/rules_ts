@@ -1,4 +1,4 @@
-import {a} from "./a";
-import {b} from "./b";
+import { a } from './a'
+import { b } from './b'
 
-export const c = a + b;
+export const c = a + b

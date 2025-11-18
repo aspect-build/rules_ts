@@ -1,1 +1,1 @@
-export const name = "feature/sub";
+export const name = 'feature/sub'

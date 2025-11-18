@@ -1,3 +1,3 @@
-import { ANSWER } from './lib';
+import { ANSWER } from './lib'
 
-console.log('TEST: ', ANSWER === 42);
+console.log('TEST: ', ANSWER === 42)

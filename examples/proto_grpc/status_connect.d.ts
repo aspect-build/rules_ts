@@ -4,4 +4,3 @@
 // @generated from file examples/proto_grpc/status.proto (package rpc, syntax proto3)
 /* eslint-disable */
 // @ts-nocheck
-

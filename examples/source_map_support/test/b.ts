@@ -1,3 +1,3 @@
 module.exports = function foo() {
-  throw new Error('test')
+    throw new Error('test')
 }

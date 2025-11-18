@@ -1,8 +1,8 @@
 {
     "compilerOptions": {
-      "allowJs": true,
-      "sourceMap": true,
-      "declaration": true,
-      "declarationMap": true
+        "allowJs": true,
+        "sourceMap": true,
+        "declaration": true,
+        "declarationMap": true
     }
 }
