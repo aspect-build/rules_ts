@@ -58,7 +58,7 @@ jobs:
         needs:
             - matrix-prep
         env:
-            - USE_BAZEL_VERSION: ${{matrix.bazel-version.version}}
+            USE_BAZEL_VERSION: ${{matrix.bazel-version.version}}
         defaults:
             run:
                 working-directory: ${{ matrix.folder }}
@@ -175,7 +175,7 @@ jobs:
         needs:
             - matrix-prep
         env:
-            - USE_BAZEL_VERSION: ${{matrix.bazel-version.version}}
+            USE_BAZEL_VERSION: ${{matrix.bazel-version.version}}
 
         strategy:
             fail-fast: false
