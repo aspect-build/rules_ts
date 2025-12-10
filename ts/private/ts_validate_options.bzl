@@ -45,6 +45,9 @@ Assumes all tsconfig file deps are already copied to the bin directory.
         env = {
             "BAZEL_BINDIR": ctx.bin_dir.path,
         },
+        execution_requirements = {
+            "supports-path-mapping": "1",
+        },
         use_default_shell_env = True,
     )
 
