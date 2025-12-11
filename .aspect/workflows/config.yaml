@@ -13,8 +13,6 @@ workspaces:
                   queue: aspect-medium
             - format:
                   without: true
-            - configure:
-                  without: true
             - buildifier:
                   without: true
     e2e/bzlmodules:
@@ -26,8 +24,6 @@ workspaces:
             - bazel-8:
                   queue: aspect-medium
             - format:
-                  without: true
-            - configure:
                   without: true
             - buildifier:
                   without: true
@@ -41,8 +37,6 @@ workspaces:
                   queue: aspect-medium
             - format:
                   without: true
-            - configure:
-                  without: true
             - buildifier:
                   without: true
     e2e/worker:
@@ -54,8 +48,6 @@ workspaces:
             - bazel-8:
                   queue: aspect-medium
             - format:
-                  without: true
-            - configure:
                   without: true
             - buildifier:
                   without: true
@@ -69,8 +61,6 @@ workspaces:
                   queue: aspect-medium
             - format:
                   without: true
-            - configure:
-                  without: true
             - buildifier:
                   without: true
 tasks:
@@ -80,6 +70,7 @@ tasks:
           bazel:
               flags:
                   - --incompatible_merge_fixed_and_default_shell_env
+                  - --test_tag_filters=-skip-on-bazel6
           env:
               USE_BAZEL_VERSION: 6.x
     - test:
@@ -87,16 +78,18 @@ tasks:
           id: bazel-7
           env:
               USE_BAZEL_VERSION: 7.x
+          bazel:
+              flags: ['--test_tag_filters=-skip-on-bazel7']
     - test:
           name: 'Test (Bazel 8.x)'
           id: bazel-8
           env:
               USE_BAZEL_VERSION: 8.x
+          bazel:
+              flags: ['--test_tag_filters=-skip-on-bazel8']
     - format:
           queue: aspect-medium
           use_args_file: false
-    - configure:
-          queue: aspect-medium
     - buildifier:
           queue: aspect-medium
     - finalization:
