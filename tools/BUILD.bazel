@@ -22,5 +22,8 @@ format_multirun(
 bazelrc_preset(
     name = "preset",
     # The output is specific to the version in .bazelversion
-    tags = ["skip-on-bazel8"],
+    tags = [
+        "skip-on-bazel6",
+        "skip-on-bazel8",
+    ],
 )
