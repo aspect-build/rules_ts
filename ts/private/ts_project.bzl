@@ -123,7 +123,9 @@ def _ts_project_impl(ctx):
 
     typecheck_outs = []
 
-    execution_requirements = {}
+    execution_requirements = {
+        "supports-path-mapping": "1",
+    }
     executable = ctx.executable.tsc
 
     supports_workers = options.supports_workers
