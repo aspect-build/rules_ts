@@ -13,8 +13,6 @@ workspaces:
                   queue: aspect-medium
             - format:
                   without: true
-            - configure:
-                  without: true
             - buildifier:
                   without: true
     e2e/bzlmodules:
@@ -26,8 +24,6 @@ workspaces:
             - bazel-8:
                   queue: aspect-medium
             - format:
-                  without: true
-            - configure:
                   without: true
             - buildifier:
                   without: true
@@ -41,8 +37,6 @@ workspaces:
                   queue: aspect-medium
             - format:
                   without: true
-            - configure:
-                  without: true
             - buildifier:
                   without: true
     e2e/worker:
@@ -55,8 +49,6 @@ workspaces:
                   queue: aspect-medium
             - format:
                   without: true
-            - configure:
-                  without: true
             - buildifier:
                   without: true
     e2e/test:
@@ -68,8 +60,6 @@ workspaces:
             - bazel-8:
                   queue: aspect-medium
             - format:
-                  without: true
-            - configure:
                   without: true
             - buildifier:
                   without: true
@@ -95,8 +85,6 @@ tasks:
     - format:
           queue: aspect-medium
           use_args_file: false
-    - configure:
-          queue: aspect-medium
     - buildifier:
           queue: aspect-medium
     - finalization:
