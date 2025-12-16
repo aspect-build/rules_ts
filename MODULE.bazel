@@ -37,6 +37,14 @@ npm.npm_translate_lock(
     pnpm_lock = "//examples:pnpm-lock.yaml",
     verify_node_modules_ignored = "//:.bazelignore",
 )
+npm.npm_import(
+    name = "npm__prettier__3.6.2",
+    integrity = "sha512-I7AIg5boAr5R0FFtJ6rCfD+LFsWHp81dolrFD8S79U9tb8Az2nGrJncnMSnys+bpQJfRUzqs9hnA81OAA3hCuQ==",
+    package = "prettier",
+    version = "3.6.2",
+)
+use_repo(npm, "npm__prettier__3.6.2")
+use_repo(npm, "npm__prettier__3.6.2__links")
 use_repo(npm, "npm")
 
 # Allow us to do 'bazel run @pnpm -- --dir=$PWD install'

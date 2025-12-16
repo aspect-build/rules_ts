@@ -105,33 +105,49 @@ function main(_a) {
     function check_out_dir() {
         var attr = 'out_dir'
         var optionVal = getTsOption('outDir')
-        var attrIsFalsyOrUndefined = attrs[attr] === false || attrs[attr] === '' || attrs[attr] === undefined
-        if (attrIsFalsyOrUndefined && optionVal !== undefined && optionVal != attrs[attr]) {
+        var attrIsFalsyOrUndefined =
+            attrs[attr] === false ||
+            attrs[attr] === '' ||
+            attrs[attr] === undefined
+        if (
+            attrIsFalsyOrUndefined &&
+            optionVal !== undefined &&
+            optionVal != attrs[attr]
+        ) {
             throw new Error(
                 'When outDir is set in the tsconfig it must also be set in the ts_project' +
-                ' rule, so that the output directory is known to Bazel.\n\n' +
-                'tsconfig:   ' + JSON.stringify(optionVal) + '\n' +
-                'ts_project: ' + JSON.stringify(attrs[attr])
+                    ' rule, so that the output directory is known to Bazel.\n\n' +
+                    'tsconfig:   ' +
+                    JSON.stringify(optionVal) +
+                    '\n' +
+                    'ts_project: ' +
+                    JSON.stringify(attrs[attr])
             )
         }
     }
     function checkRootDirExclude() {
-        var rootDirAttrValue = attrs["root_dir"];
-        var outDirAttrValue = attrs["out_dir"];
-        var excludeOptionValue = config["exclude"];
+        var rootDirAttrValue = attrs['root_dir']
+        var outDirAttrValue = attrs['out_dir']
+        var excludeOptionValue = config['exclude']
 
-        let rootDirNotEmpty = rootDirAttrValue !== undefined && rootDirAttrValue !== "";
-        let outDirEmpty = outDirAttrValue === undefined || outDirAttrValue === "";
+        let rootDirNotEmpty =
+            rootDirAttrValue !== undefined && rootDirAttrValue !== ''
+        let outDirEmpty =
+            outDirAttrValue === undefined || outDirAttrValue === ''
 
-        if (rootDirNotEmpty && outDirEmpty && excludeOptionValue === undefined) {
+        if (
+            rootDirNotEmpty &&
+            outDirEmpty &&
+            excludeOptionValue === undefined
+        ) {
             throw new Error(
                 '\n\nWhen root dir is set, exclude must also be set to empty array in the tsconfig file.\n\n' +
-                'For example, tsconfig.json:\n' +
-                '{\n' +
-                '   "exclude": []\n' +
-                '}\n\n' +
-                'See tickets: https://github.com/microsoft/TypeScript/issues/59036 and ' +
-                'https://github.com/aspect-build/rules_ts/issues/644\n'
+                    'For example, tsconfig.json:\n' +
+                    '{\n' +
+                    '   "exclude": []\n' +
+                    '}\n\n' +
+                    'See tickets: https://github.com/microsoft/TypeScript/issues/59036 and ' +
+                    'https://github.com/aspect-build/rules_ts/issues/644\n'
             )
         }
     }
