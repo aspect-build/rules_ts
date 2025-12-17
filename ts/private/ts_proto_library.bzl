@@ -129,39 +129,16 @@ def _protoc_action(ctx, proto_info, outputs):
         use_default_shell_env = True,
     )
 
-# Vendored: https://github.com/protocolbuffers/protobuf/blob/v31.1/bazel/common/proto_common.bzl#L297C1-L335C19
-# and modified to avoid _virtual_imports paths.
-def _declare_generated_files(
-        actions,
-        proto_info,
-        extension,
-        name_mapper = None):
-    proto_sources = proto_info.direct_sources
-    outputs = []
-
-    for src in proto_sources:
-        basename_no_ext = src.basename[:-(len(src.extension) + 1)]
-
-        if name_mapper:
-            basename_no_ext = name_mapper(basename_no_ext)
-
-        # Note that two proto_library rules can have the same source file, so this is actually a
-        # shared action. NB: This can probably result in action conflicts if the proto_library rules
-        # are not the same.
-        outputs.append(actions.declare_file(
-            basename_no_ext + extension,
-            # LOCAL MOD
-            # sibling = src
-        ))
-
-    return outputs
-
 def _declare_outs(ctx, info, ext):
-    outs = _declare_generated_files(ctx.actions, info, "_pb" + ext)
+    proto_sources = info.direct_sources
+    _declare_generated_files = lambda suffix: [
+        ctx.actions.declare_file(src.basename[:-(len(src.extension) + 1)] + extension)
+        for src in proto_sources
+    ]
+    outs = _declare_generated_files("_pb" + ext)
     if ctx.attr.gen_connect_es:
-        outs.extend(_declare_generated_files(ctx.actions, info, "_connect" + ext))
+        outs.extend(_declare_generated_files("_connect" + ext))
     if ctx.attr.gen_connect_query:
-        proto_sources = info.direct_sources
         proto_source_map = {src.basename: src for src in proto_sources}
 
         # FIXME: we should refer to source files via labels instead of filenames

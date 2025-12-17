@@ -16,6 +16,7 @@ proto_library(
     visibility = ["//visibility:public"],
     deps = [
         "//examples/connect_node/proto:eliza_proto",
+        "//examples/proto_grpc/stripping:s_proto",
         "@com_google_protobuf//:any_proto",
         "@com_google_protobuf//:timestamp_proto",
     ],
