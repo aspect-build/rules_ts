@@ -135,6 +135,7 @@ def ts_proto_library(name, node_modules, proto, protoc_gen_options = {}, gen_con
         gen_connect_query_service_mapping = gen_connect_query_service_mapping,
         proto = proto,
         protoc_gen_options = protoc_gen_options,
+        proto_srcs = proto_srcs,
     )
 
     js_library(

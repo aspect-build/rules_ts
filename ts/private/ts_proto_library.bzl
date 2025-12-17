@@ -2,7 +2,7 @@
 
 load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "COPY_FILE_TO_BIN_TOOLCHAINS")
 load("@aspect_bazel_lib//lib:platform_utils.bzl", "platform_utils")
-load("@rules_proto//proto:defs.bzl", "ProtoInfo", "proto_common")
+load("@rules_proto//proto:defs.bzl", "ProtoInfo")
 load("@rules_proto//proto:proto_common.bzl", proto_toolchains = "toolchains")
 
 _PROTO_TOOLCHAIN_TYPE = "@rules_proto//proto:toolchain_type"
@@ -60,14 +60,7 @@ def _protoc_action(ctx, proto_info, outputs):
       '--descriptor_set_in=bazel-out/k8-fastbuild/bin/external/com_google_protobuf/timestamp_proto-descriptor-set.proto.bin:bazel-out/k8-fastbuild/bin/example/thing/thing_proto-descriptor-set.proto.bin:bazel-out/k8-fastbuild/bin/example/place/place_proto-descriptor-set.proto.bin:bazel-out/k8-fastbuild/bin/example/person/person_proto-descriptor-set.proto.bin' \
       example/person/person.proto
     """
-    inputs = depset(proto_info.direct_sources, transitive = [proto_info.transitive_descriptor_sets])
-
-    # ensure that bin_dir doesn't get duplicated in the path
-    # e.g. by proto_library(strip_import_prefix=...)
-    proto_root = proto_info.proto_source_root
-    if proto_root.startswith(ctx.bin_dir.path):
-        proto_root = proto_root[len(ctx.bin_dir.path) + 1:]
-    plugin_output = ctx.bin_dir.path + "/" + proto_root
+    inputs = depset(ctx.files.proto_srcs or proto_info.direct_sources, transitive = [proto_info.transitive_descriptor_sets])
 
     options = dict({
         "keep_empty_files": True,
@@ -83,19 +76,19 @@ def _protoc_action(ctx, proto_info, outputs):
     args.add_joined(["--plugin", "protoc-gen-es", _windows_path_normalize(ctx.executable.protoc_gen_es.path)], join_with = "=")
     for (key, value) in options.items():
         args.add_joined(["--es_opt", key, value], join_with = "=")
-    args.add_joined(["--es_out", plugin_output], join_with = "=")
+    args.add_joined(["--es_out", ctx.bin_dir.path], join_with = "=")
 
     if ctx.attr.gen_connect_es:
         args.add_joined(["--plugin", "protoc-gen-connect-es", _windows_path_normalize(ctx.executable.protoc_gen_connect_es.path)], join_with = "=")
         for (key, value) in options.items():
             args.add_joined(["--connect-es_opt", key, value], join_with = "=")
-        args.add_joined(["--connect-es_out", plugin_output], join_with = "=")
+        args.add_joined(["--connect-es_out", ctx.bin_dir.path], join_with = "=")
 
     if ctx.attr.gen_connect_query:
         args.add_joined(["--plugin", "protoc-gen-connect-query", _windows_path_normalize(ctx.executable.protoc_gen_connect_query.path)], join_with = "=")
         for (key, value) in options.items():
             args.add_joined(["--connect-query_opt", key, value], join_with = "=")
-        args.add_joined(["--connect-query_out", plugin_output], join_with = "=")
+        args.add_joined(["--connect-query_out", ctx.bin_dir.path], join_with = "=")
 
     args.add("--descriptor_set_in")
     args.add_joined(proto_info.transitive_descriptor_sets, join_with = ctx.configuration.host_path_separator)
@@ -114,7 +107,10 @@ def _protoc_action(ctx, proto_info, outputs):
     args.add_all(proto_info.transitive_proto_path, map_each = _import_main_output_proto_path)
     args.add("-I.")  # Needs to come last
 
-    args.add_all(proto_info.direct_sources)
+    if ctx.attr.proto_srcs:
+        args.add_all(ctx.files.proto_srcs)
+    else:
+        args.add_all(proto_info.direct_sources)
 
     proto_toolchain_enabled = len(proto_toolchains.use_toolchain(_PROTO_TOOLCHAIN_TYPE)) > 0
     ctx.actions.run(
@@ -133,10 +129,37 @@ def _protoc_action(ctx, proto_info, outputs):
         use_default_shell_env = True,
     )
 
+# Vendored: https://github.com/protocolbuffers/protobuf/blob/v31.1/bazel/common/proto_common.bzl#L297C1-L335C19
+# and modified to avoid _virtual_imports paths.
+def _declare_generated_files(
+        actions,
+        proto_info,
+        extension,
+        name_mapper = None):
+    proto_sources = proto_info.direct_sources
+    outputs = []
+
+    for src in proto_sources:
+        basename_no_ext = src.basename[:-(len(src.extension) + 1)]
+
+        if name_mapper:
+            basename_no_ext = name_mapper(basename_no_ext)
+
+        # Note that two proto_library rules can have the same source file, so this is actually a
+        # shared action. NB: This can probably result in action conflicts if the proto_library rules
+        # are not the same.
+        outputs.append(actions.declare_file(
+            basename_no_ext + extension,
+            # LOCAL MOD
+            # sibling = src
+        ))
+
+    return outputs
+
 def _declare_outs(ctx, info, ext):
-    outs = proto_common.declare_generated_files(ctx.actions, info, "_pb" + ext)
+    outs = _declare_generated_files(ctx.actions, info, "_pb" + ext)
     if ctx.attr.gen_connect_es:
-        outs.extend(proto_common.declare_generated_files(ctx.actions, info, "_connect" + ext))
+        outs.extend(_declare_generated_files(ctx.actions, info, "_connect" + ext))
     if ctx.attr.gen_connect_query:
         proto_sources = info.direct_sources
         proto_source_map = {src.basename: src for src in proto_sources}
@@ -145,10 +168,14 @@ def _declare_outs(ctx, info, ext):
         for proto, services in ctx.attr.gen_connect_query_service_mapping.items():
             if not proto in proto_source_map:
                 fail("{} is not provided by proto_srcs".format(proto))
-            src = proto_source_map.get(proto)
+
+            # src = proto_source_map.get(proto)
             prefix = proto.replace(".proto", "")
             for service in services:
-                outs.append(ctx.actions.declare_file("{}-{}_connectquery{}".format(prefix, service, ext), sibling = src))
+                outs.append(ctx.actions.declare_file(
+                    "{}-{}_connectquery{}".format(prefix, service, ext),
+                    # sibling = src
+                ))
 
     return outs
 
@@ -168,6 +195,10 @@ def _ts_proto_library_impl(ctx):
 ts_proto_library = rule(
     implementation = _ts_proto_library_impl,
     attrs = dict({
+        "proto_srcs": attr.label_list(
+            doc = "proto source files to generate JS/DTS for",
+            allow_files = [".proto"],
+        ),
         "gen_connect_es": attr.bool(
             doc = """whether to generate service stubs with gen-connect-es
             Deprecated: no longer needed, see https://github.com/connectrpc/connect-es/blob/main/MIGRATING.md""",
