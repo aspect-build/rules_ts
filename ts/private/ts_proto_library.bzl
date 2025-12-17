@@ -135,6 +135,7 @@ def _protoc_action(ctx, proto_info, outputs):
 
 def _declare_outs(ctx, info, ext):
     outs = proto_common.declare_generated_files(ctx.actions, info, "_pb" + ext)
+    print(outs)
     if ctx.attr.gen_connect_es:
         outs.extend(proto_common.declare_generated_files(ctx.actions, info, "_connect" + ext))
     if ctx.attr.gen_connect_query:
