@@ -58,6 +58,7 @@ ts_project(
     deps = [
         ":logger_ts_proto",
         ":status_ts_proto",
+        "//examples/proto_grpc/stripping:s_ts_proto",
     ],
 )
 
