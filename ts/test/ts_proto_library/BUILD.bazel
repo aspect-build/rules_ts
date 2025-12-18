@@ -3,13 +3,16 @@
 # since protoc would otherwise not find the proto files in the descriptor
 # database.
 
+package(default_visibility = ["//ts/test:__subpackages__"])
+
+exports_files(["foo.proto"])
+
 proto_library(
     name = "bar_proto",
     srcs = [
         ":bar.proto",
     ],
     tags = ["manual"],
-    visibility = ["//ts/test:__subpackages__"],
 )
 
 proto_library(
@@ -18,7 +21,6 @@ proto_library(
         ":foo.proto",
     ],
     tags = ["manual"],
-    visibility = ["//ts/test:__subpackages__"],
     deps = [
         ":bar_proto",
     ],

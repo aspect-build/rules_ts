@@ -1,3 +1,5 @@
 syntax = "proto3";
 
+package proto_grpc.stripping;
+
 message Empty {}
