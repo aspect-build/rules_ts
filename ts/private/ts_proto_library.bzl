@@ -131,7 +131,7 @@ def _protoc_action(ctx, proto_info, outputs):
 
 def _declare_outs(ctx, info, ext):
     proto_sources = info.direct_sources
-    _declare_generated_files = lambda suffix: [
+    _declare_generated_files = lambda extension: [
         ctx.actions.declare_file(src.basename[:-(len(src.extension) + 1)] + extension)
         for src in proto_sources
     ]
