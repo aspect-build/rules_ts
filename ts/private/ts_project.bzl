@@ -111,8 +111,11 @@ def _ts_project_impl(ctx):
     js_outs = []
     map_outs = []
     if not ctx.attr.no_emit and ctx.attr.transpile != 0:
-        js_outs = _lib.declare_outputs(ctx, _lib.calculate_js_outs(srcs, ctx.attr.out_dir, ctx.attr.root_dir, ctx.attr.allow_js, ctx.attr.resolve_json_module, ctx.attr.preserve_jsx, ctx.attr.emit_declaration_only))
-        map_outs = _lib.declare_outputs(ctx, _lib.calculate_map_outs(srcs, ctx.attr.out_dir, ctx.attr.root_dir, ctx.attr.source_map, ctx.attr.allow_js, ctx.attr.preserve_jsx, ctx.attr.emit_declaration_only))
+        # Exclude .js sources that would collide with their outputs (allowJs + no effective outDir).
+        # tsc cannot emit them without TS5055; they are handled as copy_to_bin passthroughs.
+        tsc_srcs = _lib.filter_js_passthrough_srcs(srcs, ctx.attr.out_dir, ctx.attr.root_dir, ctx.attr.allow_js, ctx.attr.resolve_json_module)
+        js_outs = _lib.declare_outputs(ctx, _lib.calculate_js_outs(tsc_srcs, ctx.attr.out_dir, ctx.attr.root_dir, ctx.attr.allow_js, ctx.attr.resolve_json_module, ctx.attr.preserve_jsx, ctx.attr.emit_declaration_only))
+        map_outs = _lib.declare_outputs(ctx, _lib.calculate_map_outs(tsc_srcs, ctx.attr.out_dir, ctx.attr.root_dir, ctx.attr.source_map, ctx.attr.allow_js, ctx.attr.preserve_jsx, ctx.attr.emit_declaration_only))
 
     # dts+map file outputs
     typings_outs = []

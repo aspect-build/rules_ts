@@ -351,6 +351,17 @@ def _calculate_root_dir(ctx):
         ctx.attr.root_dir,
     )
 
+def _filter_js_passthrough_srcs(srcs, out_dir, root_dir, allow_js, resolve_json_module):
+    """Filter out .js sources whose output would collide with their input.
+
+    When allowJs=True and there is no effective outDir transformation, tsc cannot
+    emit .js outputs without TS5055 (output would overwrite input). These files are
+    handled as copy_to_bin passthroughs instead.
+    """
+    if not allow_js or out_dir or root_dir:
+        return srcs
+    return [f for f in srcs if not _is_js_src(f, allow_js, resolve_json_module)]
+
 def _declare_outputs(ctx, paths):
     return [
         ctx.actions.declare_file(path)
@@ -372,4 +383,5 @@ lib = struct(
     calculate_typings_outs = _calculate_typings_outs,
     calculate_typing_maps_outs = _calculate_typing_maps_outs,
     calculate_root_dir = _calculate_root_dir,
+    filter_js_passthrough_srcs = _filter_js_passthrough_srcs,
 )

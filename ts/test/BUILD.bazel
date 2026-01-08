@@ -1,3 +1,4 @@
+load("@aspect_bazel_lib//lib:testing.bzl", "assert_outputs")
 load("//ts:defs.bzl", "ts_project")
 load(":flags_test.bzl", "ts_project_flags_test_suite")
 load(":mock_transpiler.bzl", "mock")
@@ -12,6 +13,74 @@ ts_project_test_suite(name = "ts_project_test")
 ts_config_test_suite(name = "ts_config_test")
 
 ts_project_flags_test_suite(name = "ts_project_flags_test")
+
+# .js source with allowJs=True and no outDir/rootDir: passthrough, no source map
+ts_project(
+    name = "allow_js_no_outdir",
+    srcs = ["allow_js_src.js"],
+    transpiler = "tsc",
+    tsconfig = {
+        "compilerOptions": {
+            "allowJs": True,
+            "sourceMap": True,
+        },
+    },
+)
+
+assert_outputs(
+    name = "allow_js_no_outdir_test",
+    actual = ":allow_js_no_outdir",
+    expected = ["ts/test/allow_js_src.js"],
+)
+
+# .js source with allowJs=True and outDir set: tsc emits .js and .js.map
+ts_project(
+    name = "allow_js_with_outdir",
+    srcs = ["allow_js_src.js"],
+    out_dir = "allow_js_outdir",
+    transpiler = "tsc",
+    tsconfig = {
+        "compilerOptions": {
+            "allowJs": True,
+            "sourceMap": True,
+        },
+    },
+)
+
+assert_outputs(
+    name = "allow_js_with_outdir_test",
+    actual = ":allow_js_with_outdir",
+    expected = [
+        "ts/test/allow_js_outdir/allow_js_src.js",
+        "ts/test/allow_js_outdir/allow_js_src.js.map",
+    ],
+)
+
+# .js source with allowJs=True, declaration=True, and no outDir:
+# the .js is passed through but tsc should still emit a .d.ts (d.js -> d.d.ts doesn't collide)
+ts_project(
+    name = "allow_js_declaration_no_outdir",
+    srcs = ["allow_js_src.js"],
+    declaration = True,
+    transpiler = "tsc",
+    tsconfig = {
+        "compilerOptions": {
+            "allowJs": True,
+        },
+    },
+)
+
+assert_outputs(
+    name = "allow_js_declaration_no_outdir_test",
+    actual = ":allow_js_declaration_no_outdir",
+    expected = ["ts/test/allow_js_src.js"],
+)
+
+assert_outputs(
+    name = "allow_js_declaration_no_outdir_types_test",
+    actual = ":allow_js_declaration_no_outdir_types",
+    expected = ["ts/test/allow_js_src.d.ts"],
+)
 
 # Ensure that when determining output location, the `root_dir` attribute is only removed once.
 ts_project(
