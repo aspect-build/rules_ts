@@ -40,14 +40,11 @@ def babel(name, srcs, out_dir = None, resolve_json = False, commonjs = False, **
         if src.endswith(".d.ts") or src.endswith(".d.mts"):
             continue
 
-        if not (src.endswith(".ts") or src.endswith(".mts")):
-            fail("babel example transpiler only supports source .[m]ts or .json files, found: %s" % src)
-
         out_pre = "%s/" % out_dir if out_dir else ""
 
         # Predict the output paths where babel will write
         js_out = out_pre + src.replace(".mts", ".mjs").replace(".ts", ".js")
-        map_out = out_pre + src.replace(".mts", ".mjs.map").replace(".ts", ".js.map")
+        map_out = out_pre + src.replace(".mts", ".mjs.map").replace(".js", ".js.map").replace(".ts", ".js.map")
 
         # see https://babeljs.io/docs/en/babel-cli
         args = []
