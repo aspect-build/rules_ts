@@ -401,6 +401,29 @@ assert_outputs(
     ],
 )
 
+# input .js files with custom transpiler and NO outDir
+ts_project(
+    name = "allow_js_babel_no_outdir",
+    srcs = ["d.js"],
+    transpiler = babel,
+    tsconfig = {
+        "compilerOptions": {
+            "allowJs": True,
+            "module": "commonjs",
+            "sourceMap": True,
+        },
+    },
+)
+
+assert_outputs(
+    name = "allow_js_babel_no_outdir_test",
+    actual = ":allow_js_babel_no_outdir",
+    expected = [
+        "examples/transpiler/d.js",
+        "examples/transpiler/d.js.map",
+    ],
+)
+
 # input .js files with tsc transpiler and NO outDir
 # TODO: broken due to all source .js being copied to bin before invoking tsc
 # ts_project(

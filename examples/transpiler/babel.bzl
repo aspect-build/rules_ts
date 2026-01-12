@@ -51,7 +51,10 @@ def babel(name, srcs, out_dir = None, resolve_json = False, commonjs = False, **
         args = []
 
         # Inputs source files
-        args.append("{}/$(location {})".format(execroot, src))
+        if js_out != src:
+            args.append("{}/$(location {})".format(execroot, src))
+        else:
+            args.append(src)
 
         # Output paths
         args.extend(["--out-file", "{}/$(location {})".format(execroot, js_out)])
@@ -70,7 +73,7 @@ def babel(name, srcs, out_dir = None, resolve_json = False, commonjs = False, **
                 "//examples:node_modules/@babel/plugin-transform-modules-commonjs",
             ],
             chdir = "examples",
-            outs = [js_out, map_out],
+            outs = [js_out, map_out] if js_out != src else [map_out],
             args = args,
             **kwargs
         )
