@@ -1,7 +1,7 @@
 """Simplest example of using ts_project to transpile and type-check a file"""
 
-load("@aspect_bazel_lib//lib:testing.bzl", "assert_contains")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_lib//lib:testing.bzl", "assert_contains")
 
 # Type-checks, and emits output to
 # bazel-bin/examples/simple/foo.js

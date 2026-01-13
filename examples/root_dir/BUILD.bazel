@@ -4,8 +4,8 @@ Note that rootDirs and rootDir are totally different features in TypeScript,
 despite their similar naming.
 """
 
-load("@aspect_bazel_lib//lib:testing.bzl", "assert_outputs")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_lib//lib:testing.bzl", "assert_outputs")
 
 # By default, TypeScript calculates rootDir as the closest common ancestor
 # so you'd expect outDir/a.ts to be produced.

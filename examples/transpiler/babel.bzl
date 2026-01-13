@@ -1,7 +1,7 @@
 "Adapter from the Babel CLI to the ts_project#transpiler interface"
 
-load("@aspect_bazel_lib//lib:copy_file.bzl", "copy_file")
-load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
+load("@bazel_lib//lib:copy_file.bzl", "copy_file")
+load("@bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
 load("@npm//examples:@babel/cli/package_json.bzl", "bin")
 
 # buildifier: disable=function-docstring

@@ -1,8 +1,8 @@
 """Shows different ways to pass source files into ts_project"""
 
-load("@aspect_bazel_lib//lib:params_file.bzl", "params_file")
-load("@aspect_bazel_lib//lib:testing.bzl", "assert_contains")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_lib//lib:params_file.bzl", "params_file")
+load("@bazel_lib//lib:testing.bzl", "assert_contains")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 
 # By default, the macro collects all .ts files in this directory.

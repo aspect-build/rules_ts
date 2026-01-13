@@ -1,12 +1,12 @@
 "ts_project rule"
 
-load("@aspect_bazel_lib//lib:copy_file.bzl", "copy_file_action")
-load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "COPY_FILE_TO_BIN_TOOLCHAINS", "copy_file_to_bin_action", "copy_files_to_bin_actions")
-load("@aspect_bazel_lib//lib:paths.bzl", "to_output_relative_path")
-load("@aspect_bazel_lib//lib:platform_utils.bzl", "platform_utils")
-load("@aspect_bazel_lib//lib:resource_sets.bzl", "resource_set", "resource_set_attr")
 load("@aspect_rules_js//js:libs.bzl", "js_lib_helpers")
 load("@aspect_rules_js//js:providers.bzl", "JsInfo", "js_info")
+load("@bazel_lib//lib:copy_file.bzl", "copy_file_action")
+load("@bazel_lib//lib:copy_to_bin.bzl", "COPY_FILE_TO_BIN_TOOLCHAINS", "copy_file_to_bin_action", "copy_files_to_bin_actions")
+load("@bazel_lib//lib:paths.bzl", "to_output_relative_path")
+load("@bazel_lib//lib:platform_utils.bzl", "platform_utils")
+load("@bazel_lib//lib:resource_sets.bzl", "resource_set", "resource_set_attr")
 load("@bazel_skylib//lib:dicts.bzl", "dicts")
 load(":options.bzl", "OptionsInfo", "transpiler_selection_required")
 load(":ts_config.bzl", "TsConfigInfo")
