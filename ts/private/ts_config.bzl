@@ -65,10 +65,9 @@ def _ts_config_impl(ctx):
 
     files_depset = depset(files)
 
+    # tsconfig.json file won't be needed at runtime
     runfiles = js_lib_helpers.gather_runfiles(
         ctx = ctx,
-        sources = depset(),  # tsconfig.json file won't be needed at runtime
-        data = [],
         deps = ctx.attr.deps,
     )
 

@@ -372,22 +372,17 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
     if options.validation_typecheck:
         validation_outs.extend(typecheck_outs)
 
-    # Align runfiles config with rules_js js_library() to align behaviour.
+    # Align runfiles config with rules_js js_library() to align behaviour, do not set attributes
+    # unless explicitly overriding the rules_js defaults.
     # See https://github.com/aspect-build/rules_js/blob/v2.1.0/js/private/js_library.bzl#L241-L254
     runfiles = js_lib_helpers.gather_runfiles(
         ctx = ctx,
-        sources = output_sources_depset,
         data = ctx.attr.data,
         deps = srcs_deps,
         data_files = ctx.files.data,
         copy_data_files_to_bin = True,  # NOTE: configurable (default true) in js_library()
         no_copy_to_bin = [],  # NOTE: configurable (default []) in js_library()
-        include_sources = True,
-        include_types = False,
-        include_transitive_sources = True,
-        include_transitive_types = False,
-        include_npm_sources = True,
-    )
+    ).merge(ctx.runfiles(transitive_files = depset(transitive = [output_sources_depset])))
 
     providers = [
         DefaultInfo(
