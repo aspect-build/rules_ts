@@ -1,5 +1,3 @@
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-
 local_repository(
     name = "aspect_rules_ts",
     path = "../../..",
@@ -8,14 +6,6 @@ local_repository(
 local_repository(
     name = "lib_wksp",
     path = "..",
-)
-
-# Override the version declared by rules_ts for windows fix
-http_archive(
-    name = "aspect_bazel_lib",
-    sha256 = "da67c6a785cdc10faf960a22c44501fe6be357a6ebd2bd6101560f9c2a9e06b3",
-    strip_prefix = "bazel-lib-2.9.0",
-    url = "https://github.com/bazel-contrib/bazel-lib/releases/download/v2.9.0/bazel-lib-v2.9.0.tar.gz",
 )
 
 load("@aspect_rules_ts//ts:repositories.bzl", "LATEST_TYPESCRIPT_VERSION", "rules_ts_dependencies")
