@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "module": "nodenext",
+        "target": "esnext",
+        "types": [],
+        "sourceMap": true,
+        "declaration": true,
+        "strict": true,
+        "isolatedModules": true,
+        "skipLibCheck": true
+    }
+}

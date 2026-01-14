@@ -4,12 +4,6 @@ local_path_override(
     path = "../..",
 )
 
-# Override the version declared by rules_ts for windows fix
-single_version_override(
-    module_name = "aspect_bazel_lib",
-    version = "2.9.0",
-)
-
 bazel_dep(name = "bazel_skylib", version = "1.5.0", dev_dependency = True)
 
 rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext", dev_dependency = True)
