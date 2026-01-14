@@ -1,0 +1,19 @@
+"Basic e2e test for rules_js v3"
+
+module(name = "rules_js_v3_test")
+
+bazel_dep(name = "aspect_rules_ts", version = "0.0.0")
+local_path_override(
+    module_name = "aspect_rules_ts",
+    path = "../..",
+)
+
+bazel_dep(name = "aspect_rules_js", version = "3.0.0-alpha.4")
+
+bazel_dep(name = "bazel_skylib", version = "1.8.1", dev_dependency = True)
+
+rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext")
+rules_ts_ext.deps(
+    ts_version_from = "//:package.json",
+)
+use_repo(rules_ts_ext, "npm_typescript")

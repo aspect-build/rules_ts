@@ -73,6 +73,7 @@ jobs:
                     - '.'
                     - 'e2e/smoke'
                     - 'e2e/bzlmodules'
+                    - 'e2e/rules_js_v3'
                     - 'e2e/external_dep'
                     - 'e2e/external_dep/app'
                     - 'e2e/worker'
@@ -108,10 +109,16 @@ jobs:
                     # bzlmod only tests
                     - bzlmod: 0
                       folder: e2e/bzlmodules
+                    - bzlmod: 0
+                      folder: e2e/rules_js_v3
                     # TODO: e2e/smoke broken with bazel6
                     - bazel-version:
                           major: 6
                       folder: e2e/smoke
+                    # rules_js v3 requires newer Bazel
+                    - bazel-version:
+                          major: 6
+                      folder: e2e/rules_js_v3
                     # TODO: broken on bazel 8
                     - bazel-version:
                           major: 8
