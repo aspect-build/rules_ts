@@ -5,5 +5,8 @@
     "devDependencies": {
         "@bufbuild/protoc-gen-es": "1.8.0",
         "typescript": "4.8.4"
+    },
+    "pnpm": {
+        "onlyBuiltDependencies": []
     }
 }
