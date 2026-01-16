@@ -20,5 +20,8 @@
     },
     "devDependencies": {
         "@myorg/lib_nocompile_linked": "workspace:*"
+    },
+    "pnpm": {
+        "onlyBuiltDependencies": []
     }
 }
