@@ -1,1 +1,1 @@
-export const ANSWER = 42;
+export const ANSWER = 42

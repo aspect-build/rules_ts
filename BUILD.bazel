@@ -1,4 +1,14 @@
+load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@buildifier_prebuilt//:rules.bzl", "buildifier")
+load("@npm__prettier__3.6.2__links//:defs.bzl", "npm_link_imported_package")
+
+npm_link_imported_package(name = "node_modules")
+
+js_library(
+    name = "prettierrc",
+    srcs = [".prettierrc"],
+    visibility = ["//:__subpackages__"],
+)
 
 buildifier(
     name = "buildifier",

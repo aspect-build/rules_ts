@@ -3,6 +3,7 @@ docs/
 e2e/
 
 # TODO(bazel 8): move to REPO.bazel
+node_modules
 examples/connect_node/node_modules
 examples/node_modules
 examples/proto_grpc/node_modules
