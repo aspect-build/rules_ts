@@ -1,0 +1,16 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
+
+ts_config(
+    name = "tsconfig",
+    src = "tsconfig.json",
+)
+
+ts_project(
+    name = "content",
+    srcs = ["content.ts"],
+    declaration = True,
+    declaration_map = True,
+    source_map = True,
+    tsconfig = ":tsconfig",
+    visibility = ["//visibility:public"],
+)

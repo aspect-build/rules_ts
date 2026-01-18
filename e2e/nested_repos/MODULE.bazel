@@ -1,0 +1,27 @@
+module(name = "nested_repos")
+
+bazel_dep(name = "aspect_rules_ts", version = "0.0.0")
+bazel_dep(name = "bazel_skylib", version = "1.8.1")
+bazel_dep(name = "module_a")
+bazel_dep(name = "module_b")
+bazel_dep(name = "module_c")
+
+local_path_override(
+    module_name = "aspect_rules_ts",
+    path = "../..",
+)
+
+local_path_override(
+    module_name = "module_a",
+    path = "module_a",
+)
+
+local_path_override(
+    module_name = "module_b",
+    path = "module_b",
+)
+
+local_path_override(
+    module_name = "module_c",
+    path = "module_c",
+)

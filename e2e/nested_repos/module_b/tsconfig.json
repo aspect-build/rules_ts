@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+        "module": "nodenext",
+        "target": "esnext",
+        "baseUrl": ".",
+        "paths": {
+            "module_a/*": [
+                "external/module_a+/*",
+                "../module_a+/*",
+                "external/module_a~/*",
+                "../module_a~/*"
+            ]
+        },
+        "sourceMap": true,
+        "declaration": true,
+        "declarationMap": true
+    }
+}

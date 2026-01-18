@@ -1,0 +1,6 @@
+{
+    "name": "module_a",
+    "dependencies": {
+        "typescript": "5.9.2"
+    }
+}
