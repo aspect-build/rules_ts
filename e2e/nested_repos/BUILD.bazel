@@ -1,0 +1,16 @@
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+
+build_test(
+    name = "module_a_content_test",
+    targets = ["@module_a//:content"],
+)
+
+build_test(
+    name = "module_b_consumer_test",
+    targets = ["@module_b//:consumer"],
+)
+
+build_test(
+    name = "module_c_tar_test",
+    targets = ["@module_c//:module_a_content_tar"],
+)
