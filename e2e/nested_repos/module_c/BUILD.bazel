@@ -1,0 +1,7 @@
+load("@tar.bzl", "tar")
+
+tar(
+    name = "module_a_content_tar",
+    srcs = ["@module_a//:content"],
+    visibility = ["//visibility:public"],
+)
