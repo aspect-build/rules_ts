@@ -5,6 +5,7 @@ package logger;
 import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
 import "examples/connect_node/proto/eliza.proto";
+import "proto_grpc/stripping/s.proto";
 
 service Logger {
   rpc SendLogMessage(LogMessage) returns (Empty) {}
@@ -15,6 +16,7 @@ message LogMessage {
   google.protobuf.Timestamp time = 2;
   google.protobuf.Any details = 3;
   connectrpc.eliza.v1.SayRequest say_request = 4;
+  proto_grpc.stripping.Empty empty = 5;
 }
 
 message Empty {}

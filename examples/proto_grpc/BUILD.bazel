@@ -16,6 +16,7 @@ proto_library(
     visibility = ["//visibility:public"],
     deps = [
         "//examples/connect_node/proto:eliza_proto",
+        "//examples/proto_grpc/stripping:s_proto",
         "@com_google_protobuf//:any_proto",
         "@com_google_protobuf//:timestamp_proto",
     ],
@@ -36,7 +37,12 @@ ts_proto_library(
     proto = ":logger_proto",
     proto_srcs = logger_srcs,
     # See https://github.com/connectrpc/connect-es/blob/main/MIGRATING.md#update-plugin-options
-    protoc_gen_options = {"import_extension": "js"},
+    # rewrite_imports fixes the import path for s_pb.js which has strip_import_prefix on its proto_library.
+    # Without this, the generated import would be ../../proto_grpc/stripping/s_pb.js instead of ./stripping/s_pb.js
+    protoc_gen_options = {
+        "import_extension": "js",
+        "rewrite_imports": "./proto_grpc/**/*:./examples",
+    },
     visibility = ["//visibility:public"],
     deps = ["//examples/connect_node/proto"],
 )
@@ -58,6 +64,7 @@ ts_project(
     deps = [
         ":logger_ts_proto",
         ":status_ts_proto",
+        "//examples/proto_grpc/stripping:s_ts_proto",
     ],
 )
 
