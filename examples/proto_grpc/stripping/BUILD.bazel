@@ -4,23 +4,28 @@ load("@rules_proto//proto:defs.bzl", "proto_library")
 proto_library(
     name = "s_proto",
     srcs = ["s.proto"],
-    # The prefix to add to the paths of the .proto files in this rule.
-    # When set, the .proto source files in the srcs attribute of this rule are accessible at
-    # is the value of this attribute prepended to their repository-relative path.
-    # The prefix in the strip_import_prefix attribute is removed before this prefix is added.
-    import_prefix = "post-stripped",
     # The prefix to strip from the paths of the .proto files in this rule.
     # When set, .proto source files in the srcs attribute of this rule are accessible at their path with this prefix cut off.
     # If it's a relative path (not starting with a slash), it's taken as a package-relative one.
     # If it's an absolute one, it's understood as a repository-relative path.
     strip_import_prefix = "/examples",
+    # TODO: demonstrate this
+    # The prefix to add to the paths of the .proto files in this rule.
+    # When set, the .proto source files in the srcs attribute of this rule are accessible at
+    # is the value of this attribute prepended to their repository-relative path.
+    # The prefix in the strip_import_prefix attribute is removed before this prefix is added.
+    # import_prefix = "post-stripped",
     visibility = ["//visibility:public"],
 )
 
 ts_proto_library(
     name = "s_ts_proto",
+    # When strip_import_prefix is used, don't pass proto_srcs - let the rule
+    # use proto_info.direct_sources which has the virtual import path.
+    # This ensures the generated symbol names match what importers expect.
+    # Also set copy_files = False since proto_srcs is required for that feature.
+    copy_files = False,
     node_modules = "//examples/proto_grpc:node_modules",
     proto = ":s_proto",
-    proto_srcs = ["s.proto"],
     visibility = ["//visibility:public"],
 )

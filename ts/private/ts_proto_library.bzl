@@ -60,7 +60,10 @@ def _protoc_action(ctx, proto_info, outputs):
       '--descriptor_set_in=bazel-out/k8-fastbuild/bin/external/com_google_protobuf/timestamp_proto-descriptor-set.proto.bin:bazel-out/k8-fastbuild/bin/example/thing/thing_proto-descriptor-set.proto.bin:bazel-out/k8-fastbuild/bin/example/place/place_proto-descriptor-set.proto.bin:bazel-out/k8-fastbuild/bin/example/person/person_proto-descriptor-set.proto.bin' \
       example/person/person.proto
     """
-    inputs = depset(ctx.files.proto_srcs or proto_info.direct_sources, transitive = [proto_info.transitive_descriptor_sets])
+
+    # When proto_srcs is not provided, use direct_sources (which handles virtual imports correctly)
+    proto_sources = ctx.files.proto_srcs if ctx.attr.proto_srcs else proto_info.direct_sources
+    inputs = depset(proto_sources, transitive = [proto_info.transitive_descriptor_sets])
 
     options = dict({
         "keep_empty_files": True,
@@ -72,23 +75,30 @@ def _protoc_action(ctx, proto_info, outputs):
     if options["target"] != "js+dts":
         fail("protoc_gen_options.target must be 'js+dts'")
 
+    # Compute the output directory. When strip_import_prefix is used, we need to adjust
+    # the es_out path so that outputs land in the rule's package directory.
+    stripped_prefix = _get_stripped_prefix(ctx, proto_sources)
+    es_out = ctx.bin_dir.path
+    if stripped_prefix:
+        es_out = ctx.bin_dir.path + "/" + stripped_prefix
+
     args = ctx.actions.args()
     args.add_joined(["--plugin", "protoc-gen-es", _windows_path_normalize(ctx.executable.protoc_gen_es.path)], join_with = "=")
     for (key, value) in options.items():
         args.add_joined(["--es_opt", key, value], join_with = "=")
-    args.add_joined(["--es_out", ctx.bin_dir.path], join_with = "=")
+    args.add_joined(["--es_out", es_out], join_with = "=")
 
     if ctx.attr.gen_connect_es:
         args.add_joined(["--plugin", "protoc-gen-connect-es", _windows_path_normalize(ctx.executable.protoc_gen_connect_es.path)], join_with = "=")
         for (key, value) in options.items():
             args.add_joined(["--connect-es_opt", key, value], join_with = "=")
-        args.add_joined(["--connect-es_out", ctx.bin_dir.path], join_with = "=")
+        args.add_joined(["--connect-es_out", es_out], join_with = "=")
 
     if ctx.attr.gen_connect_query:
         args.add_joined(["--plugin", "protoc-gen-connect-query", _windows_path_normalize(ctx.executable.protoc_gen_connect_query.path)], join_with = "=")
         for (key, value) in options.items():
             args.add_joined(["--connect-query_opt", key, value], join_with = "=")
-        args.add_joined(["--connect-query_out", ctx.bin_dir.path], join_with = "=")
+        args.add_joined(["--connect-query_out", es_out], join_with = "=")
 
     args.add("--descriptor_set_in")
     args.add_joined(proto_info.transitive_descriptor_sets, join_with = ctx.configuration.host_path_separator)
@@ -107,10 +117,7 @@ def _protoc_action(ctx, proto_info, outputs):
     args.add_all(proto_info.transitive_proto_path, map_each = _import_main_output_proto_path)
     args.add("-I.")  # Needs to come last
 
-    if ctx.attr.proto_srcs:
-        args.add_all(ctx.files.proto_srcs)
-    else:
-        args.add_all(proto_info.direct_sources)
+    args.add_all(proto_sources)
 
     proto_toolchain_enabled = len(proto_toolchains.use_toolchain(_PROTO_TOOLCHAIN_TYPE)) > 0
     ctx.actions.run(
@@ -129,15 +136,63 @@ def _protoc_action(ctx, proto_info, outputs):
         use_default_shell_env = True,
     )
 
+def _get_proto_import_path(src):
+    """Extracts the proto import path from a source file.
+
+    When strip_import_prefix is used, proto sources are in a _virtual_imports directory.
+    For example: bazel-out/.../pkg/_virtual_imports/foo_proto/stripped/path/foo.proto
+    The import path is: stripped/path/foo.proto
+
+    For regular protos without stripping, the source path is the import path.
+    """
+    src_path = src.path
+    if "_virtual_imports/" in src_path:
+        # Extract path after _virtual_imports/<target_name>/
+        idx = src_path.find("_virtual_imports/")
+        remainder = src_path[idx + len("_virtual_imports/"):]
+
+        # Skip the target name directory
+        slash_idx = remainder.find("/")
+        if slash_idx >= 0:
+            return remainder[slash_idx + 1:]
+
+    # Regular case: use the short_path (relative to workspace root)
+    return src.short_path
+
+def _get_stripped_prefix(ctx, proto_sources):
+    """Computes the prefix that was stripped by strip_import_prefix.
+
+    Returns the prefix to add to --es_out so outputs land in the rule's package.
+    For example, if the rule is in examples/proto_grpc/stripping and the proto
+    import path is proto_grpc/stripping/s.proto, returns "examples".
+    """
+    if not proto_sources:
+        return ""
+
+    src = proto_sources[0]
+    if "_virtual_imports/" not in src.path:
+        return ""
+
+    import_path = _get_proto_import_path(src)
+    import_dir = import_path.rsplit("/", 1)[0] if "/" in import_path else ""
+    pkg = ctx.label.package
+
+    # Check if the package ends with the import directory
+    if import_dir and pkg.endswith(import_dir):
+        prefix = pkg[:-len(import_dir)].rstrip("/")
+        return prefix
+    return ""
+
 def _declare_outs(ctx, info, ext):
     proto_sources = info.direct_sources
-    _declare_generated_files = lambda extension: [
-        ctx.actions.declare_file(src.basename[:-(len(src.extension) + 1)] + extension)
-        for src in proto_sources
-    ]
-    outs = _declare_generated_files("_pb" + ext)
+
+    def _declare_generated_file(src, suffix):
+        # Always declare outputs using basename, in the rule's package
+        return ctx.actions.declare_file(src.basename[:-(len(src.extension) + 1)] + suffix)
+
+    outs = [_declare_generated_file(src, "_pb" + ext) for src in proto_sources]
     if ctx.attr.gen_connect_es:
-        outs.extend(_declare_generated_files("_connect" + ext))
+        outs.extend([_declare_generated_file(src, "_connect" + ext) for src in proto_sources])
     if ctx.attr.gen_connect_query:
         proto_source_map = {src.basename: src for src in proto_sources}
 

@@ -13,7 +13,7 @@ importers:
         version: 19.0.0-next.2(@angular/core@19.0.0-next.2)
       '@angular/compiler-cli':
         specifier: ^19.0.0-next.2
-        version: 19.0.0-next.2(@angular/compiler@19.0.0-next.2)(typescript@5.6.2)
+        version: 19.0.0-next.2(@angular/compiler@19.0.0-next.2)(typescript@5.7.3)
       '@angular/core':
         specifier: ^19.0.0-next.2
         version: 19.0.0-next.2(rxjs@7.5.7)(zone.js@0.12.0)
@@ -39,8 +39,8 @@ importers:
         specifier: 2.0.5
         version: 2.0.5
       '@types/node':
-        specifier: ^20.19.11
-        version: 20.19.11
+        specifier: ^22
+        version: 22.0.0
       date-fns:
         specifier: 2.29.3
         version: 2.29.3
@@ -51,8 +51,8 @@ importers:
         specifier: ^0.5.21
         version: 0.5.21
       typescript:
-        specifier: 5.6.2
-        version: 5.6.2
+        specifier: 5.7.3
+        version: 5.7.3
       zone.js:
         specifier: 0.12.0
         version: 0.12.0
@@ -155,12 +155,12 @@ importers:
   proto_grpc:
     dependencies:
       '@bufbuild/protobuf':
-        specifier: ~2.2.4
-        version: 2.2.4
+        specifier: 2.11.0
+        version: 2.11.0
     devDependencies:
       '@bufbuild/protoc-gen-es':
-        specifier: ~2.2.4
-        version: 2.2.4(@bufbuild/protobuf@2.2.4)
+        specifier: 2.11.0
+        version: 2.11.0(@bufbuild/protobuf@2.11.0)
 
   resolve_json_module_esm:
     dependencies:
@@ -178,7 +178,7 @@ packages:
       '@jridgewell/trace-mapping': 0.3.25
     dev: false
 
-  /@angular/compiler-cli@19.0.0-next.2(@angular/compiler@19.0.0-next.2)(typescript@5.6.2):
+  /@angular/compiler-cli@19.0.0-next.2(@angular/compiler@19.0.0-next.2)(typescript@5.7.3):
     resolution: {integrity: sha512-Fj/ORrCM66TN06qJMz4j5S5dZK5wI9EKKeI+I/c0c1m3lUUx96mKp+93svagg/gVTsB/ldHtFKzzJuUIMV6JmA==}
     engines: {node: ^18.19.1 || ^20.11.1 || >=22.0.0}
     hasBin: true
@@ -194,7 +194,7 @@ packages:
       reflect-metadata: 0.2.2
       semver: 7.6.3
       tslib: 2.6.3
-      typescript: 5.6.2
+      typescript: 5.7.3
       yargs: 17.7.2
     transitivePeerDependencies:
       - supports-color
@@ -898,8 +898,27 @@ packages:
       '@bufbuild/buf-win32-x64': 1.50.1
     dev: true
 
+  /@bufbuild/protobuf@2.11.0:
+    resolution: {integrity: sha512-sBXGT13cpmPR5BMgHE6UEEfEaShh5Ror6rfN3yEK5si7QVrtZg8LEPQb0VVhiLRUslD2yLnXtnRzG035J/mZXQ==}
+
   /@bufbuild/protobuf@2.2.4:
     resolution: {integrity: sha512-P9xQgtMh71TA7tHTnbDe68zcI+TPnkyyfBIhGaUr4iUEIXN7yI01DyjmmdEwXTk5OlISBJYkoxCVj2dwmHqIkA==}
+
+  /@bufbuild/protoc-gen-es@2.11.0(@bufbuild/protobuf@2.11.0):
+    resolution: {integrity: sha512-VzQuwEQDXipbZ1soWUuAWm1Z0C3B/IDWGeysnbX6ogJ6As91C2mdvAND/ekQ4YIWgen4d5nqLfIBOWLqCCjYUA==}
+    engines: {node: '>=20'}
+    hasBin: true
+    peerDependencies:
+      '@bufbuild/protobuf': 2.11.0
+    peerDependenciesMeta:
+      '@bufbuild/protobuf':
+        optional: true
+    dependencies:
+      '@bufbuild/protobuf': 2.11.0
+      '@bufbuild/protoplugin': 2.11.0
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
 
   /@bufbuild/protoc-gen-es@2.2.4(@bufbuild/protobuf@2.2.4):
     resolution: {integrity: sha512-s8hCpjYBCIKTFGfoEdnxIxgZkp3tBtFLz96J82TKNtrOATR5VBj3EPp53/rAG7+I7uguPfcDslO0EZxlzLVtdA==}
@@ -913,6 +932,16 @@ packages:
     dependencies:
       '@bufbuild/protobuf': 2.2.4
       '@bufbuild/protoplugin': 2.2.4
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
+  /@bufbuild/protoplugin@2.11.0:
+    resolution: {integrity: sha512-lyZVNFUHArIOt4W0+dwYBe5GBwbKzbOy8ObaloEqsw9Mmiwv2O48TwddDoHN4itylC+BaEGqFdI1W8WQt2vWJQ==}
+    dependencies:
+      '@bufbuild/protobuf': 2.11.0
+      '@typescript/vfs': 1.6.2(typescript@5.4.5)
+      typescript: 5.4.5
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -1061,9 +1090,27 @@ packages:
     resolution: {integrity: sha512-uug3FEEGv0r+jrecvUUpbY8lLisvIjg6AAic6a2bSP5OEOLeJsDSnvhCDov7ipFFMXS3orMpzlmi0ZcuGkBbow==}
     dependencies:
       undici-types: 6.21.0
+    dev: true
+
+  /@types/node@22.0.0:
+    resolution: {integrity: sha512-VT7KSYudcPOzP5Q0wfbowyNLaVR8QWUdw+088uFWwfvpY6uCWaXpqV6ieLAu9WBcnTa7H4Z5RLK8I5t2FuOcqw==}
+    dependencies:
+      undici-types: 6.11.1
+    dev: false
 
   /@typescript/vfs@1.6.0(typescript@5.4.5):
     resolution: {integrity: sha512-hvJUjNVeBMp77qPINuUvYXj4FyWeeMMKZkxEATEU3hqBAQ7qdTBCUFT7Sp0Zu0faeEtFf+ldXxMEDr/bk73ISg==}
+    peerDependencies:
+      typescript: '*'
+    dependencies:
+      debug: 4.3.5
+      typescript: 5.4.5
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
+  /@typescript/vfs@1.6.2(typescript@5.4.5):
+    resolution: {integrity: sha512-hoBwJwcbKHmvd2QVebiytN1aELvpk9B74B4L1mFm/XT1Q/VOYAWl2vQ9AWRFtQq8zmz6enTpfTV8WRc4ATjW/g==}
     peerDependencies:
       typescript: '*'
     dependencies:
@@ -1835,14 +1882,19 @@ packages:
     hasBin: true
     dev: true
 
-  /typescript@5.6.2:
-    resolution: {integrity: sha512-NW8ByodCSNCwZeghjN3o+JX5OFH0Ojg6sadjEKY4huZ52TqbJTJnDo5+Tw98lSy63NZvi4n+ez5m2u5d4PkZyw==}
+  /typescript@5.7.3:
+    resolution: {integrity: sha512-84MVSjMEHP+FQRPy3pX9sTVV/INIex71s9TL2Gm5FG/WG1SqXeKyZ0k7/blY/4FdOzI12CBy1vGc4og/eus0fw==}
     engines: {node: '>=14.17'}
     hasBin: true
     dev: false
 
+  /undici-types@6.11.1:
+    resolution: {integrity: sha512-mIDEX2ek50x0OlRgxryxsenE5XaQD4on5U2inY7RApK3SOJpofyw7uW2AyfMKkhAxXIceo2DeWGVGwyvng1GNQ==}
+    dev: false
+
   /undici-types@6.21.0:
     resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
+    dev: true
 
   /update-browserslist-db@1.1.0(browserslist@4.23.2):
     resolution: {integrity: sha512-EdRAaAyk2cUE1wOf2DkEhzxqOQvFOoRJFNS6NeyJ01Gp2beMRpBAINjM2iDXE3KCuKhwnvHIQCJm6ThL2Z+HzQ==}
