@@ -25,3 +25,6 @@ local_path_override(
     module_name = "module_c",
     path = "module_c",
 )
+
+rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext")
+rules_ts_ext.deps(ts_version = "5.9.2")
