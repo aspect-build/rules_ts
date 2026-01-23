@@ -5,6 +5,8 @@ workspaces:
         label: rules_ts
     e2e/smoke:
         tasks:
+            - bazel-6:
+                  without: true
             - bazel-7:
                   queue: aspect-medium
             - bazel-8:
@@ -15,6 +17,8 @@ workspaces:
                   without: true
     e2e/bzlmodules:
         tasks:
+            - bazel-6:
+                  without: true
             - bazel-7:
                   queue: aspect-medium
             - bazel-8:
@@ -25,6 +29,8 @@ workspaces:
                   without: true
     e2e/rules_js_v3:
         tasks:
+            - bazel-6:
+                  without: true
             - bazel-7:
                   queue: aspect-medium
             - bazel-8:
@@ -35,6 +41,8 @@ workspaces:
                   without: true
     e2e/external_dep:
         tasks:
+            - bazel-6:
+                  queue: aspect-medium
             - bazel-7:
                   queue: aspect-medium
             - bazel-8:
@@ -45,6 +53,8 @@ workspaces:
                   without: true
     e2e/worker:
         tasks:
+            - bazel-6:
+                  queue: aspect-medium
             - bazel-7:
                   queue: aspect-medium
             - bazel-8:
@@ -55,6 +65,8 @@ workspaces:
                   without: true
     e2e/test:
         tasks:
+            - bazel-6:
+                  queue: aspect-medium
             - bazel-7:
                   queue: aspect-medium
             - bazel-8:
@@ -65,6 +77,8 @@ workspaces:
                   without: true
     examples:
         tasks:
+            - bazel-6:
+                  without: true
             - bazel-7:
                   without: true
             - bazel-8:
@@ -74,6 +88,14 @@ workspaces:
             - buildifier:
                   without: true
 tasks:
+    - test:
+          name: 'Test (Bazel 6.x)'
+          id: bazel-6
+          bazel:
+              flags:
+                  - --incompatible_merge_fixed_and_default_shell_env
+          env:
+              USE_BAZEL_VERSION: 6.x
     - test:
           name: 'Test (Bazel 7.x)'
           id: bazel-7
