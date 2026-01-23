@@ -8,7 +8,7 @@ try {
         .map((s) => s.trim())
     assert.deepEqual(
         frames.filter((f) => f.includes('source_map_support/test/a')),
-        [`at Object.<anonymous> (source_map_support/test/a.ts:2:17)`]
+        [`at Object.<anonymous> (source_map_support/test/a.ts:2:19)`]
     )
     assert.deepEqual(
         frames.filter((f) => f.includes('source_map_support/test/b')),
