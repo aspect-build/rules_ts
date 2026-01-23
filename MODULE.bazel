@@ -30,6 +30,10 @@ bazel_dep(name = "buildifier_prebuilt", version = "6.4.0", dev_dependency = True
 bazel_dep(name = "rules_go", version = "0.46.0", dev_dependency = True, repo_name = "io_bazel_rules_go")
 bazel_dep(name = "rules_nodejs", version = "6.7.3", dev_dependency = True)
 
+rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext", dev_dependency = True)
+rules_ts_ext.deps(ts_version = "5.6.2")
+use_repo(rules_ts_ext, "npm_typescript")
+
 go_sdk = use_extension("@io_bazel_rules_go//go:extensions.bzl", "go_sdk", dev_dependency = True)
 go_sdk.download(version = "1.19.3")
 use_repo(
