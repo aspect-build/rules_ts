@@ -95,7 +95,7 @@ tasks:
               flags:
                   - --incompatible_merge_fixed_and_default_shell_env
           env:
-              USE_BAZEL_VERSION: 6.x
+              USE_BAZEL_VERSION: 6.5.0
     - test:
           name: 'Test (Bazel 7.x)'
           id: bazel-7
