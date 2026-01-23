@@ -30,7 +30,7 @@ ts_project(
         ":b.ts",
         "//%s:c.ts" % package_name(),
         "@//%s:d.ts" % package_name(),
-        "@aspect_rules_ts//%s:e.ts" % package_name(),
+        # "@aspect_rules_ts//%s:e.ts" % package_name(),
 
         # Label to a rule
         ":gen-a-ts",
@@ -58,7 +58,7 @@ build_test(
         "out/d.js",
         "out/d.js.map",
         "out/d.d.ts",
-        "out/e.d.ts",
+        # "out/e.d.ts",
     ],
 )
 

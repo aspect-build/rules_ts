@@ -10,25 +10,19 @@ load("@aspect_rules_js//js:defs.bzl", _js_binary = "js_binary", _js_test = "js_t
 def js_binary(data = [], node_options = [], **kwargs):
     _js_binary(
         data = [
-            "//examples:node_modules/source-map-support",
-            "//examples/source_map_support:stack-trace-support",
+            "//:node_modules/source-map-support",
+            "//source_map_support:stack-trace-support",
         ] + data,
-        node_options = select({
-            "@aspect_bazel_lib//lib:bzlmod": ["--require", "$$RUNFILES/_main/examples/source_map_support/stack-trace-support"] + node_options,
-            "//conditions:default": ["--require", "$$RUNFILES/aspect_rules_ts/examples/source_map_support/stack-trace-support"] + node_options,
-        }),
+        node_options = ["--require", "$$RUNFILES/_main/source_map_support/stack-trace-support"] + node_options,
         **kwargs
     )
 
 def js_test(data = [], node_options = [], **kwargs):
     _js_test(
         data = [
-            "//examples:node_modules/source-map-support",
-            "//examples/source_map_support:stack-trace-support",
+            "//:node_modules/source-map-support",
+            "//source_map_support:stack-trace-support",
         ] + data,
-        node_options = select({
-            "@aspect_bazel_lib//lib:bzlmod": ["--require", "$$RUNFILES/_main/examples/source_map_support/stack-trace-support"] + node_options,
-            "//conditions:default": ["--require", "$$RUNFILES/aspect_rules_ts/examples/source_map_support/stack-trace-support"] + node_options,
-        }),
+        node_options = ["--require", "$$RUNFILES/_main/source_map_support/stack-trace-support"] + node_options,
         **kwargs
     )

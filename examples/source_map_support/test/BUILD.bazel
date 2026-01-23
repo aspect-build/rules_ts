@@ -1,5 +1,5 @@
-load("//examples/source_map_support:defs.bzl", "js_test")
-load("//ts:defs.bzl", "ts_project")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("//source_map_support:defs.bzl", "js_test")
 
 ts_project(
     name = "ts",
@@ -15,7 +15,7 @@ ts_project(
         },
     },
     deps = [
-        "//examples:node_modules/@types/node",
+        "//:node_modules/@types/node",
     ],
 )
 
@@ -27,7 +27,6 @@ js_test(
 
 js_test(
     name = "stack_trace_support_with_chdir_test",
-    chdir = "examples",
     data = [":ts"],
     entry_point = ":a.js",
 )

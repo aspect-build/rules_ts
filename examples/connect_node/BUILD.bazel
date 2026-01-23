@@ -15,7 +15,7 @@ ts_project(
         ":node_modules/@connectrpc/connect-fastify",
         ":node_modules/@types/node",
         ":node_modules/fastify",
-        "//examples/connect_node/proto:eliza_ts_proto",
+        "//connect_node/proto:eliza_ts_proto",
     ],
 )
 

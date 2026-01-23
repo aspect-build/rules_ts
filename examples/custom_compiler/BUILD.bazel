@@ -5,7 +5,7 @@ load("@aspect_rules_js//js:defs.bzl", "js_binary")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("@npm//examples:@angular/compiler-cli/package_json.bzl", "bin")
+load("@npm//:@angular/compiler-cli/package_json.bzl", "bin")
 
 write_file(
     name = "bigts",
@@ -58,8 +58,8 @@ ts_project(
     # Tell ts_project to run ngc. The compiler has to have a matching CLI as `tsc` for this to work.
     tsc = ":ngc",
     deps = [
-        "//examples:node_modules/@angular/core",
-        "//examples:node_modules/@types/node",
+        "//:node_modules/@angular/core",
+        "//:node_modules/@types/node",
     ],
 )
 

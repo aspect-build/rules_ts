@@ -1,8 +1,8 @@
 """Shows how https://www.typescriptlang.org/tsconfig/#declarationDir can be used to write
 .d.ts typings files to a different folder than the JavaScript outputs."""
 
-load("@aspect_bazel_lib//lib:testing.bzl", "assert_outputs")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_lib//lib:testing.bzl", "assert_outputs")
 
 ts_project(
     name = "transpile",
@@ -20,8 +20,8 @@ assert_outputs(
     name = "check_transpile",
     actual = ":transpile",
     expected = [
-        "examples/declaration_dir/out/code/lib.js",
-        "examples/declaration_dir/out/code/lib.js.map",
+        "declaration_dir/out/code/lib.js",
+        "declaration_dir/out/code/lib.js.map",
     ],
 )
 
@@ -36,7 +36,7 @@ assert_outputs(
     name = "check_types",
     actual = ":types",
     expected = [
-        "examples/declaration_dir/out/types/lib.d.ts",
-        "examples/declaration_dir/out/types/lib.d.ts.map",
+        "declaration_dir/out/types/lib.d.ts",
+        "declaration_dir/out/types/lib.d.ts.map",
     ],
 )

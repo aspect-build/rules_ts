@@ -6,7 +6,7 @@ ts_config(
     src = "tsconfig.json",
     deps = [
         "types/typings.d.ts",
-        "//examples:node_modules/@types/node",
+        "//:node_modules/@types/node",
     ],
 )
 

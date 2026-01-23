@@ -5,8 +5,8 @@ ts_project(
     name = "core",
     declaration = True,
     isolated_typecheck = True,
-    tsconfig = "//examples/isolated_typecheck:tsconfig",
-    visibility = ["//examples/isolated_typecheck:__subpackages__"],
+    tsconfig = "//isolated_typecheck:tsconfig",
+    visibility = ["//isolated_typecheck:__subpackages__"],
 )
 
 build_test(

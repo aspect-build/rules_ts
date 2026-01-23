@@ -3,5 +3,5 @@ load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 ts_project(
     name = "ts",
     srcs = ["b.ts"],
-    deps = ["//examples/ts_project_dep/a:ts"],
+    deps = ["//ts_project_dep/a:ts"],
 )

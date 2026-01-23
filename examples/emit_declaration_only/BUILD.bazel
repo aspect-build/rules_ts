@@ -6,8 +6,8 @@ transpile to JavaScript, such as when TypeScript can be natively understood by t
 Note, to use an alternative transpiler, see the `transpiler` attribute instead.
 """
 
-load("@aspect_bazel_lib//lib:testing.bzl", "assert_contains")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_lib//lib:testing.bzl", "assert_contains")
 
 ts_project(
     name = "declaration_only",

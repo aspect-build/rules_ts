@@ -75,6 +75,18 @@ workspaces:
                   without: true
             - buildifier:
                   without: true
+    examples:
+        tasks:
+            - bazel-6:
+                  without: true
+            - bazel-7:
+                  without: true
+            - bazel-8:
+                  queue: aspect-medium
+            - format:
+                  without: true
+            - buildifier:
+                  without: true
 tasks:
     - test:
           name: 'Test (Bazel 6.x)'

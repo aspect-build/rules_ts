@@ -1,5 +1,5 @@
-load("@aspect_bazel_lib//lib:testing.bzl", "assert_outputs")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_lib//lib:testing.bzl", "assert_outputs")
 load("@bazel_skylib//lib:partial.bzl", "partial")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 
@@ -318,8 +318,8 @@ assert_outputs(
     name = "declarations_tsc_test",
     actual = ":declarations_tsc",
     expected = [
-        "examples/transpiler/build-declarations_tsc/a.js",
-        "examples/transpiler/build-declarations_tsc/a.js.map",
+        "transpiler/build-declarations_tsc/a.js",
+        "transpiler/build-declarations_tsc/a.js.map",
     ],
 )
 
@@ -345,7 +345,7 @@ assert_outputs(
     name = "declarations_custom_test",
     actual = ":declarations_custom",
     expected = [
-        "examples/transpiler/build-declarations_custom/a.js",
-        "examples/transpiler/build-declarations_custom/a.js.map",
+        "transpiler/build-declarations_custom/a.js",
+        "transpiler/build-declarations_custom/a.js.map",
     ],
 )

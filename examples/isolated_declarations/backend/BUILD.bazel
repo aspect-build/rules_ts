@@ -1,15 +1,15 @@
-load("@aspect_bazel_lib//lib:testing.bzl", "assert_outputs")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_lib//lib:testing.bzl", "assert_outputs")
 
 ts_project(
     name = "backend",
     declaration = True,
-    tsconfig = "//examples/isolated_declarations:tsconfig",
-    deps = ["//examples/isolated_declarations/core"],
+    tsconfig = "//isolated_declarations:tsconfig",
+    deps = ["//isolated_declarations/core"],
 )
 
 assert_outputs(
     name = "test_backend_default_outputs",
     actual = "backend",
-    expected = ["examples/isolated_declarations/backend/index.js"],
+    expected = ["isolated_declarations/backend/index.js"],
 )

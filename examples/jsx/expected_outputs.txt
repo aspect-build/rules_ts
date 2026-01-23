@@ -1,8 +1,8 @@
-examples/jsx/out/a.d.ts
-examples/jsx/out/a.d.ts.map
-examples/jsx/out/b.d.ts
-examples/jsx/out/b.d.ts.map
-examples/jsx/out/a.jsx
-examples/jsx/out/a.jsx.map
-examples/jsx/out/b.jsx
-examples/jsx/out/b.jsx.map
+jsx/out/a.d.ts
+jsx/out/a.d.ts.map
+jsx/out/b.d.ts
+jsx/out/b.d.ts.map
+jsx/out/a.jsx
+jsx/out/a.jsx.map
+jsx/out/b.jsx
+jsx/out/b.jsx.map

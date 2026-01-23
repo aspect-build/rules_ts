@@ -1,14 +1,13 @@
 "Adapter from the Babel CLI to the ts_project#transpiler interface"
 
-load("@aspect_bazel_lib//lib:copy_file.bzl", "copy_file")
-load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
-load("@npm//examples:@babel/cli/package_json.bzl", "bin")
+load("@bazel_lib//lib:copy_file.bzl", "copy_file")
+load("@bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
+load("@npm//:@babel/cli/package_json.bzl", "bin")
 
 # buildifier: disable=function-docstring
 def babel(name, srcs, out_dir = None, resolve_json = False, commonjs = False, **kwargs):
     # rules_js runs under the output tree in bazel-out/[arch]/bin
-    # and we additionally chdir to the examples/ folder beneath that.
-    execroot = "../../../.."
+    execroot = "../../.."
 
     outs = []
 
@@ -69,10 +68,9 @@ def babel(name, srcs, out_dir = None, resolve_json = False, commonjs = False, **
             name = "{}_{}".format(name, idx),
             srcs = [
                 src,
-                "//examples:node_modules/@babel/preset-typescript",
-                "//examples:node_modules/@babel/plugin-transform-modules-commonjs",
+                "//:node_modules/@babel/preset-typescript",
+                "//:node_modules/@babel/plugin-transform-modules-commonjs",
             ],
-            chdir = "examples",
             outs = [js_out, map_out],
             args = args,
             **kwargs

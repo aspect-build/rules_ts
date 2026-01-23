@@ -1,6 +1,6 @@
 load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
 
-package(default_visibility = ["//examples/project_references:__subpackages__"])
+package(default_visibility = ["//project_references:__subpackages__"])
 
 # Demonstrate that transitive tsconfig extends clauses work
 ts_config(
@@ -8,7 +8,7 @@ ts_config(
     src = "tsconfig.json",
     deps = [
         "tsconfig-extended.json",
-        "//examples/project_references:tsconfig",
+        "//project_references:tsconfig",
     ],
 )
 
@@ -22,7 +22,7 @@ ts_project(
     # Use @babel/parser since the package.json is required to resolve "typings" field
     # Repro of rules_nodejs#2044
     deps = [
-        "//examples:node_modules/@babel/parser",
-        "//examples:node_modules/@babel/types",
+        "//:node_modules/@babel/parser",
+        "//:node_modules/@babel/types",
     ],
 )

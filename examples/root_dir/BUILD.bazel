@@ -4,8 +4,8 @@ Note that rootDirs and rootDir are totally different features in TypeScript,
 despite their similar naming.
 """
 
-load("@aspect_bazel_lib//lib:testing.bzl", "assert_outputs")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_lib//lib:testing.bzl", "assert_outputs")
 
 # By default, TypeScript calculates rootDir as the closest common ancestor
 # so you'd expect outDir/a.ts to be produced.
@@ -20,8 +20,8 @@ assert_outputs(
     name = "default_test",
     actual = "default",
     expected = [
-        "examples/root_dir/subdir/a.js",
-        "examples/root_dir/subdir/deep/subdir/b.js",
+        "root_dir/subdir/a.js",
+        "root_dir/subdir/deep/subdir/b.js",
     ],
 )
 
@@ -37,8 +37,8 @@ assert_outputs(
     name = "dot_test",
     actual = "dot",
     expected = [
-        "examples/root_dir/dot/subdir/a.js",
-        "examples/root_dir/dot/subdir/deep/subdir/b.js",
+        "root_dir/dot/subdir/a.js",
+        "root_dir/dot/subdir/deep/subdir/b.js",
     ],
 )
 
@@ -54,8 +54,8 @@ assert_outputs(
     name = "dot-slash_test",
     actual = "dot-slash",
     expected = [
-        "examples/root_dir/dot-slash/subdir/a.js",
-        "examples/root_dir/dot-slash/subdir/deep/subdir/b.js",
+        "root_dir/dot-slash/subdir/a.js",
+        "root_dir/dot-slash/subdir/deep/subdir/b.js",
     ],
 )
 
@@ -75,8 +75,8 @@ assert_outputs(
     name = "strip_test",
     actual = "strip",
     expected = [
-        "examples/root_dir/a.js",
-        "examples/root_dir/deep/subdir/b.js",
+        "root_dir/a.js",
+        "root_dir/deep/subdir/b.js",
     ],
 )
 
@@ -91,7 +91,7 @@ assert_outputs(
     name = "replace_test",
     actual = "replace",
     expected = [
-        "examples/root_dir/otherdir/a.js",
-        "examples/root_dir/otherdir/deep/subdir/b.js",
+        "root_dir/otherdir/a.js",
+        "root_dir/otherdir/deep/subdir/b.js",
     ],
 )

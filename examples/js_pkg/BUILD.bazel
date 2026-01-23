@@ -5,7 +5,7 @@ npm_package(
     name = "pkg",
     srcs = ["index.js"],
     package = "@myorg/js_pkg",
-    visibility = ["//examples:__subpackages__"],
+    visibility = ["//:__subpackages__"],
 )
 
 js_library(
@@ -13,5 +13,5 @@ js_library(
     # Provide index.js as types available to downstream type checking rules
     # since it has no corresponding .d.ts file.
     types = ["index.js"],
-    visibility = ["//examples:__subpackages__"],
+    visibility = ["//:__subpackages__"],
 )

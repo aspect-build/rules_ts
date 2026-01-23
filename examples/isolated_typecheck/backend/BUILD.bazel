@@ -1,5 +1,5 @@
-load("@aspect_bazel_lib//lib:testing.bzl", "assert_outputs")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
+load("@bazel_lib//lib:testing.bzl", "assert_outputs")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 
 # A tsconfig file/target with dependencies required for type-checking and potentially
@@ -9,8 +9,8 @@ ts_config(
     src = "tsconfig.json",
     visibility = [":__subpackages__"],
     deps = [
-        "//examples:node_modules/@types/node",
-        "//examples/isolated_typecheck:tsconfig",
+        "//:node_modules/@types/node",
+        "//isolated_typecheck:tsconfig",
     ],
 )
 
@@ -19,13 +19,13 @@ ts_project(
     declaration = True,
     isolated_typecheck = True,
     tsconfig = ":tsconfig",
-    deps = ["//examples/isolated_typecheck/core"],
+    deps = ["//isolated_typecheck/core"],
 )
 
 assert_outputs(
     name = "test_backend_default_outputs",
     actual = "backend",
-    expected = ["examples/isolated_typecheck/backend/index.js"],
+    expected = ["isolated_typecheck/backend/index.js"],
 )
 
 build_test(

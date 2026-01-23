@@ -1,15 +1,15 @@
 load("@aspect_rules_js//js:defs.bzl", "js_test")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 
-package(default_visibility = ["//examples/project_references:__subpackages__"])
+package(default_visibility = ["//project_references:__subpackages__"])
 
 ts_project(
     name = "lib_b",
     srcs = ["index.ts"],
     composite = True,
     declaration = True,
-    extends = "//examples/project_references:tsconfig-base",
-    deps = ["//examples/project_references/lib_a"],
+    extends = "//project_references:tsconfig-base",
+    deps = ["//project_references/lib_a"],
 )
 
 ts_project(
@@ -18,11 +18,11 @@ ts_project(
     srcs = [":index.spec.ts"],
     composite = True,
     declaration = True,
-    extends = "//examples/project_references:tsconfig-base",
+    extends = "//project_references:tsconfig-base",
     tsconfig = "tsconfig-test.json",
     deps = [
         ":lib_b",
-        "//examples:node_modules/@types/node",
+        "//:node_modules/@types/node",
     ],
 )
 

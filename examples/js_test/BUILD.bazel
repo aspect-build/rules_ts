@@ -14,7 +14,7 @@ ts_project(
 # If run with
 #
 # ```
-# bazel run //examples/js_test:test --config=debug
+# bazel run //js_test:test --config=debug
 # ```
 #
 # will start a debug session that can be connected to with Visual Studio Code. VSCode will follow
