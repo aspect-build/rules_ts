@@ -7,5 +7,5 @@ ts_project(
             "declaration": True,
         },
     },
-    deps = ["//examples/isolated_declarations/core"],
+    deps = ["//isolated_declarations/core"],
 )

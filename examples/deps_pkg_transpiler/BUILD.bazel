@@ -1,6 +1,6 @@
 load("@aspect_rules_js//npm:defs.bzl", "npm_package")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
-load("//examples/transpiler:babel.bzl", "babel")
+load("//transpiler:babel.bzl", "babel")
 
 ts_config(
     name = "tsconfig",
@@ -14,13 +14,13 @@ ts_project(
     data = [
         # Also propagate the date-fns npm package downstream so it is an runtime dependency
         # of any linked npm_package that this target is used by.
-        "//examples:node_modules/date-fns",
+        "//:node_modules/date-fns",
     ],
     declaration = True,
     transpiler = babel,
     deps = [
-        "//examples:node_modules/date-fns",
-        "//examples/deps_pkg_transpiler/b",
+        "//:node_modules/date-fns",
+        "//deps_pkg_transpiler/b",
     ],
 )
 
@@ -30,7 +30,7 @@ npm_package(
         ":lib",
     ],
     package = "@myorg/deps_pkg_transpiler",
-    visibility = ["//examples:__subpackages__"],
+    visibility = ["//:__subpackages__"],
 )
 
 ts_project(
@@ -49,6 +49,6 @@ ts_project(
     declaration = True,
     transpiler = babel,
     deps = [
-        "//examples:node_modules/@myorg/deps_pkg_transpiler",
+        "//:node_modules/@myorg/deps_pkg_transpiler",
     ],
 )

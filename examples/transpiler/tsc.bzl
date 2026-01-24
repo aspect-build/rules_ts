@@ -1,6 +1,6 @@
 "Adapter from the TypeScript CLI to the ts_project#transpiler/declaration_transpiler interface"
 
-load("@npm//examples:typescript/package_json.bzl", typescript_bin = "bin")
+load("@npm//:typescript/package_json.bzl", typescript_bin = "bin")
 
 # tsc configured with --outDir and --emitDeclarationOnly
 def tsc_dts(name, srcs, out_dir, **kwargs):

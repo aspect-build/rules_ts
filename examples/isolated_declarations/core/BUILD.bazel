@@ -3,6 +3,6 @@ load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 ts_project(
     name = "core",
     declaration = True,
-    tsconfig = "//examples/isolated_declarations:tsconfig",
-    visibility = ["//examples/isolated_declarations:__subpackages__"],
+    tsconfig = "//isolated_declarations:tsconfig",
+    visibility = ["//isolated_declarations:__subpackages__"],
 )

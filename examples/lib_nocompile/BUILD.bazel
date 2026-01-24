@@ -1,12 +1,12 @@
 load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
-load("//examples/transpiler:babel.bzl", "babel")
+load("//transpiler:babel.bzl", "babel")
 
 js_library(
     name = "pkg",
     srcs = [":lib"],
-    visibility = ["//examples:__subpackages__"],
+    visibility = ["//:__subpackages__"],
 )
 
 ts_project(
@@ -15,7 +15,7 @@ ts_project(
     declaration = True,  # True even though we are asserting tsc is not run
     tags = ["manual"],  # manual to prevent test //... from triggering
     transpiler = babel,
-    visibility = ["//examples:__subpackages__"],
+    visibility = ["//:__subpackages__"],
 )
 
 # Targets which should never force tsc to run

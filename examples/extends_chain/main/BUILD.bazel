@@ -4,14 +4,14 @@ load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
 ts_project(
     name = "main",
     srcs = ["main.ts"],
-    extends = "//examples/extends_chain:tsconfig_node",
+    extends = "//extends_chain:tsconfig_node",
 )
 
 # Alternately, we could define tsconfig dictionary
 ts_project(
     name = "config_dict",
     srcs = ["main.ts"],
-    extends = "//examples/extends_chain:tsconfig_node",
+    extends = "//extends_chain:tsconfig_node",
     out_dir = "config_dict",
     tsconfig = {
         "compilerOptions": {
@@ -25,7 +25,7 @@ ts_config(
     name = "tsconfig_node_extension",
     src = "tsconfig.json",
     deps = [
-        "//examples/extends_chain:tsconfig_node",
+        "//extends_chain:tsconfig_node",
     ],
 )
 

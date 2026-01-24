@@ -10,7 +10,7 @@ ts_project(
             "isolatedDeclarations": True,
         },
     },
-    deps = ["//examples/isolated_typecheck/core"],
+    deps = ["//isolated_typecheck/core"],
 )
 
 build_test(

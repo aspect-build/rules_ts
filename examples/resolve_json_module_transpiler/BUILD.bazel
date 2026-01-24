@@ -1,10 +1,10 @@
 """Shows how https://www.typescriptlang.org/tsconfig/#resolveJsonModule can be used."""
 
-load("@aspect_bazel_lib//lib:testing.bzl", "assert_contains")
 load("@aspect_rules_js//js:defs.bzl", "js_test")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_lib//lib:testing.bzl", "assert_contains")
 load("@bazel_skylib//lib:partial.bzl", "partial")
-load("//examples/transpiler:babel.bzl", "babel")
+load("//transpiler:babel.bzl", "babel")
 
 ts_project(
     name = "ts",

@@ -11,5 +11,5 @@ js_library(
         "index.d.ts",
         "index.js",
     ],
-    visibility = ["//examples:__subpackages__"],
+    visibility = ["//:__subpackages__"],
 )

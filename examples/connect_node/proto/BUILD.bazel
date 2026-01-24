@@ -1,6 +1,6 @@
 load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@aspect_rules_ts//ts:proto.bzl", "ts_proto_library")
-load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@protobuf//bazel:proto_library.bzl", "proto_library")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -17,7 +17,7 @@ ts_proto_library(
     gen_connect_query_service_mapping = {
         "eliza.proto": ["ElizaService"],
     },
-    node_modules = "//examples/connect_node:node_modules",
+    node_modules = "//connect_node:node_modules",
     proto = ":eliza_proto",
     proto_srcs = proto_srcs,
 )

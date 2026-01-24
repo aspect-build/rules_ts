@@ -1,7 +1,7 @@
 """Simplest example of using ts_project to transpile and type-check a file"""
 
-load("@aspect_bazel_lib//lib:testing.bzl", "assert_contains")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_lib//lib:testing.bzl", "assert_contains")
 
 # Type-checks, and emits output to
 # bazel-bin/examples/simple/foo.js
@@ -18,13 +18,13 @@ ts_project(
     deps = [
         # Two dependencies are linked from first-party code in this repo
         # by the npm_link_package calls in /examples/BUILD.bazel
-        "//examples:node_modules/@myorg/js_pkg",
-        "//examples:node_modules/@myorg/js_lib",
-        "//examples:node_modules/@myorg/dts_pkg",
+        "//:node_modules/@myorg/js_pkg",
+        "//:node_modules/@myorg/js_lib",
+        "//:node_modules/@myorg/dts_pkg",
         # Two dependencies are linked from third-party npm packages
         # by the npm_link_all_packages call in /examples/BUILD.bazel
-        "//examples:node_modules/@types/node",
-        "//examples:node_modules/date-fns",
+        "//:node_modules/@types/node",
+        "//:node_modules/date-fns",
     ],
 )
 

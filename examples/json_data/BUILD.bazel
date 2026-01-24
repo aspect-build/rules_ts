@@ -22,7 +22,7 @@ ts_project(
         },
     },
     deps = [
-        "//examples:node_modules/@types/node",
+        "//:node_modules/@types/node",
     ],
 )
 

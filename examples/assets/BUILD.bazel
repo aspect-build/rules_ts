@@ -1,7 +1,7 @@
-load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
-load("@aspect_bazel_lib//lib:testing.bzl", "assert_outputs")
 load("@aspect_rules_js//js:defs.bzl", "js_test")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
+load("@bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
+load("@bazel_lib//lib:testing.bzl", "assert_outputs")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 
 genrule(
@@ -15,7 +15,7 @@ ts_config(
     src = "tsconfig.json",
     deps = [
         "types/typings.d.ts",
-        "//examples:node_modules/@types/node",
+        "//:node_modules/@types/node",
     ],
 )
 
@@ -95,9 +95,9 @@ assert_outputs(
     name = "ts-out-target_outputs_test",
     actual = ":ts-out-target",
     expected = [
-        "examples/assets/out-target/src/generated.json",
-        "examples/assets/out-target/src/index.js",
-        "examples/assets/out-target/src/styles.css",
+        "assets/out-target/src/generated.json",
+        "assets/out-target/src/index.js",
+        "assets/out-target/src/styles.css",
     ],
 )
 
@@ -123,9 +123,9 @@ assert_outputs(
     name = "ts-out-copy-target_outputs_test",
     actual = ":ts-out-copy-target",
     expected = [
-        "examples/assets/out-copy-target/src/generated.json",
-        "examples/assets/out-copy-target/src/index.js",
-        "examples/assets/out-copy-target/src/styles.css",
+        "assets/out-copy-target/src/generated.json",
+        "assets/out-copy-target/src/index.js",
+        "assets/out-copy-target/src/styles.css",
     ],
 )
 
@@ -145,9 +145,9 @@ assert_outputs(
     name = "ts-out-copy-target-abs_outputs_test",
     actual = ":ts-out-copy-target-abs",
     expected = [
-        "examples/assets/out-copy-target-abs/src/generated.json",
-        "examples/assets/out-copy-target-abs/src/index.js",
-        "examples/assets/out-copy-target-abs/src/styles.css",
+        "assets/out-copy-target-abs/src/generated.json",
+        "assets/out-copy-target-abs/src/index.js",
+        "assets/out-copy-target-abs/src/styles.css",
     ],
 )
 
@@ -189,10 +189,10 @@ assert_outputs(
     name = "ts-root-out_outputs_test",
     actual = ":ts-root-out",
     expected = [
-        "examples/assets/root-out/generated.json",
-        "examples/assets/root-out/index.js",
-        "examples/assets/root-out/metadata/generated_metadata.json",
-        "examples/assets/root-out/styles.css",
+        "assets/root-out/generated.json",
+        "assets/root-out/index.js",
+        "assets/root-out/metadata/generated_metadata.json",
+        "assets/root-out/styles.css",
     ],
 )
 

@@ -1,12 +1,12 @@
-load("@aspect_bazel_lib//lib:write_source_files.bzl", "write_source_files")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_lib//lib:write_source_files.bzl", "write_source_files")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 
 ts_project(
     name = "lib",
     srcs = [
         "index.ts",
-        "//examples/global_dts_generated_tsconfig:lib_types",
+        "//global_dts_generated_tsconfig:lib_types",
     ],
     tsconfig = {},
 )

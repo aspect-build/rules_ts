@@ -4,7 +4,7 @@ ts_config(
     name = "config",
     src = "tsconfig.json",
     deps = [
-        "//examples:node_modules/@tsconfig/strictest",
+        "//:node_modules/@tsconfig/strictest",
     ],
 )
 

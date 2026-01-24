@@ -1,5 +1,5 @@
 load("@aspect_rules_ts//ts:proto.bzl", "ts_proto_library")
-load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@protobuf//bazel:proto_library.bzl", "proto_library")
 
 proto_library(
     name = "s_proto",
@@ -13,13 +13,13 @@ proto_library(
     # When set, .proto source files in the srcs attribute of this rule are accessible at their path with this prefix cut off.
     # If it's a relative path (not starting with a slash), it's taken as a package-relative one.
     # If it's an absolute one, it's understood as a repository-relative path.
-    strip_import_prefix = "/examples",
+    strip_import_prefix = "/proto_grpc",
     visibility = ["//visibility:public"],
 )
 
 ts_proto_library(
     name = "s_ts_proto",
-    node_modules = "//examples/proto_grpc:node_modules",
+    node_modules = "//proto_grpc:node_modules",
     proto = ":s_proto",
     proto_srcs = ["s.proto"],
     visibility = ["//visibility:public"],

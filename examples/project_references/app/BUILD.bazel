@@ -4,6 +4,6 @@ ts_project(
     name = "compile",
     composite = True,
     declaration = True,
-    extends = "//examples/project_references:tsconfig-base",
-    deps = ["//examples/project_references/lib_b"],
+    extends = "//project_references:tsconfig-base",
+    deps = ["//project_references/lib_b"],
 )
