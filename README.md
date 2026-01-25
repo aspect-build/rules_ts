@@ -22,7 +22,7 @@ rules_ts is just a part of what Aspect provides:
 
 ### Starter repo
 
-The fastest way to try this in an empty project is to click the green "Use this template" button on https://github.com/bazel-starters/ruby.
+The fastest way to try this in an empty project is to click the green "Use this template" button on https://github.com/bazel-starters/js.
 
 ### Install in your project
 
