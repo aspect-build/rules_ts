@@ -18,7 +18,13 @@ rules_ts is just a part of what Aspect provides:
 -   _Need help?_ This ruleset has support provided by https://aspect.build/services.
 -   See our other Bazel rules, especially those built for rules_js, linked from <https://github.com/aspect-build>
 
-## Installation
+## Getting Started
+
+### Starter repo
+
+The fastest way to try this in an empty project is to click the green "Use this template" button on https://github.com/bazel-starters/ruby.
+
+### Install in your project
 
 Follow instructions from the release you wish to use:
 <https://github.com/aspect-build/rules_ts/releases>
