@@ -3,9 +3,50 @@ workspaces:
     .:
         icon: typescript
         label: rules_ts
+        tasks:
+            # No Bazel6 in root/examples
+            - bazel-6:
+                  without: true
+            # No WORKSPACE root/examples
+            - bazel-7-wksp:
+                  without: true
+    examples:
+        tasks:
+            # No Bazel6 in root/examples
+            - bazel-6:
+                  without: true
+            # No Bazel7 in root/examples
+            - bazel-7:
+                  without: true
+            # No WORKSPACE root/examples
+            - bazel-7-wksp:
+                  without: true
+            - format:
+                  without: true
+            - buildifier:
+                  without: true
     e2e/smoke:
         tasks:
             - bazel-6:
+                  # TODO: smoke broken with bazel6 due to rules_proto
+                  without: true
+            - bazel-7:
+                  queue: aspect-medium
+            - bazel-7-wksp:
+                  queue: aspect-medium
+            - bazel-8:
+                  queue: aspect-medium
+            - format:
+                  without: true
+            - buildifier:
+                  without: true
+    e2e/rules_js_v3:
+        tasks:
+            # No Bazel6 in rules_js v3
+            - bazel-6:
+                  without: true
+            # No WORKSPACE in rules_js v3
+            - bazel-7-wksp:
                   without: true
             - bazel-7:
                   queue: aspect-medium
@@ -16,23 +57,30 @@ workspaces:
             - buildifier:
                   without: true
     e2e/bzlmodules:
-        tasks:
+        tasks: &e2e_bzlmod_tasks
             - bazel-6:
-                  without: true
+                  queue: aspect-medium
             - bazel-7:
                   queue: aspect-medium
+            # bzlmod-only test
+            - bazel-7-wksp:
+                  without: true
             - bazel-8:
                   queue: aspect-medium
             - format:
                   without: true
             - buildifier:
                   without: true
-    e2e/rules_js_v3:
+    e2e/nested_repos:
         tasks:
+            # Bazel6 bzlmod extensions differ/broken-in-test
             - bazel-6:
                   without: true
             - bazel-7:
                   queue: aspect-medium
+            # bzlmod-only test
+            - bazel-7-wksp:
+                  without: true
             - bazel-8:
                   queue: aspect-medium
             - format:
@@ -40,10 +88,12 @@ workspaces:
             - buildifier:
                   without: true
     e2e/external_dep:
-        tasks:
+        tasks: &e2e_tasks
             - bazel-6:
                   queue: aspect-medium
             - bazel-7:
+                  queue: aspect-medium
+            - bazel-7-wksp:
                   queue: aspect-medium
             - bazel-8:
                   queue: aspect-medium
@@ -51,59 +101,40 @@ workspaces:
                   without: true
             - buildifier:
                   without: true
+    e2e/external_dep/app:
+        tasks: *e2e_tasks
     e2e/worker:
-        tasks:
-            - bazel-6:
-                  queue: aspect-medium
-            - bazel-7:
-                  queue: aspect-medium
-            - bazel-8:
-                  queue: aspect-medium
-            - format:
-                  without: true
-            - buildifier:
-                  without: true
-    e2e/test:
-        tasks:
-            - bazel-6:
-                  queue: aspect-medium
-            - bazel-7:
-                  queue: aspect-medium
-            - bazel-8:
-                  queue: aspect-medium
-            - format:
-                  without: true
-            - buildifier:
-                  without: true
-    examples:
-        tasks:
-            - bazel-6:
-                  without: true
-            - bazel-7:
-                  without: true
-            - bazel-8:
-                  queue: aspect-medium
-            - format:
-                  without: true
-            - buildifier:
-                  without: true
+        tasks: *e2e_tasks
 tasks:
     - test:
-          name: 'Test (Bazel 6.x)'
+          name: Bazel 6
           id: bazel-6
           bazel:
               flags:
                   - --incompatible_merge_fixed_and_default_shell_env
+                  - --enable_bzlmod=true
           env:
+              # NOTE: initial 6.6 build produces error
               USE_BAZEL_VERSION: 6.5.0
     - test:
-          name: 'Test (Bazel 7.x)'
+          name: Bazel 7
           id: bazel-7
           env:
               USE_BAZEL_VERSION: 7.x
     - test:
-          name: 'Test (Bazel 8.x)'
+          name: Bazel 7 (WORKSPACE)
+          id: bazel-7-wksp
+          bazel:
+              flags:
+                  - --enable_bzlmod=false
+          env:
+              USE_BAZEL_VERSION: 7.x
+    - test:
+          name: Bazel 8
           id: bazel-8
+          bazel:
+              flags:
+                  - --enable_workspace=true
           env:
               USE_BAZEL_VERSION: 8.x
     - format:
