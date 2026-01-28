@@ -1,7 +1,9 @@
 "Proto libraries for ts_proto_library tests."
+
 # These are a concrete package rather than using `write_file` in the test file,
 # since protoc would otherwise not find the proto files in the descriptor
 # database.
+load("@com_google_protobuf//bazel:proto_library.bzl", "proto_library")
 
 proto_library(
     name = "bar_proto",

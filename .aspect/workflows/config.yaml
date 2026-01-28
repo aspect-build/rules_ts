@@ -36,6 +36,9 @@ workspaces:
                   queue: aspect-medium
             - bazel-8:
                   queue: aspect-medium
+            - bazel-9:
+                  # TODO: requires updates to rulesets
+                  without: true
             - format:
                   without: true
             - buildifier:
@@ -52,12 +55,14 @@ workspaces:
                   queue: aspect-medium
             - bazel-8:
                   queue: aspect-medium
+            - bazel-9:
+                  queue: aspect-medium
             - format:
                   without: true
             - buildifier:
                   without: true
     e2e/bzlmodules:
-        tasks: &e2e_bzlmod_tasks
+        tasks:
             - bazel-6:
                   queue: aspect-medium
             - bazel-7:
@@ -66,6 +71,8 @@ workspaces:
             - bazel-7-wksp:
                   without: true
             - bazel-8:
+                  queue: aspect-medium
+            - bazel-9:
                   queue: aspect-medium
             - format:
                   without: true
@@ -83,6 +90,8 @@ workspaces:
                   without: true
             - bazel-8:
                   queue: aspect-medium
+            - bazel-9:
+                  queue: aspect-medium
             - format:
                   without: true
             - buildifier:
@@ -96,6 +105,8 @@ workspaces:
             - bazel-7-wksp:
                   queue: aspect-medium
             - bazel-8:
+                  queue: aspect-medium
+            - bazel-9:
                   queue: aspect-medium
             - format:
                   without: true
@@ -132,11 +143,13 @@ tasks:
     - test:
           name: Bazel 8
           id: bazel-8
-          bazel:
-              flags:
-                  - --enable_workspace=true
           env:
               USE_BAZEL_VERSION: 8.x
+    - test:
+          name: Bazel 9
+          id: bazel-9
+          env:
+              USE_BAZEL_VERSION: 9.x
     - format:
           queue: aspect-medium
           use_args_file: false

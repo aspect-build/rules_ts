@@ -1,7 +1,7 @@
 module(name = "nested_repos")
 
 bazel_dep(name = "aspect_rules_ts", version = "0.0.0")
-bazel_dep(name = "bazel_skylib", version = "1.8.1")
+bazel_dep(name = "bazel_skylib", version = "1.8.2")
 bazel_dep(name = "module_a")
 bazel_dep(name = "module_b")
 bazel_dep(name = "module_c")
@@ -28,3 +28,7 @@ local_path_override(
 
 rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext")
 rules_ts_ext.deps(ts_version = "5.9.2")
+
+# Override root MODULE with newer versions for bazel9 compat
+bazel_dep(name = "rules_nodejs", version = "6.5.0", dev_dependency = True)  # TODO(rm bazel6): repo_name = None)
+bazel_dep(name = "aspect_bazel_lib", version = "2.20.0", dev_dependency = True)  # TODO(rm bazel6): repo_name = None)
