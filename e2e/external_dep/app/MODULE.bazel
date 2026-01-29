@@ -4,10 +4,20 @@ local_path_override(
     path = "../../..",
 )
 
+bazel_dep(name = "e2e_external_dep", version = "0.0.0", dev_dependency = True, repo_name = "lib_wksp")
+local_path_override(
+    module_name = "e2e_external_dep",
+    path = "..",
+)
+
 # TODO: see note on rules_js in the parent MODULE.bazel
 bazel_dep(name = "aspect_rules_js", version = "2.0.0", dev_dependency = True)
-bazel_dep(name = "bazel_skylib", version = "1.5.0", dev_dependency = True)
+bazel_dep(name = "bazel_skylib", version = "1.8.2", dev_dependency = True)
 
 rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext", dev_dependency = True)
 rules_ts_ext.deps()
 use_repo(rules_ts_ext, "npm_typescript")
+
+# Override root MODULE with newer versions for bazel9 compat
+bazel_dep(name = "rules_nodejs", version = "6.5.0", dev_dependency = True)  # TODO(rm bazel6): repo_name = None)
+bazel_dep(name = "aspect_bazel_lib", version = "2.20.0", dev_dependency = True)  # TODO(rm bazel6): repo_name = None)

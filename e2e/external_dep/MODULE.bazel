@@ -1,12 +1,16 @@
-bazel_dep(name = "aspect_rules_ts", version = "0.0.0", dev_dependency = True)
+module(
+    name = "e2e_external_dep",
+)
+
+bazel_dep(name = "aspect_rules_ts", version = "0.0.0")
 local_path_override(
     module_name = "aspect_rules_ts",
     path = "../..",
 )
 
-bazel_dep(name = "bazel_skylib", version = "1.5.0", dev_dependency = True)
+bazel_dep(name = "bazel_skylib", version = "1.8.2")
 
-rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext", dev_dependency = True)
+rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext")
 rules_ts_ext.deps()
 
 # Example demonstrating that you can also have a second typescript version
@@ -28,3 +32,7 @@ local_path_override(
     module_name = "sub_external",
     path = "./sub_external",
 )
+
+# Override root MODULE with newer versions for bazel9 compat
+bazel_dep(name = "rules_nodejs", version = "6.5.0", dev_dependency = True)  # TODO(rm bazel6): repo_name = None)
+bazel_dep(name = "aspect_bazel_lib", version = "2.20.0", dev_dependency = True)  # TODO(rm bazel6): repo_name = None)

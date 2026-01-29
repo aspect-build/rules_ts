@@ -4,6 +4,7 @@ we don't want to trigger eager fetches of these for builds that don't want to ru
 """
 
 load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
+load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 load("@bazelrc-preset.bzl", "bazelrc_preset")
 
 package(default_visibility = ["//:__subpackages__"])
