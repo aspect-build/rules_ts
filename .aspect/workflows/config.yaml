@@ -4,17 +4,11 @@ workspaces:
         icon: typescript
         label: rules_ts
         tasks:
-            # No Bazel6 in root/examples
-            - bazel-6:
-                  without: true
             # No WORKSPACE root/examples
             - bazel-7-wksp:
                   without: true
     examples:
         tasks:
-            # No Bazel6 in root/examples
-            - bazel-6:
-                  without: true
             # No Bazel7 in root/examples
             - bazel-7:
                   without: true
@@ -27,9 +21,6 @@ workspaces:
                   without: true
     e2e/smoke:
         tasks:
-            - bazel-6:
-                  # TODO: smoke broken with bazel6 due to rules_proto
-                  without: true
             - bazel-7:
                   queue: aspect-medium
             - bazel-7-wksp:
@@ -45,9 +36,6 @@ workspaces:
                   without: true
     e2e/rules_js_v3:
         tasks:
-            # No Bazel6 in rules_js v3
-            - bazel-6:
-                  without: true
             # No WORKSPACE in rules_js v3
             - bazel-7-wksp:
                   without: true
@@ -63,8 +51,6 @@ workspaces:
                   without: true
     e2e/bzlmodules:
         tasks:
-            - bazel-6:
-                  queue: aspect-medium
             - bazel-7:
                   queue: aspect-medium
             # bzlmod-only test
@@ -80,9 +66,6 @@ workspaces:
                   without: true
     e2e/nested_repos:
         tasks:
-            # Bazel6 bzlmod extensions differ/broken-in-test
-            - bazel-6:
-                  without: true
             - bazel-7:
                   queue: aspect-medium
             # bzlmod-only test
@@ -98,8 +81,6 @@ workspaces:
                   without: true
     e2e/external_dep:
         tasks: &e2e_tasks
-            - bazel-6:
-                  queue: aspect-medium
             - bazel-7:
                   queue: aspect-medium
             - bazel-7-wksp:
@@ -117,16 +98,6 @@ workspaces:
     e2e/worker:
         tasks: *e2e_tasks
 tasks:
-    - test:
-          name: Bazel 6
-          id: bazel-6
-          bazel:
-              flags:
-                  - --incompatible_merge_fixed_and_default_shell_env
-                  - --enable_bzlmod=true
-          env:
-              # NOTE: initial 6.6 build produces error
-              USE_BAZEL_VERSION: 6.5.0
     - test:
           name: Bazel 7
           id: bazel-7
