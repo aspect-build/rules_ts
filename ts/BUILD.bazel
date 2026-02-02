@@ -164,12 +164,6 @@ bzl_library(
     ] + (["@bazel_tools//tools/build_defs/repo:cache.bzl"] if bazel_lib_utils.is_bazel_7_or_greater() else []),
 )
 
-starlark_doc_extract(
-    name = "repositories.doc_extract",
-    src = "repositories.bzl",
-    deps = [":repositories"],
-)
-
 bzl_library(
     name = "extensions",
     srcs = ["extensions.bzl"],
@@ -178,6 +172,12 @@ bzl_library(
         ":repositories",
         "//ts/private:npm_repositories",
     ],
+)
+
+starlark_doc_extract(
+    name = "extensions.doc_extract",
+    src = "extensions.bzl",
+    deps = [":extensions"],
 )
 
 bzl_library(
