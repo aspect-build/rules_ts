@@ -22,20 +22,6 @@ bazel_dep(name = "rules_proto", version = "6.0.0")
 tel = use_extension("@aspect_tools_telemetry//:extension.bzl", "telemetry")
 use_repo(tel, "aspect_tools_telemetry_report")
 
-http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-
-http_archive(
-    name = "tsgo-darwin-arm64",
-    build_file_content = """\
-load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
-native_binary(name = "tsgo", src = "lib/tsgo", data = glob(["lib/*.d.ts"]), visibility = ["//visibility:public"])""",
-    integrity = "sha512-O7Hhb9m8AZJCAUSBbGmZs7Vm890Kh5Z3xAAASs+L4thtPM0oRckeaoXLvHeE9Qy1p8qG//EmZ3+uSdtUTV4wqg==",
-    strip_prefix = "package",
-    urls = [
-        "https://registry.npmjs.org/@typescript/native-preview-darwin-arm64/-/native-preview-darwin-arm64-7.0.0-dev.20251117.1.tgz",
-    ],
-)
-
 ####### Dev dependencies ########
 
 bazel_dep(name = "aspect_rules_lint", version = "1.13.0", dev_dependency = True)

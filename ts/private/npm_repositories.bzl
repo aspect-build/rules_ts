@@ -19,6 +19,10 @@ def _http_archive_version_impl(rctx):
             ts = p["devDependencies"]["typescript"]
         elif "dependencies" in p.keys() and "typescript" in p["dependencies"]:
             ts = p["dependencies"]["typescript"]
+        elif "devDependencies" in p.keys() and "@typescript/native-preview" in p["devDependencies"]:
+            ts = p["devDependencies"]["@typescript/native-preview"]
+        elif "dependencies" in p.keys() and "@typescript/native-preview" in p["dependencies"]:
+            ts = p["dependencies"]["@typescript/native-preview"]
         else:
             fail("key 'typescript' not found in either dependencies or devDependencies of %s" % json_path)
         version = ts

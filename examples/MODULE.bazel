@@ -28,3 +28,17 @@ use_repo(pnpm, "pnpm")
 rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext")
 rules_ts_ext.deps(ts_version_from = "//:package.json")
 use_repo(rules_ts_ext, "npm_typescript")
+
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+    name = "tsgo-darwin-arm64",
+    build_file_content = """\
+load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
+native_binary(name = "tsgo", src = "lib/tsgo", data = glob(["lib/*.d.ts"]), visibility = ["//visibility:public"])""",
+    integrity = "sha512-Jo5kVoxaewKPn/3bKWyUB/gPR+Tjhj6isLc8VshV4OyFX4n6pkvVyk3ANivl7Kwmiv3WGKGUotbZ71DKCZATwA==",
+    strip_prefix = "package",
+    urls = [
+        "https://registry.npmjs.org/@typescript/native-preview-darwin-arm64/-/native-preview-darwin-arm64-7.0.0-dev.20260130.1.tgz",
+    ],
+)
