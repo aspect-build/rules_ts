@@ -81,13 +81,6 @@ Just add this to `/.bazelrc``:
     # Bazel 6.4 or greater: 'common' means 'any command that supports this flag'
     common --@aspect_rules_ts//ts:default_to_tsc_transpiler
 
-    # Between Bazel 6.0 and 6.3, you need all of this, to avoid discarding the analysis cache:
-    build --@aspect_rules_ts//ts:default_to_tsc_transpiler
-    fetch --@aspect_rules_ts//ts:default_to_tsc_transpiler
-    query --@aspect_rules_ts//ts:default_to_tsc_transpiler
-
-    # Before Bazel 6.0, only the 'build' and 'fetch' lines work.
-
 ### Other Transpilers
 
 The `transpiler` attribute accepts any rule or macro with this signature: `(name, srcs, **kwargs)`

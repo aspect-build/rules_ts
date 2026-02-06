@@ -70,10 +70,6 @@ def ts_project(
     Unlike bare `tsc`, this rule understands the Bazel interop mechanism (Providers)
     so that this rule works with others that produce or consume TypeScript typings (`.d.ts` files).
 
-    One of the benefits of using ts_project is that it understands the [Bazel Worker Protocol]
-    which makes the overhead of starting the compiler be a one-time cost.
-    Worker mode is on by default to speed up build and typechecking process.
-
     Some TypeScript options affect which files are emitted, and Bazel needs to predict these ahead-of-time.
     As a result, several options from the tsconfig file must be mirrored as attributes to ts_project.
     A validation action is run to help ensure that these are correctly mirrored.
@@ -81,8 +77,6 @@ def ts_project(
 
     If you have problems getting your `ts_project` to work correctly, read the dedicated
     [troubleshooting guide](/docs/troubleshooting.md).
-
-    [Bazel Worker Protocol]: https://bazel.build/remote/persistent
 
     Args:
         name: a name for this target
