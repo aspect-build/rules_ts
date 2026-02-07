@@ -35,25 +35,11 @@ You must choose exactly one of the following flags:
     # Bazel 6.4 or greater: 'common' means 'any command that supports this flag'
     common --@aspect_rules_ts//ts:skipLibCheck=always
 
-    # Between Bazel 6.0 and 6.3, you need all of this, to avoid discarding the analysis cache:
-    build --@aspect_rules_ts//ts:skipLibCheck=always
-    fetch --@aspect_rules_ts//ts:skipLibCheck=always
-    query --@aspect_rules_ts//ts:skipLibCheck=always
-
-    # Before Bazel 6.0, only the 'build' and 'fetch' lines work.
-
 2. To choose more correct typechecks, put this in /.bazelrc:
 
     # honor the setting of `skipLibCheck` in the tsconfig.json file
     # Bazel 6.4 or greater: 'common' means 'any command that supports this flag'
     common --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
-
-    # Between Bazel 6.0 and 6.3, you need all of this, to avoid discarding the analysis cache:
-    build --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
-    fetch --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
-    query --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
-
-    # Before Bazel 6.0, only the 'build' and 'fetch' lines work.
 
 ##########################################################
 """
