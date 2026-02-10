@@ -146,6 +146,12 @@ bzl_library(
     ] + (["@bazel_tools//tools/build_defs/repo:cache.bzl"] if bazel_lib_utils.is_bazel_7_or_greater() else []),
 )
 
+starlark_doc_extract(
+    name = "defs.doc_extract",
+    src = "defs.bzl",
+    deps = [":defs"],
+)
+
 bzl_library(
     name = "repositories",
     srcs = ["repositories.bzl"],
@@ -168,6 +174,12 @@ bzl_library(
     ],
 )
 
+starlark_doc_extract(
+    name = "extensions.doc_extract",
+    src = "extensions.bzl",
+    deps = [":extensions"],
+)
+
 bzl_library(
     name = "proto",
     srcs = ["proto.bzl"],
@@ -182,4 +194,10 @@ bzl_library(
         "@aspect_rules_js//js:libs",
         "@aspect_rules_js//js:providers",
     ] + (["@bazel_tools//tools/build_defs/repo:cache.bzl"] if bazel_lib_utils.is_bazel_7_or_greater() else []),
+)
+
+starlark_doc_extract(
+    name = "proto.doc_extract",
+    src = "proto.bzl",
+    deps = [":proto"],
 )

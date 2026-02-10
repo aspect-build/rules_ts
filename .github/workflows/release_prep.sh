@@ -13,6 +13,10 @@ ARCHIVE="rules_ts-$TAG.tar.gz"
 git archive --format=tar --prefix=${PREFIX}/ ${TAG} | gzip >$ARCHIVE
 SHA=$(shasum -a 256 $ARCHIVE | awk '{print $1}')
 
+# Add generated API docs to the release
+# see https://github.com/bazelbuild/bazel-central-registry/blob/main/docs/stardoc.md
+./.github/workflows/release_docs.sh "$GITHUB_WORKSPACE/${ARCHIVE%.tar.gz}.docs.tar.gz"
+
 cat <<EOF
 ## Using [Bzlmod]:
 
