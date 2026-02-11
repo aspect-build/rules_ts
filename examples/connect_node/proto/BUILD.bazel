@@ -8,17 +8,13 @@ proto_library(
     srcs = ["eliza.proto"],
 )
 
-# ts_proto_library(
-#     name = "eliza_ts_proto",
+# FIXME: this is supposed to create connect_query code
 #     gen_connect_query = True,
 #     gen_connect_query_service_mapping = {
 #         "eliza.proto": ["ElizaService"],
 #     },
-#     node_modules = "//connect_node:node_modules",
-#     proto = ":eliza_proto",
-#     proto_srcs = proto_srcs,
-# )
 
+# FIXME: should js_library be able to dep on proto_library too? Need the aspect to run
 # js_library(
 #     name = "proto",
 #     srcs = [":package.json"],

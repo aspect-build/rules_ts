@@ -1,4 +1,3 @@
-# load("@aspect_rules_ts//ts:proto.bzl", "ts_proto_library")
 load("@protobuf//bazel:proto_library.bzl", "proto_library")
 
 proto_library(
@@ -16,11 +15,3 @@ proto_library(
     strip_import_prefix = "/proto_grpc",
     visibility = ["//visibility:public"],
 )
-
-# ts_proto_library(
-#     name = "s_ts_proto",
-#     node_modules = "//proto_grpc:node_modules",
-#     proto = ":s_proto",
-#     proto_srcs = ["s.proto"],
-#     visibility = ["//visibility:public"],
-# )

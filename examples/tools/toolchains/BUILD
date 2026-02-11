@@ -13,6 +13,7 @@ gen_connect_query.protoc_gen_connect_query_binary(
 
 ts_protoc_plugin_toolchain(
     name = "ts_protoc_plugin",
+    # See https://github.com/connectrpc/connect-es/blob/main/MIGRATING.md#update-plugin-options
     command_line = "--es_opt=keep_empty_files=true --es_opt=target=js+dts --es_opt=import_extension=js",
     protoc_plugin = "protoc_gen_es",
     # NB: this must be a parent folder of any package that use the toolchain
