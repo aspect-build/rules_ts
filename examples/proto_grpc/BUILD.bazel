@@ -1,6 +1,7 @@
 load("@aspect_rules_js//js:defs.bzl", "js_test")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
-load("@aspect_rules_ts//ts:proto.bzl", "ts_proto_library")
+
+# load("@aspect_rules_ts//ts:proto.bzl", "ts_proto_library")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@protobuf//bazel:proto_library.bzl", "proto_library")
 
@@ -30,24 +31,24 @@ proto_library(
     ],
 )
 
-ts_proto_library(
-    name = "logger_ts_proto",
-    node_modules = ":node_modules",
-    proto = ":logger_proto",
-    proto_srcs = logger_srcs,
-    # See https://github.com/connectrpc/connect-es/blob/main/MIGRATING.md#update-plugin-options
-    protoc_gen_options = {"import_extension": "js"},
-    visibility = ["//visibility:public"],
-    deps = ["//connect_node/proto"],
-)
+# ts_proto_library(
+#     name = "logger_ts_proto",
+#     node_modules = ":node_modules",
+#     proto = ":logger_proto",
+#     proto_srcs = logger_srcs,
+#     # See https://github.com/connectrpc/connect-es/blob/main/MIGRATING.md#update-plugin-options
+#     protoc_gen_options = {"import_extension": "js"},
+#     visibility = ["//visibility:public"],
+#     deps = ["//connect_node/proto"],
+# )
 
-ts_proto_library(
-    name = "status_ts_proto",
-    node_modules = ":node_modules",
-    proto = ":status_proto",
-    proto_srcs = status_srcs,
-    visibility = ["//visibility:public"],
-)
+# ts_proto_library(
+#     name = "status_ts_proto",
+#     node_modules = ":node_modules",
+#     proto = ":status_proto",
+#     proto_srcs = status_srcs,
+#     visibility = ["//visibility:public"],
+# )
 
 ts_project(
     name = "proto_grpc",
@@ -56,8 +57,9 @@ ts_project(
         "package.json",  # for type=module
     ],
     deps = [
-        ":logger_ts_proto",
-        ":status_ts_proto",
+        ":logger_proto",
+        ":node_modules/@bufbuild/protobuf",
+        ":status_proto",
     ],
 )
 

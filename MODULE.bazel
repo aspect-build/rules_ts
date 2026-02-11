@@ -10,14 +10,10 @@ bazel_dep(name = "aspect_bazel_lib", version = "2.14.0")
 bazel_dep(name = "aspect_tools_telemetry", version = "0.2.8")
 bazel_dep(name = "aspect_rules_js", version = "2.0.0")
 bazel_dep(name = "bazel_skylib", version = "1.8.1")
-bazel_dep(name = "platforms", version = "0.0.5")
+bazel_dep(name = "platforms", version = "1.0.0")
 
-# TODO(4.x): remove support for non-toolchainized protoc
-bazel_dep(name = "protobuf", version = "21.7", repo_name = "com_google_protobuf")
-
-# Similar to rules_python/MODULE.bazel, see https://github.com/bazelbuild/rules_python/pull/832
-# These are loaded only when using ts_proto_library
-bazel_dep(name = "rules_proto", version = "6.0.0")
+# NB: LOWER BOUND on earliest BCR release of protobuf module, to avoid upgrading the root module by accident
+bazel_dep(name = "protobuf", version = "3.19.6")
 
 tel = use_extension("@aspect_tools_telemetry//:extension.bzl", "telemetry")
 use_repo(tel, "aspect_tools_telemetry_report")
