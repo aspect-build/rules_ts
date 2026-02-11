@@ -14,8 +14,9 @@ gen_connect_query.protoc_gen_connect_query_binary(
 js_proto_toolchain(
     name = "example_protoc_plugin",
     # See https://github.com/connectrpc/connect-es/blob/main/MIGRATING.md#update-plugin-options
-    command_line = "--es_opt=keep_empty_files=true --es_opt=target=js+dts --es_opt=import_extension=js",
-    protoc_plugin = "protoc_gen_es",
+    command_line = "--es_opt=keep_empty_files=true --es_opt=target=js+dts --es_opt=import_extension=js --es_out=$(OUT)",
+    plugin = ":protoc_gen_es",
+    plugin_format_flag = "--plugin=protoc-gen-es=%s",
     # NB: this must be a parent folder of any package that use the toolchain
     # Otherwise typescript won't resolve a dep from the generated code in that package to the @bufbuild/protobuf package
     runtime = "//:node_modules/@bufbuild/protobuf",

@@ -13,9 +13,11 @@ local_path_override(
     path = "..",
 )
 
+#local_path_override(
 git_override(
     module_name = "aspect_rules_js",
-    commit = "5210cdb3d70b5964f66e02874df36b601dc0b5a3",  # https://github.com/aspect-build/rules_js/pull/2721
+    #    path = "../../rules_js",
+    commit = "24099b340cc6c3488d99e8288c38b419ec7d97f0",  # https://github.com/aspect-build/rules_js/pull/2721
     remote = "https://github.com/aspect-build/rules_js.git",
 )
 
