@@ -74,16 +74,6 @@ bzl_library(
     ],
 )
 
-# bzl_library(
-#     name = "ts_proto_library",
-#     srcs = ["ts_proto_library.bzl"],
-#     visibility = ["//ts:__subpackages__"],
-#     deps = [
-#         "@bazel_skylib//lib:paths",
-#         "@protobuf//proto:defs",
-#     ],
-# )
-
 # keep
 bzl_library(
     name = "build_test",
