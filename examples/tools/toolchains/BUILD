@@ -1,4 +1,4 @@
-load("@aspect_rules_ts//ts:proto.bzl", "ts_protoc_plugin_toolchain")
+load("@aspect_rules_js//js:proto.bzl", "js_proto_toolchain")
 load("@npm//tools:@bufbuild/protoc-gen-es/package_json.bzl", gen_es = "bin")
 load("@npm//tools:@connectrpc/protoc-gen-connect-query/package_json.bzl", gen_connect_query = "bin")
 
@@ -11,8 +11,8 @@ gen_connect_query.protoc_gen_connect_query_binary(
     name = "protoc_gen_connect_query",
 )
 
-ts_protoc_plugin_toolchain(
-    name = "ts_protoc_plugin",
+js_proto_toolchain(
+    name = "example_protoc_plugin",
     # See https://github.com/connectrpc/connect-es/blob/main/MIGRATING.md#update-plugin-options
     command_line = "--es_opt=keep_empty_files=true --es_opt=target=js+dts --es_opt=import_extension=js",
     protoc_plugin = "protoc_gen_es",

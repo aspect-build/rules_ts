@@ -5,13 +5,9 @@ load("@protobuf//bazel:proto_library.bzl", "proto_library")
 
 npm_link_all_packages(name = "node_modules")
 
-logger_srcs = ["logger.proto"]
-
-status_srcs = ["status.proto"]
-
 proto_library(
     name = "logger_proto",
-    srcs = logger_srcs,
+    srcs = ["logger.proto"],
     visibility = ["//visibility:public"],
     deps = [
         "//connect_node/proto:eliza_proto",
@@ -22,7 +18,7 @@ proto_library(
 
 proto_library(
     name = "status_proto",
-    srcs = status_srcs,
+    srcs = ["status.proto"],
     visibility = ["//visibility:public"],
     deps = [
         "@protobuf//:any_proto",

@@ -1,4 +1,4 @@
-# load("@aspect_rules_ts//ts:proto.bzl", "ts_proto_library")
+load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@protobuf//bazel:proto_library.bzl", "proto_library")
 
 package(default_visibility = ["//visibility:public"])
@@ -14,9 +14,8 @@ proto_library(
 #         "eliza.proto": ["ElizaService"],
 #     },
 
-# FIXME: should js_library be able to dep on proto_library too? Need the aspect to run
-# js_library(
-#     name = "proto",
-#     srcs = [":package.json"],
-#     deps = ["eliza_proto"],
-# )
+js_library(
+    name = "proto",
+    srcs = [":package.json"],
+    deps = ["eliza_proto"],
+)

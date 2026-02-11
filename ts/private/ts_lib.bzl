@@ -1,6 +1,7 @@
 "Utilities functions for selecting and filtering ts and other files"
 
-load("//ts/private:ts_proto_library.bzl", "ts_proto_aspect")
+# buildifier: disable=bzl-visibility
+load("@aspect_rules_js//js/private:proto.bzl", "js_proto_aspect")
 
 # Attributes common to all TypeScript rules
 STD_ATTRS = {
@@ -31,7 +32,7 @@ https://docs.aspect.build/rulesets/aspect_rules_js/docs/js_library#data for more
 Follows the same runfiles semantics as `js_library` `deps` attribute. See
 https://docs.aspect.build/rulesets/aspect_rules_js/docs/js_library#deps for more info.
 """,
-        aspects = [ts_proto_aspect],
+        aspects = [js_proto_aspect],
     ),
     "out_dir": attr.string(
         doc = "https://www.typescriptlang.org/tsconfig#outDir",

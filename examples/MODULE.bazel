@@ -13,6 +13,12 @@ local_path_override(
     path = "..",
 )
 
+git_override(
+    module_name = "aspect_rules_js",
+    commit = "5210cdb3d70b5964f66e02874df36b601dc0b5a3",  # https://github.com/aspect-build/rules_js/pull/2721
+    remote = "https://github.com/aspect-build/rules_js.git",
+)
+
 node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node")
 node.toolchain(node_version_from_nvmrc = "//:.nvmrc")
 
