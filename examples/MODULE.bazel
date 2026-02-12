@@ -13,11 +13,10 @@ local_path_override(
     path = "..",
 )
 
-#local_path_override(
+# TODO(alexeagle): remove this once the PR is merged
 git_override(
     module_name = "aspect_rules_js",
-    #    path = "../../rules_js",
-    commit = "24099b340cc6c3488d99e8288c38b419ec7d97f0",  # https://github.com/aspect-build/rules_js/pull/2721
+    commit = "c6d592da6819db888690da84e702d295a7ca58a4",  # https://github.com/aspect-build/rules_js/pull/2722
     remote = "https://github.com/aspect-build/rules_js.git",
 )
 
