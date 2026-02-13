@@ -1,9 +1,8 @@
-"""# Protocol Buffers and gRPC (UNSTABLE)
+"""# DEPRECATED: Protocol Buffers and gRPC
 
-**UNSTABLE API**: contents of this page are not subject to our usual semver guarantees.
-We may make breaking changes in any release.
-Please try this API and provide feedback.
-We intend to promote it to a stable API in a minor release, possibly as soon as v2.1.0.
+> [!WARNING]
+> **This API has been replaced** by rules_js: <https://github.com/aspect-build/rules_js/blob/main/js/proto.bzl>
+> See updated documentation at <https://docs.aspect.build/bazel/javascript/aspect_rules_js/js_proto>
 
 `ts_proto_library` uses the Connect library from bufbuild, and supports both Web and Node.js:
 
