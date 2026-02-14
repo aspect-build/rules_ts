@@ -1,29 +1,21 @@
 load("@aspect_rules_js//js:defs.bzl", "js_library")
-load("@aspect_rules_ts//ts:proto.bzl", "ts_proto_library")
 load("@protobuf//bazel:proto_library.bzl", "proto_library")
 
 package(default_visibility = ["//visibility:public"])
 
-proto_srcs = ["eliza.proto"]
-
 proto_library(
     name = "eliza_proto",
-    srcs = proto_srcs,
+    srcs = ["eliza.proto"],
 )
 
-ts_proto_library(
-    name = "eliza_ts_proto",
-    gen_connect_query = True,
-    gen_connect_query_service_mapping = {
-        "eliza.proto": ["ElizaService"],
-    },
-    node_modules = "//connect_node:node_modules",
-    proto = ":eliza_proto",
-    proto_srcs = proto_srcs,
-)
+# FIXME: this is supposed to create connect_query code
+#     gen_connect_query = True,
+#     gen_connect_query_service_mapping = {
+#         "eliza.proto": ["ElizaService"],
+#     },
 
 js_library(
     name = "proto",
     srcs = [":package.json"],
-    deps = ["eliza_ts_proto"],
+    deps = ["eliza_proto"],
 )

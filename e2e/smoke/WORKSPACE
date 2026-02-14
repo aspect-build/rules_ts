@@ -1,47 +1,12 @@
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-
 # Override http_archive for local testing
 local_repository(
     name = "aspect_rules_ts",
     path = "../..",
 )
 
-http_archive(
-    name = "rules_proto",
-    sha256 = "303e86e722a520f6f326a50b41cfc16b98fe6d1955ce46642a5b7a67c11c0f5d",
-    strip_prefix = "rules_proto-6.0.0",
-    url = "https://github.com/bazelbuild/rules_proto/releases/download/6.0.0/rules_proto-6.0.0.tar.gz",
-)
-
-load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies")
-
-rules_proto_dependencies()
-
-load("@rules_proto//proto:toolchains.bzl", "rules_proto_toolchains")
-
-rules_proto_toolchains()
-
 load("@bazel_features//:deps.bzl", "bazel_features_deps")
 
 bazel_features_deps()
-
-http_archive(
-    name = "toolchains_protoc",
-    sha256 = "3019f9ed1273d547334da2004e634340c896d9e24dd6d899911e03b694fdc1f5",
-    strip_prefix = "toolchains_protoc-0.4.3",
-    url = "https://github.com/aspect-build/toolchains_protoc/releases/download/v0.4.3/toolchains_protoc-v0.4.3.tar.gz",
-)
-
-load("@toolchains_protoc//protoc:repositories.bzl", "rules_protoc_dependencies")
-
-rules_protoc_dependencies()
-
-load("@toolchains_protoc//protoc:toolchain.bzl", "protoc_toolchains")
-
-protoc_toolchains(
-    name = "protoc_toolchains",
-    version = "v25.3",
-)
 
 #---SNIP--- Below here is re-used in the workspace snippet published on releases
 

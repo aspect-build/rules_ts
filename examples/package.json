@@ -1,5 +1,6 @@
 {
     "private": true,
+    "packageManager": "pnpm@10.20.0",
     "dependencies": {
         "@angular/compiler": "^19.0.0-next.2",
         "@angular/compiler-cli": "^19.0.0-next.2",
@@ -10,12 +11,13 @@
         "@babel/plugin-transform-modules-commonjs": "~7.26.3",
         "@babel/preset-typescript": "^7.23.3",
         "@babel/types": "~7.23.9",
+        "@bufbuild/protobuf": "catalog:",
         "@tsconfig/strictest": "2.0.5",
-        "@types/node": "^20.19.11",
+        "@types/node": "catalog:",
         "date-fns": "2.29.3",
         "rxjs": "7.5.7",
         "source-map-support": "^0.5.21",
-        "typescript": "5.6.2",
+        "typescript": "5.8.2",
         "zone.js": "0.12.0"
     },
     "devDependencies": {

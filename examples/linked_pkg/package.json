@@ -7,6 +7,6 @@
     },
     "devDependencies": {
         "@aspect-test/f": "1.0.0",
-        "@types/node": "^20.19.11"
+        "@types/node": "catalog:"
     }
 }
