@@ -59,6 +59,12 @@ def _http_archive_version_impl(rctx):
         executable = False,
     )
 
+    # Bazel <8.3.0 lacks rctx.repo_metadata
+    if not hasattr(rctx, "repo_metadata"):
+        return None
+
+    return rctx.repo_metadata(reproducible = True)
+
 http_archive_version = repository_rule(
     doc = "Re-implementation of http_archive that can read the version from package.json",
     implementation = _http_archive_version_impl,
