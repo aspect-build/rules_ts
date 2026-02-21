@@ -349,3 +349,101 @@ assert_outputs(
         "transpiler/build-declarations_custom/a.js.map",
     ],
 )
+
+# input .js files with tsc transpiler and an outDir
+ts_project(
+    name = "allow_js_outdir",
+    srcs = ["d.js"],
+    out_dir = "build-js_outdir",
+    transpiler = "tsc",
+    tsconfig = {
+        "compilerOptions": {
+            "allowJs": True,
+            "module": "commonjs",
+            "sourceMap": True,
+        },
+    },
+)
+
+assert_outputs(
+    name = "allow_js_outdir_test",
+    actual = ":allow_js_outdir",
+    expected = [
+        "examples/transpiler/build-js_outdir/d.js",
+        "examples/transpiler/build-js_outdir/d.js.map",
+    ],
+)
+
+# input .js files with custom transpiler and an outDir
+ts_project(
+    name = "allow_js_babel_outdir",
+    srcs = ["d.js"],
+    out_dir = "build-js_babel_outdir",
+    transpiler = partial.make(
+        babel,
+        out_dir = "build-js_babel_outdir",
+    ),
+    tsconfig = {
+        "compilerOptions": {
+            "allowJs": True,
+            "module": "commonjs",
+            "sourceMap": True,
+        },
+    },
+)
+
+assert_outputs(
+    name = "allow_js_babel_outdir_test",
+    actual = ":allow_js_babel_outdir",
+    expected = [
+        "examples/transpiler/build-js_babel_outdir/d.js",
+        "examples/transpiler/build-js_babel_outdir/d.js.map",
+    ],
+)
+
+# input .js files with custom transpiler and NO outDir
+ts_project(
+    name = "allow_js_babel_no_outdir",
+    srcs = ["d.js"],
+    transpiler = babel,
+    tsconfig = {
+        "compilerOptions": {
+            "allowJs": True,
+            "module": "commonjs",
+            "sourceMap": True,
+        },
+    },
+)
+
+assert_outputs(
+    name = "allow_js_babel_no_outdir_test",
+    actual = ":allow_js_babel_no_outdir",
+    expected = [
+        "examples/transpiler/d.js",
+        "examples/transpiler/d.js.map",
+    ],
+)
+
+# input .js files with tsc transpiler and NO outDir
+# TODO: broken due to all source .js being copied to bin before invoking tsc
+# ts_project(
+#     name = "allow_js",
+#     srcs = ["d.js"],
+#     transpiler = "tsc",
+#     tsconfig = {
+#         "compilerOptions": {
+#             "allowJs": True,
+#             "module": "commonjs",
+#             "sourceMap": True,
+#         },
+#     }
+# )
+
+# assert_outputs(
+#     name = "allow_js_test",
+#     actual = ":allow_js",
+#     expected = [
+#         "examples/transpiler/d.js",
+#         "examples/transpiler/d.js.map",
+#     ],
+# )
