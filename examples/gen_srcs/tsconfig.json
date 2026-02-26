@@ -1,0 +1,4 @@
+{
+    "include": ["generated/**/*"],
+    "exclude": ["node_modules"],
+}

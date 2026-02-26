@@ -1,0 +1,17 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_skylib//rules:copy_directory.bzl", "copy_directory")
+
+# This is just copying a directory but it could be any rule that generates TS code.
+copy_directory(
+    name = "code_generation",
+    src = "inputs",
+    out = "generated",
+)
+
+ts_project(
+    name = "ts_proj",
+    srcs = [
+        ":code_generation",
+    ],
+    out_dir = "generated",
+)
