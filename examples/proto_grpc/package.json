@@ -1,9 +1,6 @@
 {
     "dependencies": {
-        "@bufbuild/protobuf": "~2.2.4"
-    },
-    "devDependencies": {
-        "@bufbuild/protoc-gen-es": "~2.2.4"
+        "@bufbuild/protobuf": "catalog:"
     },
     "type": "module"
 }

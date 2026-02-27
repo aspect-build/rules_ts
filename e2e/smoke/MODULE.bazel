@@ -6,7 +6,7 @@ local_path_override(
 
 bazel_dep(name = "aspect_rules_js", version = "2.3.8", dev_dependency = True)
 bazel_dep(name = "bazel_skylib", version = "1.8.2", dev_dependency = True)
-bazel_dep(name = "rules_proto", version = "6.0.0", dev_dependency = True)
+bazel_dep(name = "protobuf", version = "33.4", dev_dependency = True)
 bazel_dep(name = "toolchains_protoc", version = "0.4.3", dev_dependency = True)
 
 npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm", dev_dependency = True)

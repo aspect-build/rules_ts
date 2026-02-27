@@ -15,16 +15,13 @@ ts_project(
         ":node_modules/@connectrpc/connect-fastify",
         ":node_modules/@types/node",
         ":node_modules/fastify",
-        "//connect_node/proto:eliza_ts_proto",
+        "//connect_node/proto:eliza_proto",
     ],
 )
 
 # Try it out:
 # $ bazel run server
-# $ curl \
-#   --header 'Content-Type: application/json' \
-#   --data '{"sentence": "I feel happy."}' \
-#    http://localhost:8080/connectrpc.eliza.v1.ElizaService/Say
+# $ curl --header 'Content-Type: application/json' --data '{"sentence": "Hello from connect-rpc"}' http://localhost:8080/connectrpc.eliza.v1.ElizaService/Say
 js_binary(
     name = "server",
     data = [
