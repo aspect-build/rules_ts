@@ -25,7 +25,7 @@ jobs:
                     - .
                     - examples
                     - 'e2e/smoke'
-                    - 'e2e/rules_js_v3'
+                    - 'e2e/smoke_rjs3'
                 os:
                     # NB: linux testing is on Aspect Workflows
                     - macos-latest

@@ -34,7 +34,7 @@ workspaces:
                   without: true
             - buildifier:
                   without: true
-    e2e/rules_js_v3:
+    e2e/smoke_rjs3:
         tasks:
             # No WORKSPACE in rules_js v3
             - bazel-7-wksp:
