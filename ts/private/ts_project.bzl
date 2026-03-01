@@ -81,6 +81,11 @@ def _ts_project_impl(ctx):
         list of providers
     """
     options = ctx.attr._options[OptionsInfo]
+
+    for src in ctx.files.srcs:
+        if src.is_directory:
+            fail("srcs of a ts_project should be files not directories")
+
     srcs_inputs = copy_files_to_bin_actions(ctx, ctx.files.srcs)
     tsconfig, tsconfig_inputs, tsconfig_transitive_deps = _gather_tsconfig_deps(ctx)
 
