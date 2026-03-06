@@ -5,3 +5,5 @@ import %workspace%/../../tools/preset.bazelrc
 common --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
 # NB: comment this line out to test the legacy path to @com_google_protobuf//:protoc
 common --incompatible_enable_proto_toolchain_resolution
+# abseil-cpp (via protobuf 33.4) requires C++17; Bazel 7 defaults to C++14
+build --cxxopt=-std=c++17 --host_cxxopt=-std=c++17
