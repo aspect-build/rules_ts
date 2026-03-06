@@ -28,8 +28,7 @@ workspaces:
             - bazel-8:
                   queue: aspect-medium
             - bazel-9:
-                  # TODO: requires updates to rulesets
-                  without: true
+                  queue: aspect-medium
             - format:
                   without: true
             - buildifier:

@@ -19,7 +19,11 @@ concurrency:
 
 jobs:
     test:
+        # Only run on main branch (not PRs) to minimize minutes (billed at 10X and 2X respectively)
+        # https://docs.github.com/en/billing/managing-billing-for-github-actions/about-billing-for-github-actions#included-storage-and-minutes
+        if: github.ref_name == 'main' || contains(github.head_ref, 'macos') || contains(github.head_ref, 'windows')
         strategy:
+            fail-fast: false
             matrix:
                 folder:
                     - .
@@ -77,20 +81,13 @@ jobs:
     # For branch protection settings, this job provides a "stable" name that can be used to gate PR merges
     # on "all matrix jobs were successful".
     conclusion:
-        needs: test
+        needs: [test, bats-tests]
         runs-on: ubuntu-latest
         if: always()
         steps:
-            - uses: technote-space/workflow-conclusion-action@45ce8e0eb155657ab8ccf346ade734257fd196a5 # v3.0.3
-
-            # Note: possible conclusion values:
-            # https://github.com/technote-space/workflow-conclusion-action/blob/main/src/constant.ts
-            - name: report success
-              if: ${{ env.WORKFLOW_CONCLUSION == 'success' }}
-              working-directory: /tmp
-              run: echo ${{ env.WORKFLOW_CONCLUSION }} && exit 0
-
-            - name: report failure
-              if: ${{ env.WORKFLOW_CONCLUSION == 'failure' }}
-              working-directory: /tmp
-              run: echo ${{ env.WORKFLOW_CONCLUSION }} && exit 1
+            - run: |
+                  if [[ "${{ needs.bats-tests.result }}" == "success" && ("${{ needs.test.result }}" == "success" || "${{ needs.test.result }}" == "skipped") ]]; then
+                    exit 0
+                  else
+                    exit 1
+                  fi
