@@ -139,6 +139,7 @@ bzl_library(
         "//ts/private:options",
         "//ts/private:ts_config",
         "//ts/private:ts_project",
+        "@aspect_bazel_lib//lib:utils",
         "@aspect_rules_js//js:defs",
         "@aspect_tools_telemetry_report//:defs.bzl",
         "@bazel_skylib//lib:partial",
