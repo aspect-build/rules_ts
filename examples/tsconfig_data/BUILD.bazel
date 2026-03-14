@@ -1,0 +1,17 @@
+load("@aspect_rules_js//js:defs.bzl", "js_test")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_config")
+
+# tsconfig_app extends tsconfig_base, which lives in a separate package (//tsconfig_data/base).
+# The only way tsconfig.base.json can reach the js_test runfiles is through ts_config's
+# deps propagation — there is no package-level sharing that could paper over a missing dep.
+ts_config(
+    name = "tsconfig_app",
+    src = "tsconfig.app.json",
+    deps = ["//tsconfig_data/base:tsconfig_base"],
+)
+
+js_test(
+    name = "test",
+    data = [":tsconfig_app"],
+    entry_point = "check_runfiles.js",
+)

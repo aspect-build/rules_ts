@@ -1,0 +1,7 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_config")
+
+ts_config(
+    name = "tsconfig_base",
+    src = "tsconfig.base.json",
+    visibility = ["//tsconfig_data:__pkg__"],
+)
