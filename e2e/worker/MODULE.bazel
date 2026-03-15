@@ -22,4 +22,4 @@ npm.npm_translate_lock(
 use_repo(npm, "npm")
 
 # Override root MODULE with newer versions for bazel9 compat
-bazel_dep(name = "rules_nodejs", version = "6.5.0", dev_dependency = True)  # TODO(rm bazel6): repo_name = None)
+bazel_dep(name = "rules_nodejs", version = "6.7.3", dev_dependency = True)  # TODO(rm bazel6): repo_name = None)
