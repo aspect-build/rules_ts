@@ -1,10 +1,8 @@
-"""Shows how https://www.typescriptlang.org/tsconfig/#resolveJsonModule can be used."""
+"""Shows how https://www.typescriptlang.org/tsconfig/#resolveJsonModule can be used with out_dir."""
 
 load("@aspect_rules_js//js:defs.bzl", "js_test")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@bazel_lib//lib:testing.bzl", "assert_contains")
-load("@bazel_skylib//lib:partial.bzl", "partial")
-load("//transpiler:babel.bzl", "babel")
 
 ts_project(
     name = "ts",
@@ -12,12 +10,8 @@ ts_project(
         "data.json",
         "index.ts",
     ],
+    out_dir = "dist",
     resolve_json_module = True,
-    transpiler = partial.make(
-        babel,
-        commonjs = True,
-        resolve_json = True,
-    ),
 )
 
 ts_project(
@@ -27,12 +21,6 @@ ts_project(
         "index.ts",
     ],
     extends = "tsconfig.json",
-    transpiler = partial.make(
-        babel,
-        commonjs = True,
-        out_dir = "ts-dict-override",
-        resolve_json = True,
-    ),
     tsconfig = {
         "compilerOptions": {
             "outDir": "ts-dict-override",
@@ -49,12 +37,6 @@ ts_project(
     ],
     extends = "tsconfig.json",
     resolve_json_module = True,
-    transpiler = partial.make(
-        babel,
-        commonjs = True,
-        out_dir = "ts-dict-unspecified",
-        resolve_json = True,
-    ),
     tsconfig = {
         "compilerOptions": {
             "outDir": "ts-dict-unspecified",
@@ -62,47 +44,17 @@ ts_project(
     },
 )
 
-ts_project(
-    name = "ts-out-dir",
-    srcs = [
-        "data.json",
-        "index.ts",
-    ],
-    out_dir = "dist",
-    resolve_json_module = True,
-    transpiler = partial.make(
-        babel,
-        commonjs = True,
-        out_dir = "dist",
-        resolve_json = True,
-    ),
-)
-
 assert_contains(
     name = "test",
-    actual = "index.js",
-    expected = """exports.a = 'hello' + JSON.stringify""",
-)
-
-assert_contains(
-    name = "test-out-dir",
     actual = "dist/index.js",
-    expected = """exports.a = 'hello' + JSON.stringify""",
-)
-
-js_test(
-    name = "ts-with-json-out-dir",
-    data = [":ts-out-dir"],
-    entry_point = "dist/index.js",
+    expected = """JSON.stringify(data_json_1.default)""",
 )
 
 js_test(
     # Test that the json is available at runtime.
     name = "ts-with-json",
-    data = [
-        ":ts",
-    ],
-    entry_point = "index.js",
+    data = [":ts"],
+    entry_point = "dist/index.js",
 )
 
 # Test that the json is available at runtime with various ways of
@@ -110,9 +62,7 @@ js_test(
 [
     js_test(
         name = "ts-with-json-%s" % t,
-        data = [
-            ":ts-%s" % t,
-        ],
+        data = [":ts-%s" % t],
         entry_point = "ts-%s/index.js" % t,
     )
     for t in [
