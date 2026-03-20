@@ -246,7 +246,7 @@ def ts_project(
         supports_workers: Whether the "Persistent Worker" protocol is enabled.
             This uses a custom `tsc` compiler to make rebuilds faster.
             Note that this causes some known correctness bugs, see
-            https://docs.aspect.build/rules/aspect_rules_ts/docs/troubleshooting.
+            https://github.com/aspect-build/rules_ts/blob/main/docs/troubleshooting.md#problems-with-persistent-workers.
             We do not intend to fix these bugs.
 
             Worker mode can be enabled for all `ts_project`s in a build with the global
