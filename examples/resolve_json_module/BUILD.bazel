@@ -14,6 +14,44 @@ ts_project(
 )
 
 ts_project(
+    name = "ts-with-package-json-imported-no-out-dir",
+    srcs = [
+        "data.json",
+        "index-importing-package-json.ts",
+        "package.json",
+    ],
+    resolve_json_module = True,
+)
+
+js_test(
+    name = "ts-with-package-json-imported-no-out-dir-test",
+    data = [":ts-with-package-json-imported-no-out-dir"],
+    entry_point = "index-importing-package-json.js",
+)
+
+ts_project(
+    name = "ts-with-package-json-imported",
+    srcs = [
+        "data.json",
+        "index-importing-package-json.ts",
+        "package.json",
+    ],
+    extends = "tsconfig.json",
+    resolve_json_module = True,
+    tsconfig = {
+        "compilerOptions": {
+            "outDir": "dist-imported",
+        },
+    },
+)
+
+js_test(
+    name = "ts-with-package-json-imported-test",
+    data = [":ts-with-package-json-imported"],
+    entry_point = "dist-imported/index-importing-package-json.js",
+)
+
+ts_project(
     name = "ts-dict-override",
     srcs = [
         "data.json",
