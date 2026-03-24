@@ -1,8 +1,8 @@
 {
     "compilerOptions": {
         "declaration": true,
-        "module": "ES2020",
-        "moduleResolution": "node",
+        "module": "node16",
+        "moduleResolution": "node16",
         "lib": ["ES2015"]
     }
 }

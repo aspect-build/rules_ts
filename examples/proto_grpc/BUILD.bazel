@@ -51,8 +51,8 @@ ts_proto_library(
 
 ts_project(
     name = "proto_grpc",
-    srcs = ["main.ts"],
-    data = [
+    srcs = [
+        "main.ts",
         "package.json",  # for type=module
     ],
     deps = [

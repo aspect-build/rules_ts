@@ -81,7 +81,7 @@ function tsconfig() {
 	local source_map="false"
 	local declaration="false"
 	local target="ES2020"
-	local module_resolution="node"
+	local module_resolution="node16"
 	local composite="false"
 	local no_emit="false"
 	local trace_resolution="false"

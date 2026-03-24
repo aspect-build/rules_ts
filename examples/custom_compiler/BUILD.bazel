@@ -53,7 +53,7 @@ ts_project(
         # Shows that ts_project accepts any files in srcs, because it can't assume the tsc compiler
         # is the only one used. Normally `html` wouldn't make sense as a tsc input.
         "component.ng.html",
-        "component.ts",
+        "component.mts",
     ],
     # Tell ts_project to run ngc. The compiler has to have a matching CLI as `tsc` for this to work.
     tsc = ":ngc",
