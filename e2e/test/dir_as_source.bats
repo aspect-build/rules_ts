@@ -10,12 +10,15 @@ teardown() {
 }
 
 @test 'ts_project with a directory in srcs should fail to build' {
-	workspace --npm-translate-lock
+	workspace
 	tsconfig
+	mkdir inputs
 
-	echo 'console.log("hello world")' >source.ts
+	ts_project -s ":code_generation"
 
 	cat >>BUILD.bazel <<EOF
+
+load("@aspect_bazel_lib//lib:copy_directory.bzl", "copy_directory")
 
 copy_directory(
     name = "code_generation",
@@ -25,7 +28,6 @@ copy_directory(
 
 EOF
 
-	ts_project -l -s "code_generation"
 	run bazel build :foo
 	assert_failure
 	assert_output -p "fail: srcs of a ts_project should be files not directories"
