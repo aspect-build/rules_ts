@@ -1,0 +1,13 @@
+connect_node/node_modules
+connect_node/proto/node_modules
+lib_nocompile_linked/node_modules
+linked_consumer/node_modules
+linked_empty_node_modules/node_modules
+linked_lib/node_modules
+linked_pkg/node_modules
+linked_tsconfig/node_modules
+linked_tsconfig_consumer/node_modules
+node_modules
+proto_grpc/node_modules
+resolve_json_module/node_modules
+resolve_json_module_esm/node_modules

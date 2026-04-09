@@ -9,9 +9,8 @@ workspaces:
                   without: true
     examples:
         tasks:
-            # No Bazel7 in root/examples
             - bazel-7:
-                  without: true
+                  queue: aspect-medium
             # No WORKSPACE root/examples
             - bazel-7-wksp:
                   without: true
