@@ -121,3 +121,65 @@ teardown() {
 	run bazel build :foo
 	assert_success
 }
+
+@test 'When rootDir in tsconfig resolves to a parent of the package, validation should fail' {
+	workspace
+
+	mkdir -p child
+	echo "export const a = 1;" >child/source.ts
+
+	cat >child/tsconfig.json <<EOF
+{
+    "compilerOptions": {
+        "rootDir": ".."
+    },
+    "exclude": []
+}
+EOF
+
+	cat >child/BUILD.bazel <<EOF
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "foo",
+    srcs = ["source.ts"],
+    tsconfig = "tsconfig.json",
+)
+EOF
+
+	run bazel build //child:foo
+	assert_failure
+	assert_output -p "rootDir in the tsconfig resolves to"
+	assert_output -p "which is a parent of the package directory"
+}
+
+@test 'When outDir in tsconfig resolves to a parent of the package, validation should fail' {
+	workspace
+
+	mkdir -p child
+	echo "export const a = 1;" >child/source.ts
+
+	cat >child/tsconfig.json <<EOF
+{
+    "compilerOptions": {
+        "outDir": ".."
+    },
+    "exclude": []
+}
+EOF
+
+	cat >child/BUILD.bazel <<EOF
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "foo",
+    srcs = ["source.ts"],
+    tsconfig = "tsconfig.json",
+)
+EOF
+
+	run bazel build //child:foo
+	assert_failure
+	assert_output -p "outDir in the tsconfig resolves to"
+	assert_output -p "which is a parent of the package directory"
+}

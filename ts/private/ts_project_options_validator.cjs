@@ -144,6 +144,35 @@ function main(_a) {
             )
         }
     }
+    function checkDirInParent(optionName, attrName) {
+        var optionVal = options[optionName]
+        if (typeof optionVal !== 'string' || !optionVal) return
+
+        // tsconfigPath is relative, so options[optionName] stays in the same
+        // relative form. copy_file_to_bin_action enforces tsconfig-in-package.
+        var tsconfigDir = path_1.dirname(tsconfigPath)
+        var rel = path_1.relative(tsconfigDir, optionVal)
+
+        if (rel === '..' || rel.startsWith('../') || rel.startsWith('..\\')) {
+            throw new Error(
+                '\n\nThe ' +
+                    optionName +
+                    ' in the tsconfig resolves to "' +
+                    optionVal +
+                    '"' +
+                    ' which is a parent of the package directory.\n\n' +
+                    'This is not supported by ts_project because all output files must be within\n' +
+                    'the package output directory.\n\n' +
+                    'If your tsconfig is shared from a parent directory, set ' +
+                    optionName +
+                    ' in that\n' +
+                    'tsconfig to a path at or below the package, or use the ' +
+                    attrName +
+                    ' attribute\n' +
+                    'on ts_project to override it.\n'
+            )
+        }
+    }
     var jsxEmit =
         ((_b = {}),
         (_b[ts.JsxEmit.None] = 'none'),
@@ -205,6 +234,9 @@ function main(_a) {
     check('declaration')
     check('incremental')
     check('tsBuildInfoFile', 'ts_build_info_file')
+    // Must run before check_out_dir to win over its less specific attr-mismatch error.
+    checkDirInParent('rootDir', 'root_dir')
+    checkDirInParent('outDir', 'out_dir')
     check_out_dir('outDir', 'out_dir')
     check_out_dir('declarationDir', 'declaration_dir')
     check_out_dir('rootDir', 'root_dir')
