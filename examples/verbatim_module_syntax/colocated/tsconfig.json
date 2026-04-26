@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "verbatimModuleSyntax": true,
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
+        "target": "es2022",
+        "strict": true
+    }
+}

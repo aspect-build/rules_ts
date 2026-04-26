@@ -1,0 +1,18 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
+
+# Demonstrates that a package.json can be passed to ts_config via `deps`,
+# making it visible to tsc alongside the tsconfig.json. With
+# `verbatimModuleSyntax: true` and `module: "nodenext"`, TypeScript needs to
+# see a sibling package.json with `"type": "module"` to classify index.ts as
+# ESM — otherwise the `export` statement fails to type-check.
+ts_config(
+    name = "tsconfig",
+    src = "tsconfig.json",
+    deps = ["package.json"],
+)
+
+ts_project(
+    name = "verbatim_module_syntax",
+    srcs = ["index.ts"],
+    tsconfig = ":tsconfig",
+)

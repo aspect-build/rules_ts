@@ -4,6 +4,7 @@ load("@aspect_rules_js//js:providers.bzl", "JsInfo")
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("//ts:defs.bzl", "ts_config", "ts_project")
+load("//ts/private:ts_config.bzl", "TsConfigInfo")
 
 def ts_config_test_suite(name):
     """Test suite including all tests and data
@@ -50,6 +51,32 @@ def ts_config_test_suite(name):
         name = "tsconfig_extending",
         src = "src_tsconfig_extending.json",
         deps = [":tsconfig"],
+    )
+
+    # A package.json that ts_config should accept as a non-tsconfig dep
+    # (e.g. so TypeScript's extends can resolve a package by its package.json).
+    write_file(
+        name = "src_package_json",
+        out = "package.json",
+        content = ["""{"name": "pkg", "version": "0.0.0"}"""],
+        tags = ["manual"],
+    )
+
+    # ts_config receiving a package.json via deps
+    ts_config(
+        name = "tsconfig_with_package_json_dep",
+        src = "src_tsconfig.json",
+        deps = [":src_package_json"],
+    )
+
+    # ts_config whose src is another ts_config target (mirrors the
+    # examples/verbatim_module_syntax/parent_src pattern, where a child
+    # ts_config consumes a parent ts_config's bin-tree-copied tsconfig.json
+    # via `src`).
+    ts_config(
+        name = "tsconfig_wrapping_ts_config",
+        src = ":tsconfig",
+        deps = [":src_package_json"],
     )
 
     # Referencing a ts_config target
@@ -115,6 +142,16 @@ def ts_config_test_suite(name):
         target_under_test = "use_dict_extending_tsconfig_target",
     )
 
+    _ts_config_propagates_package_json_dep_test(
+        name = "tsconfig_with_package_json_dep_test",
+        target_under_test = "tsconfig_with_package_json_dep",
+    )
+
+    _ts_config_wrapping_ts_config_test(
+        name = "tsconfig_wrapping_ts_config_test",
+        target_under_test = "tsconfig_wrapping_ts_config",
+    )
+
     native.test_suite(
         name = name,
         tests = [
@@ -123,6 +160,8 @@ def ts_config_test_suite(name):
             ":outputs_tsconfig_target_test",
             ":outputs_use_extending_tsconfig_target_test",
             ":outputs_use_dict_extending_tsconfig_target_test",
+            ":tsconfig_with_package_json_dep_test",
+            ":tsconfig_wrapping_ts_config_test",
         ],
     )
 
@@ -151,3 +190,50 @@ def _ts_project_outputs_only_srcs_types_test_impl(ctx):
     return analysistest.end(env)
 
 _ts_project_outputs_only_srcs_types_test = analysistest.make(_ts_project_outputs_only_srcs_types_test_impl)
+
+def _ts_config_propagates_package_json_dep_test_impl(ctx):
+    env = analysistest.begin(ctx)
+    target_under_test = analysistest.target_under_test(env)
+
+    asserts.true(env, TsConfigInfo in target_under_test)
+    dep_paths = [f.path for f in target_under_test[TsConfigInfo].deps.to_list()]
+    asserts.true(
+        env,
+        any([p.endswith("/package.json") for p in dep_paths]),
+        "expected package.json to be propagated through TsConfigInfo.deps, got: {}".format(dep_paths),
+    )
+
+    return analysistest.end(env)
+
+_ts_config_propagates_package_json_dep_test = analysistest.make(_ts_config_propagates_package_json_dep_test_impl)
+
+def _ts_config_wrapping_ts_config_test_impl(ctx):
+    env = analysistest.begin(ctx)
+    target_under_test = analysistest.target_under_test(env)
+
+    # The target analyzes and exposes TsConfigInfo / a tsconfig.json file.
+    asserts.true(env, TsConfigInfo in target_under_test)
+    default_paths = [f.path for f in target_under_test[DefaultInfo].files.to_list()]
+    asserts.true(
+        env,
+        any([p.endswith("/src_tsconfig.json") for p in default_paths]),
+        "expected wrapping ts_config to expose the parent's tsconfig.json via DefaultInfo, got: {}".format(default_paths),
+    )
+
+    # The wrapping ts_config's TsConfigInfo.deps contains both the parent's
+    # tsconfig.json (transitively) and the locally-attached package.json.
+    dep_paths = [f.path for f in target_under_test[TsConfigInfo].deps.to_list()]
+    asserts.true(
+        env,
+        any([p.endswith("/src_tsconfig.json") for p in dep_paths]),
+        "expected parent's tsconfig.json to flow through TsConfigInfo.deps, got: {}".format(dep_paths),
+    )
+    asserts.true(
+        env,
+        any([p.endswith("/package.json") for p in dep_paths]),
+        "expected local package.json dep to be in TsConfigInfo.deps, got: {}".format(dep_paths),
+    )
+
+    return analysistest.end(env)
+
+_ts_config_wrapping_ts_config_test = analysistest.make(_ts_config_wrapping_ts_config_test_impl)
