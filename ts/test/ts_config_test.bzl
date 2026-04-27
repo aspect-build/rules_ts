@@ -4,7 +4,6 @@ load("@aspect_rules_js//js:providers.bzl", "JsInfo")
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("//ts:defs.bzl", "ts_config", "ts_project")
-load("//ts/private:ts_config.bzl", "TsConfigInfo")
 
 def ts_config_test_suite(name):
     """Test suite including all tests and data
@@ -53,30 +52,64 @@ def ts_config_test_suite(name):
         deps = [":tsconfig"],
     )
 
-    # A package.json that ts_config should accept as a non-tsconfig dep
-    # (e.g. so TypeScript's extends can resolve a package by its package.json).
+    # A package.json that ts_config should accept as a non-tsconfig dep so
+    # TypeScript can read its "type"/"exports" fields during module
+    # resolution (e.g. nodenext + verbatimModuleSyntax requires a sibling
+    # `"type": "module"` to classify a .ts file as ESM).
     write_file(
         name = "src_package_json",
         out = "package.json",
-        content = ["""{"name": "pkg", "version": "0.0.0"}"""],
+        content = ["""{"name": "pkg", "version": "0.0.0", "type": "module"}"""],
         tags = ["manual"],
     )
 
-    # ts_config receiving a package.json via deps
+    # ts_config receiving a package.json via deps. Uses a dedicated tsconfig
+    # so the consuming ts_project below can declare a unique `out_dir` that
+    # matches the tsconfig's `outDir` (rules_ts validates these agree).
+    write_file(
+        name = "src_tsconfig_pkgjson",
+        out = "src_tsconfig_pkgjson.json",
+        content = ["""{"compilerOptions": {"declaration": true, "outDir": "pkgjson-outdir"}}"""],
+        tags = ["manual"],
+    )
     ts_config(
         name = "tsconfig_with_package_json_dep",
-        src = "src_tsconfig.json",
+        src = "src_tsconfig_pkgjson.json",
         deps = [":src_package_json"],
+    )
+    ts_project(
+        name = "use_tsconfig_with_package_json_dep",
+        srcs = [":src_ts"],
+        declaration = True,
+        out_dir = "pkgjson-outdir",
+        tsconfig = ":tsconfig_with_package_json_dep",
     )
 
     # ts_config whose src is another ts_config target (mirrors the
     # examples/verbatim_module_syntax/parent_src pattern, where a child
     # ts_config consumes a parent ts_config's bin-tree-copied tsconfig.json
-    # via `src`).
+    # via `src`). The package.json dep should still flow through to tsc.
+    write_file(
+        name = "src_tsconfig_wrapparent",
+        out = "src_tsconfig_wrapparent.json",
+        content = ["""{"compilerOptions": {"declaration": true, "outDir": "wrap-outdir"}}"""],
+        tags = ["manual"],
+    )
+    ts_config(
+        name = "tsconfig_wrap_parent",
+        src = "src_tsconfig_wrapparent.json",
+    )
     ts_config(
         name = "tsconfig_wrapping_ts_config",
-        src = ":tsconfig",
+        src = ":tsconfig_wrap_parent",
         deps = [":src_package_json"],
+    )
+    ts_project(
+        name = "use_tsconfig_wrapping_ts_config",
+        srcs = [":src_ts"],
+        declaration = True,
+        out_dir = "wrap-outdir",
+        tsconfig = ":tsconfig_wrapping_ts_config",
     )
 
     # Referencing a ts_config target
@@ -142,14 +175,14 @@ def ts_config_test_suite(name):
         target_under_test = "use_dict_extending_tsconfig_target",
     )
 
-    _ts_config_propagates_package_json_dep_test(
+    _ts_project_sees_package_json_in_tsc_inputs_test(
         name = "tsconfig_with_package_json_dep_test",
-        target_under_test = "tsconfig_with_package_json_dep",
+        target_under_test = "use_tsconfig_with_package_json_dep",
     )
 
-    _ts_config_wrapping_ts_config_test(
+    _ts_project_sees_package_json_in_tsc_inputs_test(
         name = "tsconfig_wrapping_ts_config_test",
-        target_under_test = "tsconfig_wrapping_ts_config",
+        target_under_test = "use_tsconfig_wrapping_ts_config",
     )
 
     native.test_suite(
@@ -191,49 +224,36 @@ def _ts_project_outputs_only_srcs_types_test_impl(ctx):
 
 _ts_project_outputs_only_srcs_types_test = analysistest.make(_ts_project_outputs_only_srcs_types_test_impl)
 
-def _ts_config_propagates_package_json_dep_test_impl(ctx):
+def _ts_project_sees_package_json_in_tsc_inputs_test_impl(ctx):
+    """Asserts that a package.json attached to ts_config(deps=...) reaches tsc.
+
+    For TypeScript to actually use the package.json (e.g. read "type" for
+    ESM/CJS classification under nodenext + verbatimModuleSyntax, or "exports"
+    for module resolution), the file must:
+      1. Be part of the tsc action's input set, and
+      2. Live at a path TypeScript walks — namely, alongside (or above) the
+         .ts source files, since module resolution looks for the *nearest*
+         package.json starting from each source file.
+    """
     env = analysistest.begin(ctx)
     target_under_test = analysistest.target_under_test(env)
 
-    asserts.true(env, TsConfigInfo in target_under_test)
-    dep_paths = [f.path for f in target_under_test[TsConfigInfo].deps.to_list()]
+    action_input_paths = sorted([f.path for f in target_under_test[OutputGroupInfo]._action_inputs.to_list()])
+
+    src_inputs = [p for p in action_input_paths if p.endswith(".ts")]
+    asserts.equals(env, 1, len(src_inputs))
+    src_dir = src_inputs[0].rsplit("/", 1)[0]
+
+    expected_package_json = src_dir + "/package.json"
     asserts.true(
         env,
-        any([p.endswith("/package.json") for p in dep_paths]),
-        "expected package.json to be propagated through TsConfigInfo.deps, got: {}".format(dep_paths),
+        expected_package_json in action_input_paths,
+        "expected {} among tsc action inputs (so TypeScript's nearest-package-json walk finds it next to the source), got: {}".format(
+            expected_package_json,
+            action_input_paths,
+        ),
     )
 
     return analysistest.end(env)
 
-_ts_config_propagates_package_json_dep_test = analysistest.make(_ts_config_propagates_package_json_dep_test_impl)
-
-def _ts_config_wrapping_ts_config_test_impl(ctx):
-    env = analysistest.begin(ctx)
-    target_under_test = analysistest.target_under_test(env)
-
-    # The target analyzes and exposes TsConfigInfo / a tsconfig.json file.
-    asserts.true(env, TsConfigInfo in target_under_test)
-    default_paths = [f.path for f in target_under_test[DefaultInfo].files.to_list()]
-    asserts.true(
-        env,
-        any([p.endswith("/src_tsconfig.json") for p in default_paths]),
-        "expected wrapping ts_config to expose the parent's tsconfig.json via DefaultInfo, got: {}".format(default_paths),
-    )
-
-    # The wrapping ts_config's TsConfigInfo.deps contains both the parent's
-    # tsconfig.json (transitively) and the locally-attached package.json.
-    dep_paths = [f.path for f in target_under_test[TsConfigInfo].deps.to_list()]
-    asserts.true(
-        env,
-        any([p.endswith("/src_tsconfig.json") for p in dep_paths]),
-        "expected parent's tsconfig.json to flow through TsConfigInfo.deps, got: {}".format(dep_paths),
-    )
-    asserts.true(
-        env,
-        any([p.endswith("/package.json") for p in dep_paths]),
-        "expected local package.json dep to be in TsConfigInfo.deps, got: {}".format(dep_paths),
-    )
-
-    return analysistest.end(env)
-
-_ts_config_wrapping_ts_config_test = analysistest.make(_ts_config_wrapping_ts_config_test_impl)
+_ts_project_sees_package_json_in_tsc_inputs_test = analysistest.make(_ts_project_sees_package_json_in_tsc_inputs_test_impl)

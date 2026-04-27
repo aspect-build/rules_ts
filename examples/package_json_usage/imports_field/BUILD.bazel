@@ -1,0 +1,21 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
+
+# Demonstrates that TypeScript reads package.json's `"imports"` field for
+# `#`-prefixed subpath imports during compilation. The local package.json
+# defines `"#utils": "./utils.js"`; index.ts imports from `"#utils"`. tsc
+# can only resolve that specifier if the package.json is in its sandbox,
+# which is what ts_config.deps arranges.
+ts_config(
+    name = "tsconfig",
+    src = "//verbatim_module_syntax:tsconfig",
+    deps = ["package.json"],
+)
+
+ts_project(
+    name = "imports_field",
+    srcs = [
+        "index.ts",
+        "utils.ts",
+    ],
+    tsconfig = ":tsconfig",
+)

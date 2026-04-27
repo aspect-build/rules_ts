@@ -1,0 +1,8 @@
+{
+    "name": "self-reference-example",
+    "private": true,
+    "type": "module",
+    "exports": {
+        "./greeting": "./greeting.js"
+    }
+}

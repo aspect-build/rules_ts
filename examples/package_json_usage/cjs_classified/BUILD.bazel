@@ -1,0 +1,20 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
+
+# The negative companion to ../colocated and ../parent_src: this build
+# deliberately omits the package.json from ts_config.deps, so tsc never
+# sees a `"type": "module"` next to index.ts and classifies the file as
+# CommonJS. The @ts-expect-error directives in index.ts assert that the
+# ESM-only constructs do fail. If a future change ever leaked a sibling
+# package.json into this build, those directives would become unused
+# (TS2578) and the build would break — so this target also acts as a
+# regression guard for the propagation behavior.
+ts_config(
+    name = "tsconfig",
+    src = "//verbatim_module_syntax:tsconfig",
+)
+
+ts_project(
+    name = "cjs_classified",
+    srcs = ["index.ts"],
+    tsconfig = ":tsconfig",
+)

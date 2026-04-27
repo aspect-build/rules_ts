@@ -1,0 +1,8 @@
+{
+    "name": "imports-field-example",
+    "private": true,
+    "type": "module",
+    "imports": {
+        "#utils": "./utils.js"
+    }
+}

@@ -4,7 +4,8 @@ load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
 # making it visible to tsc alongside the tsconfig.json. With
 # `verbatimModuleSyntax: true` and `module: "nodenext"`, TypeScript needs to
 # see a sibling package.json with `"type": "module"` to classify index.ts as
-# ESM — otherwise the `export` statement fails to type-check.
+# ESM — otherwise ESM-only constructs like `import.meta.url` fail to
+# type-check.
 ts_config(
     name = "tsconfig",
     src = "tsconfig.json",
