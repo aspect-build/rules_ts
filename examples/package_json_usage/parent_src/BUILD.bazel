@@ -4,7 +4,7 @@ load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
 # local package.json so tsc can resolve `"type": "module"` next to index.ts.
 ts_config(
     name = "tsconfig",
-    src = "//verbatim_module_syntax:tsconfig",
+    src = "//package_json_usage:tsconfig",
     deps = ["package.json"],
 )
 

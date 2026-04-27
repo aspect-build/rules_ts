@@ -86,7 +86,7 @@ def ts_config_test_suite(name):
     )
 
     # ts_config whose src is another ts_config target (mirrors the
-    # examples/verbatim_module_syntax/parent_src pattern, where a child
+    # examples/package_json_usage/parent_src pattern, where a child
     # ts_config consumes a parent ts_config's bin-tree-copied tsconfig.json
     # via `src`). The package.json dep should still flow through to tsc.
     write_file(

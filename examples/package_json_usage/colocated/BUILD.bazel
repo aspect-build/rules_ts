@@ -13,7 +13,7 @@ ts_config(
 )
 
 ts_project(
-    name = "verbatim_module_syntax",
+    name = "package_json_usage",
     srcs = ["index.ts"],
     tsconfig = ":tsconfig",
 )

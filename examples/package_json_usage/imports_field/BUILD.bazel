@@ -7,7 +7,7 @@ load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
 # which is what ts_config.deps arranges.
 ts_config(
     name = "tsconfig",
-    src = "//verbatim_module_syntax:tsconfig",
+    src = "//package_json_usage:tsconfig",
     deps = ["package.json"],
 )
 
