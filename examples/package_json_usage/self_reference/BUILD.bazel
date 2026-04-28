@@ -1,0 +1,27 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+
+# Demonstrates that TypeScript reads the project's own package.json `"name"`
+# and `"exports"` fields to support self-reference imports — `import x from
+# "self-reference-example/greeting"` from within the same package — at
+# compile time. Requires the package.json to be in tsc's sandbox via
+# ts_config.deps.
+ts_config(
+    name = "tsconfig",
+    src = "//package_json_usage:tsconfig",
+    deps = ["package.json"],
+)
+
+ts_project(
+    name = "self_reference",
+    srcs = [
+        "greeting.ts",
+        "index.ts",
+    ],
+    tsconfig = ":tsconfig",
+)
+
+build_test(
+    name = "build_test",
+    targets = [":self_reference"],
+)

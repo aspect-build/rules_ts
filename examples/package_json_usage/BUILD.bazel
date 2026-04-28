@@ -1,0 +1,11 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_config")
+
+# A ts_config wrapping the shared tsconfig.json so subpackages can reference
+# it as the `src` of their own ts_config. ts_config's DefaultInfo emits the
+# bin-tree-copied tsconfig file, which short-circuits the same-package check
+# inside copy_file_to_bin_action when a child ts_config consumes it.
+ts_config(
+    name = "tsconfig",
+    src = "tsconfig.json",
+    visibility = [":__subpackages__"],
+)

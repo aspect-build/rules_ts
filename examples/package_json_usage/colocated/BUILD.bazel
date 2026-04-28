@@ -1,0 +1,25 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+
+# Demonstrates that a package.json can be passed to ts_config via `deps`,
+# making it visible to tsc alongside the tsconfig.json. With
+# `verbatimModuleSyntax: true` and `module: "nodenext"`, TypeScript needs to
+# see a sibling package.json with `"type": "module"` to classify index.ts as
+# ESM — otherwise ESM-only constructs like `import.meta.url` fail to
+# type-check.
+ts_config(
+    name = "tsconfig",
+    src = "tsconfig.json",
+    deps = ["package.json"],
+)
+
+ts_project(
+    name = "package_json_usage",
+    srcs = ["index.ts"],
+    tsconfig = ":tsconfig",
+)
+
+build_test(
+    name = "build_test",
+    targets = [":package_json_usage"],
+)

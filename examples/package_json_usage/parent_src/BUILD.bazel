@@ -1,0 +1,21 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+
+# `src` references a tsconfig.json in the parent package; `deps` carries the
+# local package.json so tsc can resolve `"type": "module"` next to index.ts.
+ts_config(
+    name = "tsconfig",
+    src = "//package_json_usage:tsconfig",
+    deps = ["package.json"],
+)
+
+ts_project(
+    name = "parent_src",
+    srcs = ["index.ts"],
+    tsconfig = ":tsconfig",
+)
+
+build_test(
+    name = "build_test",
+    targets = [":parent_src"],
+)
