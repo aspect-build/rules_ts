@@ -349,3 +349,38 @@ assert_outputs(
         "transpiler/build-declarations_custom/a.js.map",
     ],
 )
+
+# custom js & dts transpilers (composite = true)
+ts_project(
+    name = "custom_transpilers_composite",
+    srcs = ["a.ts"],
+    composite = True,
+    declaration = True,
+    declaration_transpiler = partial.make(
+        tsc_dts,
+        out_dir = "build-custom_transpilers_composite",
+    ),
+    out_dir = "build-custom_transpilers_composite",
+    source_map = True,
+    transpiler = partial.make(
+        tsc_js,
+        out_dir = "build-custom_transpilers_composite",
+    ),
+    tsconfig = {
+        "compilerOptions": {
+            "composite": True,
+        },
+    },
+)
+
+build_test(
+    name = "custom_transpilers_composite_test",
+    targets = [
+        ":custom_transpilers_composite",
+        ":custom_transpilers_composite_types",
+        ":custom_transpilers_composite_typecheck",
+        ":custom_transpilers_composite_typecheck_test",
+        "build-custom_transpilers_composite/a.js",
+        "build-custom_transpilers_composite/a.d.ts",
+    ],
+)

@@ -490,7 +490,7 @@ def ts_project(
         map_outs = tsc_map_outs,
         typings_outs = tsc_typings_outs,
         typing_maps_outs = tsc_typing_maps_outs,
-        buildinfo_out = tsbuildinfo_path if composite or incremental else None,
+        buildinfo_out = tsbuildinfo_path if (composite or incremental) and (emit_tsc_js or emit_tsc_dts) else None,
         no_emit = no_emit,
         emit_declaration_only = emit_declaration_only,
         tsc = tsc,
