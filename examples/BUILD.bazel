@@ -1,6 +1,42 @@
 load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
+load("@bazel_skylib//lib:selects.bzl", "selects")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@npm//:defs.bzl", "npm_link_all_packages")
+
+# Host-selecting alias for the tsgo binary fetched in MODULE.bazel.
+# Use as `tsc = "//:tsgo"` from any ts_project under examples/.
+[
+    selects.config_setting_group(
+        name = "is_" + os + "_" + cpu,
+        match_all = [
+            "@platforms//os:" + os,
+            "@platforms//cpu:" + cpu,
+        ],
+    )
+    for os, cpu in [
+        ("macos", "arm64"),
+        ("macos", "x86_64"),
+        ("linux", "arm64"),
+        ("linux", "armv7"),
+        ("linux", "x86_64"),
+        ("windows", "arm64"),
+        ("windows", "x86_64"),
+    ]
+]
+
+alias(
+    name = "tsgo",
+    actual = select({
+        ":is_macos_arm64": "@tsgo-darwin-arm64//:tsgo",
+        ":is_macos_x86_64": "@tsgo-darwin-x64//:tsgo",
+        ":is_linux_arm64": "@tsgo-linux-arm64//:tsgo",
+        ":is_linux_armv7": "@tsgo-linux-arm//:tsgo",
+        ":is_linux_x86_64": "@tsgo-linux-x64//:tsgo",
+        ":is_windows_arm64": "@tsgo-win32-arm64//:tsgo",
+        ":is_windows_x86_64": "@tsgo-win32-x64//:tsgo",
+    }),
+    visibility = ["//:__subpackages__"],
+)
 
 # Building this target results in bazel-bin/examples/node_modules/@myorg/js_pkg, so that
 # TypeScript and other node programs beneath bazel-bin/examples are able to resolve its location.

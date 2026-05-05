@@ -31,14 +31,32 @@ use_repo(rules_ts_ext, "npm_typescript")
 
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-http_archive(
-    name = "tsgo-darwin-arm64",
-    build_file_content = """\
+# typescript7 / tsgo: native preview of the Go-based TypeScript compiler.
+# Each platform's binary ships in a separate npm tarball; an alias in @tsgo
+# selects the right one for the host.
+TSGO_VERSION = "7.0.0-dev.20260504.1"
+
+TSGO_PLATFORMS = {
+    "darwin-arm64": "sha512-+Qs1Q7Qxfp11n/hU3pweFU+EQ37FnDsdWOOxb7/vCy8QGBysrLUUYRhQ+GSW3s663oMtN6+9Kf82hk3ZT+kXlg==",
+    "darwin-x64": "sha512-Wr3GWTRiMgibmhe88cjQ612ZyY7sbgsPYEaWKGPUxBaXtMHFIzgTBIoJMuaQqQx4GEJs6AUDyhnIHG1gx4rJjg==",
+    "linux-arm": "sha512-s8QkhZe0M4QD2xhK1Xiy2JUQv1AOl8kUg5DLx1G8ws0f1BK/oKyqDNbxhZMGINYLFvkjpr9lOxt7qehSnpJMYQ==",
+    "linux-arm64": "sha512-y1Qai5l55Sl+/3B0hyQtvynq//C22BKFH3CfU35fbLYUo4P/ISUycyAbcA+PAPazpDFO3E56I96QUQrbJL2VVA==",
+    "linux-x64": "sha512-ngN3Ie3Vin6pFtqeNywxm86RTxgI0Fo0GZyJ1PxokLES8J3xfMPtMYfv85c/+5uz5+7T+m4LRLyY5IoLY4gtuw==",
+    "win32-arm64": "sha512-/GZDJN/CsLbqIe7EdWDkXhNX9C41VjemBeUN6+9ckvEFLH8XyKTmXPYikNOn0N819M1KSeNZltplyUslfROOdw==",
+    "win32-x64": "sha512-EYQBdVZq4xIzhTtKxw6wvee9238hEb7XrPG413AEZBD3kcR3qqvPULXsPzQyEpneCReATSaihscP/LfhMQYUmA==",
+}
+
+[
+    http_archive(
+        name = "tsgo-" + platform,
+        build_file_content = """\
 load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
 native_binary(name = "tsgo", src = "lib/tsgo", data = glob(["lib/*.d.ts"]), visibility = ["//visibility:public"])""",
-    integrity = "sha512-Jo5kVoxaewKPn/3bKWyUB/gPR+Tjhj6isLc8VshV4OyFX4n6pkvVyk3ANivl7Kwmiv3WGKGUotbZ71DKCZATwA==",
-    strip_prefix = "package",
-    urls = [
-        "https://registry.npmjs.org/@typescript/native-preview-darwin-arm64/-/native-preview-darwin-arm64-7.0.0-dev.20260130.1.tgz",
-    ],
-)
+        integrity = integrity,
+        strip_prefix = "package",
+        urls = [
+            "https://registry.npmjs.org/@typescript/native-preview-{p}/-/native-preview-{p}-{v}.tgz".format(p = platform, v = TSGO_VERSION),
+        ],
+    )
+    for platform, integrity in TSGO_PLATFORMS.items()
+]
