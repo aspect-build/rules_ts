@@ -6,6 +6,7 @@ despite their similar naming.
 
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@bazel_lib//lib:testing.bzl", "assert_outputs")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 
 # By default, TypeScript calculates rootDir as the closest common ancestor
 # so you'd expect outDir/a.ts to be produced.
@@ -94,4 +95,19 @@ assert_outputs(
         "root_dir/otherdir/a.js",
         "root_dir/otherdir/deep/subdir/b.js",
     ],
+)
+
+# A tsconfig that lives in a subfolder of the package can use rootDir = ".."
+# to point back at the package root. The validator must accept this since the
+# resolved path stays inside the package.
+ts_project(
+    name = "subfolder_tsconfig",
+    srcs = ["subdir/a.ts"],
+    out_dir = "subfolder_out",
+    tsconfig = "subdir/tsconfig-parent.json",
+)
+
+build_test(
+    name = "subfolder_tsconfig_test",
+    targets = [":subfolder_tsconfig"],
 )

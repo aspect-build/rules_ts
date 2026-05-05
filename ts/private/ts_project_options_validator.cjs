@@ -148,10 +148,10 @@ function main(_a) {
         var optionVal = options[optionName]
         if (typeof optionVal !== 'string' || !optionVal) return
 
-        // tsconfigPath is relative, so options[optionName] stays in the same
-        // relative form. copy_file_to_bin_action enforces tsconfig-in-package.
-        var tsconfigDir = path_1.dirname(tsconfigPath)
-        var rel = path_1.relative(tsconfigDir, optionVal)
+        // The boundary is the rule's package, not the tsconfig's directory:
+        // tsconfigs may live in subfolders (e.g. pkg/config/tsconfig.json) where
+        // ".." still resolves inside the package.
+        var rel = path_1.relative(packageDir, optionVal)
 
         if (rel === '..' || rel.startsWith('../') || rel.startsWith('..\\')) {
             throw new Error(
