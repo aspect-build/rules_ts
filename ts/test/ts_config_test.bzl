@@ -75,7 +75,7 @@ def ts_config_test_suite(name):
     ts_config(
         name = "tsconfig_with_package_json_dep",
         src = "src_tsconfig_pkgjson.json",
-        deps = [":src_package_json"],
+        package_json = ":src_package_json",
     )
     ts_project(
         name = "use_tsconfig_with_package_json_dep",
@@ -83,6 +83,27 @@ def ts_config_test_suite(name):
         declaration = True,
         out_dir = "pkgjson-outdir",
         tsconfig = ":tsconfig_with_package_json_dep",
+    )
+
+    # The _without_package_json companion target created by ts_config's
+    # package_json parameter — should NOT propagate the package.json.
+    write_file(
+        name = "src_tsconfig_nopkg",
+        out = "src_tsconfig_nopkg.json",
+        content = ["""{"compilerOptions": {"declaration": true, "outDir": "nopkg-outdir"}}"""],
+        tags = ["manual"],
+    )
+    ts_config(
+        name = "tsconfig_nopkg",
+        src = "src_tsconfig_nopkg.json",
+        package_json = ":src_package_json",
+    )
+    ts_project(
+        name = "use_tsconfig_without_package_json",
+        srcs = [":src_ts"],
+        declaration = True,
+        out_dir = "nopkg-outdir",
+        tsconfig = ":tsconfig_nopkg_without_package_json",
     )
 
     # ts_config whose src is another ts_config target (mirrors the
@@ -102,7 +123,7 @@ def ts_config_test_suite(name):
     ts_config(
         name = "tsconfig_wrapping_ts_config",
         src = ":tsconfig_wrap_parent",
-        deps = [":src_package_json"],
+        package_json = ":src_package_json",
     )
     ts_project(
         name = "use_tsconfig_wrapping_ts_config",
@@ -185,6 +206,11 @@ def ts_config_test_suite(name):
         target_under_test = "use_tsconfig_wrapping_ts_config",
     )
 
+    _ts_project_does_not_see_package_json_test(
+        name = "tsconfig_without_package_json_test",
+        target_under_test = "use_tsconfig_without_package_json",
+    )
+
     native.test_suite(
         name = name,
         tests = [
@@ -195,6 +221,7 @@ def ts_config_test_suite(name):
             ":outputs_use_dict_extending_tsconfig_target_test",
             ":tsconfig_with_package_json_dep_test",
             ":tsconfig_wrapping_ts_config_test",
+            ":tsconfig_without_package_json_test",
         ],
     )
 
@@ -257,3 +284,22 @@ def _ts_project_sees_package_json_in_tsc_inputs_test_impl(ctx):
     return analysistest.end(env)
 
 _ts_project_sees_package_json_in_tsc_inputs_test = analysistest.make(_ts_project_sees_package_json_in_tsc_inputs_test_impl)
+
+def _ts_project_does_not_see_package_json_test_impl(ctx):
+    """Asserts that the _without_package_json companion target does not
+    propagate a package.json to the tsc action inputs."""
+    env = analysistest.begin(ctx)
+    target_under_test = analysistest.target_under_test(env)
+
+    action_input_paths = [f.path for f in target_under_test[OutputGroupInfo]._action_inputs.to_list()]
+    package_json_inputs = [p for p in action_input_paths if p.endswith("/package.json")]
+    asserts.equals(
+        env,
+        0,
+        len(package_json_inputs),
+        "expected no package.json in tsc action inputs for the _without_package_json target, got: {}".format(package_json_inputs),
+    )
+
+    return analysistest.end(env)
+
+_ts_project_does_not_see_package_json_test = analysistest.make(_ts_project_does_not_see_package_json_test_impl)

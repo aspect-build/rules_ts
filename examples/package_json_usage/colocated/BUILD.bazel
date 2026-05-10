@@ -10,7 +10,7 @@ load("@bazel_skylib//rules:build_test.bzl", "build_test")
 ts_config(
     name = "tsconfig",
     src = "tsconfig.json",
-    deps = ["package.json"],
+    package_json = "package.json",
 )
 
 ts_project(

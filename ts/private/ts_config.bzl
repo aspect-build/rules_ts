@@ -90,7 +90,7 @@ def _ts_config_impl(ctx):
         TsConfigInfo(deps = depset(files, transitive = transitive_deps)),
     ]
 
-ts_config = rule(
+ts_config_rule = rule(
     implementation = _ts_config_impl,
     attrs = {
         "deps": attr.label_list(
@@ -112,6 +112,45 @@ extended configuration file as well, to pass them both to the TypeScript compile
 """,
     toolchains = COPY_FILE_TO_BIN_TOOLCHAINS,
 )
+
+def ts_config(name, src, deps = [], package_json = None, **kwargs):
+    """Wrapper around ts_config_rule that optionally includes a package.json.
+
+    When package_json is set, an additional `name + "_without_package_json"` target
+    is created so that extending ts_configs can inherit the tsconfig without
+    receiving the package.json.
+
+    Args:
+        name: name of the resulting write_file rule
+        config: tsconfig dictionary
+        files: list of input .ts files to put in the files[] array
+        out: the file to write
+        extends: a label for a tsconfig.json file to extend from, if any
+        allow_js: value of the allowJs tsconfig property
+        resolve_json_module: value of the resolveJsonModule tsconfig property
+        package_json: a package.json file to include in deps
+        **kwargs: Other common named parameters such as `tags` or `visibility`
+    """
+    if package_json:
+        ts_config_rule(
+            name = name,
+            src = src,
+            deps = deps + [package_json],
+            **kwargs
+        )
+        ts_config_rule(
+            name = name + "_without_package_json",
+            src = src,
+            deps = deps,
+            **kwargs
+        )
+    else:
+        ts_config_rule(
+            name = name,
+            src = src,
+            deps = deps,
+            **kwargs
+        )
 
 def _write_tsconfig_rule(ctx):
     # TODO: is it useful to expand Make variables in the content?

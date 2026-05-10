@@ -8,11 +8,12 @@ load("@aspect_bazel_lib//lib:utils.bzl", "to_label")
 load("@aspect_tools_telemetry_report//:defs.bzl", "TELEMETRY")  # buildifier: disable=load
 load("@bazel_skylib//lib:partial.bzl", "partial")
 load("//ts/private:build_test.bzl", "build_test")
-load("//ts/private:ts_config.bzl", "write_tsconfig", _TsConfigInfo = "TsConfigInfo", _ts_config = "ts_config")
+load("//ts/private:ts_config.bzl", "write_tsconfig", _TsConfigInfo = "TsConfigInfo", _ts_config = "ts_config", _ts_config_rule = "ts_config_rule")
 load("//ts/private:ts_lib.bzl", _lib = "lib")
 load("//ts/private:ts_project.bzl", _ts_project = "ts_project")
 
 ts_config = _ts_config
+ts_config_rule = _ts_config_rule
 TsConfigInfo = _TsConfigInfo
 ts_project_rule = _ts_project
 
