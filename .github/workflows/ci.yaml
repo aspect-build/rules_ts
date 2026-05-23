@@ -60,12 +60,12 @@ jobs:
                   version: '7.14.2'
 
             - name: Setup bats
-              uses: mig4/setup-bats@v1
+              uses: mig4/setup-bats@af9a00deb21b5d795cabfeaa8d9060410377686d # v1
               with:
                   bats-version: '1.8.2'
 
             - name: Setup bats helpers
-              uses: brokenpip3/setup-bats-libs@0.0.3
+              uses: brokenpip3/setup-bats-libs@adb596631d41c8e1da2466833a66ed2c321a4157 # 0.0.3
               with:
                   support-path: /usr/lib/bats/bats-support
                   support-version: '0.3.0'

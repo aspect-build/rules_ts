@@ -15,7 +15,7 @@ jobs:
                   ./ts/private/mirror_versions.sh
                   npx @bazel/buildifier ts/private/versions.bzl
             - name: Create Pull Request
-              uses: peter-evans/create-pull-request@v8
+              uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8
               with:
                   commit-message: 'fix: add latest ts external release hashes'
                   author: "aspect-marvin <marvin@aspect.build>"
