@@ -37,7 +37,7 @@ jobs:
                     # - windows-latest
         runs-on: ${{ matrix.os }}
         steps:
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@v6
             - uses: bazel-contrib/setup-bazel@0.18.0
               with:
                   bazelisk-cache: true
@@ -49,7 +49,7 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@v6
             - uses: actions/setup-node@v3
               with:
                   # pnpm 7 does not work with latest node 20
