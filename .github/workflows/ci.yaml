@@ -18,6 +18,12 @@ concurrency:
     cancel-in-progress: ${{ github.ref_name != 'main' }}
 
 jobs:
+    org-checks:
+        uses: aspect-build/.github/.github/workflows/org-check.yaml@main
+        secrets: inherit
+        permissions:
+            contents: read
+            pull-requests: write
     test:
         # Only run on main branch (not PRs) to minimize minutes (billed at 10X and 2X respectively)
         # https://docs.github.com/en/billing/managing-billing-for-github-actions/about-billing-for-github-actions#included-storage-and-minutes
