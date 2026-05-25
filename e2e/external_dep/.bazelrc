@@ -1,6 +1,12 @@
 import %workspace%/../../tools/preset.bazelrc
 
-### YOUR PROJECT SPECIFIC OPTIONS GO HERE ###
-
 common --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
 common --@aspect_rules_ts//ts:default_to_tsc_transpiler
+
+# Build without the bytes
+common:ci --remote_download_outputs=minimal
+common:ci --nobuild_runfile_links
+
+# Override the preset's `--lockfile_mode=error` on CI since we don't
+# yet commit MODULE.bazel.lock — see .gitignore.
+common:ci --lockfile_mode=off

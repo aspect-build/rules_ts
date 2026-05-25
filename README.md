@@ -1,5 +1,9 @@
 # Bazel rules for TypeScript
 
+> [!NOTE]
+> This repository uses the [Aspect CLI](https://github.com/aspect-build/aspect-cli) for CI and local development.
+> See the [docs](https://docs.aspect.build/cli/overview) and [install instructions](https://docs.aspect.build/cli/install) to get started.
+
 This is the canonical ruleset for using Bazel with TypeScript, based on
 <https://github.com/aspect-build/rules_js>.
 
