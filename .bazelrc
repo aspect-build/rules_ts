@@ -1,7 +1,5 @@
 import %workspace%/tools/preset.bazelrc
 
-### YOUR PROJECT SPECIFIC OPTIONS GO HERE ###
-
 common --config=ruleset
 
 common --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
@@ -10,8 +8,10 @@ common --@aspect_rules_ts//ts:default_to_tsc_transpiler
 # verbose
 common:verbose --@aspect_rules_ts//ts:verbose --worker_verbose
 
-# Load any settings & overrides specific to the current user.
-# This file should appear in `.gitignore` so that settings are not shared with team members. This
-# should be last statement in this config so the user configuration is able to overwrite flags from
-# this file. See https://bazel.build/configure/best-practices#bazelrc-file.
-try-import %workspace%/user.bazelrc
+# Build without the bytes
+common:ci --remote_download_outputs=minimal
+common:ci --nobuild_runfile_links
+
+# Override the preset's `--lockfile_mode=error` on CI since we don't
+# yet commit MODULE.bazel.lock — see .gitignore.
+common:ci --lockfile_mode=off

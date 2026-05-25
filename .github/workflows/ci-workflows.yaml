@@ -1,0 +1,94 @@
+name: CI - Aspect Workflows
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+    workflow_dispatch:
+
+permissions:
+    id-token: write
+
+env:
+    ASPECT_API_TOKEN: ${{ secrets.ASPECT_API_TOKEN }}
+    INSTALL_ASPECT_LAUNCHER_VERSION: 2026.21.44
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+    cancel-in-progress: true
+
+jobs:
+    format:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v6
+            - uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # 0.19.0
+              with:
+                bazelisk-cache: true
+                disk-cache: ${{ github.workflow }}-format
+                repository-cache: true
+                external-cache: true
+            - name: Format
+              run: |
+                curl -fsSL https://install.aspect.build | bash -s -- "$INSTALL_ASPECT_LAUNCHER_VERSION"
+                aspect format --task-key=format
+    buildifier:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v6
+            - uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # 0.19.0
+              with:
+                bazelisk-cache: true
+                disk-cache: ${{ github.workflow }}-buildifier
+                repository-cache: true
+                external-cache: true
+            - name: Buildifier
+              run: |
+                curl -fsSL https://install.aspect.build | bash -s -- "$INSTALL_ASPECT_LAUNCHER_VERSION"
+                aspect buildifier --task-key=buildifier
+    test:
+        name: test (${{ matrix.workspace.path }}, ${{ matrix.bazel.id }})
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                workspace:
+                - { path: ".", slug: "root" }
+                - { path: "examples", slug: "examples" }
+                - { path: "e2e/smoke", slug: "e2e-smoke" }
+                - { path: "e2e/smoke_rjs3", slug: "e2e-smoke_rjs3" }
+                - { path: "e2e/bzlmodules", slug: "e2e-bzlmodules" }
+                - { path: "e2e/nested_repos", slug: "e2e-nested_repos" }
+                - { path: "e2e/external_dep", slug: "e2e-external_dep" }
+                - { path: "e2e/external_dep/app", slug: "e2e-external_dep-app" }
+                - { path: "e2e/worker", slug: "e2e-worker" }
+                bazel:
+                - { id: "bazel-7", version: "7.x", flags: "" }
+                - { id: "bazel-7-wksp", version: "7.x", flags: "--bazel-flag=--enable_bzlmod=false" }
+                - { id: "bazel-8", version: "8.x", flags: "" }
+                - { id: "bazel-9", version: "9.x", flags: "" }
+                exclude:
+                # No WORKSPACE root/examples
+                - { workspace: { slug: "root" }, bazel: { id: "bazel-7-wksp" } }
+                - { workspace: { slug: "examples" }, bazel: { id: "bazel-7-wksp" } }
+                # No WORKSPACE in rules_js v3
+                - { workspace: { slug: "e2e-smoke_rjs3" }, bazel: { id: "bazel-7-wksp" } }
+                # bzlmod-only test
+                - { workspace: { slug: "e2e-bzlmodules" }, bazel: { id: "bazel-7-wksp" } }
+                - { workspace: { slug: "e2e-nested_repos" }, bazel: { id: "bazel-7-wksp" } }
+        env:
+            USE_BAZEL_VERSION: ${{ matrix.bazel.version }}
+        steps:
+            - uses: actions/checkout@v6
+            - uses: bazel-contrib/setup-bazel@c5acdfb288317d0b5c0bbd7a396a3dc868bb0f86 # 0.19.0
+              with:
+                bazelisk-cache: true
+                disk-cache: ${{ github.workflow }}-test-${{ matrix.workspace.slug }}-${{ matrix.bazel.id }}
+                repository-cache: true
+                external-cache: true
+            - name: Test
+              working-directory: ${{ matrix.workspace.path }}
+              run: |
+                curl -fsSL https://install.aspect.build | bash -s -- "$INSTALL_ASPECT_LAUNCHER_VERSION"
+                aspect test --task-key=test-${{ matrix.workspace.slug }}-${{ matrix.bazel.id }} ${{ matrix.bazel.flags }} -- //...
