@@ -131,6 +131,9 @@ def _protoc_action(ctx, proto_info, outputs):
         ),
         env = {"BAZEL_BINDIR": ctx.bin_dir.path},
         use_default_shell_env = True,
+        execution_requirements = {
+            "supports-path-mapping": "1",
+        },
     )
 
 def _declare_outs(ctx, info, ext):
