@@ -4,26 +4,30 @@
 name: Release
 
 on:
-  # Can be triggered from the tag.yaml workflow
-  workflow_call:
-    inputs:
-      tag_name:
-        required: true
-        type: string
-    secrets:
-      BCR_PUBLISH_TOKEN:
-        required: true
-  # Or, developers can manually push a tag from their clone
-  push:
-    tags:
-      - "v*.*.*"
+    # Can be triggered from the tag.yaml workflow
+    workflow_call:
+        inputs:
+            tag_name:
+                required: true
+                type: string
+        secrets:
+            BCR_PUBLISH_TOKEN:
+                required: true
+    # Or, developers can manually push a tag from their clone
+    push:
+        tags:
+            - 'v*.*.*'
 permissions:
     id-token: write
     attestations: write
     contents: write
 jobs:
     release:
-        uses: bazel-contrib/.github/.github/workflows/release_ruleset.yaml@e5ab8fc4c23cb13783fad499e8bd865fd9f6d669 # v7.6.0
+        # SLSA trusted-builder reusable workflows MUST be referenced by a semantic
+        # version tag, not a commit SHA: slsa-verifier reads the builder ref from the
+        # provenance and rejects a bare SHA ("unexpected ref type"), which breaks the
+        # release-artifact attestations that BCR's presubmit verifies. Do not SHA-pin.
+        uses: bazel-contrib/.github/.github/workflows/release_ruleset.yaml@v7.6.0
         with:
             release_files: rules_ts-*.tar.gz
             prerelease: false
