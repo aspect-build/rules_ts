@@ -122,6 +122,80 @@ teardown() {
 	assert_success
 }
 
+@test 'When options are set in an extended tsconfig but attributes are not set, should fail validation' {
+	workspace
+
+	echo "export const a = 1;" >./source.ts
+
+	cat >tsconfig.base.json <<EOF
+{
+    "compilerOptions": {
+        "declaration": true,
+        "jsx": "preserve"
+    }
+}
+EOF
+
+	cat >tsconfig.json <<EOF
+{
+    "extends": "./tsconfig.base.json"
+}
+EOF
+
+	cat >BUILD.bazel <<EOF
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "foo",
+    srcs = ["source.ts"],
+    tsconfig = "tsconfig.json",
+    extends = "tsconfig.base.json",
+)
+EOF
+
+	run bazel build :foo
+	assert_failure
+	assert_output -p 'attribute declaration=false does not match compilerOptions.declaration=true'
+	assert_output -p 'attribute preserve_jsx=false does not match compilerOptions.jsx=preserve'
+}
+
+@test 'When attributes match options inherited from an extended tsconfig, should succeed' {
+	workspace
+
+	echo "export const a = 1;" >./source.ts
+
+	cat >tsconfig.base.json <<EOF
+{
+    "compilerOptions": {
+        "declaration": true,
+        "jsx": "preserve"
+    }
+}
+EOF
+
+	cat >tsconfig.json <<EOF
+{
+    "extends": "./tsconfig.base.json"
+}
+EOF
+
+	cat >BUILD.bazel <<EOF
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "foo",
+    srcs = ["source.ts"],
+    tsconfig = "tsconfig.json",
+    extends = "tsconfig.base.json",
+    declaration = True,
+    preserve_jsx = True,
+)
+EOF
+
+	run bazel build :foo
+	assert_success
+}
+
 @test 'When rootDir in tsconfig resolves to a parent of the package, validation should fail' {
 	workspace
 
