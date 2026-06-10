@@ -1,4 +1,5 @@
 load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 
 # Uses tsconfig.json in this source folder by default
 ts_project(
@@ -49,4 +50,30 @@ ts_project(
             "isolatedDeclarations": True,
         },
     },
+)
+
+# The declaration and preserve_jsx attributes only match compilerOptions
+# (declaration, jsx) inherited from the extended tsconfig.emit.json, so this
+# target both validates and emits .d.ts only if `extends` is resolved.
+# See https://github.com/aspect-build/rules_ts/issues/930
+ts_project(
+    name = "extended_options",
+    srcs = ["main.ts"],
+    declaration = True,
+    extends = "//extends_chain:tsconfig_emit",
+    out_dir = "extended_options",
+    preserve_jsx = True,
+    tsconfig = "tsconfig.emit.json",
+)
+
+build_test(
+    name = "test",
+    targets = [
+        ":main",
+        ":config_dict",
+        ":tsconfig_target",
+        ":tsconfig_isolated_target",
+        ":extended_options",
+        ":extended_options/main.d.ts",
+    ],
 )

@@ -6,3 +6,13 @@ ts_config(
     visibility = [":__subpackages__"],
     deps = ["tsconfig.json"],
 )
+
+# Sets options (declaration, jsx) that ts_project validates against its
+# attributes, so targets extending this config exercise `extends` resolution
+# in the options validator. See https://github.com/aspect-build/rules_ts/issues/930
+ts_config(
+    name = "tsconfig_emit",
+    src = "tsconfig.emit.json",
+    visibility = [":__subpackages__"],
+    deps = [":tsconfig_node"],
+)

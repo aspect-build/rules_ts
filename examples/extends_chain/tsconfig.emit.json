@@ -1,0 +1,7 @@
+{
+    "extends": "./tsconfig.node.json",
+    "compilerOptions": {
+        "declaration": true,
+        "jsx": "preserve"
+    }
+}
