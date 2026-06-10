@@ -1,5 +1,7 @@
 "Utilities functions for selecting and filtering ts and other files"
 
+load("@aspect_rules_js//js:providers.bzl", "JsInfo")
+
 # Attributes common to all TypeScript rules
 STD_ATTRS = {
     "assets": attr.label_list(
@@ -29,6 +31,7 @@ https://docs.aspect.build/rulesets/aspect_rules_js/docs/js_library#data for more
 Follows the same runfiles semantics as `js_library` `deps` attribute. See
 https://docs.aspect.build/rulesets/aspect_rules_js/docs/js_library#deps for more info.
 """,
+        providers = [JsInfo],  # Same as js_library(deps)
     ),
     "out_dir": attr.string(
         doc = "https://www.typescriptlang.org/tsconfig#outDir",
