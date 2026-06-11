@@ -5,6 +5,9 @@ common --config=ruleset
 common --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
 common --@aspect_rules_ts//ts:default_to_tsc_transpiler
 
+# Required for the tsc js_binary entry_point (inside a tree artifact) on Windows.
+common:windows --enable_runfiles
+
 # verbose
 common:verbose --@aspect_rules_ts//ts:verbose --worker_verbose
 

@@ -230,7 +230,7 @@ def ts_project_test_suite(name):
     write_file(
         name = "tsconfig_path_norm_trailing_slash",
         out = "tsconfig_path_norm_trailing_slash.json",
-        content = ['{"compilerOptions": {"outDir": "out2/", "declaration": true, "declarationDir": "types2/", "rootDir": "nrm2/"}, "exclude": []}'],
+        content = ['{"files": ["nrm2/src2.ts"], "compilerOptions": {"outDir": "out2/", "declaration": true, "declarationDir": "types2/", "rootDir": "nrm2/"}, "exclude": []}'],
         tags = ["manual"],
     )
     ts_project_wrapper(
@@ -258,7 +258,7 @@ def ts_project_test_suite(name):
     write_file(
         name = "tsconfig_path_norm_both_slash",
         out = "tsconfig_path_norm_both_slash.json",
-        content = ['{"compilerOptions": {"outDir": "./out3/", "declaration": true, "declarationDir": "./types3/", "rootDir": "./nrm3/"}, "exclude": []}'],
+        content = ['{"files": ["nrm3/src3.ts"], "compilerOptions": {"outDir": "./out3/", "declaration": true, "declarationDir": "./types3/", "rootDir": "./nrm3/"}, "exclude": []}'],
         tags = ["manual"],
     )
     ts_project_wrapper(

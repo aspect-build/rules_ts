@@ -20,17 +20,21 @@ def ts_config_test_suite(name):
         tags = ["manual"],
     )
 
-    # A simple tsconfig file
+    # A simple tsconfig file.
+    # NB: fixture tsconfigs pin `files` so tsc only compiles the intended
+    # sources. Without it tsc includes every .ts it can see, which is
+    # non-hermetic on hosts without sandboxing (e.g. Windows) where files
+    # generated for sibling targets (such as typeerror.ts) are also visible.
     write_file(
         name = "src_tsconfig",
         out = "src_tsconfig.json",
-        content = ["""{"compilerOptions": {"declaration": true, "outDir": "outdir"}}"""],
+        content = ["""{"files": ["src_ts.ts"], "compilerOptions": {"declaration": true, "outDir": "outdir"}}"""],
         tags = ["manual"],
     )
     write_file(
         name = "src_tsconfig2",
         out = "src_tsconfig2.json",
-        content = ["""{"compilerOptions": {"declaration": true, "outDir": "outdir2"}}"""],
+        content = ["""{"files": ["src_ts.ts"], "compilerOptions": {"declaration": true, "outDir": "outdir2"}}"""],
         tags = ["manual"],
     )
 
@@ -69,7 +73,7 @@ def ts_config_test_suite(name):
     write_file(
         name = "src_tsconfig_pkgjson",
         out = "src_tsconfig_pkgjson.json",
-        content = ["""{"compilerOptions": {"declaration": true, "outDir": "pkgjson-outdir"}}"""],
+        content = ["""{"files": ["src_ts.ts"], "compilerOptions": {"declaration": true, "outDir": "pkgjson-outdir"}}"""],
         tags = ["manual"],
     )
     ts_config(
@@ -92,7 +96,7 @@ def ts_config_test_suite(name):
     write_file(
         name = "src_tsconfig_wrapparent",
         out = "src_tsconfig_wrapparent.json",
-        content = ["""{"compilerOptions": {"declaration": true, "outDir": "wrap-outdir"}}"""],
+        content = ["""{"files": ["src_ts.ts"], "compilerOptions": {"declaration": true, "outDir": "wrap-outdir"}}"""],
         tags = ["manual"],
     )
     ts_config(
