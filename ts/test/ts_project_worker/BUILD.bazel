@@ -12,9 +12,16 @@ js_test(
     name = "fstree_test",
     data = [
         "mock.js",
+        "package.json",
         ":ts_project_worker.js",
     ],
     entry_point = ":fstree.test.js",
+    # The test exercises the worker fstree with POSIX path semantics and
+    # creates symlinks, neither of which hold on Windows.
+    target_compatible_with = select({
+        "@platforms//os:windows": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
 )
 
 npm_link_package(
@@ -27,6 +34,7 @@ js_test(
     name = "oom_test",
     data = [
         "mock.js",
+        "package.json",
         ":ts_project_worker.js",
     ],
     entry_point = ":oom.test.js",

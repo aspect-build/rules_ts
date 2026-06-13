@@ -27,8 +27,13 @@ jobs:
                 os:
                     # NB: linux testing is on Aspect Workflows
                     - macos-latest
-                    # Broken by rules_multitool, among others
-                    # - windows-latest
+                    - windows-latest
+                exclude:
+                    # examples are not windows-compatible, e.g. the custom
+                    # transpilers in examples/transpiler rely on sandboxing
+                    # to hide generated .ts fixtures from `tsc -p`.
+                    - folder: examples
+                      os: windows-latest
         runs-on: ${{ matrix.os }}
         steps:
             - uses: actions/checkout@v6
@@ -38,6 +43,7 @@ jobs:
                   external-cache: true
                   module-root: ${{ matrix.folder }}
             - run: bazel test //...
+              working-directory: ${{ matrix.folder }}
 
     bats-tests:
         runs-on: ubuntu-latest
