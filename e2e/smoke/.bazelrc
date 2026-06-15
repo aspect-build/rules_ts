@@ -3,8 +3,14 @@ import %workspace%/../../tools/preset.bazelrc
 common --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
 # NB: comment this line out to test the legacy path to @com_google_protobuf//:protoc
 common --incompatible_enable_proto_toolchain_resolution
+
+# Required for the tsc js_binary entry_point (inside a tree artifact) on Windows.
+common:windows --enable_runfiles
+
 # abseil-cpp (via protobuf 33.4) requires C++17; Bazel 7 defaults to C++14
-build --cxxopt=-std=c++17 --host_cxxopt=-std=c++17
+build:linux --cxxopt=-std=c++17 --host_cxxopt=-std=c++17
+build:macos --cxxopt=-std=c++17 --host_cxxopt=-std=c++17
+build:windows --cxxopt=/std:c++17 --host_cxxopt=/std:c++17
 
 # Build without the bytes
 common:ci --remote_download_outputs=minimal

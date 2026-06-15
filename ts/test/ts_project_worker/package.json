@@ -1,0 +1,4 @@
+{
+    "comment": "Pin this directory to CommonJS. Without sandboxing (e.g. Windows) node would otherwise find the 'type: module' package.json fixture that ts_config_test.bzl generates into bazel-out/bin/ts/test/ and treat the .js test files here as ESM.",
+    "type": "commonjs"
+}
