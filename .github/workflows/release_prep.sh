@@ -11,7 +11,6 @@ ARCHIVE="rules_ts-$TAG.tar.gz"
 
 # NB: configuration for 'git archive' is in /.gitattributes
 git archive --format=tar --prefix=${PREFIX}/ ${TAG} | gzip >$ARCHIVE
-SHA=$(shasum -a 256 $ARCHIVE | awk '{print $1}')
 
 # Add generated API docs to the release
 # see https://github.com/bazelbuild/bazel-central-registry/blob/main/docs/stardoc.md
@@ -35,31 +34,4 @@ use_repo(rules_ts_ext, "npm_typescript")
 \`\`\`
 
 [Bzlmod]: https://bazel.build/build/bzlmod
-
-## Using legacy WORKSPACE
-
-Paste this snippet into your \`WORKSPACE\` file:
-
-\`\`\`starlark
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-http_archive(
-    name = "aspect_rules_ts",
-    sha256 = "${SHA}",
-    strip_prefix = "${PREFIX}",
-    url = "https://github.com/aspect-build/rules_ts/releases/download/${TAG}/${ARCHIVE}",
-)
-EOF
-
-awk 'f;/--SNIP--/{f=1}' e2e/smoke/WORKSPACE
-echo "\`\`\`"
-
-cat <<EOF
-
-To use rules_ts with bazel-lib 2.x, you must additionally register the coreutils toolchain.
-
-\`\`\`starlark
-load("@aspect_bazel_lib//lib:repositories.bzl", "register_coreutils_toolchains")
-
-register_coreutils_toolchains()
-\`\`\`
 EOF
