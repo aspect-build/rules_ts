@@ -301,7 +301,8 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             env = env,
         )
     else:
-        typecheck_outs.extend(output_types)
+        # When tsc emits js but no dts, js_outs are the only artifact proving tsc ran and type-checked.
+        typecheck_outs.extend(output_types if output_types else js_outs)
 
     if use_tsc_for_js or use_tsc_for_dts:
         tsc_emit_arguments = ctx.actions.args()

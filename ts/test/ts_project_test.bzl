@@ -109,6 +109,39 @@ _TSCONFIG = {
     },
 }
 
+_TSCONFIG_JS_ONLY = {
+    "compilerOptions": {
+        "declaration": False,
+    },
+}
+
+# no_decl_lib_transitive_typecheck_test
+# Verifies that when declaration=False, js_outs appear in transitive_typecheck (the fix).
+def _no_decl_lib_transitive_typecheck_test_impl(ctx):
+    env = analysistest.begin(ctx)
+    target = analysistest.target_under_test(env)
+
+    files = target[OutputGroupInfo].transitive_typecheck.to_list()
+    asserts.equals(env, 1, len(files))
+    asserts.true(env, files[0].path.find(".js") != -1)
+
+    return analysistest.end(env)
+
+_no_decl_lib_transitive_typecheck_test = analysistest.make(_no_decl_lib_transitive_typecheck_test_impl)
+
+# no_decl_consumer_transitive_typecheck_test
+# Verifies that transitive_typecheck chains correctly through declaration=False deps.
+def _no_decl_consumer_transitive_typecheck_test_impl(ctx):
+    env = analysistest.begin(ctx)
+    target = analysistest.target_under_test(env)
+
+    files = target[OutputGroupInfo].transitive_typecheck.to_list()
+    asserts.equals(env, 2, len(files))
+
+    return analysistest.end(env)
+
+_no_decl_consumer_transitive_typecheck_test = analysistest.make(_no_decl_consumer_transitive_typecheck_test_impl)
+
 def ts_project_test_suite(name):
     """Test suite including all tests and data
 
@@ -276,6 +309,41 @@ def ts_project_test_suite(name):
         targets = [":path_norm_both_slash"],
     )
 
+    write_file(
+        name = "no_decl_lib_ts",
+        out = "no_decl_lib.ts",
+        content = ["export const x = 1;"],
+        tags = ["manual"],
+    )
+    ts_project(
+        name = "no_decl_lib",
+        srcs = ["no_decl_lib.ts"],
+        tsconfig = _TSCONFIG_JS_ONLY,
+        tags = ["manual"],
+    )
+    _no_decl_lib_transitive_typecheck_test(
+        name = "no_decl_lib_transitive_typecheck_analysis_test",
+        target_under_test = "no_decl_lib",
+    )
+
+    write_file(
+        name = "no_decl_consumer_ts",
+        out = "no_decl_consumer.ts",
+        content = ["export const y = 2;"],
+        tags = ["manual"],
+    )
+    ts_project(
+        name = "no_decl_consumer",
+        srcs = ["no_decl_consumer.ts"],
+        deps = [":no_decl_lib"],
+        tsconfig = _TSCONFIG_JS_ONLY,
+        tags = ["manual"],
+    )
+    _no_decl_consumer_transitive_typecheck_test(
+        name = "no_decl_consumer_transitive_typecheck_analysis_test",
+        target_under_test = "no_decl_consumer",
+    )
+
     native.test_suite(
         name = name,
         tests = [
@@ -286,6 +354,8 @@ def ts_project_test_suite(name):
             ":path_norm_dotslash_test",
             ":path_norm_trailing_slash_test",
             ":path_norm_both_slash_test",
+            ":no_decl_lib_transitive_typecheck_analysis_test",
+            ":no_decl_consumer_transitive_typecheck_analysis_test",
         ],
     )
 
