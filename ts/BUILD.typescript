@@ -1,12 +1,12 @@
 "BUILD file inserted into @npm_typescript repository"
 
-load("@aspect_rules_js//js:defs.bzl", "js_binary")
-load("@aspect_rules_js//npm/private:npm_package_internal.bzl", "npm_package_internal")
-load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
 load("@aspect_bazel_lib//lib:directory_path.bzl", "directory_path")
+load("@aspect_rules_js//js:defs.bzl", "js_binary")
+load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
+load("@aspect_rules_js//npm/private:npm_package_internal.bzl", "npm_package_internal")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_setting")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("@bazel_skylib//rules:common_settings.bzl", "bool_setting")
 
 bool_setting(
     name = "is_typescript_5_or_greater_flag",
@@ -35,6 +35,13 @@ npm_link_package(
     visibility = ["//visibility:public"],
 )
 
+# ts_native_package_targets
+
+TSC_DATA = [
+    ":node_modules/typescript",
+    # ts_native_package_labels
+]
+
 # tsc
 directory_path(
     name = "tsc_entrypoint",
@@ -45,7 +52,7 @@ directory_path(
 
 js_binary(
     name = "tsc",
-    data = [":node_modules/typescript"],
+    data = TSC_DATA,
     entry_point = ":tsc_entrypoint",
     visibility = ["//visibility:public"],
 )
@@ -59,7 +66,7 @@ copy_file(
 
 js_binary(
     name = "validator",
-    data = [":node_modules/typescript"],
+    data = TSC_DATA,
     entry_point = "copy_validator",
     visibility = ["//visibility:public"],
 )
@@ -87,9 +94,8 @@ js_binary(
     name = "tsc_worker",
     data = [
         ":copy_worker_js",
-        ":node_modules/typescript",
         ":package_json",
-    ],
+    ] + TSC_DATA,
     entry_point = "copy_ts_project_worker",
     visibility = ["//visibility:public"],
 )
