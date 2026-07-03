@@ -2,10 +2,6 @@ bazel_dep(name = "aspect_rules_js", version = "2.3.8")
 bazel_dep(name = "aspect_rules_ts")
 bazel_dep(name = "bazel_lib", version = "3.1.0")
 bazel_dep(name = "bazel_skylib", version = "1.8.2")
-
-# Matches e2e/smoke. Older protobuf resolves an abseil-cpp that fails to
-# compile on newer macOS Apple clang (-Wdeprecated-builtins on the deprecated
-# __is_trivially_relocatable builtin); 33.4 pins an abseil that guards it.
 bazel_dep(name = "protobuf", version = "33.4")
 
 # Minimum versions for bazel_lib and bazel9 compat
