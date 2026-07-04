@@ -51,12 +51,43 @@ def _http_archive_version_impl(rctx):
         canonical_id = get_default_canonical_id(rctx, urls),
     )
 
+    # Only inspect and link the platform-specific native packages for versions
+    # in NATIVE_TYPESCRIPT_VERSIONS.
+    native_package_labels = []
+    native_package_targets = []
+    if native_typescript_version:
+        native_package_labels, native_package_targets = _link_native_packages(rctx, version, native_typescript_version)
+
+    build_file_substitutions = {
+        "ts_version": version,
+        # Note: we can't depend on bazel_skylib because this code is called from
+        # rules_ts_dependencies so it's not "in scope" yet.
+        # So we can't use versions.bzl to parse the version
+        "is_ts_5": str(int(version.split(".")[0]) >= 5),
+        "# ts_native_package_labels": "".join(native_package_labels),
+        "# ts_native_package_targets": "\n".join(native_package_targets),
+    }
+    rctx.template(
+        "BUILD.bazel",
+        rctx.path(rctx.attr._build_file),
+        substitutions = build_file_substitutions,
+        executable = False,
+    )
+
+    # Bazel <8.3.0 lacks rctx.repo_metadata
+    if not hasattr(rctx, "repo_metadata"):
+        return None
+
+    return rctx.repo_metadata(reproducible = True)
+
+def _link_native_packages(rctx, version, native_typescript_version):
     native_package_integrities = native_typescript_version.get("native_package_integrities", {})
     native_packages = _declared_native_packages(rctx)
-    missing_native_packages = []
-    for native_package in native_packages:
-        if native_package not in native_package_integrities:
-            missing_native_packages.append(native_package)
+    missing_native_packages = [
+        native_package
+        for native_package in native_packages
+        if native_package not in native_package_integrities
+    ]
     if missing_native_packages:
         fail("""typescript version {} requires native packages that are not mirrored in rules_ts: {}
             See documentation on rules_ts_dependencies.""".format(version, ", ".join(missing_native_packages)))
@@ -87,27 +118,7 @@ npm_link_package(
         ))
         native_package_labels.append('    ":{link_name}",\n'.format(link_name = link_name))
 
-    build_file_substitutions = {
-        "ts_version": version,
-        # Note: we can't depend on bazel_skylib because this code is called from
-        # rules_ts_dependencies so it's not "in scope" yet.
-        # So we can't use versions.bzl to parse the version
-        "is_ts_5": str(int(version.split(".")[0]) >= 5),
-        "# ts_native_package_labels": "".join(native_package_labels),
-        "# ts_native_package_targets": "\n".join(native_package_targets),
-    }
-    rctx.template(
-        "BUILD.bazel",
-        rctx.path(rctx.attr._build_file),
-        substitutions = build_file_substitutions,
-        executable = False,
-    )
-
-    # Bazel <8.3.0 lacks rctx.repo_metadata
-    if not hasattr(rctx, "repo_metadata"):
-        return None
-
-    return rctx.repo_metadata(reproducible = True)
+    return native_package_labels, native_package_targets
 
 def _declared_native_packages(rctx):
     package_json = json.decode(rctx.read(rctx.path("package/package.json")))
