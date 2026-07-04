@@ -47,3 +47,7 @@ echo -n "TOOL_VERSIONS = " >>"$NEW"
 jq "$TOOL_VERSIONS_JQ_FILTER" "$REGISTRY_JSON" >>"$NEW"
 
 cp "$NEW" "$SCRIPT_DIR/versions.bzl"
+
+# jq emits 2-space indentation; reformat to the repo's buildifier style so the
+# generated file is committable as-is without a separate manual step.
+npx @bazel/buildifier "$SCRIPT_DIR/versions.bzl"
