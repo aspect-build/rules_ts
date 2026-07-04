@@ -30,12 +30,21 @@ ts_project(
     tsc = "@npm_typescript-56rc//:tsc",
 )
 
+ts_project(
+    name = "lib.ts7rc",
+    srcs = ["lib.ts"],
+    composite = True,
+    out_dir = "ts7rc_out",
+    tsc = "@npm_typescript-7rc//:tsc",
+)
+
 build_test(
     name = "test",
     targets = [
         ":lib",
         "lib.ts3",
         "lib.ts56rc",
+        "lib.ts7rc",
     ],
 )
 
