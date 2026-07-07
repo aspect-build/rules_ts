@@ -384,3 +384,104 @@ build_test(
         "build-custom_transpilers_composite/a.d.ts",
     ],
 )
+
+# input .js files with tsc transpiler and an outDir
+ts_project(
+    name = "allow_js_outdir",
+    srcs = ["d.js"],
+    out_dir = "build-js_outdir",
+    transpiler = "tsc",
+    tsconfig = {
+        "compilerOptions": {
+            "allowJs": True,
+            "module": "commonjs",
+            "sourceMap": True,
+        },
+    },
+)
+
+assert_outputs(
+    name = "allow_js_outdir_test",
+    actual = ":allow_js_outdir",
+    expected = [
+        "transpiler/build-js_outdir/d.js",
+        "transpiler/build-js_outdir/d.js.map",
+    ],
+)
+
+# input .js files with custom transpiler and an outDir
+ts_project(
+    name = "allow_js_babel_outdir",
+    srcs = ["d.js"],
+    out_dir = "build-js_babel_outdir",
+    transpiler = partial.make(
+        babel,
+        out_dir = "build-js_babel_outdir",
+    ),
+    tsconfig = {
+        "compilerOptions": {
+            "allowJs": True,
+            "module": "commonjs",
+            "sourceMap": True,
+        },
+    },
+)
+
+assert_outputs(
+    name = "allow_js_babel_outdir_test",
+    actual = ":allow_js_babel_outdir",
+    expected = [
+        "transpiler/build-js_babel_outdir/d.js",
+        "transpiler/build-js_babel_outdir/d.js.map",
+    ],
+)
+
+# input .js files with custom transpiler and NO outDir
+# Note: like tsc, the babel adapter cannot emit .js output for a .js input without
+# overwriting it. The .js file is passed through via copy_to_bin and no source map
+# is generated; use out_dir to have babel process .js inputs (see allow_js_babel_outdir).
+ts_project(
+    name = "allow_js_babel_no_outdir",
+    srcs = ["d.js"],
+    transpiler = babel,
+    tsconfig = {
+        "compilerOptions": {
+            "allowJs": True,
+            "module": "commonjs",
+            "sourceMap": True,
+        },
+    },
+)
+
+assert_outputs(
+    name = "allow_js_babel_no_outdir_test",
+    actual = ":allow_js_babel_no_outdir",
+    expected = [
+        "transpiler/d.js",
+    ],
+)
+
+# input .js files with tsc transpiler and NO outDir
+# Note: tsc cannot emit .js output for .js input without TS5055 (output would overwrite
+# input). The .js file is passed through via copy_to_bin. Source maps are not generated
+# in this case; use out_dir to get source maps (see allow_js_outdir above).
+ts_project(
+    name = "allow_js",
+    srcs = ["d.js"],
+    transpiler = "tsc",
+    tsconfig = {
+        "compilerOptions": {
+            "allowJs": True,
+            "module": "commonjs",
+            "sourceMap": True,
+        },
+    },
+)
+
+assert_outputs(
+    name = "allow_js_test",
+    actual = ":allow_js",
+    expected = [
+        "transpiler/d.js",
+    ],
+)

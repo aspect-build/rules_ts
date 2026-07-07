@@ -373,8 +373,11 @@ def ts_project(
     tsc_js_outs = []
     tsc_map_outs = []
     if emit_tsc_js:
-        tsc_js_outs = _lib.calculate_js_outs(srcs, out_dir, root_dir, allow_js, resolve_json_module, preserve_jsx, emit_declaration_only)
-        tsc_map_outs = _lib.calculate_map_outs(srcs, out_dir, root_dir, source_map, allow_js, preserve_jsx, emit_declaration_only)
+        # Exclude .js sources that would collide with their outputs (allowJs + no effective outDir).
+        # tsc cannot emit them without TS5055; they are handled as copy_to_bin passthroughs.
+        tsc_srcs = _lib.filter_js_passthrough_srcs(srcs, out_dir, root_dir, allow_js, resolve_json_module)
+        tsc_js_outs = _lib.calculate_js_outs(tsc_srcs, out_dir, root_dir, allow_js, resolve_json_module, preserve_jsx, emit_declaration_only)
+        tsc_map_outs = _lib.calculate_map_outs(tsc_srcs, out_dir, root_dir, source_map, allow_js, preserve_jsx, emit_declaration_only)
 
     # Custom typing transpiler
     if emit_transpiler_dts:
