@@ -45,15 +45,32 @@ mock_impl = rule(
 )
 
 def mock(name, srcs, source_map = False, **kwargs):
+    # Calculate pre-declared outputs so they can be referenced as targets.
+    # This is an optional transpiler feature aligning with the default tsc transpiler.
+    outs = lib.calculate_outs(
+        srcs = srcs,
+        out_dir = None,
+        typings_out_dir = None,
+        root_dir = None,
+        allow_js = False,
+        resolve_json_module = False,
+        preserve_jsx = False,
+        emit_declaration_only = False,
+        source_map = source_map,
+        declaration = False,
+        composite = False,
+        declaration_map = False,
+        emit_js = True,
+        emit_dts = False,
+    )
+
     # Run the rule producing those pre-declared outputs as well as any other outputs
     # which can not be determined ahead of time such as within directories, goruped
     # within a filegroup() etc.
     mock_impl(
         name = name,
         srcs = srcs,
-        # Calculate pre-declared outputs so they can be referenced as targets.
-        # This is an optional transpiler feature aligning with the default tsc transpiler.
-        js_outs = lib.calculate_js_outs(srcs, None, None, False, False, False, False),
-        map_outs = lib.calculate_map_outs(srcs, None, None, True, False, False, False) if source_map else [],
+        js_outs = outs.js_outs,
+        map_outs = outs.map_outs,
         **kwargs
     )

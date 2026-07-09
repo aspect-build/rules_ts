@@ -107,19 +107,30 @@ def _ts_project_impl(ctx):
     # recalculated here.
     typings_out_dir = ctx.attr.declaration_dir or ctx.attr.out_dir
 
+    outs = _lib.calculate_outs(
+        srcs = srcs,
+        out_dir = ctx.attr.out_dir,
+        typings_out_dir = typings_out_dir,
+        root_dir = ctx.attr.root_dir,
+        allow_js = ctx.attr.allow_js,
+        resolve_json_module = ctx.attr.resolve_json_module,
+        preserve_jsx = ctx.attr.preserve_jsx,
+        emit_declaration_only = ctx.attr.emit_declaration_only,
+        source_map = ctx.attr.source_map,
+        declaration = ctx.attr.declaration,
+        composite = ctx.attr.composite,
+        declaration_map = ctx.attr.declaration_map,
+        emit_js = not ctx.attr.no_emit and ctx.attr.transpile != 0,
+        emit_dts = not ctx.attr.no_emit and not ctx.attr.declaration_transpile,
+    )
+
     # js+map file outputs
-    js_outs = []
-    map_outs = []
-    if not ctx.attr.no_emit and ctx.attr.transpile != 0:
-        js_outs = _lib.declare_outputs(ctx, _lib.calculate_js_outs(srcs, ctx.attr.out_dir, ctx.attr.root_dir, ctx.attr.allow_js, ctx.attr.resolve_json_module, ctx.attr.preserve_jsx, ctx.attr.emit_declaration_only))
-        map_outs = _lib.declare_outputs(ctx, _lib.calculate_map_outs(srcs, ctx.attr.out_dir, ctx.attr.root_dir, ctx.attr.source_map, ctx.attr.allow_js, ctx.attr.preserve_jsx, ctx.attr.emit_declaration_only))
+    js_outs = _lib.declare_outputs(ctx, outs.js_outs)
+    map_outs = _lib.declare_outputs(ctx, outs.map_outs)
 
     # dts+map file outputs
-    typings_outs = []
-    typing_maps_outs = []
-    if not ctx.attr.no_emit and not ctx.attr.declaration_transpile:
-        typings_outs = _lib.declare_outputs(ctx, _lib.calculate_typings_outs(srcs, typings_out_dir, ctx.attr.root_dir, ctx.attr.declaration, ctx.attr.composite, ctx.attr.allow_js))
-        typing_maps_outs = _lib.declare_outputs(ctx, _lib.calculate_typing_maps_outs(srcs, typings_out_dir, ctx.attr.root_dir, ctx.attr.declaration_map, ctx.attr.allow_js))
+    typings_outs = _lib.declare_outputs(ctx, outs.typings_outs)
+    typing_maps_outs = _lib.declare_outputs(ctx, outs.typing_maps_outs)
 
     validation_outs = []
     if ctx.attr.validate:
@@ -218,12 +229,12 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
 
     # Add JS inputs that collide with outputs (see #250).
     #
-    # Unfortunately this duplicates logic in ts_lib._to_js_out_paths:
+    # Unfortunately this duplicates logic in ts_lib.calculate_outs:
     # files collide iff the following conditions are met:
     # - They are files not renamed when transpiled (ext in [.d.ts, js, json])
     # - out_dir == root_dir
     #
-    # The duplication is hard to avoid, since out_paths works on path strings
+    # The duplication is hard to avoid, since calculate_outs works on path strings
     # (so it also works in the macro), but we need Files here.
     if ctx.attr.out_dir == ctx.attr.root_dir:
         for s in srcs_inputs:

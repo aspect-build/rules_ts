@@ -362,19 +362,27 @@ def ts_project(
     declarations_target_name = None
     transpile_target_name = None
 
-    # typing predeclared outputs
-    tsc_typings_outs = []
-    tsc_typing_maps_outs = []
-    if emit_tsc_dts:
-        tsc_typings_outs = _lib.calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, composite, allow_js)
-        tsc_typing_maps_outs = _lib.calculate_typing_maps_outs(srcs, typings_out_dir, root_dir, declaration_map, allow_js)
-
-    # js predeclared outputs
-    tsc_js_outs = []
-    tsc_map_outs = []
-    if emit_tsc_js:
-        tsc_js_outs = _lib.calculate_js_outs(srcs, out_dir, root_dir, allow_js, resolve_json_module, preserve_jsx, emit_declaration_only)
-        tsc_map_outs = _lib.calculate_map_outs(srcs, out_dir, root_dir, source_map, allow_js, preserve_jsx, emit_declaration_only)
+    # tsc predeclared outputs (js, map, typings, typing maps), computed in a single pass over srcs
+    tsc_outs = _lib.calculate_outs(
+        srcs = srcs,
+        out_dir = out_dir,
+        typings_out_dir = typings_out_dir,
+        root_dir = root_dir,
+        allow_js = allow_js,
+        resolve_json_module = resolve_json_module,
+        preserve_jsx = preserve_jsx,
+        emit_declaration_only = emit_declaration_only,
+        source_map = source_map,
+        declaration = declaration,
+        composite = composite,
+        declaration_map = declaration_map,
+        emit_js = emit_tsc_js,
+        emit_dts = emit_tsc_dts,
+    )
+    tsc_js_outs = tsc_outs.js_outs
+    tsc_map_outs = tsc_outs.map_outs
+    tsc_typings_outs = tsc_outs.typings_outs
+    tsc_typing_maps_outs = tsc_outs.typing_maps_outs
 
     # Custom typing transpiler
     if emit_transpiler_dts:
