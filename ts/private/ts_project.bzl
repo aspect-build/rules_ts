@@ -93,7 +93,9 @@ def _ts_project_impl(ctx):
 
     srcs_deps = ctx.attr.srcs + ctx.attr.deps
 
-    tsc_inputs = srcs_inputs + copy_files_to_bin_actions(ctx, tsconfig_inputs)
+    # tsconfig_inputs are already outputs of copy-to-bin actions (see _gather_tsconfig_deps),
+    # so there is no need to pass them through copy_files_to_bin_actions again.
+    tsc_inputs = srcs_inputs + tsconfig_inputs
     tsc_inputs_depset = depset(tsc_inputs, transitive = [tsconfig_transitive_deps])
     tsc_transitive_inputs_depset = depset(tsc_inputs, transitive = [
         _gather_types_from_js_infos(srcs_deps),
