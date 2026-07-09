@@ -257,20 +257,6 @@ def _to_out_path(f, out_dir, root_dir):
         f = out_dir + "/" + f
     return f
 
-def _to_js_out_paths(srcs, out_dir, root_dir, allow_js, resolve_json_module, ext_map, default_ext):
-    outs = []
-    for f in srcs:
-        if _is_ts_src(f, allow_js, resolve_json_module, False):
-            out = _to_out_path(f, out_dir, root_dir)
-            ext_idx = out.rindex(".")
-            out = out[:ext_idx] + ext_map.get(out[ext_idx:], default_ext)
-
-            # Don't declare outputs that collide with inputs
-            # for example, a.js -> a.js
-            if out != f:
-                outs.append(out)
-    return outs
-
 # Quick check to validate path options
 # One usecase: https://github.com/aspect-build/rules_ts/issues/551
 def _validate_tsconfig_dirs(root_dir, out_dir, typings_out_dir):
@@ -283,66 +269,131 @@ def _validate_tsconfig_dirs(root_dir, out_dir, typings_out_dir):
     if typings_out_dir and typings_out_dir.find("../") != -1:
         fail("typings_out_dir cannot output to parent directory")
 
-def _calculate_js_outs(srcs, out_dir, root_dir, allow_js, resolve_json_module, preserve_jsx, emit_declaration_only):
-    if emit_declaration_only:
-        return []
+def _with_jsx_exts(exts, jsx_out_ext):
+    d = dict(exts)
+    d[".jsx"] = jsx_out_ext
+    d[".tsx"] = jsx_out_ext
+    return d
 
-    exts = {
-        ".mts": ".mjs",
-        ".mjs": ".mjs",
-        ".cjs": ".cjs",
-        ".cts": ".cjs",
-        ".json": ".json",
-    }
+# Maps of src extension -> output extension for each emit type. The _PRESERVE_JSX
+# variants additionally map .jsx/.tsx to jsx outputs. Note that .jsx srcs only pass
+# _is_ts_src when allow_js is set, so unused entries are harmless.
+_JS_OUT_EXTS = {
+    ".mts": ".mjs",
+    ".mjs": ".mjs",
+    ".cjs": ".cjs",
+    ".cts": ".cjs",
+    ".json": ".json",
+}
+_JS_OUT_EXTS_PRESERVE_JSX = _with_jsx_exts(_JS_OUT_EXTS, ".jsx")
+_MAP_OUT_EXTS = {
+    ".mts": ".mjs.map",
+    ".cts": ".cjs.map",
+    ".mjs": ".mjs.map",
+    ".cjs": ".cjs.map",
+}
+_MAP_OUT_EXTS_PRESERVE_JSX = _with_jsx_exts(_MAP_OUT_EXTS, ".jsx.map")
+_DTS_OUT_EXTS = {
+    ".mts": ".d.mts",
+    ".cts": ".d.cts",
+    ".mjs": ".d.mts",
+    ".cjs": ".d.cts",
+}
+_DTS_MAP_OUT_EXTS = {
+    ".mts": ".d.mts.map",
+    ".cts": ".d.cts.map",
+    ".mjs": ".d.mts.map",
+    ".cjs": ".d.cts.map",
+}
 
-    if preserve_jsx:
-        exts[".jsx"] = ".jsx"
-        exts[".tsx"] = ".jsx"
+def _calculate_outs(
+        srcs,
+        out_dir,
+        typings_out_dir,
+        root_dir,
+        allow_js,
+        resolve_json_module,
+        preserve_jsx,
+        emit_declaration_only,
+        source_map,
+        declaration,
+        composite,
+        declaration_map,
+        emit_js,
+        emit_dts):
+    """Calculate js, map, typings and typing map output paths in a single pass over srcs.
 
-    return _to_js_out_paths(srcs, out_dir, root_dir, allow_js, resolve_json_module, exts, ".js")
+    Args:
+        srcs: list of source path strings, relative to the package
+        out_dir: `out_dir` attribute of ts_project
+        typings_out_dir: `declaration_dir` attribute of ts_project, falling back to `out_dir`
+        root_dir: `root_dir` attribute of ts_project
+        allow_js: `allow_js` attribute of ts_project
+        resolve_json_module: `resolve_json_module` attribute of ts_project
+        preserve_jsx: `preserve_jsx` attribute of ts_project
+        emit_declaration_only: `emit_declaration_only` attribute of ts_project
+        source_map: `source_map` attribute of ts_project
+        declaration: `declaration` attribute of ts_project
+        composite: `composite` attribute of ts_project
+        declaration_map: `declaration_map` attribute of ts_project
+        emit_js: whether tsc emits js (and source map) outputs for this target
+        emit_dts: whether tsc emits declaration (and declaration map) outputs for this target
 
-def _calculate_map_outs(srcs, out_dir, root_dir, source_map, allow_js, preserve_jsx, emit_declaration_only):
-    if not source_map or emit_declaration_only:
-        return []
+    Returns:
+        struct with js_outs, map_outs, typings_outs and typing_maps_outs path lists
+    """
+    want_js = emit_js and not emit_declaration_only
+    want_map = want_js and source_map
+    want_dts = emit_dts and (declaration or composite)
+    want_dts_map = emit_dts and declaration_map
 
-    exts = {
-        ".mts": ".mjs.map",
-        ".cts": ".cjs.map",
-        ".mjs": ".mjs.map",
-        ".cjs": ".cjs.map",
-    }
-    if preserve_jsx:
-        exts[".tsx"] = ".jsx.map"
-        if allow_js:
-            exts[".jsx"] = ".jsx.map"
+    js_outs = []
+    map_outs = []
+    typings_outs = []
+    typing_maps_outs = []
 
-    return _to_js_out_paths(srcs, out_dir, root_dir, allow_js, False, exts, ".js.map")
+    if not (want_js or want_dts or want_dts_map):
+        return struct(js_outs = js_outs, map_outs = map_outs, typings_outs = typings_outs, typing_maps_outs = typing_maps_outs)
 
-def _calculate_typings_outs(srcs, typings_out_dir, root_dir, declaration, composite, allow_js):
-    if not (declaration or composite):
-        return []
+    js_exts = _JS_OUT_EXTS_PRESERVE_JSX if preserve_jsx else _JS_OUT_EXTS
+    map_exts = _MAP_OUT_EXTS_PRESERVE_JSX if preserve_jsx else _MAP_OUT_EXTS
+    same_out_dirs = typings_out_dir == out_dir
 
-    exts = {
-        ".mts": ".d.mts",
-        ".cts": ".d.cts",
-        ".mjs": ".d.mts",
-        ".cjs": ".d.cts",
-    }
+    for f in srcs:
+        is_ts = _is_ts_src(f, allow_js, False, False)
+        is_json = want_js and resolve_json_module and f.endswith(".json")
+        if not is_ts and not is_json:
+            continue
 
-    return _to_js_out_paths(srcs, typings_out_dir, root_dir, allow_js, False, exts, ".d.ts")
+        out = None
+        if want_js or (want_map and is_ts):
+            out = _to_out_path(f, out_dir, root_dir)
+            ext_idx = out.rindex(".")
+            if want_js:
+                js_out = out[:ext_idx] + js_exts.get(out[ext_idx:], ".js")
 
-def _calculate_typing_maps_outs(srcs, typings_out_dir, root_dir, declaration_map, allow_js):
-    if not declaration_map:
-        return []
+                # Don't declare outputs that collide with inputs
+                # for example, a.js -> a.js
+                if js_out != f:
+                    js_outs.append(js_out)
+            if want_map and is_ts:
+                map_out = out[:ext_idx] + map_exts.get(out[ext_idx:], ".js.map")
+                if map_out != f:
+                    map_outs.append(map_out)
 
-    exts = {
-        ".mts": ".d.mts.map",
-        ".cts": ".d.cts.map",
-        ".mjs": ".d.mts.map",
-        ".cjs": ".d.cts.map",
-    }
+        if (want_dts or want_dts_map) and is_ts:
+            t_out = out if (same_out_dirs and out != None) else _to_out_path(f, typings_out_dir, root_dir)
+            ext_idx = t_out.rindex(".")
+            if want_dts:
+                dts_out = t_out[:ext_idx] + _DTS_OUT_EXTS.get(t_out[ext_idx:], ".d.ts")
+                if dts_out != f:
+                    typings_outs.append(dts_out)
+            if want_dts_map:
+                dts_map_out = t_out[:ext_idx] + _DTS_MAP_OUT_EXTS.get(t_out[ext_idx:], ".d.ts.map")
+                if dts_map_out != f:
+                    typing_maps_outs.append(dts_map_out)
 
-    return _to_js_out_paths(srcs, typings_out_dir, root_dir, allow_js, False, exts, ".d.ts.map")
+    return struct(js_outs = js_outs, map_outs = map_outs, typings_outs = typings_outs, typing_maps_outs = typing_maps_outs)
 
 def _calculate_root_dir(ctx):
     return _join(
@@ -364,12 +415,8 @@ lib = struct(
     is_typings_src = _is_typings_src,
     is_ts_src = _is_ts_src,
     is_js_src = _is_js_src,
-    out_paths = _to_js_out_paths,
     to_out_path = _to_out_path,
     validate_tsconfig_dirs = _validate_tsconfig_dirs,
-    calculate_js_outs = _calculate_js_outs,
-    calculate_map_outs = _calculate_map_outs,
-    calculate_typings_outs = _calculate_typings_outs,
-    calculate_typing_maps_outs = _calculate_typing_maps_outs,
+    calculate_outs = _calculate_outs,
     calculate_root_dir = _calculate_root_dir,
 )
