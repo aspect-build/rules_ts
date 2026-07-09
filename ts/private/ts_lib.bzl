@@ -227,11 +227,15 @@ def _relative_to_package(path, ctx):
         path = path.removeprefix(ctx.label.package + "/")
     return path
 
+_TYPINGS_EXTS = (".d.ts", ".d.mts", ".d.cts")
+_JS_EXTS = (".js", ".jsx", ".mjs", ".cjs")
+_TS_EXTS = (".ts", ".tsx", ".mts", ".cts")
+
 def _is_typings_src(src):
-    return src.endswith(".d.ts") or src.endswith(".d.mts") or src.endswith(".d.cts")
+    return src.endswith(_TYPINGS_EXTS)
 
 def _is_js_src(src, allow_js, resolve_json_module):
-    if allow_js and (src.endswith(".js") or src.endswith(".jsx") or src.endswith(".mjs") or src.endswith(".cjs")):
+    if allow_js and src.endswith(_JS_EXTS):
         return True
 
     if resolve_json_module and src.endswith(".json"):
@@ -240,7 +244,7 @@ def _is_js_src(src, allow_js, resolve_json_module):
     return False
 
 def _is_ts_src(src, allow_js, resolve_json_module, include_typings):
-    if src.endswith(".ts") or src.endswith(".tsx") or src.endswith(".mts") or src.endswith(".cts"):
+    if src.endswith(_TS_EXTS):
         return include_typings or not _is_typings_src(src)
 
     return _is_js_src(src, allow_js, resolve_json_module)
