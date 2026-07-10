@@ -1,0 +1,11 @@
+import %workspace%/../../tools/preset.bazelrc
+
+common --@aspect_rules_ts//ts:skipLibCheck=always
+
+# Build without the bytes
+common:ci --remote_download_outputs=minimal
+common:ci --nobuild_runfile_links
+
+# Override the preset's `--lockfile_mode=error` on CI,
+# matching the other e2e workspaces.
+common:ci --lockfile_mode=off

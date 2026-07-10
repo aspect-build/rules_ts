@@ -2,7 +2,7 @@
 """
 
 load("@aspect_rules_js//js:defs.bzl", "js_binary")
-load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project", "tsc_toolchain")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@npm//:@angular/compiler-cli/package_json.bzl", "bin")
@@ -16,8 +16,8 @@ write_file(
     ],
 )
 
-# The default value for ts_project#tsc is @npm_typescript//:tsc
-# We can inspect that using
+# By default the compiler comes from toolchain resolution, providing
+# @npm_typescript//:tsc. We can inspect that using
 # $ bazel query --output=build @npm_typescript//:tsc
 # and see something like
 # js_binary(
@@ -26,7 +26,8 @@ write_file(
 #   entry_point = "@npm_typescript//:tsc_entrypoint",
 # )
 #
-# So if we need to pass arguments to Node, we just need to make our own modified version of that.
+# So if we need to pass arguments to Node, we just need to make our own modified version of that
+# and wrap it in a tsc_toolchain.
 js_binary(
     name = "tsc_with_more_heap",
     data = ["@npm_typescript//:node_modules/typescript"],
@@ -34,17 +35,27 @@ js_binary(
     node_options = ["--max-old-space-size=8192"],
 )
 
+tsc_toolchain(
+    name = "tsc_with_more_heap_toolchain",
+    tsc_binary = ":tsc_with_more_heap",
+)
+
 ts_project(
     name = "big",
     srcs = ["big.ts"],
     # Tell Bazel to reserve more than the default 250MB of RAM for the TsProject action
     resource_set = "mem_8g",
-    tsc = ":tsc_with_more_heap",
+    tsc_toolchain = ":tsc_with_more_heap_toolchain",
 )
 
 # The ngc compiler from Angular: https://angular.io/guide/aot-compiler
 bin.ngc_binary(
     name = "ngc",
+)
+
+tsc_toolchain(
+    name = "ngc_toolchain",
+    tsc_binary = ":ngc",
 )
 
 ts_project(
@@ -56,7 +67,7 @@ ts_project(
         "component.mts",
     ],
     # Tell ts_project to run ngc. The compiler has to have a matching CLI as `tsc` for this to work.
-    tsc = ":ngc",
+    tsc_toolchain = ":ngc_toolchain",
     deps = [
         "//:node_modules/@angular/core",
         "//:node_modules/@types/node",

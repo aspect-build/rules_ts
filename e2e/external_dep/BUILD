@@ -12,14 +12,15 @@ ts_project(
     visibility = ["//visibility:public"],
 )
 
-# Demonstrate how to use a different typescript where required
+# Demonstrate how to use a different typescript where required, selecting
+# the version per-target via an explicit toolchain.
 # Picks up TypeScript 5.0.4 defined in MODULE.bazel
 ts_project(
     name = "lib.ts5",
     srcs = ["lib.ts"],
     composite = True,
     out_dir = "ts5_out",
-    tsc = "@npm_typescript5//:tsc",
+    tsc_toolchain = "@npm_typescript5//:tsc_toolchain",
 )
 
 ts_project(
@@ -27,7 +28,7 @@ ts_project(
     srcs = ["lib.ts"],
     composite = True,
     out_dir = "ts56rc_out",
-    tsc = "@npm_typescript-56rc//:tsc",
+    tsc_toolchain = "@npm_typescript-56rc//:tsc_toolchain",
 )
 
 ts_project(
@@ -35,7 +36,7 @@ ts_project(
     srcs = ["lib.ts"],
     composite = True,
     out_dir = "ts7rc_out",
-    tsc = "@npm_typescript-7rc//:tsc",
+    tsc_toolchain = "@npm_typescript-7rc//:tsc_toolchain",
     validator = "@npm_typescript-7rc//:validator",
 )
 
@@ -53,7 +54,7 @@ ts_project(
     name = "implied_checkjs.ts7rc",
     srcs = ["lib.ts"],
     out_dir = "implied_checkjs_ts7rc_out",
-    tsc = "@npm_typescript-7rc//:tsc",
+    tsc_toolchain = "@npm_typescript-7rc//:tsc_toolchain",
     tsconfig = "tsconfig-checkjs.json",
     validator = "@npm_typescript-7rc//:validator",
 )
@@ -64,7 +65,7 @@ ts_project(
     name = "implied_resolve_json_module",
     srcs = ["lib.ts"],
     out_dir = "implied_resolve_json_module_out",
-    tsc = "@npm_typescript-59//:tsc",
+    tsc_toolchain = "@npm_typescript-59//:tsc_toolchain",
     tsconfig = "tsconfig-nodenext.json",
     validator = "@npm_typescript-59//:validator",
 )

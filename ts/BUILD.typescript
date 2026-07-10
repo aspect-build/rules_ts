@@ -1,10 +1,29 @@
 "BUILD file inserted into @npm_typescript repository"
 
-load("@bazel_lib//lib:directory_path.bzl", "directory_path")
 load("@aspect_rules_js//js:defs.bzl", "js_binary")
 load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
 load("@aspect_rules_js//npm/private:npm_package_internal.bzl", "npm_package_internal")
-load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+load("@aspect_rules_ts//ts/private:tsc_toolchain.bzl", "tsc_toolchain")
+load("@bazel_lib//lib:directory_path.bzl", "directory_path")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_setting")
+
+# Whether this is a native TypeScript version (7+) which publishes the compiler
+# as pre-compiled platform-specific binaries, invoked via toolchain resolution
+# rather than through NodeJS.
+bool_setting(
+    name = "is_native_typescript_flag",
+    build_setting_default = is_native_ts,
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "is_native_typescript",
+    flag_values = {
+        ":is_native_typescript_flag": "true",
+    },
+    visibility = ["//visibility:public"],
+)
+
 npm_package_internal(
     name = "npm_typescript",
     src = "package",
@@ -18,11 +37,8 @@ npm_link_package(
     visibility = ["//visibility:public"],
 )
 
-# ts_native_package_targets
-
 TSC_DATA = [
     ":node_modules/typescript",
-    # ts_native_package_labels
 ]
 
 # tsc
@@ -40,16 +56,14 @@ js_binary(
     visibility = ["//visibility:public"],
 )
 
-# validator
-copy_file(
-    name = "copy_validator",
-    src = "@aspect_rules_ts//ts/private:ts_project_options_validator.cjs",
-    out = "ts_project_options_validator.cjs",
-)
-
-js_binary(
+# The tsconfig options validator, generated in the validator subpackage so its
+# NodeJS resolution of the typescript package can differ from the repository
+# root: native TypeScript versions (7+) don't ship the JS compiler API the
+# validator requires, so a JS-based version is linked there instead.
+alias(
     name = "validator",
-    data = TSC_DATA,
-    entry_point = "copy_validator",
+    actual = "//validator",
     visibility = ["//visibility:public"],
 )
+
+# ts_tsc_toolchain

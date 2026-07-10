@@ -1,0 +1,8 @@
+{
+    "compilerOptions": {
+        "declaration": true,
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "strict": true
+    }
+}

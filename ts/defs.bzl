@@ -11,10 +11,12 @@ load("//ts/private:build_test.bzl", "build_test")
 load("//ts/private:ts_config.bzl", "write_tsconfig", _TsConfigInfo = "TsConfigInfo", _ts_config = "ts_config")
 load("//ts/private:ts_lib.bzl", _lib = "lib")
 load("//ts/private:ts_project.bzl", _ts_project = "ts_project")
+load("//ts/private:tsc_toolchain.bzl", _tsc_toolchain = "tsc_toolchain")
 
 ts_config = _ts_config
 TsConfigInfo = _TsConfigInfo
 ts_project_rule = _ts_project
+tsc_toolchain = _tsc_toolchain
 
 def _is_file_missing(label):
     """Check if a file is missing by passing its relative path through a glob().
@@ -26,8 +28,6 @@ def _is_file_missing(label):
     file_rel = file_abs[len(native.package_name()) + 1:]
     file_glob = native.glob([file_rel], allow_empty = True)
     return len(file_glob) == 0
-
-_tsc = "@npm_typescript//:tsc"
 
 def ts_project(
         name,
@@ -53,7 +53,7 @@ def ts_project(
         declaration_transpiler = None,
         ts_build_info_file = None,
         generate_trace = None,
-        tsc = _tsc,
+        tsc_toolchain = None,
         validate = True,
         validator = "@npm_typescript//:validator",
         declaration_dir = None,
@@ -199,12 +199,18 @@ def ts_project(
 
             By default the out_dir is the package's folder under bazel-out.
 
-        tsc: Label of the TypeScript compiler binary to run.
-            This allows you to use a custom API-compatible compiler in place of the regular `tsc` such as a custom `js_binary` or Angular's `ngc`.
-            compatible with it such as Angular's `ngc`.
+        tsc_toolchain: Label of a `tsc_toolchain` target providing the TypeScript compiler for this target,
+            taking precedence over the toolchain provided by toolchain resolution.
+
+            Allows individual targets to compile with a different TypeScript version than the globally
+            registered toolchain, e.g. `tsc_toolchain = "@npm_typescript_older//:tsc_toolchain"` where
+            `npm_typescript_older` was created by an additional `rules_ts_ext.deps(name = "npm_typescript_older", ...)`.
+
+            Also allows a custom API-compatible compiler in place of the regular `tsc`, such as a
+            custom `js_binary` or Angular's `ngc`, by wrapping it in a `tsc_toolchain` target:
+            `tsc_toolchain(name = "ngc_toolchain", tsc_binary = ":ngc")`.
 
             See examples of use in [examples/custom_compiler](https://github.com/aspect-build/rules_ts/blob/main/examples/custom_compiler/BUILD.bazel)
-
         validator: Label of the tsconfig validator to run when `validate = True`.
         allow_js: Whether TypeScript will read .js and .jsx files.
             When used with `declaration`, TypeScript will generate `.d.ts` files from `.js` files.
@@ -465,7 +471,7 @@ def ts_project(
         buildinfo_out = tsbuildinfo_path if (composite or incremental) and (emit_tsc_js or emit_tsc_dts) else None,
         no_emit = no_emit,
         emit_declaration_only = emit_declaration_only,
-        tsc = tsc,
+        tsc_toolchain = tsc_toolchain,
         transpile = -1 if not transpiler else int(transpiler == "tsc"),
         declaration_transpile = declaration_transpiler != None,
         pretranspiled_js = transpile_target_name,
