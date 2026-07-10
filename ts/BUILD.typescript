@@ -10,7 +10,7 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
 
 bool_setting(
     name = "is_typescript_5_or_greater_flag",
-    build_setting_default = is_ts_5,
+    build_setting_default = is_ts_5_or_greater,
     visibility = ["//visibility:public"],
 )
 

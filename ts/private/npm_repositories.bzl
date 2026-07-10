@@ -63,7 +63,7 @@ def _http_archive_version_impl(rctx):
         # Note: we can't depend on bazel_skylib because this code is called from
         # rules_ts_dependencies so it's not "in scope" yet.
         # So we can't use versions.bzl to parse the version
-        "is_ts_5": str(int(version.split(".")[0]) >= 5),
+        "is_ts_5_or_greater": str(int(version.split(".")[0]) >= 5),
         "# ts_native_package_labels": "".join(native_package_labels),
         "# ts_native_package_targets": "\n".join(native_package_targets),
     }
