@@ -6,13 +6,12 @@ _DUMMY_SOURCEMAP = """{"version":3,"sources":["%s"],"mappings":"AAAO,KAAK,CAAC",
 
 def _mock_impl(ctx):
     src_files = [src for src in ctx.files.srcs if src.short_path.endswith(".ts") and not src.short_path.endswith(".d.ts")]
+    src_paths = lib.files_relative_to_package(ctx, src_files)
     out_files = []
 
-    for src in src_files:
-        out_path = src.short_path
-
-        js_file = ctx.actions.declare_file(lib.relative_to_package(out_path.replace(".ts", ".js"), ctx))
-        map_file = ctx.actions.declare_file(lib.relative_to_package(out_path.replace(".ts", ".js.map"), ctx))
+    for src, src_path in zip(src_files, src_paths):
+        js_file = ctx.actions.declare_file(src_path.replace(".ts", ".js"))
+        map_file = ctx.actions.declare_file(src_path.replace(".ts", ".js.map"))
 
         out_files.append(js_file)
         out_files.append(map_file)

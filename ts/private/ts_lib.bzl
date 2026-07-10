@@ -219,13 +219,21 @@ def _join(*elements):
         return "/".join(segments)
     return "."
 
-def _relative_to_package(path, ctx):
-    path = path.removeprefix(ctx.bin_dir.path + "/")
-    path = path.removeprefix("external/")
-    path = path.removeprefix(ctx.label.workspace_name + "/")
-    if ctx.label.package:
-        path = path.removeprefix(ctx.label.package + "/")
-    return path
+def _files_relative_to_package(ctx, files):
+    """Package-relative paths for a list of files, computing the prefixes only once."""
+    bin_dir_prefix = ctx.bin_dir.path + "/"
+    workspace_prefix = ctx.label.workspace_name + "/"
+    package_prefix = ctx.label.package + "/" if ctx.label.package else None
+
+    paths = []
+    for file in files:
+        path = file.path.removeprefix(bin_dir_prefix)
+        path = path.removeprefix("external/")
+        path = path.removeprefix(workspace_prefix)
+        if package_prefix:
+            path = path.removeprefix(package_prefix)
+        paths.append(path)
+    return paths
 
 _TYPINGS_EXTS = (".d.ts", ".d.mts", ".d.cts")
 _JS_EXTS = (".js", ".jsx", ".mjs", ".cjs")
@@ -415,7 +423,7 @@ def _declare_outputs(ctx, paths):
 lib = struct(
     declare_outputs = _declare_outputs,
     join = _join,
-    relative_to_package = _relative_to_package,
+    files_relative_to_package = _files_relative_to_package,
     is_typings_src = _is_typings_src,
     is_ts_src = _is_ts_src,
     is_js_src = _is_js_src,
