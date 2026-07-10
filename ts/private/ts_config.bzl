@@ -136,18 +136,23 @@ def _write_tsconfig_rule(ctx):
     path_to_root = "/".join([".."] * (ctx.label.package.count("/") + 1))
 
     # Compute the list of source files with paths relative to the generated tsconfig file.
+    allow_js = ctx.attr.allow_js
+    resolve_json_module = ctx.attr.resolve_json_module
+    local_package_prefix_len = len(local_package_prefix)
+    root_prefix = "./%s/" % path_to_root
     src_files = []
     for f in ctx.files.files:
         # Only include typescript source files
-        if not _lib.is_ts_src(f.basename, ctx.attr.allow_js, ctx.attr.resolve_json_module, True):
+        if not _lib.is_ts_src(f.basename, allow_js, resolve_json_module, True):
             continue
 
-        if f.short_path.startswith(local_package_prefix):
+        short_path = f.short_path
+        if short_path.startswith(local_package_prefix):
             # Files within this project or subdirs can avoid the ugly ../ prefix
-            src_files.append("./{}".format(f.short_path.removeprefix(local_package_prefix)))
+            src_files.append("./" + short_path[local_package_prefix_len:])
         else:
             # Files from parent/sibling projects must navigate up to the workspace root
-            src_files.append("./{}/{}".format(path_to_root, f.short_path))
+            src_files.append(root_prefix + short_path)
 
     content = content.replace("\"__files__\"", str(src_files))
     ctx.actions.write(

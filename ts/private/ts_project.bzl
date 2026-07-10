@@ -89,7 +89,7 @@ def _ts_project_impl(ctx):
     srcs_inputs = copy_files_to_bin_actions(ctx, ctx.files.srcs)
     tsconfig, tsconfig_inputs, tsconfig_transitive_deps = _gather_tsconfig_deps(ctx)
 
-    srcs = [_lib.relative_to_package(src.path, ctx) for src in srcs_inputs]
+    srcs = _lib.files_relative_to_package(ctx, srcs_inputs)
 
     srcs_deps = ctx.attr.srcs + ctx.attr.deps
 
@@ -209,8 +209,8 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
     ])
 
     assets_outs = []
-    for a in ctx.files.assets:
-        a_path = _lib.relative_to_package(a.path, ctx)
+    asset_paths = _lib.files_relative_to_package(ctx, ctx.files.assets)
+    for a, a_path in zip(ctx.files.assets, asset_paths):
         a_out = _lib.to_out_path(a_path, ctx.attr.out_dir, ctx.attr.root_dir)
         if a.is_source or a_path != a_out:
             asset = ctx.actions.declare_file(a_out)
