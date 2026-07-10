@@ -1,6 +1,7 @@
 "Utilities functions for selecting and filtering ts and other files"
 
 load("@aspect_rules_js//js:providers.bzl", "JsInfo")
+load(":tsc_toolchain.bzl", "TscInfo")
 
 # Attributes common to all TypeScript rules
 STD_ATTRS = {
@@ -70,9 +71,12 @@ https://docs.aspect.build/rulesets/aspect_rules_js/docs/js_library#deps for more
         doc = "Whether tsc should be used to produce .d.ts outputs",
     ),
     "tsc": attr.label(
-        doc = "TypeScript compiler binary",
-        mandatory = True,
-        executable = True,
+        doc = """A tsc_toolchain target providing the TypeScript compiler for this target,
+        taking precedence over the toolchain provided by toolchain resolution.
+
+        Allows individual targets to compile with a different TypeScript version than
+        the globally registered toolchain, e.g. `@npm_typescript_older//:tsc_toolchain`.""",
+        providers = [TscInfo],
         cfg = "exec",
     ),
     "tsconfig": attr.label(

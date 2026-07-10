@@ -2,15 +2,20 @@
 exports.__esModule = true
 var path_1 = require('path')
 // Resolve the tsconfig options to a single config by spawning `tsc --showConfig`.
-function resolveConfig(tsconfigPath, output) {
+function resolveConfig(tsconfigPath, output, nativeTsc) {
     var fs = require('fs')
-    // require('typescript') is blocked by the native package's exports map, but
-    // ./package.json is always resolvable; anchor the compiler CLI on it.
-    var tscBin = path_1.join(
-        path_1.dirname(require.resolve('typescript/package.json')),
-        'bin',
-        'tsc'
-    )
+    // The native (7+) compiler binary is spawned directly; otherwise the
+    // NodeJS-hosted CLI of the typescript package is run with node.
+    var command = nativeTsc || process.execPath
+    var commandArgs = nativeTsc
+        ? []
+        : [
+              path_1.join(
+                  path_1.dirname(require.resolve('typescript/package.json')),
+                  'bin',
+                  'tsc'
+              ),
+          ]
     // The srcs are not inputs to this action, so resolve a wrapper config declaring
     // empty "files": TypeScript < 7 --showConfig fails when a config finds no inputs
     // (TS18003). The wrapper must be alongside the tsconfig so relative paths resolve
@@ -30,8 +35,8 @@ function resolveConfig(tsconfigPath, output) {
     var stdout
     try {
         stdout = require('child_process').execFileSync(
-            process.execPath,
-            [tscBin, '--project', wrapperPath, '--showConfig'],
+            command,
+            commandArgs.concat(['--project', wrapperPath, '--showConfig']),
             { encoding: 'utf-8' }
         )
     } catch (e) {
@@ -100,13 +105,14 @@ function main(_a) {
         output = _a[1],
         target = _a[2],
         packageDir = _a[3],
-        attrsStr = _a[4]
+        attrsStr = _a[4],
+        nativeTsc = _a[5]
     // The Bazel ts_project attributes were json-encoded
     // (on Windows the quotes seem to be quoted wrong, so replace backslash with quotes :shrug:)
     var attrs = JSON.parse(attrsStr.replace(/\\/g, '"'))
     // The resolved config, in `tsc --showConfig` shape, which the checks below
     // read in place of the raw tsconfig file(s).
-    var config = resolveConfig(tsconfigPath, output)
+    var config = resolveConfig(tsconfigPath, output, nativeTsc)
     var options = config.compilerOptions || {}
     var configDir = path_1.dirname(path_1.resolve(tsconfigPath))
     var failures = []
