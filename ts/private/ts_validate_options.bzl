@@ -4,12 +4,15 @@ load("@aspect_rules_js//js:libs.bzl", "js_binary_lib")
 load("@bazel_lib//lib:paths.bzl", "to_output_relative_path")
 load(":ts_lib.bzl", _lib = "lib")
 
-def _validate_action(ctx, tsconfig, tsconfig_deps):
+def _validate_action(ctx, tsconfig, tsconfig_deps, tscinfo):
     """Create an action to validate the ts_project attributes against the tsconfig.json properties.
 
-The validator invokes the equivalent of `tsc --showConfig` programmatically to flatten
-the tsconfig "extends" chain, checks the attributes against the resolved config, and
-writes the resolved config as the validation output.
+The validator spawns `tsc --showConfig` to flatten the tsconfig "extends" chain,
+checks the attributes against the resolved config, and writes the resolved config
+as the validation output.
+
+The native compiler binary is spawned directly; the NodeJS-hosted compiler is
+resolved from the typescript package in the validator's node_modules.
 
 Assumes all tsconfig file deps are already copied to the bin directory.
 """
@@ -40,11 +43,14 @@ Assumes all tsconfig file deps are already copied to the bin directory.
         _lib.join(ctx.label.workspace_root, ctx.label.package),
         json.encode(config),
     ])
+    if tscinfo.is_native:
+        arguments.add(to_output_relative_path(tscinfo.tsc))
 
     js_binary_lib.run_binary_action(
         ctx = ctx,
         executable = ctx.executable.validator,
         inputs = tsconfig_deps,
+        tools = tscinfo.tool_files,
         outputs = [resolved],
         arguments = [arguments],
         mnemonic = "TsValidateOptions",

@@ -11,6 +11,7 @@ load(":options.bzl", "OptionsInfo", "transpiler_selection_required")
 load(":ts_config.bzl", "TsConfigInfo")
 load(":ts_lib.bzl", "COMPILER_OPTION_ATTRS", "OUTPUT_ATTRS", "STD_ATTRS", _lib = "lib")
 load(":ts_validate_options.bzl", _validate_lib = "lib")
+load(":tsc_toolchain.bzl", "TSC_TOOLCHAIN_TYPE", "TscInfo")
 
 # Forked from js_lib_helpers.js_lib_helpers.gather_files_from_js_providers to not
 # include any sources; only transitive types & npm sources
@@ -58,6 +59,29 @@ def _gather_tsconfig_deps(ctx):
         ])
 
     return tsconfig, depset([tsconfig], transitive = deps)
+
+def _run_tsc(ctx, tscinfo, env, **kwargs):
+    if tscinfo.is_native:
+        ctx.actions.run(
+            executable = tscinfo.tsc,
+            tools = tscinfo.tool_files,
+            resource_set = resource_set(ctx.attr),
+            env = env,
+            use_default_shell_env = True,
+            **kwargs
+        )
+    else:
+        # The native binary bakes the bin dir into string arguments, so only the
+        # launcher-hosted compiler supports path mapping.
+        js_binary_lib.run_binary_action(
+            ctx = ctx,
+            executable = tscinfo.tsc,
+            execution_requirements = {"supports-path-mapping": "1"},
+            resource_set = resource_set(ctx.attr),
+            env = env,
+            use_default_shell_env = True,
+            **kwargs
+        )
 
 def _ts_project_impl(ctx):
     """Creates the action which spawns `tsc`.
@@ -125,14 +149,21 @@ def _ts_project_impl(ctx):
     typings_outs = _lib.declare_outputs(ctx, outs.typings_outs)
     typing_maps_outs = _lib.declare_outputs(ctx, outs.typing_maps_outs)
 
+    toolchain_tscinfo = ctx.toolchains[TSC_TOOLCHAIN_TYPE].tscinfo
+    tscinfo = ctx.attr.tsc[TscInfo] if ctx.attr.tsc else toolchain_tscinfo
+    is_native_tsc = tscinfo.is_native
+
     validation_outs = []
     if ctx.attr.validate:
-        validation_outs.extend(_validate_lib.validation_action(ctx, tsconfig, tsconfig_transitive_deps))
+        # A custom tsc need not support --showConfig; prefer a native binary when one is in play.
+        validation_tscinfo = tscinfo if is_native_tsc else toolchain_tscinfo
+        validation_outs.extend(_validate_lib.validation_action(ctx, tsconfig, tsconfig_transitive_deps, validation_tscinfo))
         _lib.validate_tsconfig_dirs(ctx.attr.root_dir, ctx.attr.out_dir, typings_out_dir)
 
     typecheck_outs = []
 
-    executable = ctx.executable.tsc
+    # Environment required by the compiler, declared by the toolchain.
+    tsc_env = {k: v.replace("$(BINDIR)", ctx.bin_dir.path) for k, v in tscinfo.env.items()}
 
     common_args = []
 
@@ -142,27 +173,32 @@ def _ts_project_impl(ctx):
     # Add user specified arguments *before* rule supplied arguments
     common_args.extend(ctx.attr.args)
 
+    # The js_binary launcher chdirs to the bazel-out bin dir before spawning tsc,
+    # while the native compiler binary runs from the execroot, so relative paths
+    # on the command line resolve against different directories.
+    output_prefix = ctx.bin_dir.path + "/" if is_native_tsc else ""
+
     if ctx.attr.out_dir or ctx.attr.root_dir:
         # TODO: add validation that excludes is non-empty in this case, as passing the --outDir or --declarationDir flag
         # to TypeScript causes it to set a default for excludes such that it won't find our sources that were copied-to-bin.
         # See https://github.com/microsoft/TypeScript/issues/59036 and https://github.com/aspect-build/rules_ts/issues/644
         common_args.extend([
             "--outDir",
-            _lib.join(ctx.label.workspace_root, ctx.label.package, ctx.attr.out_dir),
+            output_prefix + _lib.join(ctx.label.workspace_root, ctx.label.package, ctx.attr.out_dir),
         ])
 
         if len(typings_outs) > 0:
             common_args.extend([
                 "--declarationDir",
-                _lib.join(ctx.label.workspace_root, ctx.label.package, typings_out_dir),
+                output_prefix + _lib.join(ctx.label.workspace_root, ctx.label.package, typings_out_dir),
             ])
 
-    tsconfig_path = to_output_relative_path(tsconfig)
+    tsconfig_path = output_prefix + to_output_relative_path(tsconfig)
     common_args.extend([
         "--project",
         tsconfig_path,
         "--rootDir",
-        _lib.calculate_root_dir(ctx),
+        output_prefix + _lib.calculate_root_dir(ctx),
     ])
 
     assets_outs = []
@@ -178,7 +214,7 @@ def _ts_project_impl(ctx):
 
     outputs = js_outs + map_outs + typings_outs + typing_maps_outs
     if ctx.outputs.buildinfo_out:
-        common_args.extend(["--tsBuildInfoFile", to_output_relative_path(ctx.outputs.buildinfo_out)])
+        common_args.extend(["--tsBuildInfoFile", output_prefix + to_output_relative_path(ctx.outputs.buildinfo_out)])
         outputs.append(ctx.outputs.buildinfo_out)
 
     should_generate_tsc_trace = options.generate_tsc_trace or ctx.attr.generate_trace
@@ -241,24 +277,22 @@ def _ts_project_impl(ctx):
         if should_generate_tsc_trace:
             tsc_trace_dir = ctx.actions.declare_directory(ctx.attr.name + "_trace")
             typecheck_outputs.append(tsc_trace_dir)
-            typecheck_arguments.add_all(["--generateTrace", to_output_relative_path(tsc_trace_dir)])
+            typecheck_arguments.add_all(["--generateTrace", output_prefix + to_output_relative_path(tsc_trace_dir)])
 
         progress_message = ctx.attr.isolated_typecheck_progress_message.format(
             label = ctx.label,
             tsconfig_path = tsconfig_path,
         )
 
-        js_binary_lib.run_binary_action(
-            ctx = ctx,
-            executable = executable,
+        _run_tsc(
+            ctx,
+            tscinfo,
+            tsc_env,
             inputs = tsc_transitive_inputs_depset,
             arguments = [typecheck_arguments],
             outputs = typecheck_outputs,
             mnemonic = "TsProjectCheck",
-            execution_requirements = {"supports-path-mapping": "1"},
-            resource_set = resource_set(ctx.attr),
             progress_message = progress_message,
-            use_default_shell_env = True,
         )
     else:
         # When tsc emits js but no dts, js_outs are the only artifact proving tsc ran and type-checked.
@@ -285,7 +319,7 @@ def _ts_project_impl(ctx):
         if should_generate_tsc_trace and not ctx.attr.isolated_typecheck:
             tsc_trace_dir = ctx.actions.declare_directory(ctx.attr.name + "_trace")
             outputs.append(tsc_trace_dir)
-            tsc_emit_arguments.add_all(["--generateTrace", to_output_relative_path(tsc_trace_dir)])
+            tsc_emit_arguments.add_all(["--generateTrace", output_prefix + to_output_relative_path(tsc_trace_dir)])
 
         inputs_depset = tsc_inputs_depset if ctx.attr.isolated_typecheck else tsc_transitive_inputs_depset
 
@@ -298,17 +332,15 @@ def _ts_project_impl(ctx):
             type_check_part = " & type-checking" if not ctx.attr.isolated_typecheck else "",
         )
 
-        js_binary_lib.run_binary_action(
-            ctx = ctx,
-            executable = executable,
+        _run_tsc(
+            ctx,
+            tscinfo,
+            tsc_env,
             inputs = inputs_depset,
             arguments = [tsc_emit_arguments],
             outputs = outputs,
             mnemonic = "TsProjectEmit" if ctx.attr.isolated_typecheck else "TsProject",
-            execution_requirements = {"supports-path-mapping": "1"},
-            resource_set = resource_set(ctx.attr),
             progress_message = progress_message,
-            use_default_shell_env = True,
         )
 
     transitive_sources = js_lib_helpers.gather_transitive_sources(output_sources, srcs_deps)
@@ -393,5 +425,7 @@ ts_project = rule(
     """,
     implementation = lib.implementation,
     attrs = lib.attrs,
-    toolchains = COPY_FILE_TO_BIN_TOOLCHAINS,
+    toolchains = COPY_FILE_TO_BIN_TOOLCHAINS + [
+        config_common.toolchain_type(TSC_TOOLCHAIN_TYPE, mandatory = True),
+    ],
 )

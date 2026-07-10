@@ -7,6 +7,12 @@ exports_files(
     visibility = ["//visibility:public"],
 )
 
+# The TypeScript compiler for the exec platform; default toolchains are registered in MODULE.bazel.
+toolchain_type(
+    name = "toolchain_type",
+    visibility = ["//visibility:public"],
+)
+
 # Users can enable with --@aspect_rules_ts//ts:skipLibCheck=always
 string_flag(
     # Note: this name is chosen to be searchable when users look for "skipLibCheck" in their repo,
@@ -126,6 +132,7 @@ bzl_library(
         "//ts/private:options",
         "//ts/private:ts_config",
         "//ts/private:ts_project",
+        "//ts/private:tsc_toolchain",
         "@aspect_rules_js//js:defs",
         "@aspect_tools_telemetry_report//:defs.bzl",
         "@bazel_lib//lib:utils",
@@ -147,6 +154,7 @@ bzl_library(
     visibility = ["//visibility:public"],
     deps = [
         "//ts/private:npm_repositories",
+        "//ts/private:tsc_repositories",
         "//ts/private:versions",
     ],
 )
