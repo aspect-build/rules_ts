@@ -15,16 +15,16 @@ Otherwise later tooling on CI may yell at you about formatting/linting violation
 
 ## Using this as a development dependency of other rules
 
-You'll commonly find that you develop in another WORKSPACE, such as
+You'll commonly find that you develop in another Bazel module, such as
 some other ruleset that depends on rules_ts, or in a nested
-WORKSPACE in the integration_tests folder.
+module like the ones in the `e2e` folder.
 
 To always tell Bazel to use this directory rather than some release
 artifact or a version fetched from the internet, run this from this
 directory:
 
 ```sh
-OVERRIDE="--override_repository=aspect_rules_ts=$(pwd)/aspect_rules_ts"
+OVERRIDE="--override_module=aspect_rules_ts=$(pwd)/aspect_rules_ts"
 echo "common $OVERRIDE" >> ~/.bazelrc
 ```
 

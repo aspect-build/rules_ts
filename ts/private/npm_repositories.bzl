@@ -38,7 +38,7 @@ def _http_archive_version_impl(rctx):
         fail("""typescript version {} is not mirrored in rules_ts, is this a real version?
             If so, you must manually set 'ts_integrity'.
             If this is a semver range you must specify an exact version instead.
-            See documentation on rules_ts_dependencies.""".format(version))
+            See documentation on the rules_ts module extension.""".format(version))
 
     urls = [u.format(version) for u in rctx.attr.urls]
 
@@ -61,7 +61,7 @@ def _http_archive_version_impl(rctx):
     build_file_substitutions = {
         "ts_version": version,
         # Note: we can't depend on bazel_skylib because this code is called from
-        # rules_ts_dependencies so it's not "in scope" yet.
+        # the module extension so it's not "in scope" yet.
         # So we can't use versions.bzl to parse the version
         "is_ts_5_or_greater": str(int(version.split(".")[0]) >= 5),
         "# ts_native_package_labels": "".join(native_package_labels),
@@ -90,7 +90,7 @@ def _link_native_packages(rctx, version, native_typescript_version):
     ]
     if missing_native_packages:
         fail("""typescript version {} requires native packages that are not mirrored in rules_ts: {}
-            See documentation on rules_ts_dependencies.""".format(version, ", ".join(missing_native_packages)))
+            See documentation on the rules_ts module extension.""".format(version, ", ".join(missing_native_packages)))
 
     native_package_labels = []
     native_package_targets = []

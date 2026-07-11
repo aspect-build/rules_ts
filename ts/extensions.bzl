@@ -2,8 +2,10 @@
 See https://bazel.build/docs/bzlmod#extension-definition
 """
 
-load("//ts:repositories.bzl", "LATEST_TYPESCRIPT_VERSION")
 load("//ts/private:npm_repositories.bzl", "npm_dependencies")
+load("//ts/private:versions.bzl", "TOOL_VERSIONS")
+
+LATEST_TYPESCRIPT_VERSION = TOOL_VERSIONS.keys()[-1]
 
 def _extension_impl(module_ctx):
     # Prefer the root module's tag when multiple modules request the same repo.

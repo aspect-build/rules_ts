@@ -19,29 +19,20 @@ function workspace() {
 		esac
 	done
 
-	touch MODULE.bazel
-	cat >WORKSPACE <<EOF
-local_repository(
-    name = "aspect_rules_ts",
+	cat >MODULE.bazel <<EOF
+bazel_dep(name = "aspect_rules_ts", version = "0.0.0")
+local_path_override(
+    module_name = "aspect_rules_ts",
     path = "$rules_ts_path",
 )
 
-load("@aspect_rules_ts//ts:repositories.bzl", "rules_ts_dependencies")
+bazel_dep(name = "aspect_rules_js", version = "2.0.0")
+
+rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext")
 
 # TODO(#361): upgrade to 5.x
-rules_ts_dependencies(ts_version = "4.9.5")
-
-load("@aspect_rules_js//js:repositories.bzl", "rules_js_dependencies")
-
-rules_js_dependencies()
-
-load("@aspect_rules_js//js:toolchains.bzl", "DEFAULT_NODE_VERSION", "rules_js_register_toolchains")
-
-rules_js_register_toolchains(node_version = DEFAULT_NODE_VERSION)
-
-load("@aspect_bazel_lib//lib:repositories.bzl", "register_copy_directory_toolchains", "register_copy_to_directory_toolchains")
-register_copy_directory_toolchains()
-register_copy_to_directory_toolchains()
+rules_ts_ext.deps(ts_version = "4.9.5")
+use_repo(rules_ts_ext, "npm_typescript")
 EOF
 
 	[[ -e "$BATS_TEST_DIRNAME/.bazelversion" ]] && cp "$BATS_TEST_DIRNAME/.bazelversion" .bazelversion
@@ -59,17 +50,14 @@ EOF
 	fi
 
 	if ((is_npm_translate_lock)); then
-		cat >>WORKSPACE <<EOF
-load("@aspect_rules_js//npm:repositories.bzl", "npm_translate_lock")
+		cat >>MODULE.bazel <<EOF
+npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm")
 
-npm_translate_lock(
+npm.npm_translate_lock(
     name = "npm",
     pnpm_lock = "//:pnpm-lock.yaml",
 )
-
-load("@npm//:repositories.bzl", "npm_repositories")
-
-npm_repositories()  
+use_repo(npm, "npm")
 EOF
 	fi
 }
