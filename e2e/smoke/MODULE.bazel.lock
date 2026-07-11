@@ -184,8 +184,8 @@
   "moduleExtensions": {
     "@@aspect_rules_ts~//ts:extensions.bzl%ext": {
       "general": {
-        "bzlTransitiveDigest": "WV+DuevmiFUeiSXIrDC1IEJov1WdDAy3pSFgQHHEFA0=",
-        "usagesDigest": "/z4ca+1z/VCydEk0MwLyKPL107p9F5XvIgbvZZhwt3Y=",
+        "bzlTransitiveDigest": "YdJ2Zt1ieGUAq2P1TtpU8iET+Rw5x8yIeHGkX/U1d6s=",
+        "usagesDigest": "vIHMPh47myV4+ufsAhRX8Dw0DUsLPrMSpLHRos371fk=",
         "recordedFileInputs": {
           "@@//package.json": "e8abba115559110ae0bb22355c2817b6387f054074cd53dfae07ea995fe8e37b"
         },

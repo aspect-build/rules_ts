@@ -55,7 +55,6 @@ def ts_project(
         generate_trace = None,
         tsc = _tsc,
         validate = True,
-        validator = "@npm_typescript//:validator",
         declaration_dir = None,
         out_dir = None,
         root_dir = None,
@@ -203,9 +202,11 @@ def ts_project(
             This allows you to use a custom API-compatible compiler in place of the regular `tsc` such as a custom `js_binary` or Angular's `ngc`.
             compatible with it such as Angular's `ngc`.
 
+            When `validate = True`, the tsconfig file is still resolved with the default `tsc` binary,
+            so a custom compiler does not need to support the `--showConfig` flag.
+
             See examples of use in [examples/custom_compiler](https://github.com/aspect-build/rules_ts/blob/main/examples/custom_compiler/BUILD.bazel)
 
-        validator: Label of the tsconfig validator to run when `validate = True`.
         allow_js: Whether TypeScript will read .js and .jsx files.
             When used with `declaration`, TypeScript will generate `.d.ts` files from `.js` files.
         resolve_json_module: Boolean; specifies whether TypeScript will read .json files.
@@ -471,7 +472,6 @@ def ts_project(
         pretranspiled_js = transpile_target_name,
         pretranspiled_dts = declarations_target_name,
         validate = validate,
-        validator = validator,
         **kwargs
     )
 

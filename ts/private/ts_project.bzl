@@ -401,5 +401,6 @@ ts_project = rule(
     """,
     implementation = lib.implementation,
     attrs = lib.attrs,
-    toolchains = COPY_FILE_TO_BIN_TOOLCHAINS,
+    # The jq toolchain is used by the tsconfig validation actions.
+    toolchains = COPY_FILE_TO_BIN_TOOLCHAINS + ["@jq.bzl//jq/toolchain:type"],
 )

@@ -121,7 +121,18 @@ https://docs.aspect.build/rulesets/aspect_rules_js/docs/js_library#deps for more
         """,
         default = "Type-checking TypeScript project {label} [tsc -p {tsconfig_path}]",
     ),
-    "validator": attr.label(mandatory = True, executable = True, cfg = "exec"),
+    "_validation_tsc": attr.label(
+        doc = """The default tsc, resolving the tsconfig for validation (`tsc --showConfig`)
+        regardless of the `tsc` attribute, which may be a custom compiler without `--showConfig` support.""",
+        default = "@npm_typescript//:tsc",
+        executable = True,
+        cfg = "exec",
+    ),
+    "_validator": attr.label(
+        doc = "Script comparing the resolved tsconfig with the ts_project attributes.",
+        allow_single_file = True,
+        default = "@aspect_rules_ts//ts/private:ts_project_options_validator.sh",
+    ),
     "_options": attr.label(
         default = "@aspect_rules_ts//ts:options",
     ),

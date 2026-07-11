@@ -42,6 +42,18 @@ To resolve this conflict, the root module should explicitly specify the desired 
                 "module_name": mod.name,
             }
 
+    # rules_ts itself references @npm_typescript (e.g. the tsc used to resolve
+    # tsconfig files for validation), so the default repo must exist even when
+    # no module declares a deps() tag. Note that every ts_project depends on
+    # @npm_typescript through the private validator attribute, so for modules
+    # that never declare a deps() tag this repository is fetched at the
+    # LATEST_TYPESCRIPT_VERSION default, which shifts with rules_ts releases.
+    if "npm_typescript" not in selected:
+        npm_dependencies(
+            name = "npm_typescript",
+            ts_version = LATEST_TYPESCRIPT_VERSION,
+        )
+
     for entry in selected.values():
         attr = entry["attr"]
         if attr.ts_version_from and hasattr(module_ctx, "watch"):

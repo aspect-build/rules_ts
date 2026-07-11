@@ -4,7 +4,6 @@ load("@bazel_lib//lib:directory_path.bzl", "directory_path")
 load("@aspect_rules_js//js:defs.bzl", "js_binary")
 load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
 load("@aspect_rules_js//npm/private:npm_package_internal.bzl", "npm_package_internal")
-load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 npm_package_internal(
     name = "npm_typescript",
     src = "package",
@@ -37,19 +36,5 @@ js_binary(
     name = "tsc",
     data = TSC_DATA,
     entry_point = ":tsc_entrypoint",
-    visibility = ["//visibility:public"],
-)
-
-# validator
-copy_file(
-    name = "copy_validator",
-    src = "@aspect_rules_ts//ts/private:ts_project_options_validator.cjs",
-    out = "ts_project_options_validator.cjs",
-)
-
-js_binary(
-    name = "validator",
-    data = TSC_DATA,
-    entry_point = "copy_validator",
     visibility = ["//visibility:public"],
 )

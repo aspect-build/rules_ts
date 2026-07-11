@@ -111,3 +111,25 @@ build_test(
     name = "subfolder_tsconfig_test",
     targets = [":subfolder_tsconfig"],
 )
+
+# TypeScript 5.5+ ${configDir} resolves to the directory of the tsconfig the
+# compiler was invoked on — here the subfolder, not the package directory.
+# The validator must resolve it the same way the compile action does.
+ts_project(
+    name = "configdir_subfolder_tsconfig",
+    srcs = [
+        "subdir/a.ts",
+        "subdir/deep/subdir/b.ts",
+    ],
+    out_dir = "subdir/configdir_out",
+    tsconfig = "subdir/tsconfig-configdir.json",
+)
+
+assert_outputs(
+    name = "configdir_subfolder_tsconfig_test",
+    actual = "configdir_subfolder_tsconfig",
+    expected = [
+        "root_dir/subdir/configdir_out/subdir/a.js",
+        "root_dir/subdir/configdir_out/subdir/deep/subdir/b.js",
+    ],
+)

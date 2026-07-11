@@ -222,8 +222,8 @@
   "moduleExtensions": {
     "@@aspect_rules_ts~//ts:extensions.bzl%ext": {
       "general": {
-        "bzlTransitiveDigest": "WV+DuevmiFUeiSXIrDC1IEJov1WdDAy3pSFgQHHEFA0=",
-        "usagesDigest": "m9vAevWyTf4y9vIKdK6eSHhJblTDPJcGMXzaYykrt+Y=",
+        "bzlTransitiveDigest": "YdJ2Zt1ieGUAq2P1TtpU8iET+Rw5x8yIeHGkX/U1d6s=",
+        "usagesDigest": "ij2cJ0oeNR8oEPxu+UR9JjKbO41sqY74K7zOVquZzGA=",
         "recordedFileInputs": {
           "@@//package.json": "7121d883692b35c8aec1e353c7cd9151c628ef4d3450898c20efd036f383a87a"
         },

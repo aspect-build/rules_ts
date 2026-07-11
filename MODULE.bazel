@@ -11,6 +11,7 @@ bazel_dep(name = "bazel_lib", version = "3.1.0")
 bazel_dep(name = "aspect_tools_telemetry", version = "0.4.2")
 bazel_dep(name = "aspect_rules_js", version = "3.0.1")
 bazel_dep(name = "bazel_skylib", version = "1.8.1")
+bazel_dep(name = "jq.bzl", version = "0.4.0")
 bazel_dep(name = "platforms", version = "0.0.5")
 
 # TODO(4.x): remove support for non-toolchainized protoc
@@ -30,9 +31,13 @@ bazel_dep(name = "bazelrc-preset.bzl", version = "1.9.2", dev_dependency = True)
 bazel_dep(name = "buildifier_prebuilt", version = "8.2.1.1", dev_dependency = True)
 bazel_dep(name = "rules_shell", version = "0.6.1", dev_dependency = True)
 
-rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext", dev_dependency = True)
-rules_ts_ext.deps(ts_version = "5.6.2")
+# Non-dev: rules_ts itself references @npm_typescript for the tsc binary used
+# to resolve tsconfig files for validation, independent of the calling module.
+rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext")
 use_repo(rules_ts_ext, "npm_typescript")
+
+rules_ts_ext_dev = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext", dev_dependency = True)
+rules_ts_ext_dev.deps(ts_version = "5.6.2")
 
 ####### Version bumps of indirect dependencies ########
 

@@ -8,6 +8,5 @@ def ts_project(name, **kwargs):
     _ts_project(
         name = name,
         tsc = "@npm_typescript2//:tsc",
-        validator = "@npm_typescript2//:validator",
         **kwargs
     )
