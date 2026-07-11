@@ -80,8 +80,8 @@ teardown() {
 	npm_package --path ./features/notcool --name notcool --src ":notcool_lib"
 	echo '{"name": "@feature/notcool"}' >./features/notcool/package.json
 
-	echo '-packages: ["features/cool", "features/notcool"]' >pnpm-workspace.yaml
-	echo '{"dependencies":{"@feature/cool": "workspace:*", "@types/node": "*"}}' >package.json
+	echo 'packages: ["features/cool", "features/notcool"]' >pnpm-workspace.yaml
+	echo '{"dependencies":{"@feature/cool": "workspace:*", "@types/node": "*"}, "pnpm": {"onlyBuiltDependencies": []}}' >package.json
 	run pnpm install --lockfile-only
 	assert_success
 
@@ -91,7 +91,7 @@ teardown() {
 	assert_failure
 	assert_output -p "node_modules/.aspect_rules_js/@feature+cool@0.0.0/node_modules/@feature/cool/index.d.ts(1,40): error TS2307: Cannot find module '@feature/notcool' or its corresponding type declarations."
 
-	echo '{"dependencies":{"@feature/cool": "workspace:*", "@types/node": "*"}, "pnpm": {"packageExtensions": {"@feature/cool": {"dependencies": {"@feature/notcool": "workspace:*"}}}}}' >package.json
+	echo '{"dependencies":{"@feature/cool": "workspace:*", "@types/node": "*"}, "pnpm": {"onlyBuiltDependencies": [], "packageExtensions": {"@feature/cool": {"dependencies": {"@feature/notcool": "workspace:*"}}}}}' >package.json
 	run pnpm install --lockfile-only
 	assert_success
 	# TODO: fixup (broken with upgrade to Bazel 7.3.2)

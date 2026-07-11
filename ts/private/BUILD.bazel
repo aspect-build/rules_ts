@@ -79,6 +79,7 @@ bzl_library(
     srcs = ["ts_proto_library.bzl"],
     visibility = ["//ts:__subpackages__"],
     deps = [
+        "@aspect_bazel_lib//lib:copy_to_bin",
         "@bazel_skylib//lib:paths",
         "@rules_proto//proto:defs",
     ],
