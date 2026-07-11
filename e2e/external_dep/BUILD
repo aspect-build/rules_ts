@@ -36,7 +36,6 @@ ts_project(
     composite = True,
     out_dir = "ts7rc_out",
     tsc = "@npm_typescript-7rc//:tsc",
-    validator = "@npm_typescript-7rc//:validator",
 )
 
 # Validation must accept an option implied as a computed default of another
@@ -55,7 +54,6 @@ ts_project(
     out_dir = "implied_checkjs_ts7rc_out",
     tsc = "@npm_typescript-7rc//:tsc",
     tsconfig = "tsconfig-checkjs.json",
-    validator = "@npm_typescript-7rc//:validator",
 )
 
 # TypeScript 5.9 resolves `module: nodenext` to also imply resolveJsonModule;
@@ -66,7 +64,6 @@ ts_project(
     out_dir = "implied_resolve_json_module_out",
     tsc = "@npm_typescript-59//:tsc",
     tsconfig = "tsconfig-nodenext.json",
-    validator = "@npm_typescript-59//:validator",
 )
 
 build_test(

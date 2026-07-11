@@ -13,7 +13,8 @@ ts_project(
     srcs = [
         "index.ts",
     ],
-    # @tsconfig/strictest sets allowJs: true
+    # @tsconfig/strictest sets allowJs: true. The validator resolves the npm
+    # package in the extends chain, so the attribute must be mirrored here.
     allow_js = True,
     tsconfig = ":config",
 )

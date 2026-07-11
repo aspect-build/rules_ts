@@ -1,0 +1,5 @@
+{
+    "compilerOptions": {
+        "outDir": "${configDir}/configdir_out"
+    }
+}

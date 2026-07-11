@@ -227,6 +227,110 @@ EOF
 	assert_output -p "which is a parent of the package directory"
 }
 
+@test 'When the tsconfig extends an npm package that is not an input, validation should fail explaining the missing input' {
+	workspace
+
+	echo "export const a = 1;" >./source.ts
+
+	cat >tsconfig.json <<EOF
+{
+    "extends": "@tsconfig/strictest/tsconfig.json"
+}
+EOF
+
+	# The mock transpiler keeps tsc out of the default outputs so the failure
+	# deterministically comes from the validation action.
+	ts_project --transpiler-mock --src "source.ts"
+
+	run bazel build :foo
+	assert_failure
+	assert_output -p 'failed to resolve the tsconfig file'
+	assert_output -p 'ts_config(deps)'
+}
+
+@test 'When a tsconfig from another package sets outDir below the ts_project package, matching out_dir attr should succeed' {
+	workspace
+
+	mkdir -p child
+	echo "export const a = 1;" >child/source.ts
+
+	cat >tsconfig.json <<EOF
+{
+    "compilerOptions": {
+        "outDir": "child/dist"
+    }
+}
+EOF
+
+	cat >BUILD.bazel <<EOF
+load("@aspect_rules_ts//ts:defs.bzl", "ts_config")
+
+ts_config(
+    name = "config",
+    src = "tsconfig.json",
+    visibility = ["//visibility:public"],
+)
+EOF
+
+	cat >child/BUILD.bazel <<EOF
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "foo",
+    srcs = ["source.ts"],
+    out_dir = "dist",
+    tsconfig = "//:config",
+)
+EOF
+
+	run bazel build //child:foo
+	assert_success
+	run test -f bazel-bin/child/dist/source.js
+	assert_success
+}
+
+@test 'When a tsconfig from another package sets outDir outside the ts_project package, validation should fail' {
+	workspace
+
+	mkdir -p child
+	echo "export const a = 1;" >child/source.ts
+
+	cat >tsconfig.json <<EOF
+{
+    "compilerOptions": {
+        "outDir": "dist"
+    }
+}
+EOF
+
+	cat >BUILD.bazel <<EOF
+load("@aspect_rules_ts//ts:defs.bzl", "ts_config")
+
+ts_config(
+    name = "config",
+    src = "tsconfig.json",
+    visibility = ["//visibility:public"],
+)
+EOF
+
+	cat >child/BUILD.bazel <<EOF
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@aspect_rules_ts//ts/test:mock_transpiler.bzl", "mock")
+
+ts_project(
+    name = "foo",
+    srcs = ["source.ts"],
+    transpiler = mock,
+    tsconfig = "//:config",
+)
+EOF
+
+	run bazel build //child:foo
+	assert_failure
+	assert_output -p 'outDir in the tsconfig resolves to'
+	assert_output -p 'parent of the package directory'
+}
+
 @test 'When outDir in tsconfig resolves to a parent of the package, validation should fail' {
 	workspace
 

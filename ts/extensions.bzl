@@ -49,6 +49,18 @@ To resolve this conflict, the root module should explicitly specify the desired 
                 "module_name": mod.name,
             }
 
+    # rules_ts itself references @npm_typescript (e.g. the tsc used to resolve
+    # tsconfig files for validation), so the default repo must exist even when
+    # no module declares a deps() tag. Note that every ts_project depends on
+    # @npm_typescript through the private validator attribute, so for modules
+    # that never declare a deps() tag this repository is fetched at the
+    # LATEST_TYPESCRIPT_VERSION default, which shifts with rules_ts releases.
+    if "npm_typescript" not in selected:
+        npm_dependencies(
+            name = "npm_typescript",
+            ts_version = LATEST_TYPESCRIPT_VERSION,
+        )
+
     for entry in selected.values():
         attr = entry["attr"]
         if attr.ts_version_from:
@@ -63,6 +75,16 @@ To resolve this conflict, the root module should explicitly specify the desired 
             ts_version_from = attr.ts_version_from,
             ts_integrity = attr.ts_integrity,
         )
+
+    # rules_ts's own MODULE.bazel imports npm_typescript from a non-dev usage
+    # (so @npm_typescript resolves in rules_ts .bzl files when rules_ts is a
+    # dependency of another module), while its version pin is a dev tag.
+    # Report the repo as a regular dependency of the root module so that the
+    # non-dev use_repo() validates and `bazel mod tidy` does not move it to
+    # the dev usage, which non-root modules would ignore.
+    for mod in module_ctx.modules:
+        if mod.is_root and mod.name == "aspect_rules_ts":
+            root_direct_deps["npm_typescript"] = None
 
     # A repo requested by both dev and non-dev usages of the root module is a non-dev dep.
     for name in root_direct_deps.keys():

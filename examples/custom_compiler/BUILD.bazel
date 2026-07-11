@@ -56,6 +56,7 @@ ts_project(
         "component.mts",
     ],
     # Tell ts_project to run ngc. The compiler has to have a matching CLI as `tsc` for this to work.
+    # The tsconfig validation still resolves the tsconfig with the default tsc.
     tsc = ":ngc",
     deps = [
         "//:node_modules/@angular/core",
