@@ -2,13 +2,14 @@
 set -o nounset -o errexit -o pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
-# Stable v6 and below only: v7+ lives in NATIVE_TYPESCRIPT_VERSIONS instead so
-# LATEST_TYPESCRIPT_VERSION (TOOL_VERSIONS.keys()[-1], the default ts_version)
-# does not silently switch to the native compiler.
+# Stable v5 and v6 only: v4 and below are unsupported, and v7+ lives in
+# NATIVE_TYPESCRIPT_VERSIONS instead so LATEST_TYPESCRIPT_VERSION
+# (TOOL_VERSIONS.keys()[-1], the default ts_version) does not silently switch
+# to the native compiler.
 TOOL_VERSIONS_JQ_FILTER='
 [
     .versions[]
-    | select((.version | test("^[0-9.]+$")) and ((.version | split(".")[0] | tonumber) < 7))
+    | select((.version | test("^[0-9.]+$")) and ((.version | split(".")[0] | tonumber) | . >= 5 and . < 7))
     | {key: .version, value: .dist.integrity}
 ] | from_entries
 '

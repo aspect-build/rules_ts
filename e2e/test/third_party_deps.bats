@@ -10,7 +10,7 @@ teardown() {
 }
 
 @test 'should report missing third-party deps' {
-	run pnpm add @nestjs/core@9.0.8 @nestjs/common@9.0.8 rxjs@7.1.0 @types/node@18.11.9 --lockfile-only
+	run pnpm add @nestjs/core@9.0.8 @nestjs/common@9.0.8 rxjs@7.1.0 @types/node@18.19.130 --lockfile-only
 
 	workspace --npm-translate-lock
 	tsconfig

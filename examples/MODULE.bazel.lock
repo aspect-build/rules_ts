@@ -222,7 +222,7 @@
   "moduleExtensions": {
     "@@aspect_rules_ts~//ts:extensions.bzl%ext": {
       "general": {
-        "bzlTransitiveDigest": "QPhGP7/8H/zyx/WSkGp8kH3SKmVHM/vkUGf4YJwcSlI=",
+        "bzlTransitiveDigest": "WV+DuevmiFUeiSXIrDC1IEJov1WdDAy3pSFgQHHEFA0=",
         "usagesDigest": "m9vAevWyTf4y9vIKdK6eSHhJblTDPJcGMXzaYykrt+Y=",
         "recordedFileInputs": {
           "@@//package.json": "7121d883692b35c8aec1e353c7cd9151c628ef4d3450898c20efd036f383a87a"

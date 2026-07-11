@@ -18,7 +18,7 @@ teardown() {
 	assert_success
 	run cat bazel-bin/source.js.map
 	assert_success
-	assert_output -p '{"version":3,"file":"source.js","sourceRoot":"","sources":["source.ts"],"names":[],"mappings":"AAAA,MAAM,CAAC,GAAW,YAAY,CAAC"}'
+	assert_output -p '{"version":3,"file":"source.js","sourceRoot":"","sources":["source.ts"],"names":[],"mappings":";;AAAA,MAAM,CAAC,GAAW,YAAY,CAAC"}'
 }
 
 @test 'should emit sourcemaps correctly in a subpackage' {
@@ -31,7 +31,7 @@ teardown() {
 	assert_success
 	run cat bazel-bin/subpkg/source.js.map
 	assert_success
-	assert_output -p '{"version":3,"file":"source.js","sourceRoot":"","sources":["source.ts"],"names":[],"mappings":"AAAA,MAAM,CAAC,GAAW,YAAY,CAAC"}'
+	assert_output -p '{"version":3,"file":"source.js","sourceRoot":"","sources":["source.ts"],"names":[],"mappings":";;AAAA,MAAM,CAAC,GAAW,YAAY,CAAC"}'
 }
 
 @test 'should emit sourcemaps correctly with outdir' {
@@ -43,7 +43,7 @@ teardown() {
 	assert_success
 	run cat bazel-bin/outdir/source.js.map
 	assert_success
-	assert_output -p '{"version":3,"file":"source.js","sourceRoot":"","sources":["../source.ts"],"names":[],"mappings":"AAAA,MAAM,CAAC,GAAW,YAAY,CAAC"}'
+	assert_output -p '{"version":3,"file":"source.js","sourceRoot":"","sources":["../source.ts"],"names":[],"mappings":";;AAAA,MAAM,CAAC,GAAW,YAAY,CAAC"}'
 }
 
 @test 'should enable source maps when added on an incremental build' {
@@ -65,5 +65,5 @@ teardown() {
 	run bazel build :foo
 	assert_success
 	run cat bazel-bin/sourcemap.js.map
-	assert_output -p '{"version":3,"file":"sourcemap.js","sourceRoot":"","sources":["sourcemap.ts"],"names":[],"mappings":"AAAA,MAAM,CAAC,GAAW,YAAY,CAAC"}'
+	assert_output -p '{"version":3,"file":"sourcemap.js","sourceRoot":"","sources":["sourcemap.ts"],"names":[],"mappings":";;AAAA,MAAM,CAAC,GAAW,YAAY,CAAC"}'
 }

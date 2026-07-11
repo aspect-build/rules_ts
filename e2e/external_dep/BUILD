@@ -13,13 +13,13 @@ ts_project(
 )
 
 # Demonstrate how to use a different typescript where required
-# Picks up TypeScript 3.9.9 defined in MODULE.bazel
+# Picks up TypeScript 5.0.4 defined in MODULE.bazel
 ts_project(
-    name = "lib.ts3",
+    name = "lib.ts5",
     srcs = ["lib.ts"],
     composite = True,
-    out_dir = "ts3_out",
-    tsc = "@npm_typescript3//:tsc",
+    out_dir = "ts5_out",
+    tsc = "@npm_typescript5//:tsc",
 )
 
 ts_project(
@@ -42,7 +42,7 @@ build_test(
     name = "test",
     targets = [
         ":lib",
-        "lib.ts3",
+        "lib.ts5",
         "lib.ts56rc",
         "lib.ts7rc",
     ],

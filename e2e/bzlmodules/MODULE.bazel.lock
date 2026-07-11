@@ -146,7 +146,7 @@
   "moduleExtensions": {
     "@@aspect_rules_ts~//ts:extensions.bzl%ext": {
       "general": {
-        "bzlTransitiveDigest": "QPhGP7/8H/zyx/WSkGp8kH3SKmVHM/vkUGf4YJwcSlI=",
+        "bzlTransitiveDigest": "WV+DuevmiFUeiSXIrDC1IEJov1WdDAy3pSFgQHHEFA0=",
         "usagesDigest": "FpN2Qu/qXxwtDzlEUwR/WIa09ID2f6LvshcR5PJU/S4=",
         "recordedFileInputs": {
           "@@module_a~//package.json": "35a3409de097fcc0d3c6eea7fd7090b8f3c9cbbf7d05c8c010372bccc85aa374"
