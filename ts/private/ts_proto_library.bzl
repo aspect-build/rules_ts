@@ -1,7 +1,7 @@
 "Private implementation details for ts_proto_library"
 
-load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "COPY_FILE_TO_BIN_TOOLCHAINS")
-load("@aspect_bazel_lib//lib:platform_utils.bzl", "platform_utils")
+load("@bazel_lib//lib:copy_to_bin.bzl", "COPY_FILE_TO_BIN_TOOLCHAINS")
+load("@bazel_lib//lib:platform_utils.bzl", "platform_utils")
 load("@rules_proto//proto:defs.bzl", "ProtoInfo", "proto_common")
 load("@rules_proto//proto:proto_common.bzl", proto_toolchains = "toolchains")
 
