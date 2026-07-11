@@ -20,13 +20,13 @@ teardown() {
 	refute_output -p "WARNING: Running" "TsProject" "as a standalone process" "From Compiling TypeScript project"
 }
 
-@test 'should build successfully and print the error message with --strategy=local' {
+@test 'should build successfully and not print the error message with --strategy=local' {
 	workspace
 	tsconfig
 
 	ts_project --src "source.ts"
 	echo 'const t: string = "local";' >source.ts
-	run bazel build :foo --strategy=TsProject=local --@aspect_rules_ts//ts:supports_workers
+	run bazel build :foo --strategy=TsProject=local
 	assert_success
-	assert_output -p "WARNING: Running" "TsProject" "as a standalone process" "From Compiling TypeScript project"
+	refute_output -p "WARNING: Running" "TsProject" "as a standalone process" "From Compiling TypeScript project"
 }

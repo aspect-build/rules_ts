@@ -28,7 +28,6 @@ def _is_file_missing(label):
     return len(file_glob) == 0
 
 _tsc = "@npm_typescript//:tsc"
-_tsc_worker = "@npm_typescript//:tsc_worker"
 
 def ts_project(
         name,
@@ -55,13 +54,11 @@ def ts_project(
         ts_build_info_file = None,
         generate_trace = None,
         tsc = _tsc,
-        tsc_worker = _tsc_worker,
         validate = True,
         validator = "@npm_typescript//:validator",
         declaration_dir = None,
         out_dir = None,
         root_dir = None,
-        supports_workers = -1,
         **kwargs):
     """Compiles one TypeScript project using `tsc --project`.
 
@@ -208,7 +205,6 @@ def ts_project(
 
             See examples of use in [examples/custom_compiler](https://github.com/aspect-build/rules_ts/blob/main/examples/custom_compiler/BUILD.bazel)
 
-        tsc_worker: Label of a custom TypeScript compiler binary which understands Bazel's persistent worker protocol.
         validator: Label of the tsconfig validator to run when `validate = True`.
         allow_js: Whether TypeScript will read .js and .jsx files.
             When used with `declaration`, TypeScript will generate `.d.ts` files from `.js` files.
@@ -242,23 +238,6 @@ def ts_project(
         generate_trace: Whether to generate a trace file for TypeScript compiler performance analysis.
             When enabled, creates a trace directory containing performance tracing information that can be
             loaded in chrome://tracing. Use the `--@aspect_rules_ts//ts:generate_tsc_trace` flag to enable this by default.
-
-        supports_workers: Whether the "Persistent Worker" protocol is enabled.
-            This uses a custom `tsc` compiler to make rebuilds faster.
-            Note that this causes some known correctness bugs, see
-            https://github.com/aspect-build/rules_ts/blob/main/docs/troubleshooting.md#problems-with-persistent-workers.
-            We do not intend to fix these bugs.
-
-            Worker mode can be enabled for all `ts_project`s in a build with the global
-            `--@aspect_rules_ts//ts:supports_workers` flag.
-            To enable worker mode for all builds in the workspace, add
-            `build --@aspect_rules_ts//ts:supports_workers` to the .bazelrc.
-
-            This is a "tri-state" attribute, accepting values `[-1, 0, 1]`. The behavior is:
-
-            - `-1`: use the value of the global `--@aspect_rules_ts//ts:supports_workers` flag.
-            - `0`: Override the global flag, disabling workers for this target.
-            - `1`: Override the global flag, enabling workers for this target.
 
         **kwargs: passed through to underlying [`ts_project_rule`](#rule-ts_project_rule), eg. `visibility`, `tags`
     """
@@ -456,21 +435,6 @@ def ts_project(
             visibility = common_kwargs.get("visibility"),
         )
 
-    # Disable workers if a custom tsc was provided but not a custom tsc_worker.
-    if tsc != _tsc and tsc_worker == _tsc_worker:
-        supports_workers = 0
-
-    # Disable typescript version detection if tsc is not the default:
-    # - it would be wrong anyways
-    # - it is only used to warn if worker support is configured incorrectly.
-    if tsc != _tsc or tsc_worker != _tsc_worker:
-        is_typescript_5_or_greater = None
-    else:
-        is_typescript_5_or_greater = select({
-            "@npm_typescript//:is_typescript_5_or_greater": True,
-            "//conditions:default": False,
-        })
-
     ts_project_rule(
         name = name,
         srcs = srcs,
@@ -502,13 +466,10 @@ def ts_project(
         no_emit = no_emit,
         emit_declaration_only = emit_declaration_only,
         tsc = tsc,
-        tsc_worker = tsc_worker,
         transpile = -1 if not transpiler else int(transpiler == "tsc"),
         declaration_transpile = declaration_transpiler != None,
         pretranspiled_js = transpile_target_name,
         pretranspiled_dts = declarations_target_name,
-        supports_workers = supports_workers,
-        is_typescript_5_or_greater = is_typescript_5_or_greater,
         validate = validate,
         validator = validator,
         **kwargs

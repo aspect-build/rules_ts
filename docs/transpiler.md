@@ -65,10 +65,6 @@ To switch to SWC, follow these steps:
 `tsc` can do transpiling along with type-checking.
 This is the simplest configuration without additional dependencies. However, it's also the slowest.
 
-> Note that rules_ts used to recommend a "Persistent Worker" mode to keep the `tsc` process running
-> as a background daemon, however this introduces correctness issues in the build and is no longer
-> recommended. As of rules_ts 2.0, the "Persistent Worker" mode is no longer enabled by default.
-
 To choose this option for a single `ts_project`, set `transpiler = "tsc"`.
 You can run `npx @bazel/buildozer 'set transpiler "tsc"' //...:%ts_project` to set the attribute
 on all `ts_project` rules.

@@ -1,8 +1,0 @@
-{
-    "compilerOptions": {
-        "declaration": true,
-        "module": "node16",
-        "moduleResolution": "node16",
-        "lib": ["ES2015"]
-    }
-}

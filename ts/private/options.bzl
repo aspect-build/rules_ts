@@ -1,4 +1,4 @@
-"""A terminal rule collecting verbosity and worker support information"""
+"""A terminal rule collecting verbosity and other global settings"""
 
 transpiler_selection_required = """\
 
@@ -45,8 +45,8 @@ You must choose exactly one of the following flags:
 """
 
 OptionsInfo = provider(
-    doc = "Internal: Provider that carries verbosity and global worker support information.",
-    fields = ["args", "default_to_tsc_transpiler", "verbose", "supports_workers", "generate_tsc_trace", "validation_typecheck"],
+    doc = "Internal: Provider that carries verbosity and other global settings.",
+    fields = ["args", "default_to_tsc_transpiler", "verbose", "generate_tsc_trace", "validation_typecheck"],
 )
 
 def _options_impl(ctx):
@@ -82,7 +82,6 @@ def _options_impl(ctx):
     return OptionsInfo(
         verbose = verbose,
         args = args,
-        supports_workers = ctx.attr.supports_workers,
         default_to_tsc_transpiler = ctx.attr.default_to_tsc_transpiler,
         generate_tsc_trace = ctx.attr.generate_tsc_trace,
         validation_typecheck = ctx.attr.validation_typecheck,
@@ -93,7 +92,6 @@ options = rule(
     attrs = {
         "default_to_tsc_transpiler": attr.bool(),
         "verbose": attr.bool(),
-        "supports_workers": attr.bool(),
         "skip_lib_check": attr.string(),
         "generate_tsc_trace": attr.bool(),
         "validation_typecheck": attr.bool(),

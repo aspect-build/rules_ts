@@ -4,24 +4,7 @@ load("@bazel_lib//lib:directory_path.bzl", "directory_path")
 load("@aspect_rules_js//js:defs.bzl", "js_binary")
 load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
 load("@aspect_rules_js//npm/private:npm_package_internal.bzl", "npm_package_internal")
-load("@bazel_skylib//rules:common_settings.bzl", "bool_setting")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
-load("@bazel_skylib//rules:write_file.bzl", "write_file")
-
-bool_setting(
-    name = "is_typescript_5_or_greater_flag",
-    build_setting_default = is_ts_5_or_greater,
-    visibility = ["//visibility:public"],
-)
-
-config_setting(
-    name = "is_typescript_5_or_greater",
-    flag_values = {
-        ":is_typescript_5_or_greater_flag": "true",
-    },
-    visibility = ["//visibility:public"],
-)
-
 npm_package_internal(
     name = "npm_typescript",
     src = "package",
@@ -68,34 +51,5 @@ js_binary(
     name = "validator",
     data = TSC_DATA,
     entry_point = "copy_validator",
-    visibility = ["//visibility:public"],
-)
-
-# tsc worker
-copy_file(
-    name = "copy_worker_js",
-    src = "@aspect_rules_js//js/private/worker:worker.js",
-    out = "worker.js",
-)
-
-copy_file(
-    name = "copy_ts_project_worker",
-    src = "@aspect_rules_ts//ts/private:ts_project_worker.js",
-    out = "ts_project_worker.js",
-)
-
-write_file(
-    name = "package_json",
-    out = "package.json",
-    content = ["{\"type\": \"commonjs\"}"],
-)
-
-js_binary(
-    name = "tsc_worker",
-    data = [
-        ":copy_worker_js",
-        ":package_json",
-    ] + TSC_DATA,
-    entry_point = "copy_ts_project_worker",
     visibility = ["//visibility:public"],
 )

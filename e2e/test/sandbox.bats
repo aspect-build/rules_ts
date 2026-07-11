@@ -71,8 +71,8 @@ function mk_sibling() {
 # Under moduleResolution "nodenext", tsc classifies each .ts as CommonJS or ESM
 # by the nearest package.json "type". With none declared, source.ts is CommonJS
 # and `export =` is legal; a leaked {"type":"module"} reclassifies it as ESM,
-# where `export =` is TS1203. (The //ts/test/ts_project_worker js_tests hit the
-# runtime version of this leak: `require is not defined in ES module scope`.)
+# where `export =` is TS1203. (The runtime version of this leak manifests as
+# `require is not defined in ES module scope`.)
 function mk_module_flip() {
 	local dir="$1"
 	mkdir -p "$dir"

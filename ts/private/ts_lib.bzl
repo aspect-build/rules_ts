@@ -48,19 +48,6 @@ https://docs.aspect.build/rulesets/aspect_rules_js/docs/js_library#deps for more
         allow_files = True,
         mandatory = True,
     ),
-    "supports_workers": attr.int(
-        doc = """\
-        Whether to use a custom `tsc` compiler which understands Bazel's persistent worker protocol.
-
-        See the docs for `supports_workers` on the [`ts_project`](#ts_project-supports_workers) macro.
-        """,
-        default = 0,
-        values = [-1, 0, 1],
-    ),
-    "is_typescript_5_or_greater": attr.bool(
-        doc = "Whether TypeScript version is >= 5.0.0",
-        default = False,
-    ),
     "transpile": attr.int(
         doc = """\
         Whether tsc should be used to produce .js outputs
@@ -84,12 +71,6 @@ https://docs.aspect.build/rulesets/aspect_rules_js/docs/js_library#deps for more
     ),
     "tsc": attr.label(
         doc = "TypeScript compiler binary",
-        mandatory = True,
-        executable = True,
-        cfg = "exec",
-    ),
-    "tsc_worker": attr.label(
-        doc = "TypeScript compiler worker binary",
         mandatory = True,
         executable = True,
         cfg = "exec",
