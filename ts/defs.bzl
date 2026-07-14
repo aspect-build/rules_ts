@@ -1,6 +1,6 @@
 """# Public API for TypeScript rules
 
-The most commonly used is the [ts_project](#ts_project) macro which accepts TypeScript sources as
+The most commonly used is the [ts_project](#function-ts_project) macro which accepts TypeScript sources as
 inputs and produces JavaScript or declaration (.d.ts) outputs.
 """
 
@@ -260,7 +260,7 @@ def ts_project(
             - `0`: Override the global flag, disabling workers for this target.
             - `1`: Override the global flag, enabling workers for this target.
 
-        **kwargs: passed through to underlying [`ts_project_rule`](#ts_project_rule), eg. `visibility`, `tags`
+        **kwargs: passed through to underlying [`ts_project_rule`](#rule-ts_project_rule), eg. `visibility`, `tags`
     """
 
     tsc_deps = deps
