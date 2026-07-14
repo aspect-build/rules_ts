@@ -43,7 +43,6 @@ jobs:
                 - { path: ".", slug: "root" }
                 - { path: "examples", slug: "examples" }
                 - { path: "e2e/smoke", slug: "e2e-smoke" }
-                - { path: "e2e/smoke_rjs3", slug: "e2e-smoke_rjs3" }
                 - { path: "e2e/bzlmodules", slug: "e2e-bzlmodules" }
                 - { path: "e2e/nested_repos", slug: "e2e-nested_repos" }
                 - { path: "e2e/external_dep", slug: "e2e-external_dep" }

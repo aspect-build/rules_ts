@@ -27,7 +27,6 @@ js_test(
 npm_link_package(
     name = "node_modules/typescript",
     src = "@npm_typescript",
-    root_package = package_name(),
 )
 
 js_test(

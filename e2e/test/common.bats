@@ -26,7 +26,7 @@ local_path_override(
     path = "$rules_ts_path",
 )
 
-bazel_dep(name = "aspect_rules_js", version = "2.0.0")
+bazel_dep(name = "aspect_rules_js", version = "3.0.1")
 
 rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext")
 
@@ -50,6 +50,8 @@ EOF
 	fi
 
 	if ((is_npm_translate_lock)); then
+		node -e 'const fs = require("fs"); const p = fs.existsSync("package.json") ? JSON.parse(fs.readFileSync("package.json")) : {}; p.pnpm = Object.assign({}, p.pnpm, {onlyBuiltDependencies: []}); fs.writeFileSync("package.json", JSON.stringify(p, null, 2))'
+
 		cat >>MODULE.bazel <<EOF
 npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm")
 
