@@ -23,7 +23,3 @@ rules_ts_ext.deps(
     ts_version_from = "//:package.json",
 )
 use_repo(rules_ts_ext, "npm_typescript")
-
-# Bazel 9 compat
-bazel_dep(name = "rules_nodejs", version = "6.7.3", dev_dependency = True, repo_name = None)
-bazel_dep(name = "protobuf", version = "33.4", dev_dependency = True, repo_name = None)

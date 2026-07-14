@@ -32,13 +32,11 @@ You must choose exactly one of the following flags:
 1. To choose the faster performance put this in /.bazelrc:
 
     # passes an argument `--skipLibCheck` to *every* spawn of tsc
-    # Bazel 6.4 or greater: 'common' means 'any command that supports this flag'
     common --@aspect_rules_ts//ts:skipLibCheck=always
 
 2. To choose more correct typechecks, put this in /.bazelrc:
 
     # honor the setting of `skipLibCheck` in the tsconfig.json file
-    # Bazel 6.4 or greater: 'common' means 'any command that supports this flag'
     common --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
 
 ##########################################################

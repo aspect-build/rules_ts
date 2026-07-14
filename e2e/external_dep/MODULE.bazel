@@ -38,6 +38,3 @@ local_path_override(
     module_name = "sub_external",
     path = "./sub_external",
 )
-
-# Override root MODULE with newer versions for bazel9 compat
-bazel_dep(name = "rules_nodejs", version = "6.7.3", dev_dependency = True, repo_name = None)

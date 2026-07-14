@@ -2,6 +2,7 @@
 
 module(
     name = "aspect_rules_ts",
+    bazel_compatibility = [">=7.7.0"],
     compatibility_level = 1,
 )
 
@@ -28,7 +29,6 @@ bazel_dep(name = "aspect_rules_lint", version = "1.13.0", dev_dependency = True)
 bazel_dep(name = "bazelrc-preset.bzl", version = "1.9.2", dev_dependency = True)
 bazel_dep(name = "buildifier_prebuilt", version = "8.2.1.1", dev_dependency = True)
 bazel_dep(name = "rules_go", version = "0.60.0", dev_dependency = True, repo_name = "io_bazel_rules_go")
-bazel_dep(name = "rules_nodejs", version = "6.7.3", dev_dependency = True)  # TODO(rm bazel6): repo_name = None)
 bazel_dep(name = "rules_shell", version = "0.6.1", dev_dependency = True)
 
 rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext", dev_dependency = True)

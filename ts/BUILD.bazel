@@ -1,4 +1,3 @@
-load("@bazel_lib//lib:utils.bzl", bazel_lib_utils = "utils")
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 load("//ts/private:options.bzl", "options")
@@ -127,7 +126,8 @@ bzl_library(
         "@bazel_lib//lib:utils",
         "@bazel_skylib//lib:partial",
         "@bazel_skylib//rules:build_test",
-    ] + (["@bazel_tools//tools/build_defs/repo:cache.bzl"] if bazel_lib_utils.is_bazel_7_or_greater() else []),
+        "@bazel_tools//tools/build_defs/repo:cache.bzl",
+    ],
 )
 
 starlark_doc_extract(
@@ -165,7 +165,8 @@ bzl_library(
         "@bazel_lib//lib:directory_path",
         "@bazel_lib//lib:platform_utils",
         "@bazel_lib//lib:write_source_files",
-    ] + (["@bazel_tools//tools/build_defs/repo:cache.bzl"] if bazel_lib_utils.is_bazel_7_or_greater() else []),
+        "@bazel_tools//tools/build_defs/repo:cache.bzl",
+    ],
 )
 
 starlark_doc_extract(
