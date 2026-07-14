@@ -50,8 +50,8 @@ jobs:
                 - { path: "e2e/worker", slug: "e2e-worker" }
                 bazel:
                 - { id: "bazel-7", version: "7.x", flags: "" }
-                - { id: "bazel-8", version: "8.x", flags: "" }
-                - { id: "bazel-9", version: "9.x", flags: "" }
+                - { id: "bazel-8", version: "8.x", flags: "--bazel-flag=--lockfile_mode=update" }
+                - { id: "bazel-9", version: "9.x", flags: "--bazel-flag=--lockfile_mode=update" }
         env:
             USE_BAZEL_VERSION: ${{ matrix.bazel.version }}
         steps:
