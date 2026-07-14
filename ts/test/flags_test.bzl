@@ -8,7 +8,6 @@ _ActionInfo = provider("test provider", fields = ["actions", "bin_path"])
 
 def _transition_impl(_settings, attr):
     return {
-        "@aspect_rules_ts//ts:supports_workers": attr.supports_workers,
         "@aspect_rules_ts//ts:verbose": attr.verbose,
         "@aspect_rules_ts//ts:skipLibCheck": attr.skip_lib_check,
         "@aspect_rules_ts//ts:generate_tsc_trace": attr.generate_tsc_trace,
@@ -18,7 +17,6 @@ configuration_transition = transition(
     implementation = _transition_impl,
     inputs = [],
     outputs = [
-        "@aspect_rules_ts//ts:supports_workers",
         "@aspect_rules_ts//ts:verbose",
         "@aspect_rules_ts//ts:skipLibCheck",
         "@aspect_rules_ts//ts:generate_tsc_trace",
@@ -36,7 +34,6 @@ _transition_rule = rule(
     implementation = _transition_rule_impl,
     attrs = {
         "target": attr.label(mandatory = True, cfg = configuration_transition),
-        "supports_workers": attr.bool(default = True),
         "verbose": attr.bool(default = False),
         "skip_lib_check": attr.string(default = "honor_tsconfig"),
         "generate_tsc_trace": attr.bool(default = False),
@@ -126,7 +123,7 @@ def _generate_tsc_trace_false_test_impl(ctx):
 
 _generate_tsc_trace_false_test = analysistest.make(_generate_tsc_trace_false_test_impl)
 
-def _ts_project_with_flags(name, supports_workers = None, supports_workers_flag = None, verbose_flag = None, skip_lib_check_flag = None, generate_tsc_trace_flag = None, **kwargs):
+def _ts_project_with_flags(name, verbose_flag = None, skip_lib_check_flag = None, generate_tsc_trace_flag = None, **kwargs):
     write_file(
         name = "{}_write".format(name),
         out = "{}.ts".format(name),
@@ -137,13 +134,11 @@ def _ts_project_with_flags(name, supports_workers = None, supports_workers_flag 
         name = "{}_ts".format(name),
         srcs = ["{}.ts".format(name)],
         tags = ["manual"],
-        supports_workers = supports_workers,
         **kwargs
     )
     _transition_rule(
         name = name,
         target = "{}_ts".format(name),
-        supports_workers = supports_workers_flag,
         verbose = verbose_flag,
         skip_lib_check = skip_lib_check_flag,
         generate_tsc_trace = generate_tsc_trace_flag,

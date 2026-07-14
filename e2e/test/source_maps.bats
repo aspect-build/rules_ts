@@ -46,7 +46,7 @@ teardown() {
 	assert_output -p '{"version":3,"file":"source.js","sourceRoot":"","sources":["../source.ts"],"names":[],"mappings":"AAAA,MAAM,CAAC,GAAW,YAAY,CAAC"}'
 }
 
-@test 'should enable source maps in warm worker' {
+@test 'should enable source maps when added on an incremental build' {
 	workspace
 
 	tsconfig

@@ -5,7 +5,6 @@ load("@aspect_rules_js//js:providers.bzl", "JsInfo", "js_info")
 load("@bazel_lib//lib:copy_file.bzl", "copy_file_action")
 load("@bazel_lib//lib:copy_to_bin.bzl", "COPY_FILE_TO_BIN_TOOLCHAINS", "copy_file_to_bin_action", "copy_files_to_bin_actions")
 load("@bazel_lib//lib:paths.bzl", "to_output_relative_path")
-load("@bazel_lib//lib:platform_utils.bzl", "platform_utils")
 load("@bazel_lib//lib:resource_sets.bzl", "resource_set", "resource_set_attr")
 load("@bazel_skylib//lib:dicts.bzl", "dicts")
 load(":options.bzl", "OptionsInfo", "transpiler_selection_required")
@@ -141,41 +140,7 @@ def _ts_project_impl(ctx):
 
     typecheck_outs = []
 
-    execution_requirements = {}
     executable = ctx.executable.tsc
-
-    supports_workers = options.supports_workers
-    if ctx.attr.supports_workers == 1:
-        supports_workers = True
-    elif ctx.attr.supports_workers == 0:
-        supports_workers = False
-
-    host_is_windows = platform_utils.host_platform_is_windows()
-    if host_is_windows and supports_workers:
-        supports_workers = False
-
-        # buildifier: disable=print
-        print("""\
-WARNING: disabling ts_project workers which are not currently supported on Windows hosts.
-See https://github.com/aspect-build/rules_ts/issues/228 for more details.
-""")
-
-    if ctx.attr.is_typescript_5_or_greater and supports_workers:
-        supports_workers = False
-
-        # buildifier: disable=print
-        print("""\
-WARNING: disabling ts_project workers which are not currently supported with TS >= 5.0.0.
-See https://github.com/aspect-build/rules_ts/issues/361 for more details.
-""")
-
-    if supports_workers:
-        execution_requirements["supports-workers"] = "1"
-
-        # Workers may not be fully hermetic so we don't want to potentially poison the remote cache.
-        execution_requirements["no-remote-cache-upload"] = "1"
-        execution_requirements["worker-key-mnemonic"] = "TsProject"
-        executable = ctx.executable.tsc_worker
 
     common_args = []
 
@@ -283,19 +248,9 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
 
         env = {
             "BAZEL_BINDIR": ctx.bin_dir.path,
+            # Create the marker file by capturing stdout of the action.
+            "JS_BINARY__STDOUT_OUTPUT_FILE": typecheck_output.path,
         }
-
-        # In non-worker mode, we create the marker file by capturing stdout of the action
-        # via the JS_BINARY__STDOUT_OUTPUT_FILE environment variable, but in worker mode, the
-        # persistent worker protocol communicates with the worker process via stdin/stdout, so
-        # the output cannot just be captured. Instead, we tell the worker where to write the
-        # marker file by passing the path via the --bazelValidationFile flag.
-        if supports_workers:
-            typecheck_arguments.use_param_file("@%s", use_always = True)
-            typecheck_arguments.set_param_file_format("multiline")
-            typecheck_arguments.add("--bazelValidationFile", typecheck_output.short_path)
-        else:
-            env["JS_BINARY__STDOUT_OUTPUT_FILE"] = typecheck_output.path
 
         progress_message = ctx.attr.isolated_typecheck_progress_message.format(
             label = ctx.label,
@@ -308,7 +263,6 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             arguments = [typecheck_arguments],
             outputs = typecheck_outputs,
             mnemonic = "TsProjectCheck",
-            execution_requirements = execution_requirements,
             resource_set = resource_set(ctx.attr),
             progress_message = progress_message,
             env = env,
@@ -342,10 +296,6 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
 
         inputs_depset = tsc_inputs_depset if ctx.attr.isolated_typecheck else tsc_transitive_inputs_depset
 
-        if supports_workers:
-            tsc_emit_arguments.use_param_file("@%s", use_always = True)
-            tsc_emit_arguments.set_param_file_format("multiline")
-
         progress_message = ctx.attr.build_progress_message.format(
             label = ctx.label,
             tsconfig_path = tsconfig_path,
@@ -361,7 +311,6 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             arguments = [tsc_emit_arguments],
             outputs = outputs,
             mnemonic = "TsProjectEmit" if ctx.attr.isolated_typecheck else "TsProject",
-            execution_requirements = execution_requirements,
             resource_set = resource_set(ctx.attr),
             progress_message = progress_message,
             env = {

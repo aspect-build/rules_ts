@@ -9,7 +9,7 @@ common --@aspect_rules_ts//ts:default_to_tsc_transpiler
 common:windows --enable_runfiles
 
 # verbose
-common:verbose --@aspect_rules_ts//ts:verbose --worker_verbose
+common:verbose --@aspect_rules_ts//ts:verbose
 
 # Build without the bytes
 common:ci --remote_download_outputs=minimal
