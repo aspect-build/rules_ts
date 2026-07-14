@@ -26,6 +26,13 @@ def _http_archive_version_impl(rctx):
             fail("key 'typescript' not found in either dependencies or devDependencies of %s" % json_path)
         version = ts
 
+    # Note: we can't depend on bazel_skylib because this code is called from
+    # rules_ts_dependencies so it's not "in scope" yet.
+    # So we can't use versions.bzl to parse the version
+    major_version = version.split(".")[0]
+    if major_version.isdigit() and int(major_version) < 5:
+        fail("typescript version {} is not supported, rules_ts requires typescript >= 5.0.0".format(version))
+
     native_typescript_version = NATIVE_TYPESCRIPT_VERSIONS.get(version, {})
     if integrity:
         pass

@@ -15,8 +15,8 @@ rules_ts_ext.deps()
 
 # Example demonstrating that you can also have a second typescript version
 rules_ts_ext.deps(
-    name = "npm_typescript3",
-    ts_version = "3.9.9",
+    name = "npm_typescript5",
+    ts_version = "5.0.4",
 )
 
 # Example of an rc version
@@ -31,7 +31,7 @@ rules_ts_ext.deps(
     name = "npm_typescript-7rc",
     ts_version = "7.0.1-rc",
 )
-use_repo(rules_ts_ext, "npm_typescript", "npm_typescript-56rc", "npm_typescript-7rc", "npm_typescript3")
+use_repo(rules_ts_ext, "npm_typescript", "npm_typescript-56rc", "npm_typescript-7rc", "npm_typescript5")
 
 bazel_dep(name = "sub_external", version = "0.0.0", dev_dependency = True)
 local_path_override(

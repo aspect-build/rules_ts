@@ -40,7 +40,7 @@ teardown() {
 	workspace
 
 	echo "export const a = 1;" >./source.ts
-	tsconfig --root-dir "src"
+	tsconfig --root-dir "src" --exclude-empty
 	ts_project --root_dir "other-src" --src "source.ts"
 
 	run bazel build :foo

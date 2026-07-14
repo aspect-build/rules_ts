@@ -145,8 +145,8 @@
   "moduleExtensions": {
     "@@aspect_rules_ts~//ts:extensions.bzl%ext": {
       "general": {
-        "bzlTransitiveDigest": "QPhGP7/8H/zyx/WSkGp8kH3SKmVHM/vkUGf4YJwcSlI=",
-        "usagesDigest": "b+4KxUIHSK0qAT57/P6Bma+omDPsnk5L/KQnMYkumbc=",
+        "bzlTransitiveDigest": "WV+DuevmiFUeiSXIrDC1IEJov1WdDAy3pSFgQHHEFA0=",
+        "usagesDigest": "En5SiSexpKW8wmqMwvy5J8do84+ImOE6FtqWovuDTg4=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
@@ -162,11 +162,11 @@
               ]
             }
           },
-          "npm_typescript3": {
+          "npm_typescript5": {
             "bzlFile": "@@aspect_rules_ts~//ts/private:npm_repositories.bzl",
             "ruleClassName": "http_archive_version",
             "attributes": {
-              "version": "3.9.9",
+              "version": "5.0.4",
               "integrity": "",
               "urls": [
                 "https://registry.npmjs.org/typescript/-/typescript-{}.tgz"

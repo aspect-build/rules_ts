@@ -184,10 +184,10 @@
   "moduleExtensions": {
     "@@aspect_rules_ts~//ts:extensions.bzl%ext": {
       "general": {
-        "bzlTransitiveDigest": "QPhGP7/8H/zyx/WSkGp8kH3SKmVHM/vkUGf4YJwcSlI=",
+        "bzlTransitiveDigest": "WV+DuevmiFUeiSXIrDC1IEJov1WdDAy3pSFgQHHEFA0=",
         "usagesDigest": "/z4ca+1z/VCydEk0MwLyKPL107p9F5XvIgbvZZhwt3Y=",
         "recordedFileInputs": {
-          "@@//package.json": "cd8727fae682fb136cc7e3577d79627777fa7065835544c833abf00d4d4d7fa4"
+          "@@//package.json": "e8abba115559110ae0bb22355c2817b6387f054074cd53dfae07ea995fe8e37b"
         },
         "recordedDirentsInputs": {},
         "envVariables": {},

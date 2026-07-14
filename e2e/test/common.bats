@@ -30,8 +30,7 @@ bazel_dep(name = "aspect_rules_js", version = "3.0.1")
 
 rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext")
 
-# TODO(#361): upgrade to 5.x
-rules_ts_ext.deps(ts_version = "4.9.5")
+rules_ts_ext.deps(ts_version = "5.6.2")
 use_repo(rules_ts_ext, "npm_typescript")
 EOF
 
@@ -165,6 +164,7 @@ function tsconfig() {
         "declaration": $declaration,
         "noEmit": $no_emit,
         "target": "$target",
+        "module": "$module_resolution",
         "moduleResolution": "$module_resolution",
         "traceResolution": $trace_resolution,
         "extendedDiagnostics": $extended_diagnostics,
