@@ -1,5 +1,6 @@
 """Runtime dependencies fetched from npm"""
 
+load("@bazel_tools//tools/build_defs/repo:cache.bzl", "get_default_canonical_id")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 load("//ts/private:versions.bzl", "NATIVE_TYPESCRIPT_VERSIONS", "TOOL_VERSIONS")
 
@@ -165,10 +166,3 @@ def npm_dependencies(name = "npm_typescript", ts_version_from = None, ts_version
         integrity = ts_integrity,
         urls = ["https://registry.npmjs.org/typescript/-/typescript-{}.tgz"],
     )
-
-# Copy of Bazel's new helper that is not available in Bazel 6
-# https://github.com/bazelbuild/bazel/blob/7a29e3885da88c2b2dd9a07a622b62d7ea81f8a1/tools/build_defs/repo/cache.bzl#L39
-def get_default_canonical_id(rctx, urls):
-    if rctx.os.environ.get("BAZEL_HTTP_RULES_URLS_AS_DEFAULT_CANONICAL_ID") == "0":
-        return ""
-    return " ".join(urls)

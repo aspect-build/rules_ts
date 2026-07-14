@@ -2,8 +2,6 @@ load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@bazel_lib//lib:testing.bzl", "assert_outputs")
 load("@bazel_skylib//lib:partial.bzl", "partial")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
-
-# Note, Bazel 6 starlark has lambda so maybe we can stop using partial
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load(":babel.bzl", "babel")
 load(":tsc.bzl", "tsc_dts", "tsc_js")

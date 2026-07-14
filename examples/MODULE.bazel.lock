@@ -18,7 +18,6 @@
     "https://bcr.bazel.build/modules/apple_support/1.23.1/MODULE.bazel": "53763fed456a968cf919b3240427cf3a9d5481ec5466abc9d5dc51bc70087442",
     "https://bcr.bazel.build/modules/apple_support/1.23.1/source.json": "d888b44312eb0ad2c21a91d026753f330caa48a25c9b2102fae75eb2b0dcfdd2",
     "https://bcr.bazel.build/modules/aspect_bazel_lib/2.14.0/MODULE.bazel": "2b31ffcc9bdc8295b2167e07a757dbbc9ac8906e7028e5170a3708cecaac119f",
-    "https://bcr.bazel.build/modules/aspect_bazel_lib/2.19.2/MODULE.bazel": "30dfabbfae0139b1f0036e01c201dd4c0167da3017f0b7ef3820d78e07622989",
     "https://bcr.bazel.build/modules/aspect_bazel_lib/2.19.3/MODULE.bazel": "253d739ba126f62a5767d832765b12b59e9f8d2bc88cc1572f4a73e46eb298ca",
     "https://bcr.bazel.build/modules/aspect_bazel_lib/2.22.5/MODULE.bazel": "004ba890363d05372a97248c37205ae64b6fa31047629cd2c0895a9d0c7779e8",
     "https://bcr.bazel.build/modules/aspect_bazel_lib/2.22.5/source.json": "ac2c3213df8f985785f1d0aeb7f0f73d5324e6e67d593d9b9470fb74a25d4a9b",
@@ -223,7 +222,7 @@
   "moduleExtensions": {
     "@@aspect_rules_ts~//ts:extensions.bzl%ext": {
       "general": {
-        "bzlTransitiveDigest": "MGoT1ZZeUoONYkvazoZQ2xEWXIwFEuk5LUd+EJ/d98A=",
+        "bzlTransitiveDigest": "QPhGP7/8H/zyx/WSkGp8kH3SKmVHM/vkUGf4YJwcSlI=",
         "usagesDigest": "m9vAevWyTf4y9vIKdK6eSHhJblTDPJcGMXzaYykrt+Y=",
         "recordedFileInputs": {
           "@@//package.json": "7121d883692b35c8aec1e353c7cd9151c628ef4d3450898c20efd036f383a87a"

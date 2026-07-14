@@ -260,7 +260,7 @@
   "moduleExtensions": {
     "//ts:extensions.bzl%ext": {
       "general": {
-        "bzlTransitiveDigest": "4b1PFHvldsRMDnyWCCsId4DCGj44FBytd2/W4ulyGhw=",
+        "bzlTransitiveDigest": "QPhGP7/8H/zyx/WSkGp8kH3SKmVHM/vkUGf4YJwcSlI=",
         "usagesDigest": "TD1QE8SIsIe/1auNN+/8H40h7PindVljd5SMGA2fju4=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},

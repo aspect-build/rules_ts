@@ -11,7 +11,7 @@ def _extension_impl(module_ctx):
     # Prefer the root module's tag when multiple modules request the same repo.
     selected = {}
     for mod in module_ctx.modules:
-        is_root = hasattr(mod, "is_root") and mod.is_root
+        is_root = mod.is_root
         for attr in mod.tags.deps:
             existing = selected.get(attr.name)
             if existing and not is_root:

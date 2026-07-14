@@ -12,6 +12,7 @@ bzl_library(
     visibility = ["//ts:__subpackages__"],
     deps = [
         ":versions",
+        "@bazel_tools//tools/build_defs/repo:cache.bzl",
         "@bazel_tools//tools/build_defs/repo:utils.bzl",
     ],
 )
