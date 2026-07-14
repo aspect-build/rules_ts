@@ -3,6 +3,7 @@
 
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@bazel_lib//lib:testing.bzl", "assert_outputs")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 
 ts_project(
     name = "transpile",
@@ -39,4 +40,23 @@ assert_outputs(
         "declaration_dir/out/types/lib.d.ts",
         "declaration_dir/out/types/lib.d.ts.map",
     ],
+)
+
+# The rootDir/exclude guard must see an "exclude" inherited through the
+# tsconfig extends chain — including when declaration_dir is set, where tsc
+# would otherwise materialize an implicit exclude entry for declarationDir
+# that must not be confused with a user-authored one.
+ts_project(
+    name = "extends_exclude",
+    srcs = ["dir/lib.ts"],
+    declaration = True,
+    declaration_dir = "types_extends",
+    extends = "tsconfig-base.json",
+    root_dir = "dir",
+    tsconfig = "tsconfig-extends.json",
+)
+
+build_test(
+    name = "extends_exclude_test",
+    targets = [":extends_exclude"],
 )
