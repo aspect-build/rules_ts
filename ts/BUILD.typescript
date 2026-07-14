@@ -1,6 +1,6 @@
 "BUILD file inserted into @npm_typescript repository"
 
-load("@aspect_bazel_lib//lib:directory_path.bzl", "directory_path")
+load("@bazel_lib//lib:directory_path.bzl", "directory_path")
 load("@aspect_rules_js//js:defs.bzl", "js_binary")
 load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
 load("@aspect_rules_js//npm/private:npm_package_internal.bzl", "npm_package_internal")
