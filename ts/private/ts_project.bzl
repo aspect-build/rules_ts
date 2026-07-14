@@ -445,7 +445,7 @@ lib = struct(
 
 ts_project = rule(
     doc = """Implementation rule behind the ts_project macro.
-    Most users should use [ts_project](#ts_project) instead.
+    Most users should use [ts_project](#function-ts_project) instead.
 
     This skips conveniences like validation of the tsconfig attributes, default settings
     for srcs and tsconfig, and pre-declaring output files.
