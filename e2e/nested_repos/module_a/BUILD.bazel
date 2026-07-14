@@ -5,6 +5,15 @@ ts_config(
     src = "tsconfig.json",
 )
 
+# A tsconfig consumed by a ts_project in another module, see @module_b//:consumer_shared.
+# The "include" navigates to the consuming repository, listing both the `~` and `+`
+# external repository name separators to work across bazel versions.
+ts_config(
+    name = "tsconfig_shared",
+    src = "tsconfig-shared.json",
+    visibility = ["//visibility:public"],
+)
+
 ts_project(
     name = "content",
     srcs = ["content.ts"],

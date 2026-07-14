@@ -3,6 +3,7 @@
 load("@aspect_rules_js//js:providers.bzl", "JsInfo")
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("//ts:defs.bzl", "ts_project")
 
@@ -164,6 +165,23 @@ def ts_project_test_suite(name):
     _dir_test(
         name = "dir_test",
         target_under_test = "dir",
+    )
+
+    # Pin the content of the resolved tsconfig emitted by the validation action.
+    # This is the contract a replacement resolver (e.g. a native `tsc --showConfig`
+    # action for typescript >= 7) must reproduce.
+    # NB: the golden deliberately has no .json extension: formatters would reformat
+    # it away from the byte-exact validator output.
+    native.filegroup(
+        name = "dir_validation_output",
+        srcs = [":dir"],
+        output_group = "_validation",
+        tags = ["manual"],
+    )
+    diff_test(
+        name = "dir_resolved_tsconfig_test",
+        file1 = "dir.resolved.tsconfig.golden",
+        file2 = ":dir_validation_output",
     )
 
     write_file(

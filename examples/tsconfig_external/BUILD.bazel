@@ -13,5 +13,7 @@ ts_project(
     srcs = [
         "index.ts",
     ],
+    # @tsconfig/strictest sets allowJs: true
+    allow_js = True,
     tsconfig = ":config",
 )

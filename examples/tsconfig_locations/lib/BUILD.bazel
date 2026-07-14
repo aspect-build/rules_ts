@@ -1,0 +1,10 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+# A tsconfig in the parent package
+ts_project(
+    name = "lib",
+    srcs = ["lib.ts"],
+    declaration = True,
+    tsconfig = "//tsconfig_locations:tsconfig_parent",
+    visibility = ["//tsconfig_locations:__pkg__"],
+)

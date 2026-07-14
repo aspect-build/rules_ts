@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+        "allowJs": false,
+        "declaration": true,
+        "declarationMap": false,
+        "emitDeclarationOnly": false,
+        "noEmit": false,
+        "sourceMap": true
+    }
+}

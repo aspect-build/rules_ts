@@ -1,75 +1,9 @@
 'use strict'
 exports.__esModule = true
 var path_1 = require('path')
-// Resolve the tsconfig "extends" chain to a single config, equivalent to what
-// `tsc --showConfig -p <tsconfig>` prints. Classic TypeScript (< 7) exposes the
-// compiler API to node so this runs in-process; native TypeScript (>= 7) ships no
-// JS API, so the same output is obtained by spawning the compiler CLI instead.
-function resolveConfig(tsconfigPath) {
-    var ts
-    try {
-        ts = require('typescript')
-    } catch (e) {
-        ts = null
-    }
-    if (ts && typeof ts.getParsedCommandLineOfConfigFile === 'function') {
-        return resolveConfigViaApi(ts, tsconfigPath)
-    }
-    return resolveConfigViaShowConfig(tsconfigPath)
-}
-function resolveConfigViaApi(ts, tsconfigPath) {
-    var diagnosticsHost = {
-        getCurrentDirectory: function () {
-            return ts.sys.getCurrentDirectory()
-        },
-        getNewLine: function () {
-            return ts.sys.newLine
-        },
-        // Print filenames including their relativeRoot, so they can be located on
-        // disk
-        getCanonicalFileName: function (f) {
-            return f
-        },
-    }
-    var host = {
-        fileExists: ts.sys.fileExists,
-        readFile: ts.sys.readFile,
-        readDirectory: ts.sys.readDirectory,
-        getCurrentDirectory: function () {
-            return ts.sys.getCurrentDirectory()
-        },
-        useCaseSensitiveFileNames: ts.sys.useCaseSensitiveFileNames,
-        onUnRecoverableConfigFileDiagnostic: function (d) {
-            throw new Error(
-                tsconfigPath + ':' + ts.formatDiagnostic(d, diagnosticsHost)
-            )
-        },
-    }
-    var parsed = ts.getParsedCommandLineOfConfigFile(
-        tsconfigPath,
-        undefined,
-        host
-    )
-    // We don't pass the srcs to this action, so it can't know if the program has the right sources.
-    // error TS18002: The 'files' list in config file 'tsconfig.json' is empty.
-    // error TS18003: No inputs were found in config file 'tsconfig.json'. Specified 'include'...
-    var fatalErrors = parsed.errors.filter(function (e) {
-        return e.code !== 18002 && e.code !== 18003
-    })
-    if (fatalErrors.length > 0)
-        throw new Error(
-            tsconfigPath +
-                ':' +
-                ts.formatDiagnostics(fatalErrors, diagnosticsHost)
-        )
-    var config = ts.convertToTSConfig(parsed, tsconfigPath, ts.sys)
-    relativizeConfigPaths(config, tsconfigPath)
-    // Only keep "files" when the original config specified it; a glob-based config
-    // resolves it from this action's inputs (the tsconfig chain, not the srcs).
-    if (!Array.isArray(parsed.raw && parsed.raw.files)) delete config.files
-    return JSON.parse(JSON.stringify(config))
-}
-function resolveConfigViaShowConfig(tsconfigPath) {
+// Resolve the tsconfig options to a single config by spawning `tsc --showConfig`.
+function resolveConfig(tsconfigPath, output) {
+    var fs = require('fs')
     // require('typescript') is blocked by the native package's exports map, but
     // ./package.json is always resolvable; anchor the compiler CLI on it.
     var tscBin = path_1.join(
@@ -77,17 +11,44 @@ function resolveConfigViaShowConfig(tsconfigPath) {
         'bin',
         'tsc'
     )
-    var stdout = require('child_process').execFileSync(
-        process.execPath,
-        [tscBin, '--project', tsconfigPath, '--showConfig'],
-        { encoding: 'utf-8' }
+    // The srcs are not inputs to this action, so resolve a wrapper config declaring
+    // empty "files": TypeScript < 7 --showConfig fails when a config finds no inputs
+    // (TS18003). The wrapper must be alongside the tsconfig so relative paths resolve
+    // identically. NOTE: delete the wrapper once TypeScript < 7 support is removed.
+    var wrapperPath = path_1.join(
+        path_1.dirname(tsconfigPath),
+        (output + '.showconfig.json').replace(/[^\w.-]/g, '_')
     )
+    fs.writeFileSync(
+        wrapperPath,
+        JSON.stringify({
+            extends: './' + path_1.basename(tsconfigPath),
+            files: [],
+        }),
+        'utf-8'
+    )
+    var stdout
+    try {
+        stdout = require('child_process').execFileSync(
+            process.execPath,
+            [tscBin, '--project', wrapperPath, '--showConfig'],
+            { encoding: 'utf-8' }
+        )
+    } catch (e) {
+        // tsc prints config diagnostics to stdout and exits without JSON
+        throw new Error(
+            tsconfigPath +
+                ': tsc --showConfig failed:\n' +
+                (e.stdout || e.message)
+        )
+    } finally {
+        fs.unlinkSync(wrapperPath)
+    }
     var config = JSON.parse(stdout)
     relativizeConfigPaths(config, tsconfigPath)
-    // "files" is resolved from this action's inputs, not the compile, and is never
-    // validated, so drop it.
+    // "files" is the wrapper's empty list, not the compile's, and is never validated.
     delete config.files
-    return JSON.parse(JSON.stringify(config))
+    return config
 }
 // tsc materializes some paths as absolute, e.g. the implicit exclusion of outDir.
 // Absolute paths under the execroot are not hermetic (sandbox paths differ across
@@ -139,10 +100,9 @@ function main(_a) {
     // The Bazel ts_project attributes were json-encoded
     // (on Windows the quotes seem to be quoted wrong, so replace backslash with quotes :shrug:)
     var attrs = JSON.parse(attrsStr.replace(/\\/g, '"'))
-    // The resolved config, in `tsc --showConfig` shape. The checks below read this
-    // JSON only, so they run identically whether it was resolved in-process or by
-    // the native compiler CLI.
-    var config = resolveConfig(tsconfigPath)
+    // The resolved config, in `tsc --showConfig` shape, which the checks below
+    // read in place of the raw tsconfig file(s).
+    var config = resolveConfig(tsconfigPath, output)
     var options = config.compilerOptions || {}
     var configDir = path_1.dirname(path_1.resolve(tsconfigPath))
     var failures = []
@@ -371,38 +331,11 @@ function main(_a) {
         return 1
     }
     // We have to write an output so that Bazel needs to execute this action.
-    // Make the output change whenever the attributes changed.
+    // The resolved config doubles as a debugging aid: it is the flattened view
+    // of the tsconfig that the attributes were validated against.
     require('fs').writeFileSync(
         output,
-        '\n// checked attributes for ' +
-            target +
-            '\n// allow_js:              ' +
-            attrs.allow_js +
-            '\n// composite:             ' +
-            attrs.composite +
-            '\n// declaration:           ' +
-            attrs.declaration +
-            '\n// declaration_map:       ' +
-            attrs.declaration_map +
-            '\n// out_dir:               ' +
-            attrs.out_dir +
-            '\n// declaration_dir:       ' +
-            attrs.declaration_dir +
-            '\n// incremental:           ' +
-            attrs.incremental +
-            '\n// source_map:            ' +
-            attrs.source_map +
-            '\n// no_emit:               ' +
-            attrs.no_emit +
-            '\n// emit_declaration_only: ' +
-            attrs.emit_declaration_only +
-            '\n// ts_build_info_file:    ' +
-            attrs.ts_build_info_file +
-            '\n// preserve_jsx:          ' +
-            attrs.preserve_jsx +
-            '\n// root_dir:              ' +
-            attrs.root_dir +
-            '\n',
+        JSON.stringify(config, null, 4) + '\n',
         'utf-8'
     )
     return 0
@@ -423,5 +356,6 @@ if (require.main === module) {
         }
     } catch (e) {
         console.error(process.argv[1], e)
+        process.exitCode = 1
     }
 }
