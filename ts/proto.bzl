@@ -20,19 +20,6 @@ It's also possible to compile this library into your Gazelle binary.
 
 Note: this API surface is not included in `defs.bzl` to avoid eager loads of rules_proto for all rules_ts users.
 
-Installation
-------------
-
-If you install rules_ts in `WORKSPACE`, you'll need to install the deps of rules_proto, like this:
-
-```
-load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies")
-
-rules_proto_dependencies()
-```
-
-If you use bzlmod/`MODULE.bazel` then no extra install is required.
-
 Future work
 -----------
 

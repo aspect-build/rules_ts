@@ -51,18 +51,8 @@ jobs:
                 - { path: "e2e/worker", slug: "e2e-worker" }
                 bazel:
                 - { id: "bazel-7", version: "7.x", flags: "" }
-                - { id: "bazel-7-wksp", version: "7.x", flags: "--bazel-flag=--enable_bzlmod=false" }
                 - { id: "bazel-8", version: "8.x", flags: "" }
                 - { id: "bazel-9", version: "9.x", flags: "" }
-                exclude:
-                # No WORKSPACE root/examples
-                - { workspace: { slug: "root" }, bazel: { id: "bazel-7-wksp" } }
-                - { workspace: { slug: "examples" }, bazel: { id: "bazel-7-wksp" } }
-                # No WORKSPACE in rules_js v3
-                - { workspace: { slug: "e2e-smoke_rjs3" }, bazel: { id: "bazel-7-wksp" } }
-                # bzlmod-only test
-                - { workspace: { slug: "e2e-bzlmodules" }, bazel: { id: "bazel-7-wksp" } }
-                - { workspace: { slug: "e2e-nested_repos" }, bazel: { id: "bazel-7-wksp" } }
         env:
             USE_BAZEL_VERSION: ${{ matrix.bazel.version }}
         steps:

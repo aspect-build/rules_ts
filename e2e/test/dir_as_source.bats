@@ -11,6 +11,9 @@ teardown() {
 
 @test 'ts_project with a directory in srcs should fail to build' {
 	workspace
+	cat >>MODULE.bazel <<EOF
+bazel_dep(name = "aspect_bazel_lib", version = "2.19.2")
+EOF
 	tsconfig
 	mkdir inputs
 
