@@ -260,7 +260,7 @@
   "moduleExtensions": {
     "//ts:extensions.bzl%ext": {
       "general": {
-        "bzlTransitiveDigest": "WV+DuevmiFUeiSXIrDC1IEJov1WdDAy3pSFgQHHEFA0=",
+        "bzlTransitiveDigest": "RkR48+6Lt+KMO8Bg/pygR6AnfZsD+KSvc1RfSf+lplc=",
         "usagesDigest": "TD1QE8SIsIe/1auNN+/8H40h7PindVljd5SMGA2fju4=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -272,6 +272,7 @@
             "attributes": {
               "version": "5.6.2",
               "integrity": "",
+              "validator_repository": "",
               "urls": [
                 "https://registry.npmjs.org/typescript/-/typescript-{}.tgz"
               ]

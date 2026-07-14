@@ -222,7 +222,7 @@
   "moduleExtensions": {
     "@@aspect_rules_ts~//ts:extensions.bzl%ext": {
       "general": {
-        "bzlTransitiveDigest": "WV+DuevmiFUeiSXIrDC1IEJov1WdDAy3pSFgQHHEFA0=",
+        "bzlTransitiveDigest": "RkR48+6Lt+KMO8Bg/pygR6AnfZsD+KSvc1RfSf+lplc=",
         "usagesDigest": "m9vAevWyTf4y9vIKdK6eSHhJblTDPJcGMXzaYykrt+Y=",
         "recordedFileInputs": {
           "@@//package.json": "7121d883692b35c8aec1e353c7cd9151c628ef4d3450898c20efd036f383a87a"
@@ -237,6 +237,7 @@
               "version": "",
               "version_from": "@@//:package.json",
               "integrity": "",
+              "validator_repository": "",
               "urls": [
                 "https://registry.npmjs.org/typescript/-/typescript-{}.tgz"
               ]

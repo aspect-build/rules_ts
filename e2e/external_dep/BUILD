@@ -1,5 +1,6 @@
 """Tests a `ts_project()` in one workspace being used in another."""
 
+load("@aspect_rules_js//js:defs.bzl", "js_test")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 
@@ -31,11 +32,19 @@ ts_project(
 )
 
 ts_project(
-    name = "lib.ts7rc",
+    name = "lib.ts7",
     srcs = ["lib.ts"],
     composite = True,
-    out_dir = "ts7rc_out",
-    tsc = "@npm_typescript-7rc//:tsc",
+    out_dir = "ts7_out",
+    tsc = "@npm_typescript-7//:tsc",
+    validator = "@npm_typescript-7//:validator",
+)
+
+js_test(
+    name = "validator_version_test",
+    args = ["$(rootpath @npm_typescript-7_validator//:node_modules/typescript/dir)"],
+    data = ["@npm_typescript-7_validator//:node_modules/typescript/dir"],
+    entry_point = "validator_version_test.cjs",
 )
 
 build_test(
@@ -44,7 +53,8 @@ build_test(
         ":lib",
         "lib.ts5",
         "lib.ts56rc",
-        "lib.ts7rc",
+        "lib.ts7",
+        "validator_version_test",
     ],
 )
 

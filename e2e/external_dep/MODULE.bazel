@@ -8,6 +8,7 @@ local_path_override(
     path = "../..",
 )
 
+bazel_dep(name = "aspect_rules_js", version = "3.0.1")
 bazel_dep(name = "bazel_skylib", version = "1.8.2")
 
 rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext")
@@ -26,12 +27,14 @@ rules_ts_ext.deps(
     ts_version = "5.6.1-rc",
 )
 
-# Example of a native rc version
+# Example of a native TypeScript version
 rules_ts_ext.deps(
-    name = "npm_typescript-7rc",
-    ts_version = "7.0.1-rc",
+    name = "npm_typescript-7",
+    ts_version = "7.0.2",
+    validator_ts_integrity = "sha512-bGdAIrZ0wiGDo5l8c++HWtbaNCWTS4UTv7RaTH/ThVIgjkveJt83m74bBHMJkuCbslY8ixgLBVZJIOiQlQTjfQ==",
+    validator_ts_version = "6.0.2",
 )
-use_repo(rules_ts_ext, "npm_typescript", "npm_typescript-56rc", "npm_typescript-7rc", "npm_typescript5")
+use_repo(rules_ts_ext, "npm_typescript", "npm_typescript-56rc", "npm_typescript-7", "npm_typescript-7_validator", "npm_typescript5")
 
 bazel_dep(name = "sub_external", version = "0.0.0", dev_dependency = True)
 local_path_override(

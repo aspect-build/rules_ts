@@ -145,8 +145,8 @@
   "moduleExtensions": {
     "@@aspect_rules_ts~//ts:extensions.bzl%ext": {
       "general": {
-        "bzlTransitiveDigest": "WV+DuevmiFUeiSXIrDC1IEJov1WdDAy3pSFgQHHEFA0=",
-        "usagesDigest": "En5SiSexpKW8wmqMwvy5J8do84+ImOE6FtqWovuDTg4=",
+        "bzlTransitiveDigest": "RkR48+6Lt+KMO8Bg/pygR6AnfZsD+KSvc1RfSf+lplc=",
+        "usagesDigest": "zg6ZOv5TMWbPZ3eJcirOn8nVo+g9a+E4RxKlu+L7qmM=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
@@ -157,6 +157,7 @@
             "attributes": {
               "version": "6.0.3",
               "integrity": "",
+              "validator_repository": "",
               "urls": [
                 "https://registry.npmjs.org/typescript/-/typescript-{}.tgz"
               ]
@@ -168,6 +169,7 @@
             "attributes": {
               "version": "5.0.4",
               "integrity": "",
+              "validator_repository": "",
               "urls": [
                 "https://registry.npmjs.org/typescript/-/typescript-{}.tgz"
               ]
@@ -179,17 +181,31 @@
             "attributes": {
               "version": "5.6.1-rc",
               "integrity": "sha512-E3b2+1zEFu84jB0YQi9BORDjz9+jGbwwy1Zi3G0LUNw7a7cePUrHMRNy8aPh53nXpkFGVHSxIZo5vKTfYaFiBQ==",
+              "validator_repository": "",
               "urls": [
                 "https://registry.npmjs.org/typescript/-/typescript-{}.tgz"
               ]
             }
           },
-          "npm_typescript-7rc": {
+          "npm_typescript-7_validator": {
             "bzlFile": "@@aspect_rules_ts~//ts/private:npm_repositories.bzl",
             "ruleClassName": "http_archive_version",
             "attributes": {
-              "version": "7.0.1-rc",
+              "version": "6.0.2",
+              "integrity": "sha512-bGdAIrZ0wiGDo5l8c++HWtbaNCWTS4UTv7RaTH/ThVIgjkveJt83m74bBHMJkuCbslY8ixgLBVZJIOiQlQTjfQ==",
+              "validator_repository": "",
+              "urls": [
+                "https://registry.npmjs.org/typescript/-/typescript-{}.tgz"
+              ]
+            }
+          },
+          "npm_typescript-7": {
+            "bzlFile": "@@aspect_rules_ts~//ts/private:npm_repositories.bzl",
+            "ruleClassName": "http_archive_version",
+            "attributes": {
+              "version": "7.0.2",
               "integrity": "",
+              "validator_repository": "npm_typescript-7_validator",
               "urls": [
                 "https://registry.npmjs.org/typescript/-/typescript-{}.tgz"
               ]

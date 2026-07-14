@@ -1,10 +1,11 @@
 "BUILD file inserted into @npm_typescript repository"
 
-load("@bazel_lib//lib:directory_path.bzl", "directory_path")
 load("@aspect_rules_js//js:defs.bzl", "js_binary")
 load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
 load("@aspect_rules_js//npm/private:npm_package_internal.bzl", "npm_package_internal")
+load("@bazel_lib//lib:directory_path.bzl", "directory_path")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+
 npm_package_internal(
     name = "npm_typescript",
     src = "package",
@@ -48,8 +49,13 @@ copy_file(
 )
 
 js_binary(
-    name = "validator",
+    name = "validator_impl",
     data = TSC_DATA,
     entry_point = "copy_validator",
+)
+
+alias(
+    name = "validator",
+    actual = "VALIDATOR_ACTUAL",
     visibility = ["//visibility:public"],
 )

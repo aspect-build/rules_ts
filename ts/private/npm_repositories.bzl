@@ -6,25 +6,26 @@ load("//ts/private:versions.bzl", "NATIVE_TYPESCRIPT_VERSIONS", "TOOL_VERSIONS")
 
 _TYPESCRIPT_NATIVE_PACKAGE_PREFIX = "@typescript/"
 
+def parse_typescript_version(content, json_path):
+    p = json.decode(content)
+
+    # Allow use of "resolved.json", see https://github.com/aspect-build/rules_js/pull/1221
+    if "$schema" in p.keys() and p["$schema"] == "https://docs.aspect.build/rules/aspect_rules_js/docs/npm_translate_lock":
+        return p["version"], p["integrity"]
+    elif "devDependencies" in p.keys() and "typescript" in p["devDependencies"]:
+        return p["devDependencies"]["typescript"], None
+    elif "dependencies" in p.keys() and "typescript" in p["dependencies"]:
+        return p["dependencies"]["typescript"], None
+    else:
+        fail("key 'typescript' not found in either dependencies or devDependencies of %s" % json_path)
+
 def _http_archive_version_impl(rctx):
     integrity = None
     if rctx.attr.version:
         version = rctx.attr.version
     else:
         json_path = rctx.path(rctx.attr.version_from)
-        p = json.decode(rctx.read(json_path))
-
-        # Allow use of "resolved.json", see https://github.com/aspect-build/rules_js/pull/1221
-        if "$schema" in p.keys() and p["$schema"] == "https://docs.aspect.build/rules/aspect_rules_js/docs/npm_translate_lock":
-            ts = p["version"]
-            integrity = p["integrity"]
-        elif "devDependencies" in p.keys() and "typescript" in p["devDependencies"]:
-            ts = p["devDependencies"]["typescript"]
-        elif "dependencies" in p.keys() and "typescript" in p["dependencies"]:
-            ts = p["dependencies"]["typescript"]
-        else:
-            fail("key 'typescript' not found in either dependencies or devDependencies of %s" % json_path)
-        version = ts
+        version, integrity = parse_typescript_version(rctx.read(json_path), json_path)
 
     # Note: we can't depend on bazel_skylib because this code is called from
     # rules_ts_dependencies so it's not "in scope" yet.
@@ -65,11 +66,14 @@ def _http_archive_version_impl(rctx):
     native_package_targets = []
     if native_typescript_version:
         native_package_labels, native_package_targets = _link_native_packages(rctx, version, native_typescript_version)
+        if not rctx.attr.validator_repository:
+            fail("native TypeScript version {} requires a validator repository".format(version))
 
     build_file_substitutions = {
         "ts_version": version,
         "# ts_native_package_labels": "".join(native_package_labels),
         "# ts_native_package_targets": "\n".join(native_package_targets),
+        "VALIDATOR_ACTUAL": "@{}//:validator".format(rctx.attr.validator_repository) if native_typescript_version else ":validator_impl",
     }
     rctx.template(
         "BUILD.bazel",
@@ -150,6 +154,7 @@ http_archive_version = repository_rule(
     implementation = _http_archive_version_impl,
     attrs = {
         "integrity": attr.string(doc = "Needed only if the ts version isn't mirrored in `versions.bzl`."),
+        "validator_repository": attr.string(doc = "Repository containing the classic TypeScript validator for a native TypeScript compiler."),
         "version": attr.string(doc = "Explicit version for `urls` placeholder. If provided, the package.json is not read."),
         "urls": attr.string_list(doc = "URLs to fetch from. Each must have one `{}`-style placeholder."),
         "_build_file": attr.label(
@@ -161,7 +166,7 @@ http_archive_version = repository_rule(
 )
 
 # buildifier: disable=function-docstring
-def npm_dependencies(name = "npm_typescript", ts_version_from = None, ts_version = None, ts_integrity = None):
+def npm_dependencies(name = "npm_typescript", ts_version_from = None, ts_version = None, ts_integrity = None, validator_repository = None):
     if (ts_version and ts_version_from) or (not ts_version_from and not ts_version):
         fail("""Exactly one of 'ts_version' or 'ts_version_from' must be set.""")
 
@@ -171,5 +176,6 @@ def npm_dependencies(name = "npm_typescript", ts_version_from = None, ts_version
         version = ts_version,
         version_from = ts_version_from,
         integrity = ts_integrity,
+        validator_repository = validator_repository or "",
         urls = ["https://registry.npmjs.org/typescript/-/typescript-{}.tgz"],
     )

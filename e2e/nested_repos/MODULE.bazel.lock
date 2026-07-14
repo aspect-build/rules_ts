@@ -146,7 +146,7 @@
   "moduleExtensions": {
     "@@aspect_rules_ts~//ts:extensions.bzl%ext": {
       "general": {
-        "bzlTransitiveDigest": "WV+DuevmiFUeiSXIrDC1IEJov1WdDAy3pSFgQHHEFA0=",
+        "bzlTransitiveDigest": "RkR48+6Lt+KMO8Bg/pygR6AnfZsD+KSvc1RfSf+lplc=",
         "usagesDigest": "QQrKqBIMeJ2QsnnVGW4HXt6/cOsu2PFEVQ6z3JbkYk4=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -158,6 +158,7 @@
             "attributes": {
               "version": "5.9.2",
               "integrity": "",
+              "validator_repository": "",
               "urls": [
                 "https://registry.npmjs.org/typescript/-/typescript-{}.tgz"
               ]
