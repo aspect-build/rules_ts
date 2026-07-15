@@ -8,9 +8,16 @@ load("//ts/private:npm_repositories.bzl", "npm_dependencies")
 def _extension_impl(module_ctx):
     # Prefer the root module's tag when multiple modules request the same repo.
     selected = {}
+    root_direct_deps = {}
+    root_direct_dev_deps = {}
     for mod in module_ctx.modules:
         is_root = hasattr(mod, "is_root") and mod.is_root
         for attr in mod.tags.deps:
+            if is_root:
+                if module_ctx.is_dev_dependency(attr):
+                    root_direct_dev_deps[attr.name] = None
+                else:
+                    root_direct_deps[attr.name] = None
             existing = selected.get(attr.name)
             if existing and not is_root:
                 # Validate that non-root modules don't specify conflicting versions
@@ -54,6 +61,25 @@ To resolve this conflict, the root module should explicitly specify the desired 
             ts_version_from = attr.ts_version_from,
             ts_integrity = attr.ts_integrity,
         )
+
+    # Bazel <6.2 lacks module_ctx.extension_metadata
+    if not hasattr(module_ctx, "extension_metadata"):
+        return None
+
+    # A repo requested by both dev and non-dev usages of the root module is a non-dev dep.
+    for name in root_direct_deps.keys():
+        root_direct_dev_deps.pop(name, None)
+
+    metadata_kwargs = {}
+    if hasattr(module_ctx, "watch"):
+        # Bazel 7.1+, the same release that added `reproducible`
+        metadata_kwargs["reproducible"] = True
+
+    return module_ctx.extension_metadata(
+        root_module_direct_deps = root_direct_deps.keys(),
+        root_module_direct_dev_deps = root_direct_dev_deps.keys(),
+        **metadata_kwargs
+    )
 
 ext = module_extension(
     implementation = _extension_impl,
