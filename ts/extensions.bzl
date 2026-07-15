@@ -10,9 +10,16 @@ LATEST_TYPESCRIPT_VERSION = TOOL_VERSIONS.keys()[-1]
 def _extension_impl(module_ctx):
     # Prefer the root module's tag when multiple modules request the same repo.
     selected = {}
+    root_direct_deps = {}
+    root_direct_dev_deps = {}
     for mod in module_ctx.modules:
         is_root = mod.is_root
         for attr in mod.tags.deps:
+            if is_root:
+                if module_ctx.is_dev_dependency(attr):
+                    root_direct_dev_deps[attr.name] = None
+                else:
+                    root_direct_deps[attr.name] = None
             existing = selected.get(attr.name)
             if existing and not is_root:
                 # Validate that non-root modules don't specify conflicting versions
@@ -44,7 +51,7 @@ To resolve this conflict, the root module should explicitly specify the desired 
 
     for entry in selected.values():
         attr = entry["attr"]
-        if attr.ts_version_from and hasattr(module_ctx, "watch"):
+        if attr.ts_version_from:
             module_ctx.watch(attr.ts_version_from)
 
         ts_version = attr.ts_version
@@ -56,6 +63,17 @@ To resolve this conflict, the root module should explicitly specify the desired 
             ts_version_from = attr.ts_version_from,
             ts_integrity = attr.ts_integrity,
         )
+
+    # A repo requested by both dev and non-dev usages of the root module is a non-dev dep.
+    for name in root_direct_deps.keys():
+        root_direct_dev_deps.pop(name, None)
+
+    return module_ctx.extension_metadata(
+        root_module_direct_deps = root_direct_deps.keys(),
+        root_module_direct_dev_deps = root_direct_dev_deps.keys(),
+        # Reproducible: every fetch is pinned by ts_integrity or the integrity mirrored in ts/private/versions.bzl.
+        reproducible = True,
+    )
 
 ext = module_extension(
     implementation = _extension_impl,

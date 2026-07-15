@@ -220,43 +220,6 @@
   },
   "selectedYankedVersions": {},
   "moduleExtensions": {
-    "@@aspect_rules_ts~//ts:extensions.bzl%ext": {
-      "general": {
-        "bzlTransitiveDigest": "WV+DuevmiFUeiSXIrDC1IEJov1WdDAy3pSFgQHHEFA0=",
-        "usagesDigest": "m9vAevWyTf4y9vIKdK6eSHhJblTDPJcGMXzaYykrt+Y=",
-        "recordedFileInputs": {
-          "@@//package.json": "7121d883692b35c8aec1e353c7cd9151c628ef4d3450898c20efd036f383a87a"
-        },
-        "recordedDirentsInputs": {},
-        "envVariables": {},
-        "generatedRepoSpecs": {
-          "npm_typescript": {
-            "bzlFile": "@@aspect_rules_ts~//ts/private:npm_repositories.bzl",
-            "ruleClassName": "http_archive_version",
-            "attributes": {
-              "version": "",
-              "version_from": "@@//:package.json",
-              "integrity": "",
-              "urls": [
-                "https://registry.npmjs.org/typescript/-/typescript-{}.tgz"
-              ]
-            }
-          }
-        },
-        "recordedRepoMappingEntries": [
-          [
-            "aspect_rules_ts~",
-            "aspect_rules_ts",
-            "aspect_rules_ts~"
-          ],
-          [
-            "aspect_rules_ts~",
-            "bazel_tools",
-            "bazel_tools"
-          ]
-        ]
-      }
-    },
     "@@aspect_tools_telemetry~//:extension.bzl%telemetry": {
       "general": {
         "bzlTransitiveDigest": "4w9RM0xjdKo1crk5zL20a/TuhqO0P1z1LsuXDneBXD4=",
