@@ -1,3 +1,5 @@
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("//ts:defs.bzl", "ts_project")
 load(":flags_test.bzl", "ts_project_flags_test_suite")
 load(":mock_transpiler.bzl", "mock")
@@ -28,4 +30,96 @@ ts_project(
             "sourceMap": True,
         },
     },
+)
+
+# Validation of tsconfig options that tsc treats as implied by other options
+# (varying across TypeScript versions); validation must accept these without
+# the corresponding ts_project attribute being set.
+
+write_file(
+    name = "implied_bundler_ts",
+    out = "implied_bundler.ts",
+    content = ["export const a = 1"],
+)
+
+write_file(
+    name = "tsconfig_implied_bundler",
+    out = "tsconfig_implied_bundler.json",
+    # `moduleResolution: bundler` implies resolveJsonModule on all TypeScript 5.x
+    content = ['{"compilerOptions": {"module": "esnext", "moduleResolution": "bundler"}, "files": ["implied_bundler.ts"]}'],
+)
+
+ts_project(
+    name = "implied_bundler",
+    srcs = [":implied_bundler_ts"],
+    tsconfig = ":tsconfig_implied_bundler",
+)
+
+write_file(
+    name = "implied_check_js_ts",
+    out = "implied_check_js.ts",
+    content = ["export const a = 1"],
+)
+
+write_file(
+    name = "tsconfig_implied_check_js",
+    out = "tsconfig_implied_check_js.json",
+    # `checkJs` implies allowJs
+    content = ['{"compilerOptions": {"checkJs": true}, "files": ["implied_check_js.ts"]}'],
+)
+
+ts_project(
+    name = "implied_check_js",
+    srcs = [":implied_check_js_ts"],
+    tsconfig = ":tsconfig_implied_check_js",
+)
+
+write_file(
+    name = "implied_nodenext_ts",
+    out = "implied_nodenext.ts",
+    content = ["export const a = 1"],
+)
+
+write_file(
+    name = "tsconfig_implied_nodenext",
+    out = "tsconfig_implied_nodenext.json",
+    # `module: nodenext` implies resolveJsonModule (and more) on TypeScript 5.9,
+    # while 6.0 materializes only moduleResolution/moduleDetection
+    content = ['{"compilerOptions": {"module": "nodenext"}, "files": ["implied_nodenext.ts"]}'],
+)
+
+ts_project(
+    name = "implied_nodenext",
+    srcs = [":implied_nodenext_ts"],
+    tsconfig = ":tsconfig_implied_nodenext",
+)
+
+write_file(
+    name = "implied_composite_ts",
+    out = "implied_composite.ts",
+    content = ["export const a = 1"],
+)
+
+write_file(
+    name = "tsconfig_implied_composite",
+    out = "tsconfig_implied_composite.json",
+    # `composite` implies declaration and incremental on all versions
+    content = ['{"compilerOptions": {"composite": true}, "files": ["implied_composite.ts"]}'],
+)
+
+ts_project(
+    name = "implied_composite",
+    srcs = [":implied_composite_ts"],
+    composite = True,
+    tsconfig = ":tsconfig_implied_composite",
+)
+
+build_test(
+    name = "validation_implied_options_test",
+    targets = [
+        ":implied_bundler",
+        ":implied_check_js",
+        ":implied_composite",
+        ":implied_nodenext",
+    ],
 )
