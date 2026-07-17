@@ -257,3 +257,37 @@ EOF
 	assert_output -p "outDir in the tsconfig resolves to"
 	assert_output -p "which is a parent of the package directory"
 }
+
+@test 'When a native TypeScript (>= 7) project attribute does not match the tsconfig, validation fails' {
+	# The native compiler ships no JS API, so the default validator resolves the
+	# config by spawning its tsc --showConfig rather than the compiler API.
+	workspace --version 7.0.1-rc
+
+	echo "export const a = 1;" >./source.ts
+
+	cat >tsconfig.json <<EOF
+{
+    "compilerOptions": {
+        "composite": true
+    }
+}
+EOF
+
+	cat >BUILD.bazel <<EOF
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "foo",
+    srcs = ["source.ts"],
+    tsconfig = "tsconfig.json",
+    composite = True,
+    out_dir = "out",
+    declaration_map = True,
+)
+EOF
+
+	run bazel build :foo
+	assert_failure
+	assert_output -p 'declaration_map'
+	assert_output -p 'declarationMap'
+}
