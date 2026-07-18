@@ -12,6 +12,6 @@ local_path_override(
 
 bazel_dep(name = "bazel_skylib", version = "1.8.2", dev_dependency = True)
 
-rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext", dev_dependency = True)
-rules_ts_ext.deps()
-use_repo(rules_ts_ext, "npm_typescript")
+typescript = use_extension("@aspect_rules_ts//ts:extensions.bzl", "typescript", dev_dependency = True)
+typescript.toolchain()
+use_repo(typescript, "npm_typescript")

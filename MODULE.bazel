@@ -30,9 +30,9 @@ bazel_dep(name = "bazelrc-preset.bzl", version = "1.9.2", dev_dependency = True)
 bazel_dep(name = "buildifier_prebuilt", version = "8.2.1.1", dev_dependency = True)
 bazel_dep(name = "rules_shell", version = "0.6.1", dev_dependency = True)
 
-rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext", dev_dependency = True)
-rules_ts_ext.deps(ts_version = "5.6.2")
-use_repo(rules_ts_ext, "npm_typescript")
+typescript = use_extension("@aspect_rules_ts//ts:extensions.bzl", "typescript", dev_dependency = True)
+typescript.toolchain(version = "5.6.2")
+use_repo(typescript, "npm_typescript")
 
 ####### Version bumps of indirect dependencies ########
 
