@@ -5,6 +5,8 @@ function workspace() {
 	local rules_ts_path="$(realpath $BATS_TEST_DIRNAME/../../)"
 	local -i is_npm_translate_lock=0
 	local -i no_convenience_symlinks=0
+	# TODO(#361): upgrade the default to 5.x
+	local ts_version="4.9.5"
 	while (($# > 0)); do
 		case "$1" in
 		-t | --npm-translate-lock)
@@ -13,6 +15,11 @@ function workspace() {
 			;;
 		-t | --noconvenience-symlinks)
 			no_convenience_symlinks=1
+			shift
+			;;
+		--version)
+			shift
+			ts_version="$1"
 			shift
 			;;
 		*) break ;;
@@ -28,8 +35,7 @@ local_repository(
 
 load("@aspect_rules_ts//ts:repositories.bzl", "rules_ts_dependencies")
 
-# TODO(#361): upgrade to 5.x
-rules_ts_dependencies(ts_version = "4.9.5")
+rules_ts_dependencies(ts_version = "$ts_version")
 
 load("@aspect_rules_js//js:repositories.bzl", "rules_js_dependencies")
 

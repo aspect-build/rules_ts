@@ -23,6 +23,11 @@ rules_ts_dependencies(
     ts_version = "7.0.1-rc",
 )
 
+rules_ts_dependencies(
+    name = "npm_typescript-59",
+    ts_version = "5.9.2",
+)
+
 # NOTE: only required on non-bzlmod where the sub_external/WORKSPACE is not loaded to declare npm_typescript2
 rules_ts_dependencies(
     name = "npm_typescript2",
