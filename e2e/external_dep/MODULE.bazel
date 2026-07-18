@@ -31,7 +31,13 @@ rules_ts_ext.deps(
     name = "npm_typescript-7rc",
     ts_version = "7.0.1-rc",
 )
-use_repo(rules_ts_ext, "npm_typescript", "npm_typescript-56rc", "npm_typescript-7rc", "npm_typescript5")
+
+# TypeScript 5.9, where `module: nodenext` implies resolveJsonModule
+rules_ts_ext.deps(
+    name = "npm_typescript-59",
+    ts_version = "5.9.2",
+)
+use_repo(rules_ts_ext, "npm_typescript", "npm_typescript-56rc", "npm_typescript-59", "npm_typescript-7rc", "npm_typescript5")
 
 bazel_dep(name = "sub_external", version = "0.0.0", dev_dependency = True)
 local_path_override(
