@@ -184,6 +184,42 @@ def ts_project_test_suite(name):
         file2 = ":dir_validation_output",
     )
 
+    # When "exclude" is unspecified, tsc materializes the implicit exclusion of outDir
+    # as an ABSOLUTE path, which the validator must relativize for hermetic output.
+    # The golden pins that relativization, including on windows where tsc prints
+    # forward-slash absolute paths.
+    write_file(
+        name = "implicit_exclude_ts",
+        out = "implicit_exclude.ts",
+        content = ["export const a = 1"],
+        tags = ["manual"],
+    )
+    write_file(
+        name = "tsconfig_implicit_exclude",
+        out = "tsconfig_implicit_exclude.json",
+        content = ['{"compilerOptions": {"declaration": true, "outDir": "implicit_exclude_out"}, "files": ["implicit_exclude.ts"]}'],
+        tags = ["manual"],
+    )
+    ts_project(
+        name = "implicit_exclude",
+        srcs = [":implicit_exclude_ts"],
+        declaration = True,
+        out_dir = "implicit_exclude_out",
+        tsconfig = ":tsconfig_implicit_exclude",
+        tags = ["manual"],
+    )
+    native.filegroup(
+        name = "implicit_exclude_validation_output",
+        srcs = [":implicit_exclude"],
+        output_group = "_validation",
+        tags = ["manual"],
+    )
+    diff_test(
+        name = "implicit_exclude_resolved_tsconfig_test",
+        file1 = "implicit_exclude.resolved.tsconfig.golden",
+        file2 = ":implicit_exclude_validation_output",
+    )
+
     write_file(
         name = "use_dir_ts",
         out = "use_dir.ts",
