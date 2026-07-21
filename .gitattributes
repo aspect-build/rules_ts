@@ -2,6 +2,10 @@
 docs/rules.md         linguist-generated
 examples/**/*_pb.d.ts linguist-generated
 
+# Goldens are byte-compared against generated output, which always uses LF;
+# prevent autocrlf checkouts (e.g. windows CI) from converting them.
+*.golden text eol=lf
+
 ####################################
 # Configuration for 'git archive'
 # see https://git-scm.com/docs/git-archive/2.40.0#ATTRIBUTES
