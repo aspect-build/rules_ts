@@ -1,0 +1,6 @@
+{
+    "compilerOptions": {
+        "declaration": true
+    },
+    "include": ["../module_b~/shared.ts", "../module_b+/shared.ts"]
+}

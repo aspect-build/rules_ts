@@ -15,3 +15,15 @@ ts_project(
     visibility = ["//visibility:public"],
     deps = ["@module_a//:content"],
 )
+
+# Validate against a tsconfig owned by another module: both resolution and the
+# validator's temporary wrapper config happen in the other repository's directory.
+# The `declaration` attribute mirrors an option set only in that tsconfig, so
+# validation fails if resolution breaks.
+ts_project(
+    name = "consumer_shared",
+    srcs = ["shared.ts"],
+    declaration = True,
+    tsconfig = "@module_a//:tsconfig_shared",
+    visibility = ["//visibility:public"],
+)

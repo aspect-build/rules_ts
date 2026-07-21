@@ -6,11 +6,13 @@ load(":ts_lib.bzl", _lib = "lib")
 def _validate_action(ctx, tsconfig, tsconfig_deps):
     """Create an action to validate the ts_project attributes against the tsconfig.json properties.
 
+The validator invokes the equivalent of `tsc --showConfig` programmatically to flatten
+the tsconfig "extends" chain, checks the attributes against the resolved config, and
+writes the resolved config as the validation output.
+
 Assumes all tsconfig file deps are already copied to the bin directory.
 """
-
-    # Bazel validation actions must still produce an output file.
-    marker = ctx.actions.declare_file("%s_params.validation" % ctx.label.name)
+    resolved = ctx.actions.declare_file("%s.resolved.tsconfig.json" % ctx.label.name)
 
     arguments = ctx.actions.args()
     config = struct(
@@ -32,7 +34,7 @@ Assumes all tsconfig file deps are already copied to the bin directory.
     )
     arguments.add_all([
         to_output_relative_path(tsconfig),
-        to_output_relative_path(marker),
+        to_output_relative_path(resolved),
         str(ctx.label),
         _lib.join(ctx.label.workspace_root, ctx.label.package),
         json.encode(config),
@@ -41,7 +43,7 @@ Assumes all tsconfig file deps are already copied to the bin directory.
     ctx.actions.run(
         executable = ctx.executable.validator,
         inputs = tsconfig_deps,
-        outputs = [marker],
+        outputs = [resolved],
         arguments = [arguments],
         mnemonic = "TsValidateOptions",
         env = {
@@ -50,7 +52,7 @@ Assumes all tsconfig file deps are already copied to the bin directory.
         use_default_shell_env = True,
     )
 
-    return [marker]
+    return [resolved]
 
 lib = struct(
     validation_action = _validate_action,

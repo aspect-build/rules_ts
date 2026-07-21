@@ -1,0 +1,34 @@
+"""Validation of tsconfig files located outside the ts_project package.
+
+The validator resolves the tsconfig (and writes its temporary wrapper config)
+in the directory containing the tsconfig, wherever that is: a parent package
+(see //tsconfig_locations/lib), a child package (":use_child") or another
+repository (see e2e/nested_repos). The `declaration` attribute mirrors an
+option set only in the tsconfig, so validation fails if resolution breaks.
+"""
+
+load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+
+# The tsconfig used by the child package //tsconfig_locations/lib
+ts_config(
+    name = "tsconfig_parent",
+    src = "tsconfig-parent.json",
+    visibility = [":__subpackages__"],
+)
+
+# A tsconfig in a child package
+ts_project(
+    name = "use_child",
+    srcs = ["child_user.ts"],
+    declaration = True,
+    tsconfig = "//tsconfig_locations/config:tsconfig",
+)
+
+build_test(
+    name = "test",
+    targets = [
+        ":use_child",
+        "//tsconfig_locations/lib",
+    ],
+)

@@ -7,7 +7,10 @@ build_test(
 
 build_test(
     name = "module_b_consumer_test",
-    targets = ["@module_b//:consumer"],
+    targets = [
+        "@module_b//:consumer",
+        "@module_b//:consumer_shared",
+    ],
 )
 
 build_test(
