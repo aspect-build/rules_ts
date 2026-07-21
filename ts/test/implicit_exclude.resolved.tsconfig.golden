@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "declaration": true,
+        "outDir": "./implicit_exclude_out"
+    },
+    "exclude": [
+        "./implicit_exclude_out"
+    ]
+}

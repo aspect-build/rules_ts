@@ -56,16 +56,20 @@ function resolveConfig(tsconfigPath, output) {
 // cwd is BAZEL_BINDIR (bazel-out/<config>/bin), three segments below the execroot.
 function relativizeConfigPaths(config, tsconfigPath) {
     var configDir = path_1.dirname(path_1.resolve(tsconfigPath))
-    var execroot = path_1.resolve(process.cwd(), '..', '..', '..')
+    // tsc prints paths with forward slashes on all platforms; compare and emit
+    // forward slashes so windows behaves identically.
+    var execroot = path_1
+        .resolve(process.cwd(), '..', '..', '..')
+        .replace(/\\/g, '/')
     function relativize(p) {
         if (
             typeof p !== 'string' ||
             !path_1.isAbsolute(p) ||
-            !p.startsWith(execroot + path_1.sep)
+            !p.startsWith(execroot + '/')
         ) {
             return p
         }
-        var rel = path_1.relative(configDir, p)
+        var rel = path_1.relative(configDir, p).replace(/\\/g, '/')
         return rel.startsWith('..') ? rel : './' + rel
     }
     var arrayKeys = ['files', 'include', 'exclude']
