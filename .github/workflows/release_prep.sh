@@ -24,13 +24,13 @@ Add to your \`MODULE.bazel\` file:
 \`\`\`starlark
 bazel_dep(name = "aspect_rules_ts", version = "${TAG:1}")
 
-rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext", dev_dependency = True)
+typescript = use_extension("@aspect_rules_ts//ts:extensions.bzl", "typescript", dev_dependency = True)
 
-rules_ts_ext.deps(
-    ts_version_from = "//:package.json",
+typescript.deps(
+    version_from = "//:package.json",
 )
 
-use_repo(rules_ts_ext, "npm_typescript")
+use_repo(typescript, "npm_typescript")
 \`\`\`
 
 [Bzlmod]: https://bazel.build/build/bzlmod

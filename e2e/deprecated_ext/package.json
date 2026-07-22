@@ -1,0 +1,6 @@
+{
+    "name": "deprecated_ext",
+    "dependencies": {
+        "typescript": "5.9.2"
+    }
+}

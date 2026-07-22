@@ -14,9 +14,9 @@ local_path_override(
 bazel_dep(name = "aspect_rules_js", version = "2.0.0", dev_dependency = True)
 bazel_dep(name = "bazel_skylib", version = "1.8.2", dev_dependency = True)
 
-rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext", dev_dependency = True)
-rules_ts_ext.deps()
-use_repo(rules_ts_ext, "npm_typescript")
+typescript = use_extension("@aspect_rules_ts//ts:extensions.bzl", "typescript", dev_dependency = True)
+typescript.deps()
+use_repo(typescript, "npm_typescript")
 
 # Override root MODULE with newer versions for bazel9 compat
 bazel_dep(name = "rules_nodejs", version = "6.7.3", dev_dependency = True, repo_name = None)
