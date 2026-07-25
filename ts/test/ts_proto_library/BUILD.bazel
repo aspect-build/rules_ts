@@ -5,6 +5,8 @@
 # database.
 load("@com_google_protobuf//bazel:proto_library.bzl", "proto_library")
 
+package(default_testonly = True)
+
 proto_library(
     name = "bar_proto",
     srcs = [

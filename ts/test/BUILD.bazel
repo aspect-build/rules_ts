@@ -8,6 +8,8 @@ load(":ts_config_test.bzl", "ts_config_test_suite")
 load(":ts_lib_test.bzl", "ts_lib_test_suite")
 load(":ts_project_test.bzl", "ts_project_test_suite")
 
+package(default_testonly = True)
+
 transpiler_test_suite()
 
 ts_lib_test_suite(name = "ts_lib_test")
