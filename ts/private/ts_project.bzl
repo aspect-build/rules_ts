@@ -13,6 +13,8 @@ load(":ts_config.bzl", "TsConfigInfo")
 load(":ts_lib.bzl", "COMPILER_OPTION_ATTRS", "OUTPUT_ATTRS", "STD_ATTRS", _lib = "lib")
 load(":ts_validate_options.bzl", _validate_lib = "lib")
 
+SPAWN_BINARY_TOOLCHAIN_TYPE = "@bazel_lib//lib:spawn_binary_toolchain_type"
+
 # Forked from js_lib_helpers.js_lib_helpers.gather_files_from_js_providers to not
 # include any sources; only transitive types & npm sources
 def _gather_types_from_js_infos(targets):
@@ -302,15 +304,30 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             tsconfig_path = tsconfig_path,
         )
 
+        # All we care about is whether this action succeeded or not, but Bazel
+        # requires every action to have an output. Wrap the invocation in
+        # bazel_lib's spawn_binary to capture stderr into an output file. We
+        # capture stderr rather than stdout so that tsc's diagnostics still
+        # reach the console when type-checking fails.
+        spawn_binary_toolchain = ctx.toolchains[SPAWN_BINARY_TOOLCHAIN_TYPE]
+        if not spawn_binary_toolchain:
+            fail("ts_project target {} requires the spawn_binary toolchain.".format(ctx.label))
+        wrapper_arguments = ctx.actions.args()
+        wrapper_arguments.add("--stderr", typecheck_output)
+        wrapper_arguments.add("--")
+        wrapper_arguments.add(executable)
+
         ctx.actions.run(
-            executable = executable,
+            executable = spawn_binary_toolchain.spawn_binary_info.bin,
             inputs = tsc_transitive_inputs_depset,
-            arguments = [typecheck_arguments],
+            tools = [ctx.attr.tsc[DefaultInfo].files_to_run],
+            arguments = [wrapper_arguments, typecheck_arguments],
             outputs = typecheck_outputs,
             mnemonic = "TsProjectCheck",
             execution_requirements = execution_requirements,
             resource_set = resource_set(ctx.attr),
             progress_message = progress_message,
+            toolchain = SPAWN_BINARY_TOOLCHAIN_TYPE,
             env = env,
         )
     else:
@@ -452,5 +469,7 @@ ts_project = rule(
     """,
     implementation = lib.implementation,
     attrs = lib.attrs,
-    toolchains = COPY_FILE_TO_BIN_TOOLCHAINS,
+    toolchains = COPY_FILE_TO_BIN_TOOLCHAINS + [
+        config_common.toolchain_type(SPAWN_BINARY_TOOLCHAIN_TYPE, mandatory = False),
+    ],
 )
