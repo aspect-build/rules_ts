@@ -18,7 +18,7 @@ teardown() {
 
 	cat >>BUILD.bazel <<EOF
 
-load("@aspect_bazel_lib//lib:copy_directory.bzl", "copy_directory")
+load("@bazel_lib//lib:copy_directory.bzl", "copy_directory")
 
 copy_directory(
     name = "code_generation",

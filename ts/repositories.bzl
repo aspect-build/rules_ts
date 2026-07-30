@@ -29,17 +29,17 @@ def rules_ts_bazel_dependencies():
     )
 
     http_archive(
-        name = "aspect_bazel_lib",
-        sha256 = "40ba9d0f62deac87195723f0f891a9803a7b720d7b89206981ca5570ef9df15b",
-        strip_prefix = "bazel-lib-2.14.0",
-        url = "https://github.com/bazel-contrib/bazel-lib/releases/download/v2.14.0/bazel-lib-v2.14.0.tar.gz",
+        name = "bazel_lib",
+        integrity = "sha256-/Q/k35treDfV/XZcBP/OpGJTCgiz2YYn+2vmKmk/ThI=",
+        strip_prefix = "bazel-lib-3.1.0",
+        url = "https://github.com/bazel-contrib/bazel-lib/releases/download/v3.1.0/bazel-lib-v3.1.0.tar.gz",
     )
 
     http_archive(
         name = "aspect_rules_js",
-        sha256 = "6b7e73c35b97615a09281090da3645d9f03b2a09e8caa791377ad9022c88e2e6",
-        strip_prefix = "rules_js-2.0.0",
-        url = "https://github.com/aspect-build/rules_js/releases/download/v2.0.0/rules_js-v2.0.0.tar.gz",
+        integrity = "sha256-bkY3pjrL0soID0Y8sY/A10OfJAGtv+ACjz9FRMnrgIU=",
+        strip_prefix = "rules_js-2.8.1",
+        url = "https://github.com/aspect-build/rules_js/releases/download/v2.8.1/rules_js-v2.8.1.tar.gz",
     )
 
     http_archive(

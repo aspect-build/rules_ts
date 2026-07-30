@@ -85,8 +85,49 @@ load("@npm//:repositories.bzl", "npm_repositories")
 
 npm_repositories()
 
-# Register aspect_bazel_lib toolchains;
-# If you use npm_translate_lock or npm_import from aspect_rules_js you can omit this block.
-load("@aspect_bazel_lib//lib:repositories.bzl", "aspect_bazel_lib_dependencies")
+load(
+    "@bazel_lib//lib:repositories.bzl",
+    "bazel_lib_dependencies",
+    "register_bats_toolchains",
+    "register_copy_directory_toolchains",
+    "register_copy_to_directory_toolchains",
+    "register_coreutils_toolchains",
+    "register_expand_template_toolchains",
+    "register_zstd_toolchains",
+)
 
-aspect_bazel_lib_dependencies()
+# Required bazel-lib dependencies
+bazel_lib_dependencies()
+
+# Required rules_shell dependencies
+load("@rules_shell//shell:repositories.bzl", "rules_shell_dependencies", "rules_shell_toolchains")
+
+rules_shell_dependencies()
+
+rules_shell_toolchains()
+
+# Register bazel-lib toolchains. rules_js_register_toolchains() above already
+# registers copy_directory/copy_to_directory/coreutils toolchains from the
+# legacy aspect_bazel_lib (still used internally by aspect_rules_js), so
+# register bazel_lib's versions under distinct repo names to avoid colliding
+# with those, rather than calling bazel_lib_register_toolchains() directly.
+register_copy_directory_toolchains(name = "bazel_lib_copy_directory")
+
+register_copy_to_directory_toolchains(name = "bazel_lib_copy_to_directory")
+
+register_coreutils_toolchains(name = "bazel_lib_coreutils")
+
+register_expand_template_toolchains()
+
+register_zstd_toolchains()
+
+register_bats_toolchains()
+
+# Create the host platform repository transitively required by bazel-lib
+load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
+load("@platforms//host:extension.bzl", "host_platform_repo")
+
+maybe(
+    host_platform_repo,
+    name = "host_platform",
+)

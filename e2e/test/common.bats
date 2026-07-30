@@ -45,9 +45,20 @@ load("@aspect_rules_js//js:toolchains.bzl", "DEFAULT_NODE_VERSION", "rules_js_re
 
 rules_js_register_toolchains(node_version = DEFAULT_NODE_VERSION)
 
-load("@aspect_bazel_lib//lib:repositories.bzl", "register_copy_directory_toolchains", "register_copy_to_directory_toolchains")
-register_copy_directory_toolchains()
-register_copy_to_directory_toolchains()
+load(
+    "@bazel_lib//lib:repositories.bzl",
+    "register_copy_directory_toolchains",
+    "register_copy_to_directory_toolchains",
+    "register_coreutils_toolchains",
+)
+
+# rules_js_register_toolchains() above already registers copy_directory/
+# copy_to_directory/coreutils toolchains from the legacy aspect_bazel_lib
+# (still used internally by aspect_rules_js), so register bazel_lib's
+# versions under distinct repo names to avoid colliding with those.
+register_copy_directory_toolchains(name = "bazel_lib_copy_directory")
+register_copy_to_directory_toolchains(name = "bazel_lib_copy_to_directory")
+register_coreutils_toolchains(name = "bazel_lib_coreutils")
 EOF
 
 	[[ -e "$BATS_TEST_DIRNAME/.bazelversion" ]] && cp "$BATS_TEST_DIRNAME/.bazelversion" .bazelversion
