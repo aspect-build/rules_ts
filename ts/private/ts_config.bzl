@@ -32,10 +32,14 @@ TsConfigInfo = provider(
 def _ts_config_impl(ctx):
     files = [copy_file_to_bin_action(ctx, ctx.file.src)]
 
+    # The src may be a target carrying tsconfig dependencies of its own, such as another
+    # ts_config, so gather from it as well as the direct deps.
+    dep_targets = [ctx.attr.src] + ctx.attr.deps
+
     transitive_deps = [
         depset(copy_files_to_bin_actions(ctx, ctx.files.deps)),
         js_lib_helpers.gather_files_from_js_infos(
-            targets = ctx.attr.deps,
+            targets = dep_targets,
             include_sources = True,
             include_types = True,
             include_transitive_sources = True,
@@ -46,21 +50,21 @@ def _ts_config_impl(ctx):
 
     # TODO: now that ts_config.bzl provides a JsInfo, we should be able to remove TsConfigInfo in the future
     # since transitive files will now be passed through transitive_types in JsInfo
-    for dep in ctx.attr.deps:
+    for dep in dep_targets:
         if TsConfigInfo in dep:
             transitive_deps.append(dep[TsConfigInfo].deps)
 
-    transitive_sources = js_lib_helpers.gather_transitive_sources(files, ctx.attr.deps)
+    transitive_sources = js_lib_helpers.gather_transitive_sources(files, dep_targets)
 
-    transitive_types = js_lib_helpers.gather_transitive_types([], ctx.attr.deps)
+    transitive_types = js_lib_helpers.gather_transitive_types([], dep_targets)
 
     npm_sources = js_lib_helpers.gather_npm_sources(
         srcs = [],
-        deps = ctx.attr.deps,
+        deps = dep_targets,
     )
 
     npm_package_store_infos = js_lib_helpers.gather_npm_package_store_infos(
-        targets = ctx.attr.deps,
+        targets = dep_targets,
     )
 
     files_depset = depset(files)
@@ -68,7 +72,7 @@ def _ts_config_impl(ctx):
     # tsconfig.json file won't be needed at runtime
     runfiles = js_lib_helpers.gather_runfiles(
         ctx = ctx,
-        deps = ctx.attr.deps,
+        deps = dep_targets,
     )
 
     return [

@@ -139,9 +139,13 @@ def ts_project(
 
             See [docs/tsconfig.md](/docs/tsconfig.md) for detailed information.
 
-        extends: Label of the tsconfig file referenced in the `extends` section of tsconfig
-            To support "chaining" of more than one extended config, this label could be a target that
-            provdes `TsConfigInfo` such as `ts_config`.
+        extends: Label of the tsconfig file referenced in the `extends` section of tsconfig.
+
+            Syntax sugar for a `ts_config` target: the `tsconfig` is wrapped in one declaring
+            this label in its `deps`. A dictionary `tsconfig` also gains an `extends` clause
+            with a relative path to this file.
+
+            Equivalent to passing a `ts_config` as the `tsconfig`, with this label in its `deps`.
 
         args: List of strings of additional command-line arguments to pass to tsc.
             See https://www.typescriptlang.org/docs/handbook/compiler-options.html#compiler-options
@@ -320,6 +324,18 @@ def ts_project(
             resolve_json_module = resolve_json_module,
         )
 
+    if extends != None:
+        # Syntax sugar for wrapping the tsconfig file in a ts_config target which
+        # declares the extended tsconfig files, so they reach actions via TsConfigInfo
+        # on the tsconfig attribute alone.
+        _ts_config(
+            name = "_tsconfig_%s" % name,
+            src = tsconfig,
+            deps = [extends],
+            **common_kwargs
+        )
+        tsconfig = ":_tsconfig_%s" % name
+
     # Normalize common directory path shortcuts such as None vs "." vs "./"
     out_dir = _clean_dir_arg(out_dir)
     root_dir = _clean_dir_arg(root_dir)
@@ -445,7 +461,6 @@ def ts_project(
         tsconfig = tsconfig,
         allow_js = allow_js,
         resolve_json_module = resolve_json_module,
-        extends = extends,
         incremental = incremental,
         preserve_jsx = preserve_jsx,
         composite = composite,

@@ -89,6 +89,29 @@ def ts_config_test_suite(name):
         tsconfig = ":tsconfig_with_package_json_dep",
     )
 
+    # A ts_config target used as the tsconfig of a ts_project that also passes
+    # `extends`. The macro wraps both in another ts_config, which must not drop
+    # the deps of the tsconfig target it wraps.
+    write_file(
+        name = "src_tsconfig_pkgjson_extending",
+        out = "src_tsconfig_pkgjson_extending.json",
+        content = ["""{"files": ["src_ts.ts"], "compilerOptions": {"declaration": true, "outDir": "pkgjson-extending-outdir"}}"""],
+        tags = ["manual"],
+    )
+    ts_config(
+        name = "tsconfig_with_package_json_dep_extending",
+        src = "src_tsconfig_pkgjson_extending.json",
+        deps = [":src_package_json"],
+    )
+    ts_project(
+        name = "use_tsconfig_target_with_extends",
+        srcs = [":src_ts"],
+        declaration = True,
+        extends = ":tsconfig",
+        out_dir = "pkgjson-extending-outdir",
+        tsconfig = ":tsconfig_with_package_json_dep_extending",
+    )
+
     # ts_config whose src is another ts_config target (mirrors the
     # examples/package_json_usage/parent_src pattern, where a child
     # ts_config consumes a parent ts_config's bin-tree-copied tsconfig.json
@@ -189,6 +212,11 @@ def ts_config_test_suite(name):
         target_under_test = "use_tsconfig_wrapping_ts_config",
     )
 
+    _ts_project_sees_package_json_in_tsc_inputs_test(
+        name = "tsconfig_target_with_extends_test",
+        target_under_test = "use_tsconfig_target_with_extends",
+    )
+
     native.test_suite(
         name = name,
         tests = [
@@ -199,6 +227,7 @@ def ts_config_test_suite(name):
             ":outputs_use_dict_extending_tsconfig_target_test",
             ":tsconfig_with_package_json_dep_test",
             ":tsconfig_wrapping_ts_config_test",
+            ":tsconfig_target_with_extends_test",
         ],
     )
 

@@ -39,16 +39,9 @@ def _gather_transitive_typecheck_from_output_group_infos(typecheck_outs, targets
 def _gather_tsconfig_deps(ctx):
     tsconfig = copy_file_to_bin_action(ctx, ctx.file.tsconfig)
 
-    # Gather TsConfig info from both the direct (tsconfig) and indirect (extends) attribute
-    tsconfig_inputs = [tsconfig] + copy_files_to_bin_actions(ctx, ctx.files.extends)
-
     deps = []
-
-    # Direct TsConfigInfo deps
     if TsConfigInfo in ctx.attr.tsconfig:
         deps.append(ctx.attr.tsconfig[TsConfigInfo].deps)
-    if ctx.attr.extends and TsConfigInfo in ctx.attr.extends:
-        deps.append(ctx.attr.extends[TsConfigInfo].deps)
 
     deps.append(_gather_types_from_js_infos([ctx.attr.tsconfig]))
 
@@ -64,7 +57,7 @@ def _gather_tsconfig_deps(ctx):
             if TsConfigInfo in dep
         ])
 
-    return tsconfig, tsconfig_inputs, depset(tsconfig_inputs, transitive = deps)
+    return tsconfig, depset([tsconfig], transitive = deps)
 
 def _ts_project_impl(ctx):
     """Creates the action which spawns `tsc`.
@@ -86,17 +79,16 @@ def _ts_project_impl(ctx):
             fail("srcs of a ts_project should be files not directories")
 
     srcs_inputs = copy_files_to_bin_actions(ctx, ctx.files.srcs)
-    tsconfig, tsconfig_inputs, tsconfig_transitive_deps = _gather_tsconfig_deps(ctx)
+    tsconfig, tsconfig_transitive_deps = _gather_tsconfig_deps(ctx)
 
     srcs = _lib.files_relative_to_package(ctx, srcs_inputs)
 
     srcs_deps = ctx.attr.srcs + ctx.attr.deps
 
-    # tsconfig_inputs are already outputs of copy-to-bin actions (see _gather_tsconfig_deps),
+    # tsconfig_transitive_deps are already outputs of copy-to-bin actions (see _gather_tsconfig_deps),
     # so there is no need to pass them through copy_files_to_bin_actions again.
-    tsc_inputs = srcs_inputs + tsconfig_inputs
-    tsc_inputs_depset = depset(tsc_inputs, transitive = [tsconfig_transitive_deps])
-    tsc_transitive_inputs_depset = depset(tsc_inputs, transitive = [
+    tsc_inputs_depset = depset(srcs_inputs, transitive = [tsconfig_transitive_deps])
+    tsc_transitive_inputs_depset = depset(srcs_inputs, transitive = [
         _gather_types_from_js_infos(srcs_deps),
         tsconfig_transitive_deps,
     ])
