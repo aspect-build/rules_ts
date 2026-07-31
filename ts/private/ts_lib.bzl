@@ -149,10 +149,6 @@ COMPILER_OPTION_ATTRS = {
     "emit_declaration_only": attr.bool(
         doc = "https://www.typescriptlang.org/tsconfig#emitDeclarationOnly",
     ),
-    "extends": attr.label(
-        allow_files = True,
-        doc = "https://www.typescriptlang.org/tsconfig#extends",
-    ),
     "incremental": attr.bool(
         doc = "https://www.typescriptlang.org/tsconfig#incremental",
     ),
