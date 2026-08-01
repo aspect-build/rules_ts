@@ -17,12 +17,12 @@ npm.npm_translate_lock(
 )
 use_repo(npm, "npm")
 
-rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext", dev_dependency = True)
-rules_ts_ext.deps(
+typescript = use_extension("@aspect_rules_ts//ts:extensions.bzl", "typescript", dev_dependency = True)
+typescript.deps(
     # This keeps the TypeScript version in-sync with the editor, which is typically best.
-    ts_version_from = "//:package.json",
+    version_from = "//:package.json",
 )
-use_repo(rules_ts_ext, "npm_typescript")
+use_repo(typescript, "npm_typescript")
 
 # Bazel 9 compat
 bazel_dep(name = "rules_nodejs", version = "6.7.3", dev_dependency = True, repo_name = None)

@@ -1,0 +1,50 @@
+module(name = "deprecated_ext")
+
+bazel_dep(name = "aspect_rules_ts", version = "0.0.0")
+bazel_dep(name = "bazel_skylib", version = "1.8.2")
+
+local_path_override(
+    module_name = "aspect_rules_ts",
+    path = "../..",
+)
+
+# Intentionally exercises the ENTIRE deprecated module extension surface: the
+# `ext` extension symbol together with the `ts_version_from`, `ts_version` and
+# `ts_integrity` tag attributes. This guarantees the backward-compatibility
+# shims keep working on the 3.x line (they emit deprecation warnings and are
+# removed in the next major).
+#
+# New code should use the `typescript` extension with unprefixed attributes:
+#   typescript = use_extension("@aspect_rules_ts//ts:extensions.bzl", "typescript")
+#   typescript.deps(version_from = "//:package.json")
+#   use_repo(typescript, "npm_typescript")
+rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext")
+
+# Deprecated `ts_version_from`.
+rules_ts_ext.deps(
+    ts_version_from = "//:package.json",
+)
+
+# Deprecated `ts_version` on a named repo.
+rules_ts_ext.deps(
+    name = "npm_typescript_pinned",
+    ts_version = "5.6.2",
+)
+
+# Deprecated `ts_integrity` (+ `ts_version`) on a named repo.
+rules_ts_ext.deps(
+    name = "npm_typescript_rc",
+    ts_integrity = "sha512-E3b2+1zEFu84jB0YQi9BORDjz9+jGbwwy1Zi3G0LUNw7a7cePUrHMRNy8aPh53nXpkFGVHSxIZo5vKTfYaFiBQ==",
+    ts_version = "5.6.1-rc",
+)
+use_repo(rules_ts_ext, "npm_typescript", "npm_typescript_pinned", "npm_typescript_rc")
+
+# The deprecated and current APIs may be used side-by-side. Bazel keys extensions on the name
+# passed to `use_extension`, so `ext` and `typescript` are distinct extensions with their own repo
+# namespace; the repos they generate never collide, but each fetches its own copy of TypeScript.
+typescript = use_extension("@aspect_rules_ts//ts:extensions.bzl", "typescript")
+typescript.deps(version_from = "//:package.json")
+use_repo(typescript, npm_typescript_modern = "npm_typescript")
+
+# Override root MODULE with newer versions for bazel9 compat
+bazel_dep(name = "rules_nodejs", version = "6.7.3", dev_dependency = True, repo_name = None)

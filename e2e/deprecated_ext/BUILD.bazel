@@ -1,0 +1,66 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+
+ts_config(
+    name = "tsconfig",
+    src = "tsconfig.json",
+)
+
+# Uses the default `npm_typescript` repo (deprecated `ts_version_from`).
+ts_project(
+    name = "content",
+    srcs = ["content.ts"],
+    declaration = True,
+    declaration_map = True,
+    source_map = True,
+    tsconfig = ":tsconfig",
+)
+
+# Uses the pinned repo from the deprecated `ts_version` attribute.
+ts_project(
+    name = "content_pinned",
+    srcs = ["content.ts"],
+    declaration = True,
+    declaration_map = True,
+    out_dir = "pinned_out",
+    source_map = True,
+    tsc = "@npm_typescript_pinned//:tsc",
+    tsconfig = ":tsconfig",
+)
+
+# Uses the repo from the deprecated `ts_integrity` + `ts_version` attributes.
+ts_project(
+    name = "content_rc",
+    srcs = ["content.ts"],
+    declaration = True,
+    declaration_map = True,
+    out_dir = "rc_out",
+    source_map = True,
+    tsc = "@npm_typescript_rc//:tsc",
+    tsconfig = ":tsconfig",
+)
+
+# Uses the repo from the current `typescript` extension, in the same module as the deprecated one.
+ts_project(
+    name = "content_modern",
+    srcs = ["content.ts"],
+    declaration = True,
+    declaration_map = True,
+    out_dir = "modern_out",
+    source_map = True,
+    tsc = "@npm_typescript_modern//:tsc",
+    tsconfig = ":tsconfig",
+    validator = "@npm_typescript_modern//:validator",
+)
+
+# Building the ts_projects forces the deprecated `ext` extension to instantiate
+# each `npm_typescript*` repository, proving the shims resolve a working compiler.
+build_test(
+    name = "content_build_test",
+    targets = [
+        ":content",
+        ":content_pinned",
+        ":content_rc",
+        ":content_modern",
+    ],
+)

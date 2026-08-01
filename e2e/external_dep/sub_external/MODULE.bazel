@@ -9,10 +9,10 @@ local_path_override(
     path = "../../..",
 )
 
-rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext")
+typescript = use_extension("@aspect_rules_ts//ts:extensions.bzl", "typescript")
 
 # Use an alternate npm_typescript name to workaround https://github.com/aspect-build/rules_ts/issues/483
-rules_ts_ext.deps(
+typescript.deps(
     name = "npm_typescript2",
 )
-use_repo(rules_ts_ext, "npm_typescript2")
+use_repo(typescript, "npm_typescript2")

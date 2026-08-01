@@ -48,6 +48,7 @@ jobs:
                 - { path: "e2e/nested_repos", slug: "e2e-nested_repos" }
                 - { path: "e2e/external_dep", slug: "e2e-external_dep" }
                 - { path: "e2e/external_dep/app", slug: "e2e-external_dep-app" }
+                - { path: "e2e/deprecated_ext", slug: "e2e-deprecated_ext" }
                 - { path: "e2e/worker", slug: "e2e-worker" }
                 bazel:
                 - { id: "bazel-7", version: "7.x", flags: "" }
@@ -63,6 +64,7 @@ jobs:
                 # bzlmod-only test
                 - { workspace: { slug: "e2e-bzlmodules" }, bazel: { id: "bazel-7-wksp" } }
                 - { workspace: { slug: "e2e-nested_repos" }, bazel: { id: "bazel-7-wksp" } }
+                - { workspace: { slug: "e2e-deprecated_ext" }, bazel: { id: "bazel-7-wksp" } }
         env:
             USE_BAZEL_VERSION: ${{ matrix.bazel.version }}
         steps:
