@@ -5,7 +5,7 @@ load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "COPY_FILE_TO_BIN_TOOLCHAINS", "c
 load("@aspect_bazel_lib//lib:paths.bzl", "to_output_relative_path")
 load("@aspect_bazel_lib//lib:platform_utils.bzl", "platform_utils")
 load("@aspect_bazel_lib//lib:resource_sets.bzl", "resource_set", "resource_set_attr")
-load("@aspect_rules_js//js:libs.bzl", "js_lib_helpers")
+load("@aspect_rules_js//js:libs.bzl", "js_binary_lib", "js_lib_helpers")
 load("@aspect_rules_js//js:providers.bzl", "JsInfo", "js_info")
 load("@bazel_skylib//lib:dicts.bzl", "dicts")
 load(":options.bzl", "OptionsInfo", "transpiler_selection_required")
@@ -36,6 +36,26 @@ def _gather_transitive_typecheck_from_output_group_infos(typecheck_outs, targets
         if OutputGroupInfo in target and "transitive_typecheck" in target[OutputGroupInfo]
     ]
     return depset(typecheck_outs, transitive = files_depsets)
+
+# js_binary_lib.run_binary_action is only available in aspect_rules_js 3.4.0
+# and higher. Opportunistically use it when present, since bumping our minimum
+# supported aspect_rules_js version would be a breaking change.
+def _run_tsc_action(ctx, env = None, execution_requirements = None, **kwargs):
+    env = env or {}
+    execution_requirements = execution_requirements or {}
+    if hasattr(js_binary_lib, "run_binary_action"):
+        js_binary_lib.run_binary_action(
+            ctx = ctx,
+            env = env,
+            execution_requirements = dicts.add(execution_requirements, {"supports-path-mapping": "1"}),
+            **kwargs
+        )
+    else:
+        ctx.actions.run(
+            env = dicts.add(env, {"BAZEL_BINDIR": ctx.bin_dir.path}),
+            execution_requirements = execution_requirements,
+            **kwargs
+        )
 
 def _gather_tsconfig_deps(ctx):
     tsconfig = copy_file_to_bin_action(ctx, ctx.file.tsconfig)
@@ -355,7 +375,8 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             type_check_part = " & type-checking" if not ctx.attr.isolated_typecheck else "",
         )
 
-        ctx.actions.run(
+        _run_tsc_action(
+            ctx,
             executable = executable,
             inputs = inputs_depset,
             arguments = [tsc_emit_arguments],
@@ -364,9 +385,6 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             execution_requirements = execution_requirements,
             resource_set = resource_set(ctx.attr),
             progress_message = progress_message,
-            env = {
-                "BAZEL_BINDIR": ctx.bin_dir.path,
-            },
             use_default_shell_env = True,
         )
 

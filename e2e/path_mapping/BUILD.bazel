@@ -1,0 +1,25 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+
+ts_config(
+    name = "tsconfig",
+    src = "tsconfig.json",
+)
+
+ts_project(
+    name = "lib",
+    srcs = ["lib.ts"],
+    declaration = True,
+    source_map = True,
+    tsconfig = ":tsconfig",
+)
+
+# Gives the `bazel test //...` step in CI something to run; the actual test
+# assertions live in test.sh, which is run as a separate CI step.
+build_test(
+    name = "test",
+    targets = [
+        ":lib",
+        ":lib_types",
+    ],
+)
