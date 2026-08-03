@@ -1,6 +1,8 @@
 "Utilities functions for selecting and filtering ts and other files"
 
+load("@aspect_rules_js//js:libs.bzl", "js_binary_lib")
 load("@aspect_rules_js//js:providers.bzl", "JsInfo")
+load("@bazel_skylib//lib:dicts.bzl", "dicts")
 
 # Attributes common to all TypeScript rules
 STD_ATTRS = {
@@ -420,6 +422,26 @@ def _declare_outputs(ctx, paths):
         for path in paths
     ]
 
+# js_binary_lib.run_binary_action is only available in aspect_rules_js 3.4.0
+# and higher. Opportunistically use it when present, since bumping our minimum
+# supported aspect_rules_js version would be a breaking change.
+def _run_binary_action(ctx, env = None, execution_requirements = None, **kwargs):
+    env = env or {}
+    execution_requirements = execution_requirements or {}
+    if hasattr(js_binary_lib, "run_binary_action"):
+        js_binary_lib.run_binary_action(
+            ctx = ctx,
+            env = env,
+            execution_requirements = dicts.add(execution_requirements, {"supports-path-mapping": "1"}),
+            **kwargs
+        )
+    else:
+        ctx.actions.run(
+            env = dicts.add(env, {"BAZEL_BINDIR": ctx.bin_dir.path}),
+            execution_requirements = execution_requirements,
+            **kwargs
+        )
+
 lib = struct(
     declare_outputs = _declare_outputs,
     join = _join,
@@ -431,4 +453,5 @@ lib = struct(
     validate_tsconfig_dirs = _validate_tsconfig_dirs,
     calculate_outs = _calculate_outs,
     calculate_root_dir = _calculate_root_dir,
+    run_binary_action = _run_binary_action,
 )
