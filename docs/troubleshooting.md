@@ -31,6 +31,37 @@ The basic methodology for diagnosing problems is:
 1. Gather information from TypeScript, typically by adding flags to the `args` attribute of the failing `ts_project`, as described below. Be prepared to deal with a large volume of data, like by writing the output to a file and using tools like an editor or unix utilities to analyze it.
 1. Reason about whether TypeScript is looking for a file in the wrong place, or writing a file to the wrong place.
 
+## Type errors are not reported by `bazel build`
+
+When a `ts_project` does not use `tsc` to produce its default outputs — that is, when `transpiler`,
+`declaration_transpiler`, `no_emit` or `isolated_typecheck` is set — declaration emit and
+type-checking happen in actions separate from the JavaScript. Only the JavaScript is in the default
+outputs, so `bazel build //path/to:my_ts_project` succeeds without ever running them. A type error
+is only reported once something demands those outputs, such as a dependent target,
+`bazel build --output_groups=typecheck //path/to:my_ts_project`, or the `[name]_typecheck_test`
+target under `bazel test`. See [Macro expansion] for the full list of targets the macro creates.
+
+This is intentional, and is the whole point of using a fast transpiler without type-checking: `tsc`
+and type-checking stay off the critical path of a build. The recommended way to catch type errors
+is `bazel test`, where the `[name]_typecheck_test` targets run type-checking as tests, in parallel
+with the rest of your test suite and cached like any other test.
+
+As a last resort, type-checking can be forced onto every `bazel build` by running it as a
+[validation action](https://bazel.build/extending/rules#validation_actions):
+
+    # Not recommended: report type errors from `bazel build`, not only from `bazel test`.
+    common --@aspect_rules_ts//ts:validation_typecheck
+
+This is discouraged and off by default. It makes every build run `tsc` over the whole dependency
+graph — reintroducing exactly the cost that a custom `transpiler` and `isolated_typecheck` exist to
+avoid — so a JavaScript-only development mode is no longer fast, and iteration speed is bounded by
+the slowest type-check rather than by the transpiler. Validation actions do not block the target's
+own actions, so type-checking still runs in parallel with transpiling rather than gating it, but
+the work is paid on every build regardless. Prefer `bazel test`; if the flag is set, it can be
+skipped for a single invocation with `--norun_validations`.
+
+[Macro expansion]: transpiler.md#macro-expansion
+
 ## Verbose mode
 
 Running your build with `--@aspect_rules_ts//ts:verbose` causes the `ts_project` rule to enable several
