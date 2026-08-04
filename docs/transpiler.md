@@ -109,6 +109,7 @@ When `no_emit`, `transpiler` or `declaration_transpiler` is set, then the `ts_pr
 - `[name]` - the default target which can be included in the `deps` of downstream rules.
     Note that it will successfully build *even if there are typecheck failures* because invoking `tsc` is not needed to produce the default outputs.
     This is considered a feature, as it allows you to have a faster development mode where type-checking is not on the critical path.
+    Use `bazel test` to run the `[name]_typecheck_test` target below; see [Type errors are not reported by `bazel build`](troubleshooting.md#type-errors-are-not-reported-by-bazel-build).
 - `[name]_types` - provides typings (`.d.ts` files) as the default outputs.
     This target is not created if `no_emit` is set.
 - `[name]_typecheck` - provides default outputs asserting type-checking has been run.
