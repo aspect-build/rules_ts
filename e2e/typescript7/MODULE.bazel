@@ -1,0 +1,22 @@
+bazel_dep(name = "aspect_rules_ts", version = "0.0.0", dev_dependency = True)
+local_path_override(
+    module_name = "aspect_rules_ts",
+    path = "../..",
+)
+
+bazel_dep(name = "bazel_skylib", version = "1.8.2", dev_dependency = True)
+
+# A native TypeScript version: ts_project invokes the pre-compiled tsc binary
+# for the exec platform directly via toolchain resolution, without NodeJS.
+rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext", dev_dependency = True)
+rules_ts_ext.deps(
+    ts_version = "7.0.2",
+)
+
+# A second native version, selected per-target via ts_project(tsc_toolchain)
+# instead of the globally registered toolchain.
+rules_ts_ext.deps(
+    name = "npm_typescript_7rc",
+    ts_version = "7.0.1-rc",
+)
+use_repo(rules_ts_ext, "npm_typescript", "npm_typescript_7rc")
