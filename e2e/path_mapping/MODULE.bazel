@@ -8,15 +8,7 @@ local_path_override(
     path = "../..",
 )
 
-# js_binary_lib.run_binary_action, which ts_project opportunistically uses to support path
-# mapping, has not yet been released. This pins to a commit on an unmerged aspect_rules_js
-# branch that has it, for testing purposes only.
-bazel_dep(name = "aspect_rules_js", version = "3.0.2")
-git_override(
-    module_name = "aspect_rules_js",
-    commit = "821502f7b994e8dd9c8fb614121478d1c25f97d9",
-    remote = "https://github.com/aspect-build/rules_js.git",
-)
+bazel_dep(name = "aspect_rules_js", version = "3.4.0")
 
 bazel_dep(name = "bazel_skylib", version = "1.8.1", dev_dependency = True)
 
