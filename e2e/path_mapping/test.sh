@@ -28,16 +28,37 @@ exec_log="$scratch/exec_log.json"
 # up-to-date, which would prevent them from ever consulting our disk cache.
 invalidate="$(date +%s)"
 
-bazel build -c fastbuild //:lib \
+# //:lib_isolated_typecheck sets isolated_typecheck = True, which makes tsc
+# type-checking run as its own TsProjectCheck action separate from the
+# TsProject(Emit) action. That action is only built as part of the
+# "_typecheck" filegroup target the ts_project macro generates, not as part of
+# the default outputs. This is what exercises run_binary_action's use in
+# ts_project's isolated typecheck action.
+targets=(//:lib //:lib_isolated_typecheck_typecheck)
+
+bazel build -c fastbuild "${targets[@]}" \
 	--disk_cache="$disk_cache" \
 	--action_env="TS_PROJECT_PATH_MAPPING_TEST_INVALIDATE=$invalidate"
 
-bazel build -c opt //:lib \
+bazel build -c opt "${targets[@]}" \
 	--disk_cache="$disk_cache" \
 	--action_env="TS_PROJECT_PATH_MAPPING_TEST_INVALIDATE=$invalidate" \
 	--execution_log_json_file="$exec_log"
 
-for mnemonic in TsProject TsValidateOptions; do
+# mnemonic:target pairs to check via aquery. The target must be the
+# underlying ts_project rule itself (not a wrapping filegroup) since aquery
+# does not surface a filegroup's generating action when it re-exports a
+# non-default output group, as the "_typecheck" filegroup does.
+mnemonic_targets=(
+	"TsProject:lib"
+	"TsValidateOptions:lib"
+	"TsProjectCheck:lib_isolated_typecheck"
+)
+
+for entry in "${mnemonic_targets[@]}"; do
+	mnemonic="${entry%%:*}"
+	target="${entry#*:}"
+
 	matches="$(jq -s --arg mnemonic "$mnemonic" '[.[] | select(.mnemonic == $mnemonic)]' "$exec_log")"
 	count="$(echo "$matches" | jq 'length')"
 	if [ "$count" -eq 0 ]; then
@@ -55,12 +76,12 @@ for mnemonic in TsProject TsValidateOptions; do
 
 	# We should find via bazel aquery that the action advertises path-mapping
 	# support.
-	aquery_output="$(bazel aquery "mnemonic(\"$mnemonic\", //:lib)")"
+	aquery_output="$(bazel aquery "mnemonic(\"$mnemonic\", //:$target)")"
 	if ! echo "$aquery_output" | grep -q "supports-path-mapping"; then
-		echo "FAIL: supports-path-mapping was not advertised for the $mnemonic action of //:lib" >&2
+		echo "FAIL: supports-path-mapping was not advertised for the $mnemonic action of //:$target" >&2
 		echo "$aquery_output" >&2
 		exit 1
 	fi
 
-	echo "PASS: supports-path-mapping is advertised for the $mnemonic action of //:lib"
+	echo "PASS: supports-path-mapping is advertised for the $mnemonic action of //:$target"
 done
