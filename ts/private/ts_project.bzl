@@ -1,6 +1,6 @@
 "ts_project rule"
 
-load("@aspect_rules_js//js:libs.bzl", "js_lib_helpers")
+load("@aspect_rules_js//js:libs.bzl", "js_binary_lib", "js_lib_helpers")
 load("@aspect_rules_js//js:providers.bzl", "JsInfo", "js_info")
 load("@bazel_lib//lib:copy_file.bzl", "copy_file_action")
 load("@bazel_lib//lib:copy_to_bin.bzl", "COPY_FILE_TO_BIN_TOOLCHAINS", "copy_file_to_bin_action", "copy_files_to_bin_actions")
@@ -222,9 +222,11 @@ def _ts_project_impl(ctx):
     if ctx.attr.isolated_typecheck or not (use_tsc_for_js or use_tsc_for_dts):
         typecheck_outputs = []
 
-        # The type-checking action still need to produce some output, so we output the stdout
-        # to a .typecheck file that ends up in the typecheck output group.
-        typecheck_output = ctx.actions.declare_file(ctx.attr.name + ".typecheck")
+        # The type-checking action does not produce any real output, so we declare an
+        # empty directory as a marker output just so that Bazel has something to depend
+        # on. Bazel pre-creates the directory itself before running the action, so tsc
+        # does not need to write anything into it.
+        typecheck_output = ctx.actions.declare_directory(ctx.attr.name + ".typecheck")
         typecheck_outs.append(typecheck_output)
         typecheck_outputs.append(typecheck_output)
 
@@ -238,26 +240,22 @@ def _ts_project_impl(ctx):
             typecheck_outputs.append(tsc_trace_dir)
             typecheck_arguments.add_all(["--generateTrace", to_output_relative_path(tsc_trace_dir)])
 
-        env = {
-            "BAZEL_BINDIR": ctx.bin_dir.path,
-            # Create the marker file by capturing stdout of the action.
-            "JS_BINARY__STDOUT_OUTPUT_FILE": typecheck_output.path,
-        }
-
         progress_message = ctx.attr.isolated_typecheck_progress_message.format(
             label = ctx.label,
             tsconfig_path = tsconfig_path,
         )
 
-        ctx.actions.run(
+        js_binary_lib.run_binary_action(
+            ctx = ctx,
             executable = executable,
             inputs = tsc_transitive_inputs_depset,
             arguments = [typecheck_arguments],
             outputs = typecheck_outputs,
             mnemonic = "TsProjectCheck",
+            execution_requirements = {"supports-path-mapping": "1"},
             resource_set = resource_set(ctx.attr),
             progress_message = progress_message,
-            env = env,
+            use_default_shell_env = True,
         )
     else:
         # When tsc emits js but no dts, js_outs are the only artifact proving tsc ran and type-checked.
@@ -297,17 +295,16 @@ def _ts_project_impl(ctx):
             type_check_part = " & type-checking" if not ctx.attr.isolated_typecheck else "",
         )
 
-        ctx.actions.run(
+        js_binary_lib.run_binary_action(
+            ctx = ctx,
             executable = executable,
             inputs = inputs_depset,
             arguments = [tsc_emit_arguments],
             outputs = outputs,
             mnemonic = "TsProjectEmit" if ctx.attr.isolated_typecheck else "TsProject",
+            execution_requirements = {"supports-path-mapping": "1"},
             resource_set = resource_set(ctx.attr),
             progress_message = progress_message,
-            env = {
-                "BAZEL_BINDIR": ctx.bin_dir.path,
-            },
             use_default_shell_env = True,
         )
 

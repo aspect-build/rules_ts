@@ -1,5 +1,6 @@
 "Helper rule to check that ts_project attributes match tsconfig.json properties"
 
+load("@aspect_rules_js//js:libs.bzl", "js_binary_lib")
 load("@bazel_lib//lib:paths.bzl", "to_output_relative_path")
 load(":ts_lib.bzl", _lib = "lib")
 
@@ -40,15 +41,14 @@ Assumes all tsconfig file deps are already copied to the bin directory.
         json.encode(config),
     ])
 
-    ctx.actions.run(
+    js_binary_lib.run_binary_action(
+        ctx = ctx,
         executable = ctx.executable.validator,
         inputs = tsconfig_deps,
         outputs = [resolved],
         arguments = [arguments],
         mnemonic = "TsValidateOptions",
-        env = {
-            "BAZEL_BINDIR": ctx.bin_dir.path,
-        },
+        execution_requirements = {"supports-path-mapping": "1"},
         use_default_shell_env = True,
     )
 
