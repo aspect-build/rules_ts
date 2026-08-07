@@ -44,6 +44,7 @@ jobs:
                 - { path: "examples", slug: "examples" }
                 - { path: "e2e/smoke", slug: "e2e-smoke" }
                 - { path: "e2e/smoke_rjs3", slug: "e2e-smoke_rjs3" }
+                - { path: "e2e/path_mapping", slug: "e2e-path_mapping" }
                 - { path: "e2e/bzlmodules", slug: "e2e-bzlmodules" }
                 - { path: "e2e/nested_repos", slug: "e2e-nested_repos" }
                 - { path: "e2e/external_dep", slug: "e2e-external_dep" }
@@ -61,6 +62,7 @@ jobs:
                 - { workspace: { slug: "examples" }, bazel: { id: "bazel-7-wksp" } }
                 # No WORKSPACE in rules_js v3
                 - { workspace: { slug: "e2e-smoke_rjs3" }, bazel: { id: "bazel-7-wksp" } }
+                - { workspace: { slug: "e2e-path_mapping" }, bazel: { id: "bazel-7-wksp" } }
                 # bzlmod-only test
                 - { workspace: { slug: "e2e-bzlmodules" }, bazel: { id: "bazel-7-wksp" } }
                 - { workspace: { slug: "e2e-nested_repos" }, bazel: { id: "bazel-7-wksp" } }
@@ -75,3 +77,11 @@ jobs:
             - name: Test
               working-directory: ${{ matrix.workspace.path }}
               run: aspect test --task-key=test-${{ matrix.workspace.slug }}-${{ matrix.bazel.id }} ${{ matrix.bazel.flags }} -- //...
+            - name: Optional ./test.sh
+              working-directory: ${{ matrix.workspace.path }}
+              run: |
+                  if [[ -f ./test.sh ]]; then
+                      ./test.sh
+                  else
+                      echo "No test.sh in ${PWD}; skipping"
+                  fi

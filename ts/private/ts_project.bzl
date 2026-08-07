@@ -265,9 +265,11 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
     if ctx.attr.isolated_typecheck or not (use_tsc_for_js or use_tsc_for_dts):
         typecheck_outputs = []
 
-        # The type-checking action still need to produce some output, so we output the stdout
-        # to a .typecheck file that ends up in the typecheck output group.
-        typecheck_output = ctx.actions.declare_file(ctx.attr.name + ".typecheck")
+        # The type-checking action does not produce any real output, so we declare an
+        # empty directory as a marker output just so that Bazel has something to depend
+        # on. Bazel pre-creates the directory itself before running the action, so tsc
+        # does not need to write anything into it.
+        typecheck_output = ctx.actions.declare_directory(ctx.attr.name + ".typecheck")
         typecheck_outs.append(typecheck_output)
         typecheck_outputs.append(typecheck_output)
 
@@ -281,28 +283,17 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             typecheck_outputs.append(tsc_trace_dir)
             typecheck_arguments.add_all(["--generateTrace", to_output_relative_path(tsc_trace_dir)])
 
-        env = {
-            "BAZEL_BINDIR": ctx.bin_dir.path,
-        }
-
-        # In non-worker mode, we create the marker file by capturing stdout of the action
-        # via the JS_BINARY__STDOUT_OUTPUT_FILE environment variable, but in worker mode, the
-        # persistent worker protocol communicates with the worker process via stdin/stdout, so
-        # the output cannot just be captured. Instead, we tell the worker where to write the
-        # marker file by passing the path via the --bazelValidationFile flag.
         if supports_workers:
             typecheck_arguments.use_param_file("@%s", use_always = True)
             typecheck_arguments.set_param_file_format("multiline")
-            typecheck_arguments.add("--bazelValidationFile", typecheck_output.short_path)
-        else:
-            env["JS_BINARY__STDOUT_OUTPUT_FILE"] = typecheck_output.path
 
         progress_message = ctx.attr.isolated_typecheck_progress_message.format(
             label = ctx.label,
             tsconfig_path = tsconfig_path,
         )
 
-        ctx.actions.run(
+        _lib.run_binary_action(
+            ctx,
             executable = executable,
             inputs = tsc_transitive_inputs_depset,
             arguments = [typecheck_arguments],
@@ -311,7 +302,7 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             execution_requirements = execution_requirements,
             resource_set = resource_set(ctx.attr),
             progress_message = progress_message,
-            env = env,
+            use_default_shell_env = True,
         )
     else:
         # When tsc emits js but no dts, js_outs are the only artifact proving tsc ran and type-checked.
@@ -355,7 +346,8 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             type_check_part = " & type-checking" if not ctx.attr.isolated_typecheck else "",
         )
 
-        ctx.actions.run(
+        _lib.run_binary_action(
+            ctx,
             executable = executable,
             inputs = inputs_depset,
             arguments = [tsc_emit_arguments],
@@ -364,9 +356,6 @@ See https://github.com/aspect-build/rules_ts/issues/361 for more details.
             execution_requirements = execution_requirements,
             resource_set = resource_set(ctx.attr),
             progress_message = progress_message,
-            env = {
-                "BAZEL_BINDIR": ctx.bin_dir.path,
-            },
             use_default_shell_env = True,
         )
 

@@ -38,15 +38,13 @@ Assumes all tsconfig file deps are already copied to the bin directory.
         json.encode(config),
     ])
 
-    ctx.actions.run(
+    _lib.run_binary_action(
+        ctx,
         executable = ctx.executable.validator,
         inputs = tsconfig_deps,
         outputs = [marker],
         arguments = [arguments],
         mnemonic = "TsValidateOptions",
-        env = {
-            "BAZEL_BINDIR": ctx.bin_dir.path,
-        },
         use_default_shell_env = True,
     )
 

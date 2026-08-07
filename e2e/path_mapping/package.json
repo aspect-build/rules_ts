@@ -1,0 +1,12 @@
+{
+    "name": "e2e_path_mapping",
+    "version": "1.0.0",
+    "private": true,
+    "packageManager": "pnpm@10.14.0",
+    "dependencies": {
+        "typescript": "5.8.3"
+    },
+    "pnpm": {
+        "onlyBuiltDependencies": []
+    }
+}
