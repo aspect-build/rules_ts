@@ -1,0 +1,12 @@
+import %workspace%/../../tools/preset.bazelrc
+
+common --@aspect_rules_ts//ts:skipLibCheck=always
+common --@aspect_rules_ts//ts:default_to_tsc_transpiler
+
+# Path mapping:
+# https://bazel.build/reference/command-line-reference#flag--experimental_output_paths
+common --experimental_output_paths=strip
+
+# Build without the bytes
+common:ci --remote_download_outputs=minimal
+common:ci --nobuild_runfile_links
