@@ -6,6 +6,8 @@ ts_config(
     src = "tsconfig.json",
 )
 
+# Covers the tsc emit action (mnemonic TsProject) and the options validation
+# action (mnemonic TsValidateOptions).
 ts_project(
     name = "lib",
     srcs = ["lib.ts"],
@@ -14,8 +16,8 @@ ts_project(
     tsconfig = ":tsconfig",
 )
 
-# A second target whose isolated typecheck action (mnemonic TsProjectCheck) we
-# can exercise separately from the "lib" target's main TsProject action.
+# Covers the isolated typecheck action (mnemonic TsProjectCheck) and the emit
+# action in its isolated form (mnemonic TsProjectEmit).
 ts_project(
     name = "lib_isolated_typecheck",
     srcs = ["lib.ts"],
