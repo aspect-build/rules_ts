@@ -30,10 +30,14 @@ invalidate="$(date +%s)"
 
 # //:lib_isolated_typecheck sets isolated_typecheck = True, which makes tsc
 # type-checking run as its own TsProjectCheck action separate from the
-# TsProject(Emit) action. That action is only built as part of the
-# "_typecheck" filegroup target the ts_project macro generates, not as part of
-# the default outputs.
-targets=(//:lib //:lib_isolated_typecheck_typecheck)
+# TsProjectEmit action. That action is only built as part of the "_typecheck"
+# filegroup target the ts_project macro generates, not as part of the default
+# outputs.
+targets=(
+	//:lib
+	//:lib_isolated_typecheck
+	//:lib_isolated_typecheck_typecheck
+)
 
 bazel build -c fastbuild "${targets[@]}" \
 	--disk_cache="$disk_cache" \
@@ -48,9 +52,14 @@ bazel build -c opt "${targets[@]}" \
 # underlying ts_project rule itself (not a wrapping filegroup) since aquery
 # does not surface a filegroup's generating action when it re-exports a
 # non-default output group, as the "_typecheck" filegroup does.
+# One entry per distinct action ts_project code creates: the emit action in
+# its combined (TsProject) and isolated (TsProjectEmit) forms, the isolated
+# typecheck action (TsProjectCheck) and the options validation action
+# (TsValidateOptions).
 mnemonic_targets=(
 	"TsProject:lib"
 	"TsValidateOptions:lib"
+	"TsProjectEmit:lib_isolated_typecheck"
 	"TsProjectCheck:lib_isolated_typecheck"
 )
 
@@ -58,20 +67,21 @@ for entry in "${mnemonic_targets[@]}"; do
 	mnemonic="${entry%%:*}"
 	target="${entry#*:}"
 
-	matches="$(jq -s --arg mnemonic "$mnemonic" '[.[] | select(.mnemonic == $mnemonic)]' "$exec_log")"
+	matches="$(jq -s --arg mnemonic "$mnemonic" --arg label "//:$target" \
+		'[.[] | select(.mnemonic == $mnemonic and .targetLabel == $label)]' "$exec_log")"
 	count="$(echo "$matches" | jq 'length')"
 	if [ "$count" -eq 0 ]; then
-		echo "FAIL: no $mnemonic entry found in the -c opt execution log" >&2
+		echo "FAIL: no $mnemonic entry for //:$target found in the -c opt execution log" >&2
 		exit 1
 	fi
 
-	cache_hit="$(echo "$matches" | jq -r '.[0].cacheHit')"
+	cache_hit="$(echo "$matches" | jq -r '[.[] | .cacheHit] | all')"
 	if [ "$cache_hit" != "true" ]; then
-		echo "FAIL: $mnemonic action was re-executed under -c opt (cacheHit=$cache_hit); path mapping did not share the cache entry from -c fastbuild" >&2
+		echo "FAIL: $mnemonic action of //:$target was re-executed under -c opt; path mapping did not share the cache entry from -c fastbuild" >&2
 		exit 1
 	fi
 
-	echo "PASS: $mnemonic action was cache-shared across -c fastbuild and -c opt"
+	echo "PASS: $mnemonic action of //:$target was cache-shared across -c fastbuild and -c opt"
 
 	# We should find via bazel aquery that the action advertises path-mapping
 	# support.
