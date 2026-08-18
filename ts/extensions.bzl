@@ -14,7 +14,7 @@ def _extension_impl(module_ctx):
     root_direct_dev_deps = {}
     for mod in module_ctx.modules:
         is_root = mod.is_root
-        for attr in mod.tags.deps:
+        for attr in mod.tags.toolchain:
             if is_root:
                 if module_ctx.is_dev_dependency(attr):
                     root_direct_dev_deps[attr.name] = None
@@ -25,22 +25,22 @@ def _extension_impl(module_ctx):
                 # Validate that non-root modules don't specify conflicting versions
                 if not existing["is_root"]:
                     existing_attr = existing["attr"]
-                    if attr.ts_version != existing_attr.ts_version or \
-                       attr.ts_version_from != existing_attr.ts_version_from or \
-                       attr.ts_integrity != existing_attr.ts_integrity:
+                    if attr.version != existing_attr.version or \
+                       attr.version_from != existing_attr.version_from or \
+                       attr.integrity != existing_attr.integrity:
                         fail("""Multiple non-root modules specify different versions for '{name}'.
-    Module '{existing_mod}' requests: ts_version={existing_version}, ts_version_from={existing_from}, ts_integrity={existing_integrity}
-    Module '{current_mod}' requests: ts_version={current_version}, ts_version_from={current_from}, ts_integrity={current_integrity}
+    Module '{existing_mod}' requests: version={existing_version}, version_from={existing_from}, integrity={existing_integrity}
+    Module '{current_mod}' requests: version={current_version}, version_from={current_from}, integrity={current_integrity}
 To resolve this conflict, the root module should explicitly specify the desired version.""".format(
                             name = attr.name,
                             existing_mod = existing["module_name"],
-                            existing_version = existing_attr.ts_version or "(not set)",
-                            existing_from = existing_attr.ts_version_from or "(not set)",
-                            existing_integrity = existing_attr.ts_integrity or "(not set)",
+                            existing_version = existing_attr.version or "(not set)",
+                            existing_from = existing_attr.version_from or "(not set)",
+                            existing_integrity = existing_attr.integrity or "(not set)",
                             current_mod = mod.name,
-                            current_version = attr.ts_version or "(not set)",
-                            current_from = attr.ts_version_from or "(not set)",
-                            current_integrity = attr.ts_integrity or "(not set)",
+                            current_version = attr.version or "(not set)",
+                            current_from = attr.version_from or "(not set)",
+                            current_integrity = attr.integrity or "(not set)",
                         ))
                 continue
             selected[attr.name] = {
@@ -51,17 +51,17 @@ To resolve this conflict, the root module should explicitly specify the desired 
 
     for entry in selected.values():
         attr = entry["attr"]
-        if attr.ts_version_from:
-            module_ctx.watch(attr.ts_version_from)
+        if attr.version_from:
+            module_ctx.watch(attr.version_from)
 
-        ts_version = attr.ts_version
-        if not ts_version and not attr.ts_version_from:
+        ts_version = attr.version
+        if not ts_version and not attr.version_from:
             ts_version = LATEST_TYPESCRIPT_VERSION
         npm_dependencies(
             name = attr.name,
             ts_version = ts_version,
-            ts_version_from = attr.ts_version_from,
-            ts_integrity = attr.ts_integrity,
+            ts_version_from = attr.version_from,
+            ts_integrity = attr.integrity,
         )
 
     # A repo requested by both dev and non-dev usages of the root module is a non-dev dep.
@@ -71,18 +71,18 @@ To resolve this conflict, the root module should explicitly specify the desired 
     return module_ctx.extension_metadata(
         root_module_direct_deps = root_direct_deps.keys(),
         root_module_direct_dev_deps = root_direct_dev_deps.keys(),
-        # Reproducible: every fetch is pinned by ts_integrity or the integrity mirrored in ts/private/versions.bzl.
+        # Reproducible: every fetch is pinned by integrity or the integrity mirrored in ts/private/versions.bzl.
         reproducible = True,
     )
 
-ext = module_extension(
+typescript = module_extension(
     implementation = _extension_impl,
     tag_classes = {
-        "deps": tag_class(attrs = {
+        "toolchain": tag_class(attrs = {
             "name": attr.string(default = "npm_typescript"),
-            "ts_version": attr.string(),
-            "ts_version_from": attr.label(),
-            "ts_integrity": attr.string(),
+            "version": attr.string(),
+            "version_from": attr.label(),
+            "integrity": attr.string(),
         }),
     },
 )

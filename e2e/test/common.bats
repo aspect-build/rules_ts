@@ -34,10 +34,10 @@ local_path_override(
 
 bazel_dep(name = "aspect_rules_js", version = "3.0.1")
 
-rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext")
+typescript = use_extension("@aspect_rules_ts//ts:extensions.bzl", "typescript")
 
-rules_ts_ext.deps(ts_version = "$ts_version")
-use_repo(rules_ts_ext, "npm_typescript")
+typescript.toolchain(version = "$ts_version")
+use_repo(typescript, "npm_typescript")
 EOF
 
 	[[ -e "$BATS_TEST_DIRNAME/.bazelversion" ]] && cp "$BATS_TEST_DIRNAME/.bazelversion" .bazelversion
