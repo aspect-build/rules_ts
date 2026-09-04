@@ -1,0 +1,65 @@
+"""ts_project(srcs) containing .d.ts files with various outDir/rootDir settings.
+
+A .d.ts src is never transpiled or relocated by tsc, so it is passed through to
+JsInfo(types) (the `types` output group) at its source location.
+"""
+
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@bazel_lib//lib:testing.bzl", "assert_outputs")
+
+ts_project(
+    name = "default",
+    srcs = [
+        "index.ts",
+        "types.d.ts",
+    ],
+    declaration = True,
+)
+
+assert_outputs(
+    name = "default_types_test",
+    actual = ":default_types",
+    expected = [
+        "dts_srcs/index.d.ts",
+        "dts_srcs/types.d.ts",
+    ],
+)
+
+ts_project(
+    name = "out_dir",
+    srcs = [
+        "index.ts",
+        "types.d.ts",
+    ],
+    declaration = True,
+    out_dir = "dist",
+)
+
+assert_outputs(
+    name = "out_dir_types_test",
+    actual = ":out_dir_types",
+    expected = [
+        "dts_srcs/dist/index.d.ts",
+        "dts_srcs/types.d.ts",
+    ],
+)
+
+ts_project(
+    name = "root_dir_out_dir",
+    srcs = [
+        "src/index.ts",
+        "src/types.d.ts",
+    ],
+    declaration = True,
+    out_dir = "dist2",
+    root_dir = "src",
+)
+
+assert_outputs(
+    name = "root_dir_out_dir_types_test",
+    actual = ":root_dir_out_dir_types",
+    expected = [
+        "dts_srcs/dist2/index.d.ts",
+        "dts_srcs/src/types.d.ts",
+    ],
+)
