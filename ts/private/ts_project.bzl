@@ -190,7 +190,7 @@ def _ts_project_impl(ctx):
     #
     # Unfortunately this duplicates logic in ts_lib.calculate_outs:
     # files collide iff the following conditions are met:
-    # - They are files not renamed when transpiled (ext in [.d.ts, js, json])
+    # - They are files not renamed when transpiled (ext in [js, json])
     # - out_dir == root_dir
     #
     # The duplication is hard to avoid, since calculate_outs works on path strings
@@ -199,8 +199,11 @@ def _ts_project_impl(ctx):
         for s in srcs_inputs:
             if _lib.is_js_src(s.path, ctx.attr.allow_js, ctx.attr.resolve_json_module):
                 output_sources.append(s)
-            if _lib.is_typings_src(s.path):
-                output_types.append(s)
+
+    # Add .d.ts inputs which are never emitted by tsc.
+    for s in srcs_inputs:
+        if _lib.is_typings_src(s.path):
+            output_types.append(s)
 
     is_root_module = ctx.label.workspace_root == ""
 
