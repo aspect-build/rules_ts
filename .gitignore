@@ -2,6 +2,8 @@ bazel-*
 node_modules/
 .pnpm-*
 
+**/.aspect/generated/
+
 .idea/
 .ijwb/
 .vscode

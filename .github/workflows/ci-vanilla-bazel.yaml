@@ -11,6 +11,10 @@ concurrency:
     group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
     cancel-in-progress: true
 
+env:
+    ASPECT_WORKSPACE: ${{ github.workspace }}
+    BAZEL_ASPECT_FLAGS: ${{ secrets.ASPECT_OSS_API_TOKEN != '' && '--config=aspect-cloud' || '' }}
+
 jobs:
     test:
         # Only run on main branch (not PRs) to minimize minutes (billed at 10X and 2X respectively)
@@ -41,7 +45,17 @@ jobs:
                   bazelisk-cache: true
                   external-cache: true
                   module-root: ${{ matrix.folder }}
-            - run: bazel test //...
+            - uses: aspect-build/setup-aspect@b1e9d142e86f63c10d603304daa22bf80492e24c # v2026.25.1
+              with:
+                  aspect-api-token: ${{ secrets.ASPECT_OSS_API_TOKEN }}
+                  disk-cache: false
+                  repository-cache: false
+            # Bazel fails the build rather than create the directory the
+            # aspect-exec-log group writes into.
+            - run: mkdir -p .aspect/generated
+              shell: bash
+              working-directory: ${{ matrix.folder }}
+            - run: bazel test ${{ env.BAZEL_ASPECT_FLAGS }} //...
               working-directory: ${{ matrix.folder }}
 
     bats-tests:
