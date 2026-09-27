@@ -46,6 +46,7 @@ jobs:
                   external-cache: true
                   module-root: ${{ matrix.folder }}
             - uses: aspect-build/setup-aspect@b1e9d142e86f63c10d603304daa22bf80492e24c # v2026.25.1
+              if: matrix.os != 'windows-latest'
               with:
                   aspect-api-token: ${{ secrets.ASPECT_OSS_API_TOKEN }}
                   disk-cache: false
