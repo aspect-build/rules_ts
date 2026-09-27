@@ -60,7 +60,12 @@ jobs:
               working-directory: ${{ matrix.folder }}
 
     bats-tests:
-        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                # Only run macos on main branch (not PRs) to minimize minutes, see test job above
+                os: ${{ fromJSON((github.ref_name == 'main' || contains(github.head_ref, 'macos')) && '["ubuntu-latest", "macos-latest"]' || '["ubuntu-latest"]') }}
+        runs-on: ${{ matrix.os }}
 
         steps:
             - uses: actions/checkout@v6
@@ -73,20 +78,19 @@ jobs:
                   version: '9.15.9'
 
             - name: Setup bats
-              uses: mig4/setup-bats@af9a00deb21b5d795cabfeaa8d9060410377686d # v1
+              id: setup-bats
+              uses: bats-core/bats-action@77d6fb60505b4d0d1d73e48bd035b55074bbfb43 # 4.0.0
               with:
                   bats-version: '1.8.2'
-
-            - name: Setup bats helpers
-              uses: brokenpip3/setup-bats-libs@adb596631d41c8e1da2466833a66ed2c321a4157 # 0.0.3
-              with:
-                  support-path: /usr/lib/bats/bats-support
                   support-version: '0.3.0'
-                  assert-path: /usr/lib/bats/bats-assert
                   assert-version: '2.1.0'
+                  detik-install: false
+                  file-install: false
 
             - name: bats -r .
               working-directory: e2e/test
+              env:
+                  BATS_LIB_PATH: ${{ steps.setup-bats.outputs.lib-path }}
               run: |
                   echo "import $GITHUB_WORKSPACE/.github/workflows/ci.bazelrc" > .bazelrc
                   bats -r .
