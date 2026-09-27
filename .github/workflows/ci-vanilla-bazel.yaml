@@ -46,6 +46,7 @@ jobs:
                   external-cache: true
                   module-root: ${{ matrix.folder }}
             - uses: aspect-build/setup-aspect@b1e9d142e86f63c10d603304daa22bf80492e24c # v2026.25.1
+              if: matrix.os != 'windows-latest'
               with:
                   aspect-api-token: ${{ secrets.ASPECT_OSS_API_TOKEN }}
                   disk-cache: false
@@ -55,7 +56,7 @@ jobs:
             - run: mkdir -p .aspect/generated
               shell: bash
               working-directory: ${{ matrix.folder }}
-            - run: bazel test ${{ env.BAZEL_ASPECT_FLAGS }} //...
+            - run: bazel test ${{ matrix.os != 'windows-latest' && env.BAZEL_ASPECT_FLAGS || '' }} //...
               working-directory: ${{ matrix.folder }}
 
     bats-tests:
