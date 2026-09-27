@@ -1,0 +1,23 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("//:typescript.bzl", "TSC", "VALIDATOR")
+
+npm_link_all_packages(name = "node_modules")
+
+ts_project(
+    name = "app",
+    srcs = ["index.ts"],
+    composite = True,
+    tsc = TSC,
+    validator = VALIDATOR,
+    deps = [":node_modules/outputs-lib"],
+)
+
+# Outputs must not depend on where the action ran. A path out of the sandbox into
+# the execroot varies with the sandbox layout and execution strategy.
+genrule(
+    name = "hermetic_tsbuildinfo",
+    srcs = ["app.tsbuildinfo"],
+    outs = ["hermetic_tsbuildinfo.txt"],
+    cmd = "if grep -q execroot $<; then echo \"$< references the execroot\" >&2; exit 1; fi; touch $@",
+)

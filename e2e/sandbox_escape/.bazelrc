@@ -1,0 +1,28 @@
+try-import %workspace%/../../.aspect/bazelrc
+
+import %workspace%/../../tools/preset.bazelrc
+
+common --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
+common --@aspect_rules_ts//ts:default_to_tsc_transpiler
+
+# Materialize each lib's copied sources in bazel-bin even when its actions are
+# cache hits, otherwise there is nothing for a compiler escaping the sandbox to find.
+common --remote_download_outputs=all
+
+# Report every escaping target, not only the first.
+common --keep_going
+
+# The hermetic Linux sandbox hardlinks inputs instead of symlinking them into the
+# execroot and does not mount the execroot, so there is nothing to escape to.
+# macOS has no equivalent, so the TypeScript 7 targets fail only there.
+# Require linux-sandbox so an unavailable one fails instead of silently falling
+# back to processwrapper-sandbox, which escapes like macOS.
+common:linux --spawn_strategy=linux-sandbox
+common:linux --experimental_use_hermetic_linux_sandbox
+common:linux --sandbox_add_mount_pair=/bin
+common:linux --sandbox_add_mount_pair=/etc
+common:linux --sandbox_add_mount_pair=/lib
+common:linux --sandbox_add_mount_pair=/lib64
+# TypeScript 7 reads /proc/self/exe to locate itself.
+common:linux --sandbox_add_mount_pair=/proc
+common:linux --sandbox_add_mount_pair=/usr

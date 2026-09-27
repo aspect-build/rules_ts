@@ -4,3 +4,4 @@ docs/*.md
 **/*_connectquery.d.ts
 .github/workflows/.aspect-workflows-reusable.yaml
 examples/resolve_json_module_esm/index.mts
+**/badsyntax.ts

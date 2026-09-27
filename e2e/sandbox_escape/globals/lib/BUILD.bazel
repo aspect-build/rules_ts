@@ -1,0 +1,27 @@
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+# Consumers see only the .d.ts outputs of :lib, but bazel-bin also holds its
+# copied .ts sources. A compiler that follows node_modules/globals-lib to its
+# realpath escapes the sandbox, resolves "./util" to util.ts (preferred over
+# util.d.ts) and pulls in globals.d.ts, which conflicts with the consumer's own
+# globals (TS2451). util.ts references globals.d.ts, a reference declaration
+# emit drops, so util.d.ts does not carry these private globals.
+ts_project(
+    name = "lib",
+    srcs = [
+        "globals.d.ts",
+        "index.ts",
+        "util.ts",
+    ],
+    declaration = True,
+)
+
+js_library(
+    name = "pkg",
+    srcs = [
+        "package.json",
+        ":lib",
+    ],
+    visibility = ["//visibility:public"],
+)

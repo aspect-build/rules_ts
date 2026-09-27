@@ -1,0 +1,71 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .: {}
+
+  badsyntax/app:
+    dependencies:
+      badsyntax-lib:
+        specifier: workspace:*
+        version: link:../lib
+
+  badsyntax/lib: {}
+
+  esm/app:
+    dependencies:
+      esm-lib:
+        specifier: workspace:*
+        version: link:../lib
+
+  esm/lib: {}
+
+  globals/app:
+    dependencies:
+      globals-lib:
+        specifier: workspace:*
+        version: link:../lib
+
+  globals/lib: {}
+
+  identity/app:
+    dependencies:
+      identity-lib:
+        specifier: workspace:*
+        version: link:../lib
+
+  identity/lib: {}
+
+  outputs/app:
+    dependencies:
+      outputs-lib:
+        specifier: workspace:*
+        version: link:../lib
+
+  outputs/lib: {}
+
+  phantom/app:
+    dependencies:
+      phantom-lib:
+        specifier: workspace:*
+        version: link:../lib
+
+  phantom/leaked: {}
+
+  phantom/lib:
+    devDependencies:
+      phantom-leaked:
+        specifier: workspace:*
+        version: link:../leaked
+
+  strict/app:
+    dependencies:
+      strict-lib:
+        specifier: workspace:*
+        version: link:../lib
+
+  strict/lib: {}

@@ -1,0 +1,6 @@
+{
+    "private": true,
+    "dependencies": {
+        "identity-lib": "workspace:*"
+    }
+}

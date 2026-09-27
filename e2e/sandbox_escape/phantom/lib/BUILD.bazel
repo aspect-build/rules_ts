@@ -1,0 +1,33 @@
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+
+npm_link_all_packages(name = "node_modules")
+
+# phantom-leaked is only a devDependency, supplied to this package's own
+# compilation via ts_config deps, yet the emitted index.d.ts re-exports from it.
+# Consumers cannot resolve it and, with skipLibCheck, silently get `any`. A
+# compiler that follows node_modules/phantom-lib to its realpath escapes the
+# sandbox, finds node_modules/phantom-leaked next to this package and uses its
+# real type (TS2322).
+ts_config(
+    name = "tsconfig",
+    src = "tsconfig.json",
+    deps = [":node_modules/phantom-leaked"],
+)
+
+ts_project(
+    name = "lib",
+    srcs = ["index.ts"],
+    declaration = True,
+    tsconfig = ":tsconfig",
+)
+
+js_library(
+    name = "pkg",
+    srcs = [
+        "package.json",
+        ":lib",
+    ],
+    visibility = ["//visibility:public"],
+)
