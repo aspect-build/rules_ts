@@ -1,0 +1,7 @@
+{
+    "name": "phantom-lib",
+    "private": true,
+    "devDependencies": {
+        "phantom-leaked": "workspace:*"
+    }
+}

@@ -1,0 +1,28 @@
+"e2e test for TypeScript compilers escaping the sandbox via node_modules symlinks"
+
+module(name = "e2e_sandbox_escape")
+
+bazel_dep(name = "aspect_rules_ts", version = "0.0.0")
+local_path_override(
+    module_name = "aspect_rules_ts",
+    path = "../..",
+)
+
+bazel_dep(name = "aspect_rules_js", version = "3.4.0")
+
+bazel_dep(name = "bazel_skylib", version = "1.8.2", dev_dependency = True)
+
+npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm", dev_dependency = True)
+npm.npm_translate_lock(
+    name = "npm",
+    pnpm_lock = "//:pnpm-lock.yaml",
+)
+use_repo(npm, "npm")
+
+typescript = use_extension("@aspect_rules_ts//ts:extensions.bzl", "typescript", dev_dependency = True)
+typescript.toolchain(version = "6.0.3")
+typescript.toolchain(
+    name = "npm_typescript7",
+    version = "7.0.2",
+)
+use_repo(typescript, "npm_typescript", "npm_typescript7")

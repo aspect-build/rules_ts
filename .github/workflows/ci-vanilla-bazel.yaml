@@ -27,6 +27,7 @@ jobs:
                     - .
                     - examples
                     - 'e2e/smoke'
+                    - 'e2e/sandbox_escape'
                 os:
                     # NB: linux testing is on Aspect Workflows
                     - macos-latest
@@ -36,6 +37,9 @@ jobs:
                     # transpilers in examples/transpiler rely on sandboxing
                     # to hide generated .ts fixtures from `tsc -p`.
                     - folder: examples
+                      os: windows-latest
+                    # windows has no sandbox to escape
+                    - folder: e2e/sandbox_escape
                       os: windows-latest
         runs-on: ${{ matrix.os }}
         steps:
@@ -55,6 +59,11 @@ jobs:
             # aspect-exec-log group writes into.
             - run: mkdir -p .aspect/generated
               shell: bash
+              working-directory: ${{ matrix.folder }}
+            # Control for the TypeScript 7 build below, which escapes the sandbox.
+            - name: Test with TypeScript 6
+              if: matrix.folder == 'e2e/sandbox_escape'
+              run: bazel test ${{ env.BAZEL_ASPECT_FLAGS }} --//:typescript=6 //...
               working-directory: ${{ matrix.folder }}
             - run: bazel test ${{ matrix.os != 'windows-latest' && env.BAZEL_ASPECT_FLAGS || '' }} //...
               working-directory: ${{ matrix.folder }}

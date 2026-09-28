@@ -48,6 +48,7 @@ jobs:
                 - { path: "examples", slug: "examples" }
                 - { path: "e2e/smoke", slug: "e2e-smoke" }
                 - { path: "e2e/path_mapping", slug: "e2e-path_mapping" }
+                - { path: "e2e/sandbox_escape", slug: "e2e-sandbox_escape" }
                 - { path: "e2e/bzlmodules", slug: "e2e-bzlmodules" }
                 - { path: "e2e/nested_repos", slug: "e2e-nested_repos" }
                 - { path: "e2e/external_dep", slug: "e2e-external_dep" }
@@ -63,6 +64,16 @@ jobs:
             - uses: aspect-build/setup-aspect@b1e9d142e86f63c10d603304daa22bf80492e24c # v2026.25.1
               with:
                 aspect-api-token: ${{ secrets.ASPECT_OSS_API_TOKEN }}
+            # Ubuntu 24.04 restricts the unprivileged user namespaces linux-sandbox
+            # needs, otherwise Bazel silently falls back to processwrapper-sandbox.
+            - name: Allow linux-sandbox
+              if: matrix.workspace.path == 'e2e/sandbox_escape'
+              run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+            # Control for the TypeScript 7 build below, which escapes the sandbox.
+            - name: Test with TypeScript 6
+              if: matrix.workspace.path == 'e2e/sandbox_escape'
+              working-directory: ${{ matrix.workspace.path }}
+              run: aspect test $REMOTE_FLAG --task:name=test-${{ matrix.workspace.slug }}-ts6-${{ matrix.bazel.id }} ${{ matrix.bazel.flags }} --bazel-flag=--//:typescript=6 -- //...
             - name: Test
               working-directory: ${{ matrix.workspace.path }}
               run: aspect test $REMOTE_FLAG --task:name=test-${{ matrix.workspace.slug }}-${{ matrix.bazel.id }} ${{ matrix.bazel.flags }} -- //...
