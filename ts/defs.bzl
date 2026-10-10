@@ -250,6 +250,7 @@ def ts_project(
 
     common_kwargs = {
         "tags": kwargs.get("tags", []),
+        "target_compatible_with": kwargs.get("target_compatible_with", None),
         "visibility": kwargs.get("visibility", None),
         "testonly": kwargs.get("testonly", None),
     }
@@ -399,6 +400,7 @@ def ts_project(
                 actual = declarations_target_name,
                 visibility = common_kwargs.get("visibility"),
                 tags = common_kwargs.get("tags", []),
+                target_compatible_with = common_kwargs.get("target_compatible_with"),
             )
         else:
             # tsc outputs the types and must be extracted via output_group
@@ -430,6 +432,7 @@ def ts_project(
             srcs = [name],
             output_group = "transitive_typecheck",
             tags = ["manual"] + common_kwargs.get("tags", []),
+            target_compatible_with = common_kwargs.get("target_compatible_with"),
             visibility = common_kwargs.get("visibility"),
             testonly = common_kwargs.get("testonly"),
         )
@@ -439,6 +442,7 @@ def ts_project(
             name = test_target_name,
             targets = [typecheck_target_name],
             tags = common_kwargs.get("tags"),
+            target_compatible_with = common_kwargs.get("target_compatible_with"),
             size = "small",
             visibility = common_kwargs.get("visibility"),
         )
@@ -447,6 +451,7 @@ def ts_project(
             name = transitive_typecheck_test_target_name,
             targets = [transitive_typecheck_target_name],
             tags = ["manual"] + common_kwargs.get("tags", []),
+            target_compatible_with = common_kwargs.get("target_compatible_with"),
             size = "small",
             visibility = common_kwargs.get("visibility"),
         )
