@@ -79,7 +79,7 @@ Just add this to `/.bazelrc``:
 ### Other Transpilers
 
 The `transpiler` attribute accepts any rule or macro with this signature: `(name, srcs, **kwargs)`
-The `**kwargs` attribute propagates the tags, visibility, and testonly attributes from `ts_project`.
+The `**kwargs` attribute propagates the tags, target_compatible_with, visibility, and testonly attributes from `ts_project`.
 
 See the examples/transpiler directory for a simple example using Babel, or
 <https://github.com/aspect-build/bazel-examples/tree/main/ts_project_transpiler>
