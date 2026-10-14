@@ -13,6 +13,7 @@ string_flag(
     # as that's the way it appears in tsconfig.json or tsc command line.
     name = "skipLibCheck",
     build_setting_default = "unspecified",
+    scope = "universal",
     values = [
         "always",
         "honor_tsconfig",
@@ -24,24 +25,28 @@ string_flag(
 bool_flag(
     name = "default_to_tsc_transpiler",
     build_setting_default = False,
+    scope = "universal",
     visibility = ["//visibility:public"],
 )
 
 bool_flag(
     name = "verbose",
     build_setting_default = False,
+    scope = "universal",
     visibility = ["//visibility:public"],
 )
 
 bool_flag(
     name = "generate_tsc_trace",
     build_setting_default = False,
+    scope = "universal",
     visibility = ["//visibility:public"],
 )
 
 bool_flag(
     name = "validation_typecheck",
     build_setting_default = False,
+    scope = "universal",
     visibility = ["//visibility:public"],
 )
 
