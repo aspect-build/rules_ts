@@ -1,0 +1,5 @@
+{
+    "name": "esm-lib",
+    "private": true,
+    "type": "module"
+}

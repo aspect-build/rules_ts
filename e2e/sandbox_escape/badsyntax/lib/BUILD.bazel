@@ -1,0 +1,15 @@
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+
+# Consumers see node_modules/badsyntax-lib, a symlink to this package in
+# bazel-bin. A compiler that follows it to its realpath escapes the sandbox and
+# resolves "./badsyntax" to badsyntax.ts (preferred over badsyntax.d.ts) (TS1109).
+js_library(
+    name = "pkg",
+    srcs = [
+        "badsyntax.d.ts",
+        "badsyntax.ts",
+        "index.d.ts",
+        "package.json",
+    ],
+    visibility = ["//visibility:public"],
+)

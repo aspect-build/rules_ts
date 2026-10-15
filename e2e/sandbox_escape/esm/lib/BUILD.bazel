@@ -1,0 +1,26 @@
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
+
+# package.json ("type": "module") reaches only this package's own compilation,
+# via ts_config deps, so consumers see index.d.ts without it and treat it as
+# CommonJS. It is still copied to bazel-bin, so a compiler that follows
+# node_modules/esm-lib to its realpath escapes the sandbox, finds it and treats
+# index.d.ts as ESM, which a CommonJS consumer under node16 cannot require (TS1479).
+ts_config(
+    name = "tsconfig",
+    src = "tsconfig.json",
+    deps = ["package.json"],
+)
+
+ts_project(
+    name = "lib",
+    srcs = ["index.ts"],
+    declaration = True,
+    tsconfig = ":tsconfig",
+)
+
+js_library(
+    name = "pkg",
+    srcs = [":lib"],
+    visibility = ["//visibility:public"],
+)
