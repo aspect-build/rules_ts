@@ -6,6 +6,13 @@ local_repository(
     path = "../..",
 )
 
+# rules_ts flags use `scope`, which needs bazel_skylib 1.8.0+; fetch before rules_proto pulls in an older one.
+http_archive(
+    name = "bazel_skylib",
+    sha256 = "51b5105a760b353773f904d2bbc5e664d0987fbaf22265164de65d43e910d8ac",
+    urls = ["https://github.com/bazelbuild/bazel-skylib/releases/download/1.8.1/bazel-skylib-1.8.1.tar.gz"],
+)
+
 http_archive(
     name = "rules_proto",
     sha256 = "303e86e722a520f6f326a50b41cfc16b98fe6d1955ce46642a5b7a67c11c0f5d",
