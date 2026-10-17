@@ -56,6 +56,8 @@ jobs:
                 - { id: "bazel-7-wksp", version: "7.x", flags: "--bazel-flag=--enable_bzlmod=false" }
                 - { id: "bazel-8", version: "8.x", flags: "" }
                 - { id: "bazel-9", version: "9.x", flags: "" }
+                # TODO: switch to 10.x once a 10.x LTS release exists
+                - { id: "bazel-10", version: "last_rc", flags: "" }
                 exclude:
                 # No WORKSPACE root/examples
                 - { workspace: { slug: "root" }, bazel: { id: "bazel-7-wksp" } }
