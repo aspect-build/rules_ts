@@ -56,6 +56,8 @@ jobs:
                 - { id: "bazel-7", version: "7.x", flags: "" }
                 - { id: "bazel-8", version: "8.x", flags: "--bazel-flag=--lockfile_mode=update" }
                 - { id: "bazel-9", version: "9.x", flags: "--bazel-flag=--lockfile_mode=update" }
+                # TODO: switch to 10.x once a 10.x LTS release exists
+                - { id: "bazel-10", version: "last_rc", flags: "--bazel-flag=--lockfile_mode=update" }
         env:
             USE_BAZEL_VERSION: ${{ matrix.bazel.version }}
         steps:
