@@ -1,0 +1,8 @@
+{
+    "name": "e2e_sandbox_escape",
+    "private": true,
+    "packageManager": "pnpm@10.14.0",
+    "pnpm": {
+        "onlyBuiltDependencies": []
+    }
+}

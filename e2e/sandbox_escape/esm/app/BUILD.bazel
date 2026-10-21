@@ -1,0 +1,20 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("//:typescript.bzl", "TSC", "VALIDATOR")
+
+npm_link_all_packages(name = "node_modules")
+
+ts_config(
+    name = "tsconfig",
+    src = "tsconfig.json",
+    deps = ["package.json"],
+)
+
+ts_project(
+    name = "app",
+    srcs = ["index.ts"],
+    tsc = TSC,
+    tsconfig = ":tsconfig",
+    validator = VALIDATOR,
+    deps = [":node_modules/esm-lib"],
+)

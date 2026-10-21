@@ -1,0 +1,20 @@
+load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+
+npm_link_all_packages(name = "node_modules")
+
+# TypeScript major version the apps compile with: 7 escapes the sandbox, 6 does not.
+string_flag(
+    name = "typescript",
+    build_setting_default = "7",
+    values = [
+        "6",
+        "7",
+    ],
+)
+
+config_setting(
+    name = "typescript_7",
+    flag_values = {":typescript": "7"},
+    visibility = ["//:__subpackages__"],
+)

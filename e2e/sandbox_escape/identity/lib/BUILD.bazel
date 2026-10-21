@@ -1,0 +1,18 @@
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+ts_project(
+    name = "lib",
+    srcs = ["index.ts"],
+    declaration = True,
+    visibility = ["//identity/app:__pkg__"],
+)
+
+js_library(
+    name = "pkg",
+    srcs = [
+        "package.json",
+        ":lib",
+    ],
+    visibility = ["//visibility:public"],
+)
