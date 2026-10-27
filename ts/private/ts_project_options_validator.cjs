@@ -95,15 +95,26 @@ function relativizeConfigPaths(config, tsconfigPath) {
         }
     }
 }
+// Parses the json-encoded Bazel ts_project attributes.
+// On Windows the argument may arrive quoted wrong, depending on the launcher:
+// - the hermetic launcher (validator.exe) preserves escaped quotes: {\"a\":1}
+// - the .bat launcher replaces quotes with backslashes: {\a\:1}
+// Unescape the quotes first, so that a blanket backslash replacement does not
+// corrupt {\"a\":1} into {""a"":1}. This is a no-op on unmangled JSON (e.g. on Linux and
+// macOS), since the encoded attributes contain no backslashes.
+function parseAttrs(attrsStr) {
+    try {
+        return JSON.parse(attrsStr.replace(/\\"/g, '"'))
+    } catch (e) {}
+    return JSON.parse(attrsStr.replace(/\\/g, '"'))
+}
 function main(_a) {
     var tsconfigPath = _a[0],
         output = _a[1],
         target = _a[2],
         packageDir = _a[3],
         attrsStr = _a[4]
-    // The Bazel ts_project attributes were json-encoded
-    // (on Windows the quotes seem to be quoted wrong, so replace backslash with quotes :shrug:)
-    var attrs = JSON.parse(attrsStr.replace(/\\/g, '"'))
+    var attrs = parseAttrs(attrsStr)
     // The resolved config, in `tsc --showConfig` shape, which the checks below
     // read in place of the raw tsconfig file(s).
     var config = resolveConfig(tsconfigPath, output)
