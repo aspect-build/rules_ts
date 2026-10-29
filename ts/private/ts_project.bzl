@@ -393,5 +393,6 @@ ts_project = rule(
     """,
     implementation = lib.implementation,
     attrs = lib.attrs,
+    provides = [JsInfo],
     toolchains = COPY_FILE_TO_BIN_TOOLCHAINS,
 )
