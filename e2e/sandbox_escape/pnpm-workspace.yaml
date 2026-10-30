@@ -1,0 +1,8 @@
+packages:
+    - badsyntax/*
+    - esm/*
+    - globals/*
+    - identity/*
+    - outputs/*
+    - phantom/*
+    - strict/*

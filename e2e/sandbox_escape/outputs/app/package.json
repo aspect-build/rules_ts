@@ -1,0 +1,6 @@
+{
+    "private": true,
+    "dependencies": {
+        "outputs-lib": "workspace:*"
+    }
+}
