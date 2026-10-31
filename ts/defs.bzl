@@ -4,7 +4,6 @@ The most commonly used is the [ts_project](#function-ts_project) macro which acc
 inputs and produces JavaScript or declaration (.d.ts) outputs.
 """
 
-load("@aspect_tools_telemetry_report//:defs.bzl", "TELEMETRY")  # buildifier: disable=load
 load("@bazel_lib//lib:utils.bzl", "to_label")
 load("@bazel_skylib//lib:partial.bzl", "partial")
 load("//ts/private:build_test.bzl", "build_test")
