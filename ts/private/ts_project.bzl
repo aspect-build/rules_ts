@@ -161,9 +161,11 @@ def _ts_project_impl(ctx):
     common_args.extend([
         "--project",
         tsconfig_path,
+    ])
+    root_dir_args = [
         "--rootDir",
         _lib.calculate_root_dir(ctx),
-    ])
+    ]
 
     assets_outs = []
     asset_paths = _lib.files_relative_to_package(ctx, ctx.files.assets)
@@ -267,6 +269,7 @@ def _ts_project_impl(ctx):
     if use_tsc_for_js or use_tsc_for_dts:
         tsc_emit_arguments = ctx.actions.args()
         tsc_emit_arguments.add_all(common_args)
+        tsc_emit_arguments.add_all(root_dir_args)
 
         # Type-checking is done async as a separate action and can be skipped.
         if ctx.attr.isolated_typecheck:

@@ -123,6 +123,25 @@ def _generate_tsc_trace_false_test_impl(ctx):
 
 _generate_tsc_trace_false_test = analysistest.make(_generate_tsc_trace_false_test_impl)
 
+def _find_action(env, target_under_test, mnemonic):
+    for action in target_under_test.actions:
+        if action.mnemonic == mnemonic:
+            return action
+    asserts.true(env, False, "could not find the {} action".format(mnemonic))
+    return None
+
+# isolated_typecheck passes --rootDir to the emit action only
+def _isolated_typecheck_root_dir_test_impl(ctx):
+    env = analysistest.begin(ctx)
+    target_under_test = analysistest.target_under_test(env)
+    emit = _find_action(env, target_under_test, "TsProjectEmit")
+    check = _find_action(env, target_under_test, "TsProjectCheck")
+    asserts.true(env, "--rootDir" in emit.argv, "expected --rootDir on the emit action")
+    asserts.false(env, "--rootDir" in check.argv, "expected no --rootDir on the typecheck action")
+    return analysistest.end(env)
+
+_isolated_typecheck_root_dir_test = analysistest.make(_isolated_typecheck_root_dir_test_impl)
+
 def _ts_project_with_flags(name, verbose_flag = None, skip_lib_check_flag = None, generate_tsc_trace_flag = None, **kwargs):
     write_file(
         name = "{}_write".format(name),
@@ -218,9 +237,20 @@ def ts_project_flags_test_suite(name):
         target_under_test = ":generate_tsc_trace_false",
     )
 
+    _ts_project_with_flags(
+        name = "isolated_typecheck_root_dir",
+        tsconfig = _TSCONFIG,
+        isolated_typecheck = True,
+    )
+    _isolated_typecheck_root_dir_test(
+        name = "isolated_typecheck_root_dir_test",
+        target_under_test = ":isolated_typecheck_root_dir_ts",
+    )
+
     native.test_suite(
         name = name,
         tests = [
+            ":isolated_typecheck_root_dir_test",
             ":verbose_true_test",
             ":verbose_false_test",
             ":skip_lib_check_always_test",
