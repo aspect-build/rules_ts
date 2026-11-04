@@ -239,7 +239,13 @@ def ts_project_flags_test_suite(name):
 
     _ts_project_with_flags(
         name = "isolated_typecheck_root_dir",
-        tsconfig = _TSCONFIG,
+        tsconfig = {
+            "compilerOptions": {
+                "declaration": True,
+                "isolatedDeclarations": True,
+                "sourceMap": True,
+            },
+        },
         isolated_typecheck = True,
     )
     _isolated_typecheck_root_dir_test(
