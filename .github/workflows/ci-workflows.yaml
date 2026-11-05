@@ -14,29 +14,25 @@ concurrency:
     group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
     cancel-in-progress: true
 
-env:
-    ASPECT_WORKSPACE: ${{ github.workspace }}
-    REMOTE_FLAG: ${{ secrets.ASPECT_OSS_API_TOKEN != '' && '--remote' || '' }}
-
 jobs:
     format:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v6
-            - uses: aspect-build/setup-aspect@b1e9d142e86f63c10d603304daa22bf80492e24c # v2026.25.1
+            - uses: aspect-build/setup-aspect@ebca96eb49ef58c00d4226de8bd3a0813507dd87 # v2026.38.3
               with:
-                aspect-api-token: ${{ secrets.ASPECT_OSS_API_TOKEN }}
+                aspect-api-token: ${{ secrets.ASPECT_CLOUD_API_TOKEN }}
             - name: Format
-              run: aspect format $REMOTE_FLAG --task:name=format
+              run: aspect format --task:name=format
     buildifier:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v6
-            - uses: aspect-build/setup-aspect@b1e9d142e86f63c10d603304daa22bf80492e24c # v2026.25.1
+            - uses: aspect-build/setup-aspect@ebca96eb49ef58c00d4226de8bd3a0813507dd87 # v2026.38.3
               with:
-                aspect-api-token: ${{ secrets.ASPECT_OSS_API_TOKEN }}
+                aspect-api-token: ${{ secrets.ASPECT_CLOUD_API_TOKEN }}
             - name: Buildifier
-              run: aspect buildifier $REMOTE_FLAG --task:name=buildifier
+              run: aspect buildifier --task:name=buildifier
     test:
         name: test (${{ matrix.workspace.path }}, ${{ matrix.bazel.id }})
         runs-on: ubuntu-latest
@@ -62,12 +58,12 @@ jobs:
             USE_BAZEL_VERSION: ${{ matrix.bazel.version }}
         steps:
             - uses: actions/checkout@v6
-            - uses: aspect-build/setup-aspect@b1e9d142e86f63c10d603304daa22bf80492e24c # v2026.25.1
+            - uses: aspect-build/setup-aspect@ebca96eb49ef58c00d4226de8bd3a0813507dd87 # v2026.38.3
               with:
-                aspect-api-token: ${{ secrets.ASPECT_OSS_API_TOKEN }}
+                aspect-api-token: ${{ secrets.ASPECT_CLOUD_API_TOKEN }}
             - name: Test
               working-directory: ${{ matrix.workspace.path }}
-              run: aspect test $REMOTE_FLAG --task:name=test-${{ matrix.workspace.slug }}-${{ matrix.bazel.id }} ${{ matrix.bazel.flags }} -- //...
+              run: aspect test --task:name=test-${{ matrix.workspace.slug }}-${{ matrix.bazel.id }} ${{ matrix.bazel.flags }} -- //...
             - name: Optional ./test.sh
               working-directory: ${{ matrix.workspace.path }}
               run: |
