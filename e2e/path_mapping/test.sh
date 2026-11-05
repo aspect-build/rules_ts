@@ -13,10 +13,12 @@
 # explicit disk (or remote) cache lookup, keyed by the path-mapped action
 # digest, can serve the second build's action from the first build's result.
 #
-# Bazel allows one execution log per build, so the second build clears any
-# --execution_log_compact_file an rc sets (e.g. Aspect's aspect-exec-log
-# group, enabled on CI) before asking for the JSON log it inspects.
+# Bazel runs with --nohome_rc: on CI the home rc enables Aspect's
+# aspect-exec-log group, whose --execution_log_compact_file conflicts with the
+# --execution_log_json_file inspected below (Bazel allows one execution log).
 set -o errexit -o nounset -o pipefail
+
+bazel() { command bazel --nohome_rc "$@"; }
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
@@ -50,7 +52,6 @@ bazel build -c fastbuild "${targets[@]}" \
 bazel build -c opt "${targets[@]}" \
 	--disk_cache="$disk_cache" \
 	--action_env="TS_PROJECT_PATH_MAPPING_TEST_INVALIDATE=$invalidate" \
-	--execution_log_compact_file= \
 	--execution_log_json_file="$exec_log"
 
 # mnemonic:target pairs to check via aquery. The target must be the
