@@ -11,6 +11,9 @@ concurrency:
     group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
     cancel-in-progress: true
 
+permissions:
+  id-token: write
+
 jobs:
     test:
         # Only run on main branch (not PRs) to minimize minutes (billed at 10X and 2X respectively)
