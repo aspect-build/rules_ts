@@ -282,3 +282,54 @@ function mk_extends_include() {
 	assert_output -p "bad.ts"
 	assert_output -p "error TS2322"
 }
+
+# --- Scenario 7: a dep's .ts next to its .d.ts with isolated_typecheck --------
+# With isolated_typecheck, :a's typecheck action should only see :b's .d.ts.
+# But :b's b.ts is copied to bazel-bin right next to b.d.ts, and tsc resolves
+# `../b/b` to the .ts before the .d.ts. The sandbox hides b.ts; without it tsc
+# pulls b.ts into :a's program. That is harmless unless --rootDir is passed, in
+# which case tsc rejects b.ts as outside rootDir (TS6059) even under --noEmit.
+# --rootDir is only needed for emit, so it is not passed to the typecheck action.
+function mk_isolated_typecheck_dep() {
+	local dir="$1"
+	mkdir -p "$dir/a" "$dir/b"
+	echo 'export const b: number = 1;' >"$dir/b/b.ts"
+	echo 'import { b } from "../b/b"; export const a: number = b;' >"$dir/a/a.ts"
+	cat >"$dir/b/BUILD.bazel" <<-'EOF2'
+		load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+		ts_project(
+		    name = "b",
+		    srcs = ["b.ts"],
+		    declaration = True,
+		    isolated_typecheck = True,
+		    tsconfig = {"compilerOptions": {"declaration": True, "isolatedDeclarations": True}},
+		    visibility = ["//visibility:public"],
+		)
+	EOF2
+	cat >"$dir/a/BUILD.bazel" <<-EOF2
+		load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+		ts_project(
+		    name = "a",
+		    srcs = ["a.ts"],
+		    declaration = True,
+		    isolated_typecheck = True,
+		    tsconfig = {"compilerOptions": {"declaration": True, "isolatedDeclarations": True}},
+		    deps = ["//$dir/b"],
+		)
+	EOF2
+}
+
+@test 'isolated_typecheck dep: local typecheck ignores the dep .ts outside rootDir (TS6059)' {
+	workspace
+	mk_isolated_typecheck_dep "itc_ok"
+	mk_isolated_typecheck_dep "itc_no"
+
+	run bazel build //itc_ok/a:a_typecheck --strategy=TsProjectCheck=sandboxed
+	assert_success
+
+	run bazel build //itc_no/a:a_typecheck --strategy=TsProjectCheck=local
+	assert_success
+	refute_output -p "TS6059"
+}
