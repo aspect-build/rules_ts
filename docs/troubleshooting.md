@@ -89,6 +89,24 @@ error TS6059: File '/private/var/tmp/_bazel_alex.eagle/efa8e81f99c35c1227ef40a83
 
 The `--explainFiles` flag in TS 4.2 also gives information about why a given file was added to the program.
 
+## Paths in Node.js tool configuration
+
+Node-based tool configuration files (for example, Vite configs) may run from a Bazel action or
+runfiles tree rather than directly from the source checkout. `__dirname` in CommonJS and
+`import.meta.url` in ES modules identify the config file's location; they do not necessarily identify
+the package or workspace root. Bazel may expose a package through different runfiles or symlink
+paths, and a module loader can then treat two paths to the same package as separate module instances.
+One symptom is a test mock that appears not to apply because the code under test loads another copy
+of the dependency.
+
+If a config path is intended to be relative to the working directory chosen for its Bazel target,
+use that directory as the base (for example, `path.resolve(process.cwd(), "src")`) and configure the
+target's working directory accordingly. `process.cwd()` is not inherently the repository root, so do
+not use it without checking the target's `chdir`/working-directory behavior. Declare the config and
+its referenced files as target inputs, and reproduce the behavior with the Bazel test target rather
+than relying on paths from the source checkout. A reported Vite mock-resolution example is tracked in
+[#987](https://github.com/aspect-build/rules_ts/issues/987).
+
 ## Module not resolved
 
 Use the `--traceResolution` flag to `tsc` to understand where TypeScript looked for the file.
