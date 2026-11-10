@@ -7,8 +7,8 @@ repository (see e2e/nested_repos). The `declaration` attribute mirrors an
 option set only in the tsconfig, so validation fails if resolution breaks.
 """
 
-load("@rules_ts//ts:defs.bzl", "ts_config", "ts_project")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@rules_ts//ts:defs.bzl", "ts_config", "ts_project")
 
 # The tsconfig used by the child package //tsconfig_locations/lib
 ts_config(

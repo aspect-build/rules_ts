@@ -1,9 +1,9 @@
 """Shows how https://www.typescriptlang.org/tsconfig/#resolveJsonModule can be used."""
 
 load("@aspect_rules_js//js:defs.bzl", "js_test")
-load("@rules_ts//ts:defs.bzl", "ts_project")
 load("@bazel_lib//lib:testing.bzl", "assert_contains")
 load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@rules_ts//ts:defs.bzl", "ts_project")
 
 npm_link_all_packages(name = "node_modules")
 

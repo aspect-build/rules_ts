@@ -1,8 +1,8 @@
 """Shows different ways to pass source files into ts_project"""
 
-load("@rules_ts//ts:defs.bzl", "ts_project")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@rules_ts//ts:defs.bzl", "ts_project")
 
 [
     write_file(
