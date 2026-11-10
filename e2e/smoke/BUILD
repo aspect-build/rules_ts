@@ -1,8 +1,8 @@
-load("@rules_ts//ts:defs.bzl", "ts_project")
-load("@rules_ts//ts:proto.bzl", "ts_proto_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_ts//ts:defs.bzl", "ts_project")
+load("@rules_ts//ts:proto.bzl", "ts_proto_library")
 
 package(default_visibility = ["//visibility:public"])
 

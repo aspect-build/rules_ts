@@ -4,8 +4,8 @@ A .d.ts src is never transpiled or relocated by tsc, so it is passed through to
 JsInfo(types) (the `types` output group) at its source location.
 """
 
-load("@rules_ts//ts:defs.bzl", "ts_project")
 load("@bazel_lib//lib:testing.bzl", "assert_outputs")
+load("@rules_ts//ts:defs.bzl", "ts_project")
 
 ts_project(
     name = "default",

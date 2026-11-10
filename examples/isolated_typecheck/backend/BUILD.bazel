@@ -1,6 +1,6 @@
-load("@rules_ts//ts:defs.bzl", "ts_config", "ts_project")
 load("@bazel_lib//lib:testing.bzl", "assert_outputs")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@rules_ts//ts:defs.bzl", "ts_config", "ts_project")
 
 # A tsconfig file/target with dependencies required for type-checking and potentially
 # for invoking tsc even with --noCheck.

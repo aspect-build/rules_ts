@@ -1,8 +1,8 @@
 load("@aspect_rules_js//js:defs.bzl", "js_test")
-load("@rules_ts//ts:defs.bzl", "ts_config", "ts_project")
 load("@bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
 load("@bazel_lib//lib:testing.bzl", "assert_outputs")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@rules_ts//ts:defs.bzl", "ts_config", "ts_project")
 
 genrule(
     name = "generated_json_file",
