@@ -53,7 +53,7 @@ https://docs.aspect.build/rulesets/aspect_rules_js/docs/js_library#deps for more
         Whether tsc should be used to produce .js outputs
 
         Values are:
-        - -1: Error if --@aspect_rules_ts//ts:default_to_tsc_transpiler not set, otherwise transpile
+        - -1: Error if --@rules_ts//ts:default_to_tsc_transpiler not set, otherwise transpile
         - 0: Do not transpile
         - 1: Transpile
         """,
@@ -123,7 +123,7 @@ https://docs.aspect.build/rulesets/aspect_rules_js/docs/js_library#deps for more
     ),
     "validator": attr.label(mandatory = True, executable = True, cfg = "exec"),
     "_options": attr.label(
-        default = "@aspect_rules_ts//ts:options",
+        default = Label("//ts:options"),
     ),
 }
 

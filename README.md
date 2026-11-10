@@ -19,6 +19,24 @@ rules_ts is just a part of what Aspect provides:
 Follow instructions from the release you wish to use:
 <https://github.com/aspect-build/rules_ts/releases>
 
+## Migrating from aspect_rules_ts
+
+Starting with version 4.0.0, this module is published to the Bazel Central Registry as `rules_ts`
+instead of `aspect_rules_ts`. Versions 3.x and earlier remain available under the old name.
+
+The quickest way to migrate is to keep the old repository name, so existing `load()` statements and
+`--@aspect_rules_ts//ts:...` flags keep working unchanged:
+
+```starlark
+bazel_dep(name = "rules_ts", version = "4.0.0", repo_name = "aspect_rules_ts")
+```
+
+Alternatively, depend on `bazel_dep(name = "rules_ts", version = "4.0.0")` and replace
+`@aspect_rules_ts` with `@rules_ts` in your `MODULE.bazel`, BUILD, `.bzl` and `.bazelrc` files.
+
+Note that if one of your dependencies still depends on `aspect_rules_ts`, Bazel treats it as a separate
+module: it has its own flags and its own `typescript` extension, independent of `rules_ts`.
+
 ## Examples
 
 There are a number of examples in [the examples/ folder](https://github.com/aspect-build/rules_ts/tree/main/examples) and
@@ -42,7 +60,7 @@ the program and produce `.d.ts` files.
 ### In a macro
 
 Many organizations set default values, so it's common to write a [macro] to wrap `ts_project`, then
-ensure that your developers load your macro rather than loading from `@aspect_rules_ts` directly.
+ensure that your developers load your macro rather than loading from `@rules_ts` directly.
 
 [macro]: https://bazel.build/extending/macros
 

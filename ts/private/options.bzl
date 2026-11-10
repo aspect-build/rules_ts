@@ -32,12 +32,12 @@ You must choose exactly one of the following flags:
 1. To choose the faster performance put this in /.bazelrc:
 
     # passes an argument `--skipLibCheck` to *every* spawn of tsc
-    common --@aspect_rules_ts//ts:skipLibCheck=always
+    common --@rules_ts//ts:skipLibCheck=always
 
 2. To choose more correct typechecks, put this in /.bazelrc:
 
     # honor the setting of `skipLibCheck` in the tsconfig.json file
-    common --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
+    common --@rules_ts//ts:skipLibCheck=honor_tsconfig
 
 ##########################################################
 """
@@ -53,7 +53,7 @@ def _options_impl(ctx):
     args = []
 
     # When users report problems, we can ask them to re-build with
-    # --@aspect_rules_ts//ts:verbose=true
+    # --@rules_ts//ts:verbose=true
     # so anything that's useful to diagnose rule failures belongs here
     if verbose:
         args = [

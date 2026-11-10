@@ -3,7 +3,7 @@
 Therefore type-checking is done with a validation action within the `ts_project` rule.
 """
 
-load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@rules_ts//ts:defs.bzl", "ts_project")
 
 ts_project(
     name = "typecheck_only",

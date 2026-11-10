@@ -7,7 +7,7 @@ exports_files(
     visibility = ["//visibility:public"],
 )
 
-# Users can enable with --@aspect_rules_ts//ts:skipLibCheck=always
+# Users can enable with --@rules_ts//ts:skipLibCheck=always
 string_flag(
     # Note: this name is chosen to be searchable when users look for "skipLibCheck" in their repo,
     # as that's the way it appears in tsconfig.json or tsc command line.
@@ -101,8 +101,8 @@ options(
     }),
     skip_lib_check = select(
         {
-            "@aspect_rules_ts//ts:skip_lib_check.always": "always",
-            "@aspect_rules_ts//ts:skip_lib_check.honor_tsconfig": "honor_tsconfig",
+            ":skip_lib_check.always": "always",
+            ":skip_lib_check.honor_tsconfig": "honor_tsconfig",
             "//conditions:default": "",
         },
     ),

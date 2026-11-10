@@ -1,6 +1,6 @@
-bazel_dep(name = "aspect_rules_ts", version = "0.0.0", dev_dependency = True)
+bazel_dep(name = "rules_ts", version = "0.0.0", dev_dependency = True)
 local_path_override(
-    module_name = "aspect_rules_ts",
+    module_name = "rules_ts",
     path = "../..",
 )
 
@@ -17,7 +17,7 @@ npm.npm_translate_lock(
 )
 use_repo(npm, "npm")
 
-typescript = use_extension("@aspect_rules_ts//ts:extensions.bzl", "typescript", dev_dependency = True)
+typescript = use_extension("@rules_ts//ts:extensions.bzl", "typescript", dev_dependency = True)
 typescript.toolchain(
     # This keeps the TypeScript version in-sync with the editor, which is typically best.
     version_from = "//:package.json",

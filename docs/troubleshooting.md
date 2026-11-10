@@ -50,7 +50,7 @@ As a last resort, type-checking can be forced onto every `bazel build` by runnin
 [validation action](https://bazel.build/extending/rules#validation_actions):
 
     # Not recommended: report type errors from `bazel build`, not only from `bazel test`.
-    common --@aspect_rules_ts//ts:validation_typecheck
+    common --@rules_ts//ts:validation_typecheck
 
 This is discouraged and off by default. It makes every build run `tsc` over the whole dependency
 graph — reintroducing exactly the cost that a custom `transpiler` and `isolated_typecheck` exist to
@@ -64,7 +64,7 @@ skipped for a single invocation with `--norun_validations`.
 
 ## Verbose mode
 
-Running your build with `--@aspect_rules_ts//ts:verbose` causes the `ts_project` rule to enable several
+Running your build with `--@rules_ts//ts:verbose` causes the `ts_project` rule to enable several
 flags for the TypeScript compiler. This produces a ton of output, so you'll probably want to 
 redirect the stdout to a file that you can analyze with power tools.
 
@@ -168,4 +168,4 @@ Possible solutions:
 
 
 # Troubleshooting performance issues 
-Running your build with `--@aspect_rules_ts//ts:generate_tsc_trace` causes the `ts_project` rule to run with the `generate_trace` option enabled. This generates a profile that can be analyzed to understand TypeScript compilation performance. The trace files will be written in `bazel-bin/<package>/<target>_trace/`. To analyze it use ChromeDevTools or [@typescript/analyze-trace](https://www.npmjs.com/package/@typescript/analyze-trace). See the [TypeScript documentation](https://github.com/microsoft/TypeScript-wiki/blob/main/Performance-Tracing.md) for more information.
+Running your build with `--@rules_ts//ts:generate_tsc_trace` causes the `ts_project` rule to run with the `generate_trace` option enabled. This generates a profile that can be analyzed to understand TypeScript compilation performance. The trace files will be written in `bazel-bin/<package>/<target>_trace/`. To analyze it use ChromeDevTools or [@typescript/analyze-trace](https://www.npmjs.com/package/@typescript/analyze-trace). See the [TypeScript documentation](https://github.com/microsoft/TypeScript-wiki/blob/main/Performance-Tracing.md) for more information.

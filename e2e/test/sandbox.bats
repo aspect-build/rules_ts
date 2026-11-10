@@ -35,7 +35,7 @@ function mk_sibling() {
 	echo '{"compilerOptions": {}}' >"$dir/tsconfig.json"
 	echo 'export const t: string = "ok";' >"$dir/source.ts"
 	cat >"$dir/BUILD.bazel" <<-'EOF'
-		load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+		load("@rules_ts//ts:defs.bzl", "ts_project")
 
 		ts_project(
 		    name = "foo",
@@ -79,7 +79,7 @@ function mk_module_flip() {
 	echo '{"compilerOptions": {"module": "nodenext", "moduleResolution": "nodenext", "target": "ES2020"}}' >"$dir/tsconfig.json"
 	echo 'const v = 1; export = v;' >"$dir/source.ts"
 	cat >"$dir/BUILD.bazel" <<-'EOF'
-		load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+		load("@rules_ts//ts:defs.bzl", "ts_project")
 
 		ts_project(
 		    name = "foo",
@@ -120,7 +120,7 @@ function mk_typeroots() {
 	echo '{"compilerOptions": {"typeRoots": ["./typ"]}}' >"$dir/tsconfig.json"
 	echo 'export const x = 1;' >"$dir/source.ts"
 	cat >"$dir/BUILD.bazel" <<-'EOF'
-		load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+		load("@rules_ts//ts:defs.bzl", "ts_project")
 
 		ts_project(
 		    name = "foo",
@@ -161,7 +161,7 @@ function mk_output_collision() {
 	echo '{"compilerOptions": {"declaration": true}}' >"$dir/tsconfig.json"
 	echo 'export const x = 1;' >"$dir/source.ts"
 	cat >"$dir/BUILD.bazel" <<-'EOF'
-		load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+		load("@rules_ts//ts:defs.bzl", "ts_project")
 
 		ts_project(
 		    name = "foo",
@@ -203,7 +203,7 @@ function mk_ambient_dts() {
 	# and module-scope the declaration, hiding the conflict.)
 	echo 'declare const SHARED: number; const use1 = SHARED;' >"$dir/source.ts"
 	cat >"$dir/BUILD.bazel" <<-'EOF'
-		load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+		load("@rules_ts//ts:defs.bzl", "ts_project")
 
 		ts_project(
 		    name = "foo",
@@ -245,7 +245,7 @@ function mk_extends_include() {
 	echo '{"extends": "./base.json", "files": ["source.ts"], "compilerOptions": {}}' >"$dir/tsconfig.json"
 	echo 'export const x = 1;' >"$dir/source.ts"
 	cat >"$dir/BUILD.bazel" <<-'EOF'
-		load("@aspect_rules_ts//ts:defs.bzl", "ts_config", "ts_project")
+		load("@rules_ts//ts:defs.bzl", "ts_config", "ts_project")
 
 		ts_config(
 		    name = "tsconfig",

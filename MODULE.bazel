@@ -1,7 +1,7 @@
 "aspect-build/rules_ts"
 
 module(
-    name = "aspect_rules_ts",
+    name = "rules_ts",
     bazel_compatibility = [">=7.7.0"],
     compatibility_level = 1,
 )
@@ -26,7 +26,7 @@ bazel_dep(name = "bazelrc-preset.bzl", version = "1.9.2", dev_dependency = True)
 bazel_dep(name = "buildifier_prebuilt", version = "8.2.1.1", dev_dependency = True)
 bazel_dep(name = "rules_shell", version = "0.6.1", dev_dependency = True)
 
-typescript = use_extension("@aspect_rules_ts//ts:extensions.bzl", "typescript", dev_dependency = True)
+typescript = use_extension("//ts:extensions.bzl", "typescript", dev_dependency = True)
 typescript.toolchain(version = "5.6.2")
 use_repo(typescript, "npm_typescript")
 

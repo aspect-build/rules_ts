@@ -3,13 +3,13 @@ module(
     version = "0.0.0",
 )
 
-bazel_dep(name = "aspect_rules_ts", version = "0.0.0")
+bazel_dep(name = "rules_ts", version = "0.0.0")
 local_path_override(
-    module_name = "aspect_rules_ts",
+    module_name = "rules_ts",
     path = "../../..",
 )
 
-typescript = use_extension("@aspect_rules_ts//ts:extensions.bzl", "typescript")
+typescript = use_extension("@rules_ts//ts:extensions.bzl", "typescript")
 
 # Use an alternate npm_typescript name to workaround https://github.com/aspect-build/rules_ts/issues/483
 typescript.toolchain(

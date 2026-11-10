@@ -1,8 +1,8 @@
-# DO NOT DIRECTLY DEPEND ON "aspect_rules_ts". Only override it in the root module
+# DO NOT DIRECTLY DEPEND ON "rules_ts". Only override it in the root module
 # so the submodules used under test will use the local version.
 # The root module must do the override despite not directly using the module
 local_path_override(
-    module_name = "aspect_rules_ts",
+    module_name = "rules_ts",
     path = "../..",
 )
 

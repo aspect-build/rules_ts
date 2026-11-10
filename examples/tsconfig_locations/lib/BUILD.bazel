@@ -1,4 +1,4 @@
-load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@rules_ts//ts:defs.bzl", "ts_project")
 
 # A tsconfig in the parent package
 ts_project(

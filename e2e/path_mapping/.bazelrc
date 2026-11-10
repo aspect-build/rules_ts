@@ -2,8 +2,8 @@ try-import %workspace%/../../.aspect/bazelrc
 
 import %workspace%/../../tools/preset.bazelrc
 
-common --@aspect_rules_ts//ts:skipLibCheck=always
-common --@aspect_rules_ts//ts:default_to_tsc_transpiler
+common --@rules_ts//ts:skipLibCheck=always
+common --@rules_ts//ts:default_to_tsc_transpiler
 
 # Path mapping:
 # https://bazel.build/reference/command-line-reference#flag--experimental_output_paths

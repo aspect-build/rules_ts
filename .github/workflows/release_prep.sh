@@ -22,9 +22,9 @@ cat <<EOF
 Add to your \`MODULE.bazel\` file:
 
 \`\`\`starlark
-bazel_dep(name = "aspect_rules_ts", version = "${TAG:1}")
+bazel_dep(name = "rules_ts", version = "${TAG:1}")
 
-typescript = use_extension("@aspect_rules_ts//ts:extensions.bzl", "typescript", dev_dependency = True)
+typescript = use_extension("@rules_ts//ts:extensions.bzl", "typescript", dev_dependency = True)
 
 typescript.toolchain(
     version_from = "//:package.json",

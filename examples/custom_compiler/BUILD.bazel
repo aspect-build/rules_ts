@@ -2,10 +2,10 @@
 """
 
 load("@aspect_rules_js//js:defs.bzl", "js_binary")
-load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@npm//:@angular/compiler-cli/package_json.bzl", "bin")
+load("@rules_ts//ts:defs.bzl", "ts_project")
 
 write_file(
     name = "bigts",

@@ -1,8 +1,8 @@
 """Shows how https://www.typescriptlang.org/tsconfig/#resolveJsonModule can be used with out_dir."""
 
 load("@aspect_rules_js//js:defs.bzl", "js_test")
-load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@bazel_lib//lib:testing.bzl", "assert_contains")
+load("@rules_ts//ts:defs.bzl", "ts_project")
 
 ts_project(
     name = "ts",

@@ -49,7 +49,7 @@ def _gather_tsconfig_deps(ctx):
     # composite projects we reference.
     # Otherwise we'd get an error like
     # examples/project_references/lib_b/tsconfig.json(5,9): error TS6053:
-    # File 'execroot/aspect_rules_ts/bazel-out/k8-fastbuild/bin/examples/project_references/lib_a/tsconfig.json' not found.
+    # File 'execroot/rules_ts/bazel-out/k8-fastbuild/bin/examples/project_references/lib_a/tsconfig.json' not found.
     if ctx.attr.composite:
         deps.extend([
             dep[TsConfigInfo].deps

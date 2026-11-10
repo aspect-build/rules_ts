@@ -4,14 +4,14 @@ import %workspace%/tools/preset.bazelrc
 
 common --config=ruleset
 
-common --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
-common --@aspect_rules_ts//ts:default_to_tsc_transpiler
+common --@rules_ts//ts:skipLibCheck=honor_tsconfig
+common --@rules_ts//ts:default_to_tsc_transpiler
 
 # Required for the tsc js_binary entry_point (inside a tree artifact) on Windows.
 common:windows --enable_runfiles
 
 # verbose
-common:verbose --@aspect_rules_ts//ts:verbose
+common:verbose --@rules_ts//ts:verbose
 
 # Build without the bytes
 common:ci --remote_download_outputs=minimal

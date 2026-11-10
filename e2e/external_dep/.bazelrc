@@ -2,8 +2,8 @@ try-import %workspace%/../../.aspect/bazelrc
 
 import %workspace%/../../tools/preset.bazelrc
 
-common --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
-common --@aspect_rules_ts//ts:default_to_tsc_transpiler
+common --@rules_ts//ts:skipLibCheck=honor_tsconfig
+common --@rules_ts//ts:default_to_tsc_transpiler
 
 # Build without the bytes
 common:ci --remote_download_outputs=minimal

@@ -1,6 +1,6 @@
-load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@bazel_lib//lib:write_source_files.bzl", "write_source_files")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@rules_ts//ts:defs.bzl", "ts_project")
 
 ts_project(
     name = "lib",
