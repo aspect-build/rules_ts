@@ -1,4 +1,4 @@
-load("@aspect_rules_ts//ts:defs.bzl", "ts_config")
+load("@rules_ts//ts:defs.bzl", "ts_config")
 
 # A ts_config wrapping the shared tsconfig.json so subpackages can reference
 # it as the `src` of their own ts_config. ts_config's DefaultInfo emits the

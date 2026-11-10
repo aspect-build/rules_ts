@@ -24,11 +24,11 @@ artifact or a version fetched from the internet, run this from this
 directory:
 
 ```sh
-OVERRIDE="--override_module=aspect_rules_ts=$(pwd)/aspect_rules_ts"
+OVERRIDE="--override_module=rules_ts=$(pwd)/rules_ts"
 echo "common $OVERRIDE" >> ~/.bazelrc
 ```
 
-This means that any usage of `@aspect_rules_ts` on your system will point to this folder.
+This means that any usage of `@rules_ts` on your system will point to this folder.
 
 ## Releasing
 

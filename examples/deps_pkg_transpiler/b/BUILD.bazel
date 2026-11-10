@@ -1,4 +1,4 @@
-load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@rules_ts//ts:defs.bzl", "ts_project")
 load("//transpiler:babel.bzl", "babel")
 
 ts_project(

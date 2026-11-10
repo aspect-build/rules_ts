@@ -74,7 +74,7 @@ You can simply disable this error for all targets in the build, behaving the sam
 Just add this to `/.bazelrc``:
 
     # Use "tsc" as the transpiler when ts_project has no `transpiler` set.
-    common --@aspect_rules_ts//ts:default_to_tsc_transpiler
+    common --@rules_ts//ts:default_to_tsc_transpiler
 
 ### Other Transpilers
 
@@ -95,7 +95,7 @@ then you should use a macro which calculates the predicted outputs and supplies 
 on the rule.
 
 You may want to create a `ts_project` macro within your repository where your choice is setup,
-then `load()` from your own macro rather than from `@aspect_rules_ts`.
+then `load()` from your own macro rather than from `@rules_ts`.
 
 ## Macro expansion
 

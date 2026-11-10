@@ -8,18 +8,18 @@ _ActionInfo = provider("test provider", fields = ["actions", "bin_path"])
 
 def _transition_impl(_settings, attr):
     return {
-        "@aspect_rules_ts//ts:verbose": attr.verbose,
-        "@aspect_rules_ts//ts:skipLibCheck": attr.skip_lib_check,
-        "@aspect_rules_ts//ts:generate_tsc_trace": attr.generate_tsc_trace,
+        "@rules_ts//ts:verbose": attr.verbose,
+        "@rules_ts//ts:skipLibCheck": attr.skip_lib_check,
+        "@rules_ts//ts:generate_tsc_trace": attr.generate_tsc_trace,
     }
 
 configuration_transition = transition(
     implementation = _transition_impl,
     inputs = [],
     outputs = [
-        "@aspect_rules_ts//ts:verbose",
-        "@aspect_rules_ts//ts:skipLibCheck",
-        "@aspect_rules_ts//ts:generate_tsc_trace",
+        "@rules_ts//ts:verbose",
+        "@rules_ts//ts:skipLibCheck",
+        "@rules_ts//ts:generate_tsc_trace",
     ],
 )
 

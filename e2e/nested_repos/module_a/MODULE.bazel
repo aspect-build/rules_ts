@@ -1,8 +1,8 @@
 module(name = "module_a")
 
-bazel_dep(name = "aspect_rules_ts", version = "0.0.0")
+bazel_dep(name = "rules_ts", version = "0.0.0")
 
-typescript = use_extension("@aspect_rules_ts//ts:extensions.bzl", "typescript")
+typescript = use_extension("@rules_ts//ts:extensions.bzl", "typescript")
 typescript.toolchain(
     version_from = "//:package.json",
 )

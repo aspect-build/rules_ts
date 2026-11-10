@@ -160,12 +160,12 @@ def ts_project(
 
         transpiler: A custom transpiler tool to run that produces the JavaScript outputs instead of `tsc`.
 
-            Under `--@aspect_rules_ts//ts:default_to_tsc_transpiler`, the default is to use `tsc` to produce
+            Under `--@rules_ts//ts:default_to_tsc_transpiler`, the default is to use `tsc` to produce
             `.js` outputs in the same action that does the type-checking to produce `.d.ts` outputs.
             This is the simplest configuration, however `tsc` is slower than alternatives.
             It also means developers must wait for the type-checking in the developer loop.
 
-            Without `--@aspect_rules_ts//ts:default_to_tsc_transpiler`, an explicit value must be set.
+            Without `--@rules_ts//ts:default_to_tsc_transpiler`, an explicit value must be set.
             This may be the string `"tsc"` to explicitly choose `tsc`, just like the default above.
 
             It may also be any rule or macro with this signature: `(name, srcs, **kwargs)`
@@ -240,7 +240,7 @@ def ts_project(
             Helps Bazel to predict the path where the .tsbuildinfo output is written.
         generate_trace: Whether to generate a trace file for TypeScript compiler performance analysis.
             When enabled, creates a trace directory containing performance tracing information that can be
-            loaded in chrome://tracing. Use the `--@aspect_rules_ts//ts:generate_tsc_trace` flag to enable this by default.
+            loaded in chrome://tracing. Use the `--@rules_ts//ts:generate_tsc_trace` flag to enable this by default.
 
         **kwargs: passed through to underlying [`ts_project_rule`](#rule-ts_project_rule), eg. `visibility`, `tags`
     """

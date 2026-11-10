@@ -43,7 +43,7 @@ js_binary(
 # validator
 copy_file(
     name = "copy_validator",
-    src = "@aspect_rules_ts//ts/private:ts_project_options_validator.cjs",
+    src = "@rules_ts//ts/private:ts_project_options_validator.cjs",
     out = "ts_project_options_validator.cjs",
 )
 

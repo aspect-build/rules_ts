@@ -143,7 +143,7 @@ EOF
 EOF
 
 	cat >BUILD.bazel <<EOF
-load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@rules_ts//ts:defs.bzl", "ts_project")
 
 ts_project(
     name = "foo",
@@ -180,7 +180,7 @@ EOF
 EOF
 
 	cat >BUILD.bazel <<EOF
-load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@rules_ts//ts:defs.bzl", "ts_project")
 
 ts_project(
     name = "foo",
@@ -212,7 +212,7 @@ EOF
 EOF
 
 	cat >child/BUILD.bazel <<EOF
-load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@rules_ts//ts:defs.bzl", "ts_project")
 
 ts_project(
     name = "foo",
@@ -243,7 +243,7 @@ EOF
 EOF
 
 	cat >child/BUILD.bazel <<EOF
-load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@rules_ts//ts:defs.bzl", "ts_project")
 
 ts_project(
     name = "foo",
@@ -274,7 +274,7 @@ EOF
 EOF
 
 	cat >BUILD.bazel <<EOF
-load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@rules_ts//ts:defs.bzl", "ts_project")
 
 ts_project(
     name = "foo",

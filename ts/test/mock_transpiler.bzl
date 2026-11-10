@@ -1,6 +1,6 @@
 "Fixture to demonstrate a custom transpiler for ts_project"
 
-load("@aspect_rules_ts//ts/private:ts_lib.bzl", "lib")
+load("//ts/private:ts_lib.bzl", "lib")
 
 _DUMMY_SOURCEMAP = """{"version":3,"sources":["%s"],"mappings":"AAAO,KAAK,CAAC","file":"in.js","sourcesContent":["fake"]}"""
 

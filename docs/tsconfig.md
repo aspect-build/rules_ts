@@ -29,7 +29,7 @@ Since rules_js expects files to appear in the `bazel-out` tree, the common patte
 1. In the `BUILD.bazel` file next to `tsconfig.json`, expose it using a `ts_config` rule:
 
 ```starlark
-load("@aspect_rules_ts//ts:defs.bzl", "ts_config")
+load("@rules_ts//ts:defs.bzl", "ts_config")
 
 ts_config(
     name = "tsconfig",
@@ -41,7 +41,7 @@ ts_config(
 2. In child packages, set the `tsconfig` attribute of `ts_project` rules in subpackages to point to this rule.
 
 ```
-load("@aspect_rules_ts//ts:defs.bzl", "ts_config")
+load("@rules_ts//ts:defs.bzl", "ts_config")
 
 ts_project(
     ...

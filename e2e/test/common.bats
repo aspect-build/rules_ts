@@ -26,15 +26,15 @@ function workspace() {
 	done
 
 	cat >MODULE.bazel <<EOF
-bazel_dep(name = "aspect_rules_ts", version = "0.0.0")
+bazel_dep(name = "rules_ts", version = "0.0.0")
 local_path_override(
-    module_name = "aspect_rules_ts",
+    module_name = "rules_ts",
     path = "$rules_ts_path",
 )
 
 bazel_dep(name = "aspect_rules_js", version = "3.0.1")
 
-typescript = use_extension("@aspect_rules_ts//ts:extensions.bzl", "typescript")
+typescript = use_extension("@rules_ts//ts:extensions.bzl", "typescript")
 
 typescript.toolchain(version = "$ts_version")
 use_repo(typescript, "npm_typescript")
@@ -45,8 +45,8 @@ EOF
 	cat >.bazelrc <<EOF
 try-import $BATS_TEST_DIRNAME/.bazelrc
 startup --max_idle_secs=10
-build --@aspect_rules_ts//ts:skipLibCheck=honor_tsconfig
-build --@aspect_rules_ts//ts:default_to_tsc_transpiler
+build --@rules_ts//ts:skipLibCheck=honor_tsconfig
+build --@rules_ts//ts:default_to_tsc_transpiler
 EOF
 
 	if ((no_convenience_symlinks)); then
@@ -290,10 +290,10 @@ function ts_project() {
 		echo "${args[*]}"
 	)
 	cat >"$path/BUILD.bazel" <<EOF
-load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@rules_ts//ts:defs.bzl", "ts_project")
 ${npm_link_all_packages}load("@npm//:defs.bzl", "npm_link_all_packages")
 ${npm_link_all_packages}npm_link_all_packages(name = "node_modules")
-${mock_transpiler_disabled}load("@aspect_rules_ts//ts/test:mock_transpiler.bzl", "mock")
+${mock_transpiler_disabled}load("@rules_ts//ts/test:mock_transpiler.bzl", "mock")
 
 ts_project(
     name = "${name}",

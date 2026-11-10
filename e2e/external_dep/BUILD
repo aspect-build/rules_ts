@@ -1,6 +1,6 @@
 """Tests a `ts_project()` in one workspace being used in another."""
 
-load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@rules_ts//ts:defs.bzl", "ts_project")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 
 ts_project(

@@ -154,7 +154,7 @@ http_archive_version = repository_rule(
         "urls": attr.string_list(doc = "URLs to fetch from. Each must have one `{}`-style placeholder."),
         "_build_file": attr.label(
             doc = "The BUILD file to write into the created repository.",
-            default = Label("@aspect_rules_ts//ts:BUILD.typescript"),
+            default = Label("//ts:BUILD.typescript"),
         ),
         "version_from": attr.label(doc = "Location of package.json which may have a version for the package."),
     },

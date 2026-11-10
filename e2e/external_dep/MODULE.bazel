@@ -2,15 +2,15 @@ module(
     name = "e2e_external_dep",
 )
 
-bazel_dep(name = "aspect_rules_ts", version = "0.0.0")
+bazel_dep(name = "rules_ts", version = "0.0.0")
 local_path_override(
-    module_name = "aspect_rules_ts",
+    module_name = "rules_ts",
     path = "../..",
 )
 
 bazel_dep(name = "bazel_skylib", version = "1.8.2")
 
-typescript = use_extension("@aspect_rules_ts//ts:extensions.bzl", "typescript")
+typescript = use_extension("@rules_ts//ts:extensions.bzl", "typescript")
 typescript.toolchain()
 
 # Example demonstrating that you can also have a second typescript version
