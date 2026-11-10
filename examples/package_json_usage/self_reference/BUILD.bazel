@@ -1,5 +1,5 @@
-load("@rules_ts//ts:defs.bzl", "ts_config", "ts_project")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@rules_ts//ts:defs.bzl", "ts_config", "ts_project")
 
 # Demonstrates that TypeScript reads the project's own package.json `"name"`
 # and `"exports"` fields to support self-reference imports — `import x from

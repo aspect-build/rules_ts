@@ -1,5 +1,5 @@
-load("@rules_ts//ts:defs.bzl", "ts_config", "ts_project")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@rules_ts//ts:defs.bzl", "ts_config", "ts_project")
 
 # Demonstrates that TypeScript reads package.json's `"imports"` field for
 # `#`-prefixed subpath imports during compilation. The local package.json

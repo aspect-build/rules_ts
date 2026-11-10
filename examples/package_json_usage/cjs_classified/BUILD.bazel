@@ -1,5 +1,5 @@
-load("@rules_ts//ts:defs.bzl", "ts_config", "ts_project")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@rules_ts//ts:defs.bzl", "ts_config", "ts_project")
 
 # The negative companion to ../colocated and ../parent_src: this build
 # deliberately omits the package.json from ts_config.deps, so tsc never

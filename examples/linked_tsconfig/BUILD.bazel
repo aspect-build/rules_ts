@@ -1,6 +1,6 @@
 load("@aspect_rules_js//npm:defs.bzl", "npm_package")
-load("@rules_ts//ts:defs.bzl", "ts_config")
 load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@rules_ts//ts:defs.bzl", "ts_config")
 
 npm_link_all_packages()
 
