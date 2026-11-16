@@ -16,16 +16,15 @@ load(":ts_validate_options.bzl", _validate_lib = "lib")
 # include any sources; only transitive types & npm sources
 def _gather_types_from_js_infos(targets):
     files_depsets = []
-    files_depsets.extend([
-        target[JsInfo].transitive_types
-        for target in targets
-        if JsInfo in target
-    ])
-    files_depsets.extend([
-        target[JsInfo].npm_sources
-        for target in targets
-        if JsInfo in target
-    ])
+    for target in targets:
+        if JsInfo in target:
+            for files in [target[JsInfo].transitive_types, target[JsInfo].npm_sources]:
+                # Declaration maps are useful to consumers, but tsc does not read them.
+                files_depsets.append(depset([
+                    file
+                    for file in files.to_list()
+                    if not file.basename.endswith((".d.ts.map", ".d.mts.map", ".d.cts.map"))
+                ]))
     return depset([], transitive = files_depsets)
 
 def _gather_transitive_typecheck_from_output_group_infos(typecheck_outs, targets):

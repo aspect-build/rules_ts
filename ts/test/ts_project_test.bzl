@@ -1,6 +1,6 @@
 "UnitTests for ts_project"
 
-load("@aspect_rules_js//js:providers.bzl", "JsInfo")
+load("@aspect_rules_js//js:providers.bzl", "JsInfo", "js_info")
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
@@ -100,6 +100,53 @@ def _use_dir_test_impl(ctx):
     return analysistest.end(env)
 
 _use_dir_test = analysistest.make(_use_dir_test_impl)
+
+def _declaration_map_dep_impl(ctx):
+    type_file = ctx.actions.declare_file("provider_type.d.ts")
+    type_map = ctx.actions.declare_file("provider_type.d.ts.map")
+    npm_type = ctx.actions.declare_file("npm_type.d.mts")
+    npm_map = ctx.actions.declare_file("npm_type.d.mts.map")
+    npm_commonjs_type = ctx.actions.declare_file("npm_type.d.cts")
+    npm_commonjs_map = ctx.actions.declare_file("npm_type.d.cts.map")
+    js_map = ctx.actions.declare_file("npm_source.js.map")
+    for file in [type_file, npm_type, npm_commonjs_type]:
+        ctx.actions.write(file, "export declare const value: string;\n")
+    for file in [type_map, npm_map, npm_commonjs_map, js_map]:
+        ctx.actions.write(file, '{"version":3,"sources":[],"mappings":""}\n')
+
+    types = depset([type_file, type_map])
+    npm_sources = depset([npm_type, npm_map, npm_commonjs_type, npm_commonjs_map, js_map])
+    return [
+        DefaultInfo(files = depset(transitive = [types, npm_sources])),
+        js_info(
+            target = ctx.label,
+            types = types,
+            transitive_types = types,
+            npm_sources = npm_sources,
+        ),
+    ]
+
+_declaration_map_dep = rule(implementation = _declaration_map_dep_impl)
+
+def _declaration_map_inputs_test_impl(ctx):
+    env = analysistest.begin(ctx)
+    target = analysistest.target_under_test(env)
+    inputs = [file.basename for file in target[OutputGroupInfo]._action_inputs.to_list()]
+
+    for name in ["provider_type.d.ts", "npm_type.d.mts", "npm_type.d.cts", "npm_source.js.map"]:
+        asserts.true(env, name in inputs, "expected {} in compiler inputs".format(name))
+    for name in ["provider_type.d.ts.map", "npm_type.d.mts.map", "npm_type.d.cts.map"]:
+        asserts.false(env, name in inputs, "unexpected {} in compiler inputs".format(name))
+
+    # Maps remain in JsInfo for downstream consumers, even though tsc does not read them.
+    types = [file.basename for file in target[JsInfo].transitive_types.to_list()]
+    npm_sources = [file.basename for file in target[JsInfo].npm_sources.to_list()]
+    asserts.true(env, "provider_type.d.ts.map" in types)
+    asserts.true(env, "npm_type.d.mts.map" in npm_sources)
+    asserts.true(env, "npm_type.d.cts.map" in npm_sources)
+    return analysistest.end(env)
+
+_declaration_map_inputs_test = analysistest.make(_declaration_map_inputs_test_impl)
 
 # Use a dict() defined at the top level so it gets analyzed as part of .bzl file loading
 # and is therefore immutable. See https://bazel.build/rules/language#mutability
@@ -236,6 +283,25 @@ def ts_project_test_suite(name):
     _use_dir_test(
         name = "use_dir_test",
         target_under_test = "use_dir",
+    )
+
+    _declaration_map_dep(name = "declaration_map_dep")
+    write_file(
+        name = "declaration_map_consumer_ts",
+        out = "declaration_map_consumer.ts",
+        content = ["export const value = 1;"],
+        tags = ["manual"],
+    )
+    ts_project(
+        name = "declaration_map_consumer",
+        srcs = ["declaration_map_consumer.ts"],
+        deps = [":declaration_map_dep"],
+        tsconfig = {"compilerOptions": {"noEmit": True}},
+        tags = ["manual"],
+    )
+    _declaration_map_inputs_test(
+        name = "declaration_map_inputs_test",
+        target_under_test = "declaration_map_consumer",
     )
 
     write_file(
@@ -403,6 +469,7 @@ def ts_project_test_suite(name):
         tests = [
             ":dir_test",
             ":use_dir_test",
+            ":declaration_map_inputs_test",
             ":wrapper_test",
             ":dirty_out_dir_test",
             ":path_norm_dotslash_test",
