@@ -14,17 +14,20 @@ load(":ts_validate_options.bzl", _validate_lib = "lib")
 
 # Forked from js_lib_helpers.js_lib_helpers.gather_files_from_js_providers to not
 # include any sources; only transitive types & npm sources
+def _without_declaration_maps(files):
+    # Declaration maps are useful to consumers, but tsc does not read them.
+    return depset([
+        file
+        for file in files.to_list()
+        if not file.basename.endswith((".d.ts.map", ".d.mts.map", ".d.cts.map"))
+    ])
+
 def _gather_types_from_js_infos(targets):
     files_depsets = []
     for target in targets:
         if JsInfo in target:
             for files in [target[JsInfo].transitive_types, target[JsInfo].npm_sources]:
-                # Declaration maps are useful to consumers, but tsc does not read them.
-                files_depsets.append(depset([
-                    file
-                    for file in files.to_list()
-                    if not file.basename.endswith((".d.ts.map", ".d.mts.map", ".d.cts.map"))
-                ]))
+                files_depsets.append(_without_declaration_maps(files))
     return depset([], transitive = files_depsets)
 
 def _gather_transitive_typecheck_from_output_group_infos(typecheck_outs, targets):
@@ -40,7 +43,7 @@ def _gather_tsconfig_deps(ctx):
 
     deps = []
     if TsConfigInfo in ctx.attr.tsconfig:
-        deps.append(ctx.attr.tsconfig[TsConfigInfo].deps)
+        deps.append(_without_declaration_maps(ctx.attr.tsconfig[TsConfigInfo].deps))
 
     deps.append(_gather_types_from_js_infos([ctx.attr.tsconfig]))
 
@@ -51,7 +54,7 @@ def _gather_tsconfig_deps(ctx):
     # File 'execroot/aspect_rules_ts/bazel-out/k8-fastbuild/bin/examples/project_references/lib_a/tsconfig.json' not found.
     if ctx.attr.composite:
         deps.extend([
-            dep[TsConfigInfo].deps
+            _without_declaration_maps(dep[TsConfigInfo].deps)
             for dep in ctx.attr.deps
             if TsConfigInfo in dep
         ])

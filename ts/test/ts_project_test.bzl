@@ -5,7 +5,7 @@ load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("//ts:defs.bzl", "ts_project")
+load("//ts:defs.bzl", "ts_config", "ts_project")
 
 # dir_test
 def _dir_test_impl(ctx):
@@ -147,6 +147,23 @@ def _declaration_map_inputs_test_impl(ctx):
     return analysistest.end(env)
 
 _declaration_map_inputs_test = analysistest.make(_declaration_map_inputs_test_impl)
+
+def _declaration_map_tsconfig_inputs_test_impl(ctx):
+    env = analysistest.begin(ctx)
+    target = analysistest.target_under_test(env)
+    compiler_inputs = [file.basename for file in target[OutputGroupInfo]._action_inputs.to_list()]
+    validation_actions = [action for action in analysistest.target_actions(env) if action.mnemonic == "TsValidateOptions"]
+    asserts.equals(env, 1, len(validation_actions))
+
+    for inputs in [compiler_inputs] + [[file.basename for file in action.inputs.to_list()] for action in validation_actions]:
+        for name in ["provider_type.d.ts", "npm_type.d.mts", "npm_type.d.cts", "npm_source.js.map"]:
+            asserts.true(env, name in inputs, "expected {} in action inputs".format(name))
+        for name in ["provider_type.d.ts.map", "npm_type.d.mts.map", "npm_type.d.cts.map"]:
+            asserts.false(env, name in inputs, "unexpected {} in action inputs".format(name))
+
+    return analysistest.end(env)
+
+_declaration_map_tsconfig_inputs_test = analysistest.make(_declaration_map_tsconfig_inputs_test_impl)
 
 # Use a dict() defined at the top level so it gets analyzed as part of .bzl file loading
 # and is therefore immutable. See https://bazel.build/rules/language#mutability
@@ -302,6 +319,52 @@ def ts_project_test_suite(name):
     _declaration_map_inputs_test(
         name = "declaration_map_inputs_test",
         target_under_test = "declaration_map_consumer",
+    )
+
+    write_file(
+        name = "declaration_map_tsconfig_json",
+        out = "declaration_map_tsconfig.json",
+        content = ['{"files":["declaration_map_consumer.ts"],"compilerOptions":{"noEmit":true}}'],
+        tags = ["manual"],
+    )
+    ts_config(
+        name = "declaration_map_tsconfig",
+        src = ":declaration_map_tsconfig_json",
+        deps = [":declaration_map_dep"],
+    )
+    ts_config(
+        name = "declaration_map_nested_tsconfig",
+        src = ":declaration_map_tsconfig",
+    )
+    ts_project(
+        name = "declaration_map_tsconfig_consumer",
+        srcs = ["declaration_map_consumer.ts"],
+        no_emit = True,
+        tsconfig = ":declaration_map_nested_tsconfig",
+        tags = ["manual"],
+    )
+    _declaration_map_tsconfig_inputs_test(
+        name = "declaration_map_tsconfig_inputs_test",
+        target_under_test = "declaration_map_tsconfig_consumer",
+    )
+
+    write_file(
+        name = "declaration_map_composite_ts",
+        out = "declaration_map_composite.ts",
+        content = ["export const value = 1;"],
+        tags = ["manual"],
+    )
+    ts_project(
+        name = "declaration_map_composite_consumer",
+        srcs = ["declaration_map_composite.ts"],
+        deps = [":declaration_map_tsconfig"],
+        composite = True,
+        tsconfig = {"compilerOptions": {"composite": True, "declaration": True}},
+        tags = ["manual"],
+    )
+    _declaration_map_tsconfig_inputs_test(
+        name = "declaration_map_composite_inputs_test",
+        target_under_test = "declaration_map_composite_consumer",
     )
 
     write_file(
@@ -470,6 +533,8 @@ def ts_project_test_suite(name):
             ":dir_test",
             ":use_dir_test",
             ":declaration_map_inputs_test",
+            ":declaration_map_tsconfig_inputs_test",
+            ":declaration_map_composite_inputs_test",
             ":wrapper_test",
             ":dirty_out_dir_test",
             ":path_norm_dotslash_test",
