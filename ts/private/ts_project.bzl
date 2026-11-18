@@ -7,28 +7,14 @@ load("@bazel_lib//lib:copy_to_bin.bzl", "COPY_FILE_TO_BIN_TOOLCHAINS", "copy_fil
 load("@bazel_lib//lib:paths.bzl", "to_output_relative_path")
 load("@bazel_lib//lib:resource_sets.bzl", "resource_set", "resource_set_attr")
 load("@bazel_skylib//lib:dicts.bzl", "dicts")
+load(":compiler_inputs.bzl", "CompilerInputsInfo", "gather_npm_sources", "gather_types", "without_declaration_maps")
 load(":options.bzl", "OptionsInfo", "transpiler_selection_required")
 load(":ts_config.bzl", "TsConfigInfo")
 load(":ts_lib.bzl", "COMPILER_OPTION_ATTRS", "OUTPUT_ATTRS", "STD_ATTRS", _lib = "lib")
 load(":ts_validate_options.bzl", _validate_lib = "lib")
 
-# Forked from js_lib_helpers.js_lib_helpers.gather_files_from_js_providers to not
-# include any sources; only transitive types & npm sources
-def _without_declaration_maps(files):
-    # Declaration maps are useful to consumers, but tsc does not read them.
-    return depset([
-        file
-        for file in files.to_list()
-        if not file.basename.endswith((".d.ts.map", ".d.mts.map", ".d.cts.map"))
-    ])
-
-def _gather_types_from_js_infos(targets):
-    files_depsets = []
-    for target in targets:
-        if JsInfo in target:
-            for files in [target[JsInfo].transitive_types, target[JsInfo].npm_sources]:
-                files_depsets.append(_without_declaration_maps(files))
-    return depset([], transitive = files_depsets)
+def _tsconfig_deps(target):
+    return target[CompilerInputsInfo].tsconfig_deps if CompilerInputsInfo in target else without_declaration_maps(target[TsConfigInfo].deps)
 
 def _gather_transitive_typecheck_from_output_group_infos(typecheck_outs, targets):
     files_depsets = [
@@ -43,9 +29,10 @@ def _gather_tsconfig_deps(ctx):
 
     deps = []
     if TsConfigInfo in ctx.attr.tsconfig:
-        deps.append(_without_declaration_maps(ctx.attr.tsconfig[TsConfigInfo].deps))
+        deps.append(_tsconfig_deps(ctx.attr.tsconfig))
 
-    deps.append(_gather_types_from_js_infos([ctx.attr.tsconfig]))
+    config_npm_sources = gather_npm_sources([ctx.attr.tsconfig])
+    deps.append(depset(transitive = [gather_types([ctx.attr.tsconfig]), config_npm_sources]))
 
     # When TypeScript builds a composite project, our compilation will want to read the tsconfig.json of
     # composite projects we reference.
@@ -54,12 +41,12 @@ def _gather_tsconfig_deps(ctx):
     # File 'execroot/aspect_rules_ts/bazel-out/k8-fastbuild/bin/examples/project_references/lib_a/tsconfig.json' not found.
     if ctx.attr.composite:
         deps.extend([
-            _without_declaration_maps(dep[TsConfigInfo].deps)
+            _tsconfig_deps(dep)
             for dep in ctx.attr.deps
             if TsConfigInfo in dep
         ])
 
-    return tsconfig, depset([tsconfig], transitive = deps)
+    return tsconfig, depset([tsconfig], transitive = deps), config_npm_sources
 
 def _ts_project_impl(ctx):
     """Creates the action which spawns `tsc`.
@@ -81,17 +68,20 @@ def _ts_project_impl(ctx):
             fail("srcs of a ts_project should be files not directories")
 
     srcs_inputs = copy_files_to_bin_actions(ctx, ctx.files.srcs)
-    tsconfig, tsconfig_transitive_deps = _gather_tsconfig_deps(ctx)
+    tsconfig, tsconfig_transitive_deps, config_npm_sources = _gather_tsconfig_deps(ctx)
 
     srcs = _lib.files_relative_to_package(ctx, srcs_inputs)
 
     srcs_deps = ctx.attr.srcs + ctx.attr.deps
+    compiler_types = gather_types(srcs_deps)
+    compiler_npm_sources = gather_npm_sources(srcs_deps)
 
     # tsconfig_transitive_deps are already outputs of copy-to-bin actions (see _gather_tsconfig_deps),
     # so there is no need to pass them through copy_files_to_bin_actions again.
     tsc_inputs_depset = depset(srcs_inputs, transitive = [tsconfig_transitive_deps])
     tsc_transitive_inputs_depset = depset(srcs_inputs, transitive = [
-        _gather_types_from_js_infos(srcs_deps),
+        compiler_types,
+        compiler_npm_sources,
         tsconfig_transitive_deps,
     ])
 
@@ -359,6 +349,11 @@ def _ts_project_impl(ctx):
             transitive_types = transitive_types,
             npm_sources = npm_sources,
             npm_package_store_infos = npm_package_store_infos,
+        ),
+        CompilerInputsInfo(
+            types = depset(transitive = [without_declaration_maps(depset(output_types)), compiler_types]),
+            npm_sources = depset(transitive = [compiler_npm_sources, config_npm_sources]),
+            tsconfig_deps = tsconfig_transitive_deps,
         ),
         TsConfigInfo(deps = tsconfig_transitive_deps),
         OutputGroupInfo(

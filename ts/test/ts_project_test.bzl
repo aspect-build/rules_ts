@@ -148,6 +148,18 @@ def _declaration_map_inputs_test_impl(ctx):
 
 _declaration_map_inputs_test = analysistest.make(_declaration_map_inputs_test_impl)
 
+def _emitted_declaration_map_inputs_test_impl(ctx):
+    env = analysistest.begin(ctx)
+    target = analysistest.target_under_test(env)
+    inputs = [file.basename for file in target[OutputGroupInfo]._action_inputs.to_list()]
+    types = [file.basename for file in target[JsInfo].transitive_types.to_list()]
+    asserts.true(env, "declaration_map_emitter.d.ts" in inputs)
+    asserts.false(env, "declaration_map_emitter.d.ts.map" in inputs)
+    asserts.true(env, "declaration_map_emitter.d.ts.map" in types)
+    return analysistest.end(env)
+
+_emitted_declaration_map_inputs_test = analysistest.make(_emitted_declaration_map_inputs_test_impl)
+
 def _declaration_map_tsconfig_inputs_test_impl(ctx):
     env = analysistest.begin(ctx)
     target = analysistest.target_under_test(env)
@@ -319,6 +331,42 @@ def ts_project_test_suite(name):
     _declaration_map_inputs_test(
         name = "declaration_map_inputs_test",
         target_under_test = "declaration_map_consumer",
+    )
+    ts_project(
+        name = "declaration_map_transitive_consumer",
+        srcs = ["declaration_map_consumer.ts"],
+        deps = [":declaration_map_consumer"],
+        tsconfig = {"compilerOptions": {"noEmit": True}},
+        tags = ["manual"],
+    )
+    _declaration_map_inputs_test(
+        name = "declaration_map_transitive_inputs_test",
+        target_under_test = "declaration_map_transitive_consumer",
+    )
+    write_file(
+        name = "declaration_map_emitter_ts",
+        out = "declaration_map_emitter.ts",
+        content = ["export const value = 1;"],
+        tags = ["manual"],
+    )
+    ts_project(
+        name = "declaration_map_emitter",
+        srcs = ["declaration_map_emitter.ts"],
+        declaration = True,
+        declaration_map = True,
+        tsconfig = {"compilerOptions": {"declaration": True, "declarationMap": True}},
+        tags = ["manual"],
+    )
+    ts_project(
+        name = "declaration_map_emitted_consumer",
+        srcs = ["declaration_map_consumer.ts"],
+        deps = [":declaration_map_emitter"],
+        tsconfig = {"compilerOptions": {"noEmit": True}},
+        tags = ["manual"],
+    )
+    _emitted_declaration_map_inputs_test(
+        name = "emitted_declaration_map_inputs_test",
+        target_under_test = "declaration_map_emitted_consumer",
     )
 
     write_file(
@@ -533,6 +581,8 @@ def ts_project_test_suite(name):
             ":dir_test",
             ":use_dir_test",
             ":declaration_map_inputs_test",
+            ":declaration_map_transitive_inputs_test",
+            ":emitted_declaration_map_inputs_test",
             ":declaration_map_tsconfig_inputs_test",
             ":declaration_map_composite_inputs_test",
             ":wrapper_test",
