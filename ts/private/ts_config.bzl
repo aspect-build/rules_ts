@@ -18,6 +18,7 @@ load("@aspect_rules_js//js:libs.bzl", "js_lib_helpers")
 load("@aspect_rules_js//js:providers.bzl", "js_info")
 load("@bazel_lib//lib:copy_to_bin.bzl", "COPY_FILE_TO_BIN_TOOLCHAINS", "copy_file_to_bin_action", "copy_files_to_bin_actions")
 load("@bazel_lib//lib:paths.bzl", "relative_file")
+load(":compiler_inputs.bzl", "CompilerInputsInfo", "gather_npm_sources", "gather_types", "without_declaration_maps")
 load(":ts_lib.bzl", _lib = "lib")
 
 TsConfigInfo = provider(
@@ -75,6 +76,8 @@ def _ts_config_impl(ctx):
         deps = dep_targets,
     )
 
+    tsconfig_deps = depset(files, transitive = transitive_deps)
+
     return [
         DefaultInfo(
             files = files_depset,
@@ -91,7 +94,12 @@ def _ts_config_impl(ctx):
             npm_sources = npm_sources,
             npm_package_store_infos = npm_package_store_infos,
         ),
-        TsConfigInfo(deps = depset(files, transitive = transitive_deps)),
+        TsConfigInfo(deps = tsconfig_deps),
+        CompilerInputsInfo(
+            types = gather_types(dep_targets),
+            npm_sources = gather_npm_sources(dep_targets),
+            tsconfig_deps = without_declaration_maps(tsconfig_deps),
+        ),
     ]
 
 ts_config = rule(
